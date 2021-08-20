@@ -1,0 +1,59 @@
+linters-settings:
+  gci:
+    local-prefixes: github.com/kubernetes-sigs/kube-scheduler-simulator
+  gocritic:
+    disabled-checks:
+      - appendAssign
+
+linters:
+  disable-all: true
+  enable:
+    - unused
+    - govet
+    - staticcheck
+    - typecheck
+    - varcheck
+    - errcheck
+    - gosimple
+    - asciicheck
+    - bodyclose
+    - cyclop
+    - dogsled
+    - durationcheck
+    - errorlint
+    - exportloopref
+    - forcetypeassert
+    - funlen
+    - gci
+    - gochecknoinits
+    - gocognit
+    - gocritic
+    - gocyclo
+    - godot
+    - goerr113
+    - gofmt
+    - gofumpt
+    - gosec
+    - ifshort
+    - makezero
+    - nakedret
+    - nestif
+    - nilerr
+    - nolintlint
+    - paralleltest
+    - predeclared
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - thelper
+    - unconvert
+    - unparam
+    - wastedassign
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - funlen
+        - goerr113
+        - errcheck

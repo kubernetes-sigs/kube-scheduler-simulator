@@ -1,0 +1,23 @@
+metadata:
+  name: pod
+  namespace: default
+  labels: {}
+spec:
+  containers:
+    - name: pause
+      image: k8s.gcr.io/pause:3.5
+      resources:
+        limits:
+          cpu: 100m
+          memory: 16Gi
+        requests:
+          cpu: 100m
+          memory: 16Gi
+      terminationMessagePath: '/dev/termination-log'
+      terminationMessagePolicy: File
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 30
+  dnsPolicy: ClusterFirst
+  securityContext: {}
+  enableServiceLinks: true

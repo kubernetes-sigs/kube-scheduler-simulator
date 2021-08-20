@@ -1,0 +1,13 @@
+metadata:
+  name: pv
+  labels: {}
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /tmp/data
+    type: DirectoryOrCreate
