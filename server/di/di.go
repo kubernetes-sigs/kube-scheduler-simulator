@@ -1,3 +1,6 @@
+// Package di organizes the dependencies.
+// All services are only initialized on this package.
+// di means dependency injection.
 package di
 
 import (
@@ -12,7 +15,7 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/storageclass"
 )
 
-// Container saves dependencies.
+// Container saves and provides dependencies.
 type Container struct {
 	nodeService         NodeService
 	podService          PodService
@@ -23,10 +26,11 @@ type Container struct {
 }
 
 // NewDIContainer initializes Container.
+// It initializes all service and puts to Container.
 func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config) *Container {
 	c := &Container{}
 
-	// initialize each service
+	// initializes each service
 	c.pvService = persistentvolume.NewPersistentVolumeService(client)
 	c.pvcService = persistentvolumeclaim.NewPersistentVolumeClaimService(client)
 	c.storageClassService = storageclass.NewStorageClassService(client)
