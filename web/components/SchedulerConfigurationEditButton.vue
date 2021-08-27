@@ -5,22 +5,22 @@
 </template>
 
 <script lang="ts">
-import { ref, watch, inject, defineComponent } from '@nuxtjs/composition-api'
-import SchedulerConfigurationStoreKey from './StoreKey/SchedulerConfigurationStoreKey'
+import { inject, defineComponent } from "@nuxtjs/composition-api";
+import SchedulerConfigurationStoreKey from "./StoreKey/SchedulerConfigurationStoreKey";
 
 export default defineComponent({
   setup() {
-    const schedulerconfigurationstore = inject(SchedulerConfigurationStoreKey)
+    const schedulerconfigurationstore = inject(SchedulerConfigurationStoreKey);
     if (!schedulerconfigurationstore) {
-      throw new Error(`${SchedulerConfigurationStoreKey} is not provided`)
+      throw new Error(`${SchedulerConfigurationStoreKey} is not provided`);
     }
 
     const onClick = () => {
-      schedulerconfigurationstore.fetchSelected()
-    }
+      schedulerconfigurationstore.fetchSelected();
+    };
     return {
       onClick,
-    }
+    };
   },
-})
+});
 </script>

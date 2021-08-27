@@ -1,46 +1,41 @@
-import { reactive } from '@nuxtjs/composition-api'
+import { reactive } from "@nuxtjs/composition-api";
 import {
   applyPersistentVolumeClaim,
   deletePersistentVolumeClaim,
   getPersistentVolumeClaim,
   listPersistentVolumeClaim,
-} from '~/api/v1/pvc'
-import {
-  V1PersistentVolumeClaim,
-  V1PersistentVolumeClaimList,
-  V1Pod,
-  V1PodList,
-} from '@kubernetes/client-node'
+} from "~/api/v1/pvc";
+import { V1PersistentVolumeClaim } from "@kubernetes/client-node";
 
 type stateType = {
-  selectedPersistentVolumeClaim: selectedPersistentVolumeClaim | null
-  pvcs: V1PersistentVolumeClaim[]
-}
+  selectedPersistentVolumeClaim: selectedPersistentVolumeClaim | null;
+  pvcs: V1PersistentVolumeClaim[];
+};
 
 type selectedPersistentVolumeClaim = {
   // isNew represents whether this is a new PersistentVolumeClaim or not.
-  isNew: boolean
-  item: V1PersistentVolumeClaim
-  resourceKind: string
-}
+  isNew: boolean;
+  item: V1PersistentVolumeClaim;
+  resourceKind: string;
+};
 
 export default function pvcStore() {
   const state: stateType = reactive({
     selectedPersistentVolumeClaim: null,
     pvcs: [],
-  })
+  });
 
   return {
     get pvcs() {
-      return state.pvcs
+      return state.pvcs;
     },
 
     get count(): number {
-      return state.pvcs.length
+      return state.pvcs.length;
     },
 
     get selected() {
-      return state.selectedPersistentVolumeClaim
+      return state.selectedPersistentVolumeClaim;
     },
 
     select(n: V1PersistentVolumeClaim | null, isNew: boolean) {
@@ -48,22 +43,22 @@ export default function pvcStore() {
         state.selectedPersistentVolumeClaim = {
           isNew: isNew,
           item: n,
-          resourceKind: 'PVC',
-        }
+          resourceKind: "PVC",
+        };
       }
     },
 
     resetSelected() {
-      state.selectedPersistentVolumeClaim = null
+      state.selectedPersistentVolumeClaim = null;
     },
 
     async fetchlist() {
-      state.pvcs = (await listPersistentVolumeClaim()).items
+      state.pvcs = (await listPersistentVolumeClaim()).items;
     },
 
-    async apply(n: V1PersistentVolumeClaim, onError: (msg: string) => void) {
-      await applyPersistentVolumeClaim(n, onError)
-      await this.fetchlist()
+    async apply(n: V1PersistentVolumeClaim, onError: (_: string) => void) {
+      await applyPersistentVolumeClaim(n, onError);
+      await this.fetchlist();
     },
 
     async fetchSelected() {
@@ -73,16 +68,16 @@ export default function pvcStore() {
       ) {
         const p = await getPersistentVolumeClaim(
           state.selectedPersistentVolumeClaim.item.metadata.name
-        )
-        this.select(p, false)
+        );
+        this.select(p, false);
       }
     },
 
     async delete(name: string) {
-      await deletePersistentVolumeClaim(name)
-      await this.fetchlist()
+      await deletePersistentVolumeClaim(name);
+      await this.fetchlist();
     },
-  }
+  };
 }
 
-export type PersistentVolumeClaimStore = ReturnType<typeof pvcStore>
+export type PersistentVolumeClaimStore = ReturnType<typeof pvcStore>;
