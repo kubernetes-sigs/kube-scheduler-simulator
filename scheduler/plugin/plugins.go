@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"encoding/json"
 
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
@@ -70,22 +71,40 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 
 // NewPluginConfig converts []v1beta2.PluginConfig for simulator.
 // Passed []v1beta.PluginConfig overrides default config values.
+//
+// NewPluginConfig expects that passed v1beta2.PluginConfig has data of Args in only one of PluginConfig.Args.Raw or PluginConfig.Args.Object.
+// But, if Args data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object, PluginConfig.Args.Object takes precedence.
 func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) {
 	defaultcfg, err := defaultconfig.DefaultSchedulerConfig()
 	if err != nil || len(defaultcfg.Profiles) != 1 {
 		return nil, xerrors.Errorf("get default scheduler configuration: %w", err)
 	}
 
-	pluginConfig := make(map[string]runtime.RawExtension, len(defaultcfg.Profiles[0].PluginConfig))
+	pluginConfig := make(map[string]*runtime.RawExtension, len(defaultcfg.Profiles[0].PluginConfig))
 	for i := range defaultcfg.Profiles[0].PluginConfig {
 		name := defaultcfg.Profiles[0].PluginConfig[i].Name
-		pluginConfig[name] = defaultcfg.Profiles[0].PluginConfig[i].Args
+		pluginConfig[name] = &defaultcfg.Profiles[0].PluginConfig[i].Args
 	}
 
 	for i := range pc {
 		name := pc[i].Name
-		// override default configuration
-		pluginConfig[name] = pc[i].Args
+		ret := pluginConfig[name].DeepCopy()
+
+		// v1beta2.PluginConfig may have data on pc[i].Args.Raw as []byte.
+		// We have to encoding it in this case.
+		if len(pc[i].Args.Raw) != 0 {
+			// override default configuration
+			if err := json.Unmarshal(pc[i].Args.Raw, &ret.Object); err != nil {
+				return nil, err
+			}
+		}
+
+		if pc[i].Args.Object != nil {
+			// If Args data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object, PluginConfig.Args.Object takes precedence.
+			ret.Object = pc[i].Args.Object
+		}
+
+		pluginConfig[name] = ret
 	}
 
 	ret := make([]v1beta2.PluginConfig, 0, len(pluginConfig))
@@ -93,7 +112,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 		// add plugin configs for default plugins.
 		ret = append(ret, v1beta2.PluginConfig{
 			Name: name,
-			Args: arg,
+			Args: *arg,
 		})
 	}
 
@@ -111,7 +130,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 
 		ret = append(ret, v1beta2.PluginConfig{
 			Name: pluginName(name),
-			Args: pc,
+			Args: *pc,
 		})
 
 		// avoid adding same plugin config.

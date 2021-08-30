@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sort"
 	"testing"
@@ -205,7 +206,7 @@ func Test_NewPluginConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "success with plugin config of filter/score",
+			name: "success with plugin config on Args.Object",
 			pc: []v1beta2.PluginConfig{
 				{
 					Name: "InterPodAffinity",
@@ -217,6 +218,63 @@ func Test_NewPluginConfig(t *testing.T) {
 							},
 							HardPodAffinityWeight: &hardPodAffinityWeight,
 						},
+					},
+				},
+			},
+			want: func() []v1beta2.PluginConfig {
+				pc := defaultPluginConfig()
+				for i := range pc {
+					if pc[i].Name == "InterPodAffinity" {
+						pc[i] = v1beta2.PluginConfig{
+							Name: "InterPodAffinity",
+							Args: runtime.RawExtension{
+								Object: &v1beta2.InterPodAffinityArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "InterPodAffinityArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									},
+									HardPodAffinityWeight: &hardPodAffinityWeight,
+								},
+							},
+						}
+					}
+					if pc[i].Name == "InterPodAffinityForSimulator" {
+						pc[i] = v1beta2.PluginConfig{
+							Name: "InterPodAffinityForSimulator",
+							Args: runtime.RawExtension{
+								Object: &v1beta2.InterPodAffinityArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "InterPodAffinityArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									},
+									HardPodAffinityWeight: &hardPodAffinityWeight,
+								},
+							},
+						}
+					}
+				}
+
+				return pc
+			}(),
+			wantErr: false,
+		},
+		{
+			name: "success with plugin config on Args.Raw ",
+			pc: []v1beta2.PluginConfig{
+				{
+					Name: "InterPodAffinity",
+					Args: runtime.RawExtension{
+						Raw: func() []byte {
+							cfg := v1beta2.InterPodAffinityArgs{
+								TypeMeta: metav1.TypeMeta{
+									Kind:       "InterPodAffinityArgs",
+									APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+								},
+								HardPodAffinityWeight: &hardPodAffinityWeight,
+							}
+							d, _ := json.Marshal(cfg)
+							return d
+						}(),
 					},
 				},
 			},
