@@ -24,7 +24,7 @@ build:
 	go build -o ./bin/simulator ./simulator.go
 
 .PHONY: start
-serve: build
+start: build
 	./hack/start_simulator.sh
 
 # re-generate openapi file for running api-server
