@@ -8,7 +8,7 @@ checkEtcdOnPath() {
   echo "Cannot find etcd on PATH."
   echo "Please see https://git.k8s.io/community/contributors/devel/sig-testing/integration-tests.md#install-etcd-dependency for instructions."
   echo "You can use 'hack/install-etcd.sh'on kubernetes/kubernetes repo to install a copy."
-  return 1
+  exit 1
 }
 
 CLEANUP_REQUIRED=
@@ -29,8 +29,10 @@ cleanup_etcd() {
   echo "Clean up finished"
 }
 
-trap cleanup_etcd EXIT
 
+checkEtcdOnPath
+
+trap cleanup_etcd EXIT
 start_etcd
 
 PORT=1212 FRONTEND_URL=http://localhost:3000 ./bin/simulator
