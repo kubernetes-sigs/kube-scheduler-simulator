@@ -32,8 +32,8 @@ cleanup_etcd() {
 
 checkEtcdOnPath
 
-trap cleanup_etcd EXIT
 start_etcd
+trap cleanup_etcd EXIT
 
 PORT=1212 FRONTEND_URL=http://localhost:3000 ./bin/simulator
 
