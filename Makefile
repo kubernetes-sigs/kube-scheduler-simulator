@@ -9,7 +9,7 @@ generate:
 
 .PHONY: lint
 lint:
-	golangci-lint run ./...
+	golangci-lint run --timeout 30m ./...
 
 .PHONY: format
 format:
