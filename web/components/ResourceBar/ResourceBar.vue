@@ -32,6 +32,8 @@
     <template v-if="!editmode">
       <SchedulingResults />
       <ResourceDefinitionTree :items="treeData" />
+      <!-- This is need to avoid bug on vuetify -->
+      <div style="height: 80%;"></div>
     </template>
   </v-navigation-drawer>
 </template>
