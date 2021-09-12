@@ -74,6 +74,7 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 //
 // NewPluginConfig expects that passed v1beta2.PluginConfig has data of Args in only one of PluginConfig.Args.Raw or PluginConfig.Args.Object.
 // But, if Args data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object, PluginConfig.Args.Object takes precedence.
+//nolint:funlen,cyclop
 func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) {
 	defaultcfg, err := defaultconfig.DefaultSchedulerConfig()
 	if err != nil || len(defaultcfg.Profiles) != 1 {

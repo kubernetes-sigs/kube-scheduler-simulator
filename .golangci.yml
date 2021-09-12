@@ -58,3 +58,4 @@ issues:
         - funlen
         - goerr113
         - errcheck
+        - cyclop
