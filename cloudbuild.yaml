@@ -1,0 +1,32 @@
+# See https://cloud.google.com/cloud-build/docs/build-config
+
+# this must be specified in seconds. If omitted, defaults to 600s (10 mins)
+timeout: 1200s
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - build
+    - --tag=gcr.io/$PROJECT_ID/simulator-backend:$_GIT_TAG
+    - --tag=gcr.io/$PROJECT_ID/simulator-backend:latest
+    - -f=Dockerfile
+    - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - build
+    - --tag=gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG
+    - --tag=gcr.io/$PROJECT_ID/simulator-frontend:latest
+    - -f=./web/Dockerfile
+    - .
+substitutions:
+  _GIT_TAG: '12345'
+  _PULL_BASE_REF: 'master'
+# this prevents errors if you don't use both _GIT_TAG and _PULL_BASE_REF,
+# or any new substitutions added in the future.
+options:
+  substitution_option: ALLOW_LOOSE
+# this will push these images, or cause the build to fail if they weren't built.
+images:
+  - 'gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG'
+  - 'gcr.io/$PROJECT_ID/simulator-backend:latest
+  - 'gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG'
+  - 'gcr.io/$PROJECT_ID/simulator-backend:latest
