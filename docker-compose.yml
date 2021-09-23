@@ -17,6 +17,8 @@ services:
     image: simulator-frontend
     restart: always
     container_name: simulator-frontend
+    environment:
+      - HOST=0.0.0.0
     ports:
     - "3000:3000"
     tty: true
