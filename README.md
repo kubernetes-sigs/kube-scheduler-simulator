@@ -53,6 +53,9 @@ make docker_build_and_up
 
 Then, you can access the simulator with http://localhost:3000
 
+Note: 4GB of memory should be allocated to Docker.
+If you do not allocate enough memory, it may fail.
+
 ### Run Locally
 
 You have to run frontend, server and etcd.
