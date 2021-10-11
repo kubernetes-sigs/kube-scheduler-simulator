@@ -27,13 +27,18 @@ func (h *SchedulerConfigHandler) GetSchedulerConfig(c echo.Context) error {
 }
 
 func (h *SchedulerConfigHandler) ApplySchedulerConfig(c echo.Context) error {
+	oldSchedulerCfg := h.service.GetSchedulerConfig()
 	reqSchedulerCfg := new(v1beta2.KubeSchedulerConfiguration)
+	klog.Info("test", oldSchedulerCfg)
+	klog.Info("**test", reqSchedulerCfg)
 	if err := c.Bind(reqSchedulerCfg); err != nil {
 		klog.Errorf("failed to bind scheduler config request: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	if err := h.service.RestartScheduler(reqSchedulerCfg); err != nil {
 		klog.Errorf("failed to restart scheduler: %+v", err)
+		klog.Info("Applying old configuration")
+		h.service.ResetScheduler(oldSchedulerCfg)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
