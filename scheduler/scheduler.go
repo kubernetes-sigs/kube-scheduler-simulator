@@ -38,7 +38,10 @@ func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.C
 func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error {
 	s.ShutdownScheduler()
 
+	oldSchedulerCfg := s.currentSchedulerCfg
 	if err := s.StartScheduler(cfg); err != nil {
+		klog.Info("Applying old configuration setting")
+		s.StartScheduler(oldSchedulerCfg)
 		return xerrors.Errorf("start scheduler: %w", err)
 	}
 	return nil
