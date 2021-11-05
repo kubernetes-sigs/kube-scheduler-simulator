@@ -53,6 +53,9 @@ make docker_build_and_up
 
 Then, you can access the simulator with http://localhost:3000
 
+Note: Insufficient memory allocation sometimes causes problems in building the image.
+Please allocate enough memory in that case.
+
 ### Run Locally
 
 You have to run frontend, server and etcd.
