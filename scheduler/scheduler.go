@@ -40,10 +40,10 @@ func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration
 
 	oldSchedulerCfg := s.currentSchedulerCfg
 	if err := s.StartScheduler(cfg); err != nil {
-		klog.Info("Applying old configuration setting")
-		if err := s.StartScheduler(oldSchedulerCfg); err != nil {
-			klog.Warningf("failed to start simulator server: %v", err)
-			return xerrors.Errorf("start scheduler: %w", err)
+		klog.Info("failed to start scheduler: %v. restarting with old configuration", err)
+		if err2 := s.StartScheduler(oldSchedulerCfg); err2 != nil {
+			klog.Warningf("failed to start scheduler with old configuration: %v", err2)
+			return xerrors.Errorf("start scheduler: %w, restart scheduler with old configuration: %w", err, err2)
 		}
 		return xerrors.Errorf("start scheduler: %w", err)
 	}
