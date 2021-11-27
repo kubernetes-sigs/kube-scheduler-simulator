@@ -12,6 +12,7 @@ FROM node:alpine AS builder
 WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
+ENV NODE_OPTIONS --openssl-legacy-provider
 RUN yarn build && yarn install --production --ignore-scripts --prefer-offline
 
 FROM node:alpine AS runner
