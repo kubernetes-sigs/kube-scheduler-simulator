@@ -38,6 +38,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	pvcHandler := handler.NewPersistentVolumeClaimHandler(dic.PersistentVolumeClaimService())
 	storageClassHandler := handler.NewStorageClassHandler(dic.StorageClassService())
 	schedulercfgHandler := handler.NewSchedulerConfigHandler(dic.SchedulerService())
+	priorityClassHandler := handler.NewPriorityClassHandler(dic.PriorityClassService())
 
 	// register apis
 	v1 := e.Group("/api/v1")
@@ -69,6 +70,11 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	v1.POST("/storageclasses", storageClassHandler.ApplyStorageClass)
 	v1.GET("/storageclasses/:name", storageClassHandler.GetStorageClass)
 	v1.DELETE("/storageclasses/:name", storageClassHandler.DeleteStorageClass)
+
+	v1.GET("/priorityclasses", priorityClassHandler.ListPriorityClass)
+	v1.POST("/priorityclasses", priorityClassHandler.ApplyPriorityClass)
+	v1.GET("/priorityclasses/:name", priorityClassHandler.GetPriorityClass)
+	v1.DELETE("/priorityclasses/:name", priorityClassHandler.DeletePriorityClass)
 
 	// initialize SimulatorServer.
 	s := &SimulatorServer{e: e}
