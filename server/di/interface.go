@@ -2,6 +2,8 @@ package di
 
 import (
 	"context"
+	v1 "k8s.io/api/scheduling/v1"
+	schedulingv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -56,4 +58,12 @@ type SchedulerService interface {
 	RestartScheduler(cfg *v1beta2.KubeSchedulerConfiguration) error
 	StartScheduler(cfg *v1beta2.KubeSchedulerConfiguration) error
 	ShutdownScheduler()
+}
+
+// PriorityClassService represents service for manage scheduler.
+type PriorityClassService interface {
+	Get(ctx context.Context, name string) (*v1.PriorityClass, error)
+	List(ctx context.Context) (*v1.PriorityClassList, error)
+	Apply(ctx context.Context, priorityClass *schedulingv1.PriorityClassApplyConfiguration) (*v1.PriorityClass, error)
+	Delete(ctx context.Context, name string) error
 }
