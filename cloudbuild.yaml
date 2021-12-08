@@ -27,6 +27,6 @@ options:
 # this will push these images, or cause the build to fail if they weren't built.
 images:
   - 'gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG'
-  - 'gcr.io/$PROJECT_ID/simulator-backend:latest
+  - 'gcr.io/$PROJECT_ID/simulator-backend:latest'
   - 'gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG'
-  - 'gcr.io/$PROJECT_ID/simulator-backend:latest
+  - 'gcr.io/$PROJECT_ID/simulator-backend:latest'
