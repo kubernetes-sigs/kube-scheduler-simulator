@@ -50,6 +50,14 @@ func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration
 	return nil
 }
 
+func (s *Service) ResetScheduler() error {
+	cfg, err := defaultconfig.DefaultSchedulerConfig()
+	if err != nil {
+		return xerrors.Errorf("get default scheduler config: %w", err)
+	}
+	return s.RestartScheduler(cfg)
+}
+
 // StartScheduler starts scheduler.
 func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfiguration) error {
 	clientSet := s.clientset

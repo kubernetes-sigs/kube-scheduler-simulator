@@ -38,7 +38,28 @@ empty
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
-## Apply Node 
+## Reset scheduler configuration
+
+restart scheduler with default configuration.
+
+### HTTP Request
+
+`PUT /api/v1/schedulerconfiguration`
+
+### Request Body
+
+empty
+
+### Response
+
+empty
+
+| code  | description |
+| ----- | -------- | 
+| 202   | |
+| 500 | something went wrong (see logs of the simulator server) |
+
+## Apply Node
 
 apply nodes.
 

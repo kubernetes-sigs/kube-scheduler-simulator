@@ -44,6 +44,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 
 	v1.GET("/schedulerconfiguration", schedulercfgHandler.GetSchedulerConfig)
 	v1.POST("/schedulerconfiguration", schedulercfgHandler.ApplySchedulerConfig)
+	v1.PUT("/schedulerconfiguration", schedulercfgHandler.ResetScheduler)
 
 	v1.GET("/nodes", nodeHandler.ListNode)
 	v1.POST("/nodes", nodeHandler.ApplyNode)
