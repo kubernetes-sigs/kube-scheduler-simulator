@@ -49,7 +49,7 @@ func startSimulator() error {
 
 	sc, err := defaultconfig.DefaultSchedulerConfig()
 	if err != nil {
-		return xerrors.Errorf("create scheduler config")
+		return xerrors.Errorf("create scheduler config: %w", err)
 	}
 
 	if err := dic.SchedulerService().StartScheduler(sc); err != nil {
