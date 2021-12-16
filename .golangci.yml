@@ -49,6 +49,7 @@ linters:
     - unconvert
     - unparam
     - wastedassign
+    - prealloc
 
 issues:
   exclude-rules:
