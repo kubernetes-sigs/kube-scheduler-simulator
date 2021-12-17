@@ -382,3 +382,90 @@ empty
 | ----- | -------- | 
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
+
+
+## Apply priority class
+
+apply priority classes.
+
+### HTTP Request
+
+`POST /api/v1/priorityclasses`
+
+### Request Body
+
+[v1.PriorityClassApplyConfiguration](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/client-go/applyconfigurations/scheduling/v1/priorityclass.go#L33)
+
+### Response
+
+[v1.PriorityClass](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/scheduling/v1/types.go#L30)
+
+| code  | description |
+| ----- | -------- | 
+| 202   | |
+| 500 | something went wrong (see logs of the simulator server) |
+
+## List priority classes
+
+list all priority classes.
+
+### HTTP Request
+
+`GET /api/v1/priorityclasses`
+
+### Response
+
+[v1.PriorityClassList](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/scheduling/v1/types.go#L65)
+
+| code  | description |
+| ----- | -------- | 
+| 200   | |
+| 500 | something went wrong (see logs of the simulator server) |
+
+## Get priority class
+
+get a priority class with name.
+
+### HTTP Request
+
+`GET /api/v1/priorityclasses/{name}`
+
+### Path Parameters
+
+| parameter | description         |
+| --- |---------------------|
+| name | priority class name |
+
+
+### Response
+
+[v1.PriorityClass](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/scheduling/v1/types.go#L30)
+
+| code  | description |
+| ----- | -------- |
+| 200   | |
+| 404   | not found |
+| 500 | something went wrong (see logs of the simulator server) |
+
+## Delete priority class
+
+delete a priority class.
+
+### HTTP Request
+
+`DELETE /api/v1/priorityclasses/{name}`
+
+### Path Parameters
+
+| parameter | description         |
+| --- |---------------------|
+| name | priority class name |
+
+### Response
+
+empty
+
+| code  | description |
+| ----- | -------- | 
+| 200   | |
+| 500 | something went wrong (see logs of the simulator server) |
