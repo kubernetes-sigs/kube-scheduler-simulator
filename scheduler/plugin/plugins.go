@@ -88,7 +88,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 		pluginConfig[name] = pc[i].Args
 	}
 
-	var ret []v1beta2.PluginConfig
+	ret := make([]v1beta2.PluginConfig, 0, len(pluginConfig))
 	for name, arg := range pluginConfig {
 		// add plugin configs for default plugins.
 		ret = append(ret, v1beta2.PluginConfig{
