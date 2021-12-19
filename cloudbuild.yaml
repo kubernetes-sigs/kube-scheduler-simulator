@@ -16,7 +16,7 @@ steps:
     - --tag=gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG
     - --tag=gcr.io/$PROJECT_ID/simulator-frontend:latest
     - -f=./web/Dockerfile
-    - .
+    - ./web/
 substitutions:
   _GIT_TAG: '12345'
   _PULL_BASE_REF: 'master'
