@@ -62,10 +62,10 @@ func StartAPIServer(etcdURL string) (*restclient.Config, func(), error) {
 	}
 
 	shutdownFunc := func() {
-		klog.Infof("destroying API server")
+		klog.Info("destroying API server")
 		closeFn()
 		s.Close()
-		klog.Infof("destroyed API server")
+		klog.Info("destroyed API server")
 	}
 	return cfg, shutdownFunc, nil
 }
