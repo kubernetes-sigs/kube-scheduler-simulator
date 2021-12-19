@@ -74,3 +74,12 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 
 	return nil
 }
+
+// Deltes deletes all pods.
+func (s *Service) Deletes(ctx context.Context) error {
+	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
+		return fmt.Errorf("delete pods: %w", err)
+	}
+
+	return nil
+}

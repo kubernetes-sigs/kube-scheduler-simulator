@@ -90,3 +90,26 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	}
 	return nil
 }
+
+// Deletes deletes all nodes.
+func (s *Service) Deletes(ctx context.Context) error {
+	pl, err := s.podService.List(ctx)
+	if err != nil {
+		return xerrors.Errorf("list pods: %w", err)
+	}
+
+	// delete all pods
+	for i := range pl.Items {
+		pod := pl.Items[i]
+		if err := s.podService.Delete(ctx, pod.Name); err != nil {
+			return xerrors.Errorf("delete pod: %w", err)
+		}
+	}
+
+	// delete all nodes
+	if err := s.client.CoreV1().Nodes().DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
+		return xerrors.Errorf("delete nodes: %w", err)
+	}
+
+	return nil
+}
