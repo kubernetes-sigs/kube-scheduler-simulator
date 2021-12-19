@@ -12,6 +12,7 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/persistentvolumeclaim"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/pod"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/priorityclass"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/resources"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/storageclass"
 )
@@ -24,6 +25,7 @@ type Container struct {
 	pvcService           PersistentVolumeClaimService
 	storageClassService  StorageClassService
 	schedulerService     SchedulerService
+	resourcesService     ResourcesService
 	priorityClassService PriorityClassService
 }
 
@@ -40,6 +42,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	c.podService = pod.NewPodService(client)
 
 	c.nodeService = node.NewNodeService(client, c.podService)
+	c.resourcesService = resources.NewResourcesService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.schedulerService)
 
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
 	return c
@@ -78,4 +81,8 @@ func (c *Container) SchedulerService() SchedulerService {
 // PriorityClassService returns PriorityClassService.
 func (c *Container) PriorityClassService() PriorityClassService {
 	return c.priorityClassService
+}
+
+func (c *Container) ResourcesService() ResourcesService {
+	return c.resourcesService
 }

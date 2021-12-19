@@ -22,7 +22,7 @@ type Service struct {
 	schedulerService    SchedulerService
 }
 
-// Resources  will used to compile all the resources for export
+// Resources  will used to compile all the resources for export.
 type Resources struct {
 	PodList          *[]corev1.Pod                             `json:"podList"`
 	NodeList         *[]corev1.Node                            `json:"nodeList"`
@@ -132,7 +132,6 @@ func (s *Service) ExportAll(ctx context.Context) (*Resources, error) {
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
 // (3) Get all resources. (Separated the get function to unify the struct format.)
 func (s *Service) ImportAll(ctx context.Context, resources *ResourcesApplyConfiguration) (*Resources, error) {
-
 	// TODO: Issue: #12 PR: #13
 	// if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 	// 	klog.Warningf("failed to start scheduler with imported configuration: %v", err)
