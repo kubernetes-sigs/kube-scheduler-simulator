@@ -1,62 +1,59 @@
-import { reactive } from '@nuxtjs/composition-api'
+import { reactive } from "@nuxtjs/composition-api";
 
 export interface stateType {
-  isOpen: boolean
-  message: string
-  messageType: MessageType
+  isOpen: boolean;
+  message: string;
+  messageType: MessageType;
 }
 
 export interface SnackbarPayload {
-  message: string
-  messageType: MessageType
+  message: string;
+  messageType: MessageType;
 }
 
-export enum MessageType {
-  info,
-  error,
-}
+export type MessageType = "info" | "error";
 
 export default function snackbarStore() {
   const state: stateType = reactive({
-    message: '',
-    messageType: MessageType.error,
+    message: "",
+    messageType: "error",
     isOpen: false,
-  } as stateType)
+  } as stateType);
 
   return {
     get message() {
-      return state.message
+      return state.message;
     },
     get isOpen() {
-      return state.isOpen
+      return state.isOpen;
     },
     get messageType() {
-      return state.messageType
+      return state.messageType;
     },
     open() {
-      state.isOpen = true
+      state.isOpen = true;
     },
     close() {
-      state.isOpen = false
+      state.isOpen = false;
     },
     setIsOpen(isOpen: boolean) {
       if (isOpen) {
-        this.open()
+        this.open();
       } else {
-        this.close()
+        this.close();
       }
     },
     setServerErrorMessage(error: string) {
-      const servererrormsg: string = 'Server error occurred: '
+      const servererrormsg: string = "Server error occurred: ";
 
-      state.message = servererrormsg + error
-      this.setMessageType(MessageType.error)
-      this.open()
+      state.message = servererrormsg + error;
+      this.setMessageType("error");
+      this.open();
     },
     setMessageType(messageType: MessageType) {
-      state.messageType = messageType
+      state.messageType = messageType;
     },
-  }
+  };
 }
 
-export type SnackBarStore = ReturnType<typeof snackbarStore>
+export type SnackBarStore = ReturnType<typeof snackbarStore>;

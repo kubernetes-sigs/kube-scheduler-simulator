@@ -1,46 +1,41 @@
-import { reactive } from '@nuxtjs/composition-api'
+import { reactive } from "@nuxtjs/composition-api";
 import {
   applyPersistentVolume,
   deletePersistentVolume,
   getPersistentVolume,
   listPersistentVolume,
-} from '~/api/v1/pv'
-import {
-  V1PersistentVolume,
-  V1PersistentVolumeList,
-  V1Pod,
-  V1PodList,
-} from '@kubernetes/client-node'
+} from "~/api/v1/pv";
+import { V1PersistentVolume } from "@kubernetes/client-node";
 
 type stateType = {
-  selectedPersistentVolume: selectedPersistentVolume | null
-  pvs: V1PersistentVolume[]
-}
+  selectedPersistentVolume: selectedPersistentVolume | null;
+  pvs: V1PersistentVolume[];
+};
 
 type selectedPersistentVolume = {
   // isNew represents whether this is a new PersistentVolume or not.
-  isNew: boolean
-  item: V1PersistentVolume
-  resourceKind: string
-}
+  isNew: boolean;
+  item: V1PersistentVolume;
+  resourceKind: string;
+};
 
 export default function pvStore() {
   const state: stateType = reactive({
     selectedPersistentVolume: null,
     pvs: [],
-  })
+  });
 
   return {
     get pvs() {
-      return state.pvs
+      return state.pvs;
     },
 
     get count(): number {
-      return state.pvs.length
+      return state.pvs.length;
     },
 
     get selected() {
-      return state.selectedPersistentVolume
+      return state.selectedPersistentVolume;
     },
 
     select(p: V1PersistentVolume | null, isNew: boolean) {
@@ -48,17 +43,17 @@ export default function pvStore() {
         state.selectedPersistentVolume = {
           isNew: isNew,
           item: p,
-          resourceKind: 'PV',
-        }
+          resourceKind: "PV",
+        };
       }
     },
 
     resetSelected() {
-      state.selectedPersistentVolume = null
+      state.selectedPersistentVolume = null;
     },
 
     async fetchlist() {
-      state.pvs = (await listPersistentVolume()).items
+      state.pvs = (await listPersistentVolume()).items;
     },
 
     async fetchSelected() {
@@ -68,25 +63,25 @@ export default function pvStore() {
       ) {
         const p = await getPersistentVolume(
           state.selectedPersistentVolume.item.metadata.name
-        )
-        this.select(p, false)
+        );
+        this.select(p, false);
       }
     },
 
     async apply(
       n: V1PersistentVolume,
 
-      onError: (msg: string) => void
+      onError: (_: string) => void
     ) {
-      await applyPersistentVolume(n, onError)
-      await this.fetchlist()
+      await applyPersistentVolume(n, onError);
+      await this.fetchlist();
     },
 
     async delete(name: string) {
-      await deletePersistentVolume(name)
-      await this.fetchlist()
+      await deletePersistentVolume(name);
+      await this.fetchlist();
     },
-  }
+  };
 }
 
-export type PersistentVolumeStore = ReturnType<typeof pvStore>
+export type PersistentVolumeStore = ReturnType<typeof pvStore>;

@@ -5,14 +5,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, provide } from '@nuxtjs/composition-api'
-import snackbarStore from '../../store/snackbar'
-import SnackBarStoreKey from '../StoreKey/SnackBarStoreKey'
+import { defineComponent, provide } from "@nuxtjs/composition-api";
+import snackbarStore from "../../store/snackbar";
+import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 
 export default defineComponent({
   setup() {
-    provide(SnackBarStoreKey, snackbarStore())
-    return {}
+    provide(SnackBarStoreKey, snackbarStore());
+    return {};
   },
-})
+});
 </script>

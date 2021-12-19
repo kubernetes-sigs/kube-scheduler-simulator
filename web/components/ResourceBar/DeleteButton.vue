@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="dialog" width="500">
-    <template v-slot:activator="{ on, attrs }">
+    <template #activator="{ on, attrs }">
       <v-btn class="ma-5 mb-0" color="error" v-bind="attrs" v-on="on">
         Delete
       </v-btn>
@@ -22,17 +22,20 @@
   </v-dialog>
 </template>
 <script lang="ts">
-import { ref, defineComponent, PropType } from '@nuxtjs/composition-api'
+import { ref, defineComponent } from "@nuxtjs/composition-api";
 export default defineComponent({
   props: {
-    deleteOnClick: Function,
+    deleteOnClick: {
+      type: Function,
+      required: true,
+    },
   },
-  setup(props, context) {
-    const dialog = ref(false)
+  setup() {
+    const dialog = ref(false);
 
     return {
       dialog,
-    }
+    };
   },
-})
+});
 </script>

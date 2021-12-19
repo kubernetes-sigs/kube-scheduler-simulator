@@ -1,18 +1,18 @@
 <template>
-  <v-row no-gutters v-if="storageclasses.length !== 0">
+  <v-row v-if="storageclasses.length !== 0" no-gutters>
     <v-col>
       <v-card class="ma-2" outlined>
         <v-card-title class="mb-1"> StorageClasses </v-card-title>
         <v-card-actions>
           <v-chip
-            class="ma-2"
             v-for="(p, i) in storageclasses"
             :key="i"
-            @click.stop="onClick(p)"
+            class="ma-2"
             color="primary"
             outlined
             large
             label
+            @click.stop="onClick(p)"
           >
             <img src="/sc.svg" height="40" alt="p.metadata.name" class="mr-2" />
             {{ p.metadata.name }}
@@ -24,37 +24,34 @@
 </template>
 
 <script lang="ts">
-import { V1StorageClass } from '@kubernetes/client-node'
+import { V1StorageClass } from "@kubernetes/client-node";
 import {
-  ref,
   computed,
   inject,
   onMounted,
-  PropType,
   defineComponent,
-} from '@nuxtjs/composition-api'
-import {} from './lib/util'
-import StorageClassStoreKey from './StoreKey/StorageClassStoreKey'
+} from "@nuxtjs/composition-api";
+import {} from "./lib/util";
+import StorageClassStoreKey from "./StoreKey/StorageClassStoreKey";
 export default defineComponent({
-  setup(_, context) {
-    const store = inject(StorageClassStoreKey)
+  setup() {
+    const store = inject(StorageClassStoreKey);
     if (!store) {
-      throw new Error(`${StorageClassStoreKey} is not provided`)
+      throw new Error(`${StorageClassStoreKey} is not provided`);
     }
 
     const getStorageClassList = async () => {
-      const route = context.root.$route
-      await store.fetchlist()
-    }
+      await store.fetchlist();
+    };
     const onClick = (storageclass: V1StorageClass) => {
-      store.select(storageclass, false)
-    }
-    onMounted(getStorageClassList)
-    const storageclasses = computed(() => store.storageclasses)
+      store.select(storageclass, false);
+    };
+    onMounted(getStorageClassList);
+    const storageclasses = computed(() => store.storageclasses);
     return {
       storageclasses,
       onClick,
-    }
+    };
   },
-})
+});
 </script>

@@ -11,33 +11,26 @@
   </v-snackbar>
 </template>
 <script lang="ts">
-import {
-  ref,
-  watch,
-  inject,
-  defineComponent,
-  computed,
-} from '@nuxtjs/composition-api'
-import { MessageType } from '~/store/snackbar'
-import SnackBarStoreKey from './StoreKey/SnackBarStoreKey'
+import { inject, defineComponent, computed } from "@nuxtjs/composition-api";
+import SnackBarStoreKey from "./StoreKey/SnackBarStoreKey";
 
 export default defineComponent({
   setup() {
-    const store = inject(SnackBarStoreKey)
+    const store = inject(SnackBarStoreKey);
     if (!store) {
-      throw new Error(`${SnackBarStoreKey} is not provided`)
+      throw new Error(`${SnackBarStoreKey} is not provided`);
     }
 
     const color = () => {
-      return store.messageType === MessageType.info ? 'primary' : 'error'
-    }
+      return store.messageType === "info" ? "primary" : "error";
+    };
     const setIsOpen = (b: boolean) => {
-      store.setIsOpen(b)
-    }
-    const closeSnackbar = () => store.close()
+      store.setIsOpen(b);
+    };
+    const closeSnackbar = () => store.close();
 
-    const isOpen = computed(() => store.isOpen)
-    const message = computed(() => store.message)
+    const isOpen = computed(() => store.isOpen);
+    const message = computed(() => store.message);
 
     return {
       color,
@@ -45,7 +38,7 @@ export default defineComponent({
       closeSnackbar,
       message,
       isOpen,
-    }
+    };
   },
-})
+});
 </script>
