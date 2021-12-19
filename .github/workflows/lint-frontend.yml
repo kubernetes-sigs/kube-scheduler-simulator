@@ -32,5 +32,5 @@ jobs:
         run: npm install -g yarn
       - name: Install
         run: yarn install --frozen-lockfile
-      - name: Test
+      - name: Lint
         run: yarn run lint
