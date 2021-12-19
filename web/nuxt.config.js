@@ -77,5 +77,9 @@ export default {
       "./components/lib/templates/storageclass.yaml",
       "utf8"
     ),
+    PC_TEMPLATE: fs.readFileSync(
+      "./components/lib/templates/priorityclass.yaml",
+      "utf8"
+    ),
   },
 };

@@ -14,7 +14,7 @@ export const applyPersistentVolumeClaim = async (
       req
     );
     return res.data;
-  } catch (e) {
+  } catch (e: any) {
     onError(e);
   }
 };

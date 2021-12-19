@@ -8,7 +8,7 @@ export const applyStorageClass = async (
   try {
     const res = await instance.post<V1StorageClass>(`/storageclasses`, req);
     return res.data;
-  } catch (e) {
+  } catch (e: any) {
     onError(e);
   }
 };

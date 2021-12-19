@@ -14,7 +14,7 @@ export const applyPersistentVolume = async (
       req
     );
     return res.data;
-  } catch (e) {
+  } catch (e: any) {
     onError(e);
   }
 };

@@ -20,6 +20,7 @@ import {
   pvTemplate,
   pvcTemplate,
   storageclassTemplate,
+  priorityclassTemplate,
 } from "./lib/template";
 import {} from "./lib/util";
 import PodStoreKey from "./StoreKey/PodStoreKey";
@@ -27,12 +28,14 @@ import NodeStoreKey from "./StoreKey/NodeStoreKey";
 import PersistentVolumeStoreKey from "./StoreKey/PVStoreKey";
 import PersistentVolumeClaimStoreKey from "./StoreKey/PVCStoreKey";
 import StorageClassStoreKey from "./StoreKey/StorageClassStoreKey";
+import PriorityClassStoreKey from "./StoreKey/PriorityClassStoreKey";
 import {
   V1Node,
   V1PersistentVolumeClaim,
   V1PersistentVolume,
   V1Pod,
   V1StorageClass,
+  V1PriorityClass,
 } from "@kubernetes/client-node";
 
 type Resource =
@@ -40,7 +43,8 @@ type Resource =
   | V1Node
   | V1PersistentVolumeClaim
   | V1PersistentVolume
-  | V1StorageClass;
+  | V1StorageClass
+  | V1PriorityClass;
 
 interface Store {
   readonly selected: object | null;
@@ -77,6 +81,11 @@ export default defineComponent({
       throw new Error(`${StorageClassStoreKey} is not provided`);
     }
 
+    const priorityclassstore = inject(PriorityClassStoreKey);
+    if (!priorityclassstore) {
+      throw new Error(`${PriorityClassStoreKey} is not provided`);
+    }
+
     const dialog = ref(false);
     const resourceNames = [
       "StorageClass",
@@ -84,6 +93,7 @@ export default defineComponent({
       "PersistentVolume",
       "Node",
       "Pod",
+      "PriorityClass",
     ];
 
     const create = (rn: string) => {
@@ -113,6 +123,11 @@ export default defineComponent({
           store = storageclassstore;
           // if store.count = 0, name suffix is 1.
           targetTemplate = storageclassTemplate((store.count + 1).toString());
+          break;
+        case "PriorityClass":
+          store = priorityclassstore;
+          // if store.count = 0, name suffix is 1.
+          targetTemplate = priorityclassTemplate((store.count + 1).toString());
           break;
       }
 

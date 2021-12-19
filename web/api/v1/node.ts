@@ -5,7 +5,7 @@ export const applyNode = async (req: V1Node, onError: (_: string) => void) => {
   try {
     const res = await instance.post<V1Node>(`/nodes`, req);
     return res.data;
-  } catch (e) {
+  } catch (e: any) {
     onError(e);
   }
 };

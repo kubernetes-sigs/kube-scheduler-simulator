@@ -5,17 +5,20 @@
         <PVCStoreProvider>
           <SchedulerConfigurationStoreProvider>
             <StorageClassStoreProvider>
-              <SnackbarStoreProvider>
-                <ResourceBar />
-                <SchedulerConfigurationEditButton />
-                <ResourceAddButton />
-                <NodeList />
-                <UnscheduledPodList />
-                <PVList />
-                <PVCList />
-                <StorageClassList />
-                <Snackbar />
-              </SnackbarStoreProvider>
+              <PriorityClassStoreProvider>
+                <SnackbarStoreProvider>
+                  <ResourceBar />
+                  <SchedulerConfigurationEditButton />
+                  <ResourceAddButton />
+                  <NodeList />
+                  <UnscheduledPodList />
+                  <PVList />
+                  <PVCList />
+                  <StorageClassList />
+                  <PriorityClassList />
+                  <Snackbar />
+                </SnackbarStoreProvider>
+              </PriorityClassStoreProvider>
             </StorageClassStoreProvider>
           </SchedulerConfigurationStoreProvider>
         </PVCStoreProvider>
@@ -32,6 +35,7 @@ import PVStoreProvider from "~/components/StoreProvider/PVStoreProvider.vue";
 import PVCStoreProvider from "~/components/StoreProvider/PVCStoreProvider.vue";
 import SchedulerConfigurationStoreProvider from "~/components/StoreProvider/SchedulerConfigurationStoreProvider.vue";
 import StorageClassStoreProvider from "~/components/StoreProvider/StorageClassStoreProvider.vue";
+import PriorityClassStoreProvider from "~/components/StoreProvider/PriorityClassStoreProvider.vue";
 import NodeList from "~/components/NodeList.vue";
 import UnscheduledPodList from "~/components/UnscheduledPodList.vue";
 import PVList from "~/components/PVList.vue";
@@ -61,6 +65,7 @@ export default defineComponent({
     PVCStoreProvider,
     SchedulerConfigurationEditButton,
     SchedulerConfigurationStoreProvider,
+    PriorityClassStoreProvider,
   },
 });
 </script>
