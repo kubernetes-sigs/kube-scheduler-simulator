@@ -79,8 +79,8 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	v1.GET("/priorityclasses/:name", priorityClassHandler.GetPriorityClass)
 	v1.DELETE("/priorityclasses/:name", priorityClassHandler.DeletePriorityClass)
 
-	v1.GET("/resources/export", resourcesHandler.ExportResourcesAll)
-	v1.POST("/resources/import", resourcesHandler.ImportResourcesAll)
+	v1.GET("/resources/export", resourcesHandler.Export)
+	v1.POST("/resources/import", resourcesHandler.Import)
 	// initialize SimulatorServer.
 	s := &SimulatorServer{e: e}
 	s.e.Logger.SetLevel(log.INFO)

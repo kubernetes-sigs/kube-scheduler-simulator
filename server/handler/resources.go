@@ -18,10 +18,10 @@ func NewResourcesHandler(s di.ResourcesService) *ResourcesHandler {
 	return &ResourcesHandler{service: s}
 }
 
-func (h *ResourcesHandler) ExportResourcesAll(c echo.Context) error {
+func (h *ResourcesHandler) Export(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	rs, err := h.service.ExportAll(ctx)
+	rs, err := h.service.Export(ctx)
 	if err != nil {
 		klog.Errorf("failed to export all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -29,11 +29,11 @@ func (h *ResourcesHandler) ExportResourcesAll(c echo.Context) error {
 	return c.JSON(http.StatusOK, rs)
 }
 
-func (h *ResourcesHandler) ImportResourcesAll(c echo.Context) error {
+func (h *ResourcesHandler) Import(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	// backup before overwrite exist resources.
-	bkp, err := h.service.ExportAll(ctx)
+	bkp, err := h.service.Export(ctx)
 	if err != nil {
 		klog.Errorf("failed to backup resources before import: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -45,7 +45,7 @@ func (h *ResourcesHandler) ImportResourcesAll(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	rs, err := h.service.ImportAll(ctx, reqResources)
+	rs, err := h.service.Import(ctx, reqResources)
 	if err != nil {
 		klog.Errorf("failed to import all resources: %+v", err)
 		// revocery step from backup resources
@@ -59,7 +59,7 @@ func (h *ResourcesHandler) ImportResourcesAll(c echo.Context) error {
 			klog.Errorf("failed to convert to ResourcesApplyConfiguration of recovery resources: %+v", err2)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
-		_, err3 := h.service.ImportAll(ctx, bkpResources)
+		_, err3 := h.service.Import(ctx, bkpResources)
 		if err3 != nil {
 			klog.Errorf("failed to recover of backup resources: %+v", err3)
 			return echo.NewHTTPError(http.StatusInternalServerError)

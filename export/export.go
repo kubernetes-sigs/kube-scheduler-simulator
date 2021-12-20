@@ -118,7 +118,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 	}, nil
 }
 
-func (s *Service) ExportAll(ctx context.Context) (*Resources, error) {
+func (s *Service) Export(ctx context.Context) (*Resources, error) {
 	resources, err := s.get(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("export resources all: %w", err)
@@ -131,7 +131,8 @@ func (s *Service) ExportAll(ctx context.Context) (*Resources, error) {
 // (2) Apply each resource to the scheduler.
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
 // (3) Get all resources. (Separated the get function to unify the struct format.)
-func (s *Service) ImportAll(ctx context.Context, resources *ResourcesApplyConfiguration) (*Resources, error) {
+func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfiguration) (*Resources, error) {
+
 	// TODO: Issue: #12 PR: #13
 	// if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 	// 	klog.Warningf("failed to start scheduler with imported configuration: %v", err)
