@@ -88,23 +88,23 @@ func NewResourcesService(client clientset.Interface, pods PodService, nodes Node
 func (s *Service) get(ctx context.Context) (*Resources, error) {
 	pods, err := s.podService.List(ctx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to call list pods: %w", err)
+		return nil, xerrors.Errorf("call list pods: %w", err)
 	}
 	nodes, err := s.nodeService.List(ctx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to call list nodes: %w", err)
+		return nil, xerrors.Errorf("call list nodes: %w", err)
 	}
 	pvs, err := s.pvService.List(ctx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to call list PersistentVolumes: %w", err)
+		return nil, xerrors.Errorf("call list PersistentVolumes: %w", err)
 	}
 	pvcs, err := s.pvcService.List(ctx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to call list PersistentVolumeClaims: %w", err)
+		return nil, xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
 	}
 	scs, err := s.storageClassService.List(ctx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to call list storageClasses")
+		return nil, xerrors.Errorf("to call list storageClasses")
 	}
 	ss := s.schedulerService.GetSchedulerConfig()
 
@@ -121,7 +121,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 func (s *Service) ExportAll(ctx context.Context) (*Resources, error) {
 	resources, err := s.get(ctx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to export resources all: %w", err)
+		return nil, xerrors.Errorf("export resources all: %w", err)
 	}
 	return resources, nil
 }
@@ -142,14 +142,14 @@ func (s *Service) ImportAll(ctx context.Context, resources *ResourcesApplyConfig
 		sc.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.storageClassService.Apply(ctx, &sc)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to apply StorageClass: %+v", err)
+			return nil, xerrors.Errorf("apply StorageClass: %w", err)
 		}
 	}
 	for _, pvc := range *resources.PvcList {
 		pvc.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.pvcService.Apply(ctx, &pvc)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to apply PersistentVolumeClaims: %+v", err)
+			return nil, xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
 		}
 	}
 	for _, pv := range *resources.PvList {
@@ -167,27 +167,27 @@ func (s *Service) ImportAll(ctx context.Context, resources *ResourcesApplyConfig
 		}
 		_, err := s.pvService.Apply(ctx, &pv)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to apply PersistentVolume: %+v", err)
+			return nil, xerrors.Errorf("apply PersistentVolume: %w", err)
 		}
 	}
 	for _, node := range *resources.NodeList {
 		node.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.nodeService.Apply(ctx, &node)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to apply Node: %+v", err)
+			return nil, xerrors.Errorf("apply Node: %w", err)
 		}
 	}
 	for _, pod := range *resources.PodList {
 		pod.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.podService.Apply(ctx, &pod)
 		if err != nil {
-			return nil, xerrors.Errorf("failed to apply Pod: %+v", err)
+			return nil, xerrors.Errorf("apply Pod: %w", err)
 		}
 	}
 
 	rs, err := s.get(ctx)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to load the resources after import: %w", err)
+		return nil, xerrors.Errorf("load the resources after import: %w", err)
 	}
 	return rs, nil
 }
