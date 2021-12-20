@@ -75,10 +75,10 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// Deltes deletes all pods.
-func (s *Service) Deletes(ctx context.Context) error {
+// DelteAll deletes all pods.
+func (s *Service) DeleteAll(ctx context.Context) error {
 	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
-		return fmt.Errorf("delete pods: %w", err)
+		return fmt.Errorf("delete all pods: %w", err)
 	}
 
 	return nil

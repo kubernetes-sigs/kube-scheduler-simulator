@@ -10,6 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog/v2"
 )
 
 // Service manages node.
@@ -22,6 +23,7 @@ type Service struct {
 type PodService interface {
 	List(ctx context.Context) (*corev1.PodList, error)
 	Delete(ctx context.Context, name string) error
+	DeleteAll(ctx context.Context) error
 }
 
 // NewNodeService initializes Service.
@@ -91,24 +93,25 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// Deletes deletes all nodes.
-func (s *Service) Deletes(ctx context.Context) error {
+// DeleteAll deletes all nodes.
+func (s *Service) DeleteAll(ctx context.Context) error {
 	pl, err := s.podService.List(ctx)
 	if err != nil {
 		return xerrors.Errorf("list pods: %w", err)
 	}
+	if len(pl.Items) == 0 {
+		klog.Info("delete all nodes: no pods to delete")
+		return nil
+	}
 
 	// delete all pods
-	for i := range pl.Items {
-		pod := pl.Items[i]
-		if err := s.podService.Delete(ctx, pod.Name); err != nil {
-			return xerrors.Errorf("delete pod: %w", err)
-		}
+	if err := s.podService.DeleteAll(ctx); err != nil {
+		return xerrors.Errorf("delete all nodes: %w", err)
 	}
 
 	// delete all nodes
 	if err := s.client.CoreV1().Nodes().DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
-		return xerrors.Errorf("delete nodes: %w", err)
+		return xerrors.Errorf("delete all nodes: %w", err)
 	}
 
 	return nil
