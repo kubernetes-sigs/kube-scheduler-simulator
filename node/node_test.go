@@ -201,7 +201,7 @@ func TestService_DeleteAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "failt to delete no nodes",
+			name: "fail to delete no nodes",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
 				m.EXPECT().List(gomock.Any()).Return(&corev1.PodList{
 					Items: []corev1.Pod{

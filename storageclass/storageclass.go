@@ -63,7 +63,7 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// DeleteAll deletes all storageClasss.
+// DeleteAll deletes all storageClassses.
 func (s *Service) DeleteAll(ctx context.Context) error {
 	if err := s.client.StorageV1().StorageClasses().DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
 		return xerrors.Errorf("delete all storageClassses: %w", err)
