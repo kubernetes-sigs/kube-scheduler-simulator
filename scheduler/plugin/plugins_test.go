@@ -143,6 +143,7 @@ func TestConvertForSimulator(t *testing.T) {
 	}
 }
 
+//nolint:gocognit // it is because of huge test cases.
 func Test_NewPluginConfig(t *testing.T) {
 	t.Parallel()
 
