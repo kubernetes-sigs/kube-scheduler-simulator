@@ -2,7 +2,7 @@
 
 source "./hack/etcd.sh"
 
-check_etcd_on_path() {
+check_if_etcd_exists() {
   echo "Checking etcd is on \$PATH"
   which etcd && return
   echo "Cannot find etcd on \$PATH."
@@ -29,7 +29,7 @@ cleanup_etcd() {
   echo "Clean up finished"
 }
 
-check_etcd_on_path
+check_if_etcd_exists
 
 start_etcd
 trap cleanup_etcd EXIT
