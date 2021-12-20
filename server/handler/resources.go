@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 	"github.com/labstack/echo/v4"
 	"k8s.io/klog/v2"
-
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/resources"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 )
 
 type ResourcesHandler struct {
@@ -40,7 +39,7 @@ func (h *ResourcesHandler) ImportResourcesAll(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	reqResources := new(resources.ResourcesApplyConfiguration)
+	reqResources := new(export.ResourcesApplyConfiguration)
 	if err := c.Bind(reqResources); err != nil {
 		klog.Errorf("failed to bind import resources all request: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -50,7 +49,7 @@ func (h *ResourcesHandler) ImportResourcesAll(c echo.Context) error {
 	if err != nil {
 		klog.Errorf("failed to import all resources: %+v", err)
 		// revocery step from backup resources
-		bkpResources := new(resources.ResourcesApplyConfiguration)
+		bkpResources := new(export.ResourcesApplyConfiguration)
 		bkpr, err1 := json.Marshal(bkp)
 		if err1 != nil {
 			klog.Errorf("failed to parse json of recovery resources: %+v", err1)

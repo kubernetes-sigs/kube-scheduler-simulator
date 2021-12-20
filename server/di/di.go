@@ -7,12 +7,12 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/node"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/persistentvolume"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/persistentvolumeclaim"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/pod"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/priorityclass"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/resources"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/storageclass"
 )
@@ -42,9 +42,9 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	c.podService = pod.NewPodService(client)
 
 	c.nodeService = node.NewNodeService(client, c.podService)
-	c.resourcesService = resources.NewResourcesService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.schedulerService)
 
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
+	c.resourcesService = export.NewResourcesService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.schedulerService)
 	return c
 }
 

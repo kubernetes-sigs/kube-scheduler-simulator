@@ -3,6 +3,8 @@ package di
 import (
 	"context"
 
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
+
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -10,8 +12,6 @@ import (
 	schedulingv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	storageconfigv1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/kube-scheduler/config/v1beta2"
-
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/resources"
 )
 
 // PodService represents service for manage Pods.
@@ -72,6 +72,6 @@ type PriorityClassService interface {
 }
 
 type ResourcesService interface {
-	ExportAll(ctx context.Context) (*resources.Resources, error)
-	ImportAll(ctx context.Context, resources *resources.ResourcesApplyConfiguration) (*resources.Resources, error)
+	ExportAll(ctx context.Context) (*export.Resources, error)
+	ImportAll(ctx context.Context, resources *export.ResourcesApplyConfiguration) (*export.Resources, error)
 }
