@@ -10,15 +10,15 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type ResourcesHandler struct {
+type ExportHandler struct {
 	service di.ResourcesService
 }
 
-func NewResourcesHandler(s di.ResourcesService) *ResourcesHandler {
-	return &ResourcesHandler{service: s}
+func NewExportHandler(s di.ResourcesService) *ExportHandler {
+	return &ExportHandler{service: s}
 }
 
-func (h *ResourcesHandler) Export(c echo.Context) error {
+func (h *ExportHandler) Export(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	rs, err := h.service.Export(ctx)
@@ -29,7 +29,7 @@ func (h *ResourcesHandler) Export(c echo.Context) error {
 	return c.JSON(http.StatusOK, rs)
 }
 
-func (h *ResourcesHandler) Import(c echo.Context) error {
+func (h *ExportHandler) Import(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	// backup before overwrite exist resources.
