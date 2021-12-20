@@ -72,8 +72,10 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 // NewPluginConfig converts []v1beta2.PluginConfig for simulator.
 // Passed []v1beta.PluginConfig overrides default config values.
 //
-// NewPluginConfig expects that passed v1beta2.PluginConfig has data of Args in only one of PluginConfig.Args.Raw or PluginConfig.Args.Object.
-// But, if Args data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object, PluginConfig.Args.Object takes precedence.
+// NewPluginConfig expects that either PluginConfig.Args.Raw or PluginConfig.Args.Object has data
+// in the passed v1beta2.PluginConfig parameter.
+// If data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object, PluginConfig.Args.Raw would be ignored
+// since PluginConfig.Args.Object has higher priority.
 //nolint:funlen,cyclop
 func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) {
 	defaultcfg, err := defaultconfig.DefaultSchedulerConfig()
@@ -91,7 +93,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 		name := pc[i].Name
 		ret := pluginConfig[name].DeepCopy()
 
-		// v1beta2.PluginConfig may have data on pc[i].Args.Raw as []byte.
+		// v1beta2.PluginConfig may have data in pc[i].Args.Raw as []byte.
 		// We have to encoding it in this case.
 		if len(pc[i].Args.Raw) != 0 {
 			// override default configuration
@@ -101,7 +103,8 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 		}
 
 		if pc[i].Args.Object != nil {
-			// If Args data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object, PluginConfig.Args.Object takes precedence.
+			// If data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object,
+			// PluginConfig.Args.Raw would be ignored
 			ret.Object = pc[i].Args.Object
 		}
 
