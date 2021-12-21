@@ -132,31 +132,30 @@ func (s *Service) Export(ctx context.Context) (*Resources, error) {
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
 // (3) Get all resources. (Separated the get function to unify the struct format.)
 func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfiguration) (*Resources, error) {
-
 	// TODO: Issue: #12 PR: #13
 	// if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 	// 	klog.Warningf("failed to start scheduler with imported configuration: %v", err)
 	// 	return nil, xerrors.Errorf("restart scheduler with imported configuration: %w", err)
 	// }
-
-	for _, sc := range *resources.StorageClassList {
+	for i := range *resources.StorageClassList {
+		sc := (*resources.StorageClassList)[i]
 		sc.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.storageClassService.Apply(ctx, &sc)
 		if err != nil {
 			return nil, xerrors.Errorf("apply StorageClass: %w", err)
 		}
 	}
-	for _, pvc := range *resources.PvcList {
+	for i := range *resources.PvcList {
+		pvc := (*resources.PvcList)[i]
 		pvc.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.pvcService.Apply(ctx, &pvc)
 		if err != nil {
 			return nil, xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
 		}
 	}
-	for _, pv := range *resources.PvList {
+	for i := range *resources.PvList {
+		pv := (*resources.PvList)[i]
 		pv.ObjectMetaApplyConfiguration.UID = nil
-
-		// Status is omitempty. Is this field become nil?
 		if *pv.Status.Phase == "Bound" {
 			// PersistentVolumeClaims's UID has been changed to a new value.
 			pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name)
@@ -171,21 +170,22 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 			return nil, xerrors.Errorf("apply PersistentVolume: %w", err)
 		}
 	}
-	for _, node := range *resources.NodeList {
+	for i := range *resources.NodeList {
+		node := (*resources.NodeList)[i]
 		node.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.nodeService.Apply(ctx, &node)
 		if err != nil {
 			return nil, xerrors.Errorf("apply Node: %w", err)
 		}
 	}
-	for _, pod := range *resources.PodList {
+	for i := range *resources.PodList {
+		pod := (*resources.PodList)[i]
 		pod.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.podService.Apply(ctx, &pod)
 		if err != nil {
 			return nil, xerrors.Errorf("apply Pod: %w", err)
 		}
 	}
-
 	rs, err := s.get(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("load the resources after import: %w", err)

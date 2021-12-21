@@ -3,10 +3,11 @@ package handler
 import (
 	"net/http"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 	"github.com/labstack/echo/v4"
 	"k8s.io/klog/v2"
+
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 )
 
 type ExportHandler struct {
