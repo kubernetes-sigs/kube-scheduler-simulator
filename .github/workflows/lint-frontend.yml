@@ -5,7 +5,7 @@ on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - "web"
+      - 'web/**'
 
 env:
   YARN_CACHE_FOLDER: .cache/yarn
