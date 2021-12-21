@@ -7,6 +7,7 @@
             <StorageClassStoreProvider>
               <SnackbarStoreProvider>
                 <ResourceBar />
+
                 <SchedulerConfigurationEditButton />
                 <ResourceAddButton />
                 <NodeList />
