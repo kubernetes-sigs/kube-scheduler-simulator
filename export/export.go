@@ -24,21 +24,21 @@ type Service struct {
 
 // Resources  will used to compile all the resources for export.
 type Resources struct {
-	PodList          *[]corev1.Pod                             `json:"podList"`
-	NodeList         *[]corev1.Node                            `json:"nodeList"`
-	PvList           *[]corev1.PersistentVolume                `json:"pvList"`
-	PvcList          *[]corev1.PersistentVolumeClaim           `json:"pvcList"`
-	StorageClassList *[]storagev1.StorageClass                 `json:"storageClassList"`
-	SchedulerConfig  *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
+	Pods            []corev1.Pod                              `json:"podList"`
+	Nodes           []corev1.Node                             `json:"nodeList"`
+	Pvs             []corev1.PersistentVolume                 `json:"pvList"`
+	Pvcs            []corev1.PersistentVolumeClaim            `json:"pvcList"`
+	StorageClasses  []storagev1.StorageClass                  `json:"storageClassList"`
+	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
 }
 
 type ResourcesApplyConfiguration struct {
-	PodList          *[]v1.PodApplyConfiguration                     `json:"podList"`
-	NodeList         *[]v1.NodeApplyConfiguration                    `json:"nodeList"`
-	PvList           *[]v1.PersistentVolumeApplyConfiguration        `json:"pvList"`
-	PvcList          *[]v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcList"`
-	StorageClassList *[]confstoragev1.StorageClassApplyConfiguration `json:"storageClassList"`
-	SchedulerConfig  *v1beta2config.KubeSchedulerConfiguration       `json:"schedulerConfig"`
+	Pods            []v1.PodApplyConfiguration                     `json:"podList"`
+	Nodes           []v1.NodeApplyConfiguration                    `json:"nodeList"`
+	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvList"`
+	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcList"`
+	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClassList"`
+	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
 }
 
 type PodService interface {
@@ -109,12 +109,12 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 	ss := s.schedulerService.GetSchedulerConfig()
 
 	return &Resources{
-		PodList:          &pods.Items,
-		NodeList:         &nodes.Items,
-		PvList:           &pvs.Items,
-		PvcList:          &pvcs.Items,
-		StorageClassList: &scs.Items,
-		SchedulerConfig:  ss,
+		Pods:            pods.Items,
+		Nodes:           nodes.Items,
+		Pvs:             pvs.Items,
+		Pvcs:            pvcs.Items,
+		StorageClasses:  scs.Items,
+		SchedulerConfig: ss,
 	}, nil
 }
 
@@ -137,24 +137,24 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	// 	klog.Warningf("failed to start scheduler with imported configuration: %v", err)
 	// 	return nil, xerrors.Errorf("restart scheduler with imported configuration: %w", err)
 	// }
-	for i := range *resources.StorageClassList {
-		sc := (*resources.StorageClassList)[i]
+	for i := range resources.StorageClasses {
+		sc := resources.StorageClasses[i]
 		sc.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.storageClassService.Apply(ctx, &sc)
 		if err != nil {
 			return nil, xerrors.Errorf("apply StorageClass: %w", err)
 		}
 	}
-	for i := range *resources.PvcList {
-		pvc := (*resources.PvcList)[i]
+	for i := range resources.Pvcs {
+		pvc := resources.Pvcs[i]
 		pvc.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.pvcService.Apply(ctx, &pvc)
 		if err != nil {
 			return nil, xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
 		}
 	}
-	for i := range *resources.PvList {
-		pv := (*resources.PvList)[i]
+	for i := range resources.Pvs {
+		pv := resources.Pvs[i]
 		pv.ObjectMetaApplyConfiguration.UID = nil
 		if *pv.Status.Phase == "Bound" {
 			// PersistentVolumeClaims's UID has been changed to a new value.
@@ -170,16 +170,16 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 			return nil, xerrors.Errorf("apply PersistentVolume: %w", err)
 		}
 	}
-	for i := range *resources.NodeList {
-		node := (*resources.NodeList)[i]
+	for i := range resources.Nodes {
+		node := resources.Nodes[i]
 		node.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.nodeService.Apply(ctx, &node)
 		if err != nil {
 			return nil, xerrors.Errorf("apply Node: %w", err)
 		}
 	}
-	for i := range *resources.PodList {
-		pod := (*resources.PodList)[i]
+	for i := range resources.Pods {
+		pod := resources.Pods[i]
 		pod.ObjectMetaApplyConfiguration.UID = nil
 		_, err := s.podService.Apply(ctx, &pod)
 		if err != nil {
