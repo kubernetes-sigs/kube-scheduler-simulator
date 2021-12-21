@@ -44,7 +44,7 @@ restart scheduler with default configuration.
 
 ### HTTP Request
 
-`PUT /api/v1/schedulerconfiguration`
+`PUT /api/v1/schedulerconfiguration/reset`
 
 ### Request Body
 
