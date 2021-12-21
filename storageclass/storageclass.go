@@ -66,7 +66,7 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 // DeleteAll deletes all storageClassses.
 func (s *Service) DeleteAll(ctx context.Context) error {
 	if err := s.client.StorageV1().StorageClasses().DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
-		return xerrors.Errorf("delete all storageClassses: %w", err)
+		return xerrors.Errorf("delete all storageClasses: %w", err)
 	}
 
 	return nil

@@ -101,7 +101,6 @@ func (s *Service) DeleteAll(ctx context.Context) error {
 	}
 	if len(pl.Items) == 0 {
 		klog.Info("delete all nodes: no pods to delete")
-		return nil
 	}
 
 	// delete all pods
