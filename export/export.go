@@ -89,12 +89,11 @@ func NewResourcesService(client clientset.Interface, pods PodService, nodes Node
 
 // Get all resources from each service.
 func (s *Service) get(ctx context.Context) (*Resources, error) {
-	getCtx := context.Background()
-	g, _ := errgroup.WithContext(getCtx)
+	g, _ := errgroup.WithContext(ctx)
 	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
 	resources := Resources{}
 
-	if err := sem.Acquire(getCtx, 1); err != nil {
+	if err := sem.Acquire(ctx, 1); err != nil {
 		return nil, xerrors.Errorf("acquire semaphore: %w", err)
 	}
 	g.Go(func() error {
@@ -107,7 +106,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	if err := sem.Acquire(getCtx, 1); err != nil {
+	if err := sem.Acquire(ctx, 1); err != nil {
 		return nil, xerrors.Errorf("acquire semaphore: %w", err)
 	}
 	g.Go(func() error {
@@ -120,7 +119,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	if err := sem.Acquire(getCtx, 1); err != nil {
+	if err := sem.Acquire(ctx, 1); err != nil {
 		return nil, xerrors.Errorf("acquire semaphore: %w", err)
 	}
 	g.Go(func() error {
@@ -133,7 +132,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	if err := sem.Acquire(getCtx, 1); err != nil {
+	if err := sem.Acquire(ctx, 1); err != nil {
 		return nil, xerrors.Errorf("acquire semaphore: %w", err)
 	}
 	g.Go(func() error {
@@ -146,7 +145,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	if err := sem.Acquire(getCtx, 1); err != nil {
+	if err := sem.Acquire(ctx, 1); err != nil {
 		return nil, xerrors.Errorf("acquire semaphore: %w", err)
 	}
 	g.Go(func() error {
@@ -159,7 +158,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	if err := sem.Acquire(getCtx, 1); err != nil {
+	if err := sem.Acquire(ctx, 1); err != nil {
 		return nil, xerrors.Errorf("acquire semaphore: %w", err)
 	}
 	g.Go(func() error {
@@ -194,13 +193,12 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	// 	klog.Warningf("failed to start scheduler with imported configuration: %v", err)
 	// 	return nil, xerrors.Errorf("restart scheduler with imported configuration: %w", err)
 	// }
-	getCtx := context.Background()
-	g, _ := errgroup.WithContext(getCtx)
+	g, _ := errgroup.WithContext(ctx)
 	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
 
 	for i := range resources.StorageClasses {
 		sc := resources.StorageClasses[i]
-		if err := sem.Acquire(getCtx, 1); err != nil {
+		if err := sem.Acquire(ctx, 1); err != nil {
 			return nil, xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
@@ -216,7 +214,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	for i := range resources.Pvcs {
 		pvc := resources.Pvcs[i]
-		if err := sem.Acquire(getCtx, 1); err != nil {
+		if err := sem.Acquire(ctx, 1); err != nil {
 			return nil, xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
@@ -231,7 +229,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	for i := range resources.Pvs {
 		pv := resources.Pvs[i]
-		if err := sem.Acquire(getCtx, 1); err != nil {
+		if err := sem.Acquire(ctx, 1); err != nil {
 			return nil, xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
@@ -256,7 +254,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	for i := range resources.Nodes {
 		node := resources.Nodes[i]
-		if err := sem.Acquire(getCtx, 1); err != nil {
+		if err := sem.Acquire(ctx, 1); err != nil {
 			return nil, xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
@@ -271,7 +269,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	for i := range resources.Pods {
 		pod := resources.Pods[i]
-		if err := sem.Acquire(getCtx, 1); err != nil {
+		if err := sem.Acquire(ctx, 1); err != nil {
 			return nil, xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
