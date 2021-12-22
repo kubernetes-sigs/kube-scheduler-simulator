@@ -14,7 +14,6 @@
             label
             @click.stop="onClick(p)"
           >
-            <img src="/sc.svg" height="40" alt="p.metadata.name" class="mr-2" />
             {{ p.metadata.name }}
           </v-chip>
         </v-card-actions>
