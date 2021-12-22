@@ -2,7 +2,10 @@ package export
 
 import (
 	"context"
+	"runtime"
 
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -86,36 +89,78 @@ func NewResourcesService(client clientset.Interface, pods PodService, nodes Node
 
 // Get all resources from each service.
 func (s *Service) get(ctx context.Context) (*Resources, error) {
-	pods, err := s.podService.List(ctx)
-	if err != nil {
-		return nil, xerrors.Errorf("call list pods: %w", err)
-	}
-	nodes, err := s.nodeService.List(ctx)
-	if err != nil {
-		return nil, xerrors.Errorf("call list nodes: %w", err)
-	}
-	pvs, err := s.pvService.List(ctx)
-	if err != nil {
-		return nil, xerrors.Errorf("call list PersistentVolumes: %w", err)
-	}
-	pvcs, err := s.pvcService.List(ctx)
-	if err != nil {
-		return nil, xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
-	}
-	scs, err := s.storageClassService.List(ctx)
-	if err != nil {
-		return nil, xerrors.Errorf("to call list storageClasses")
-	}
-	ss := s.schedulerService.GetSchedulerConfig()
+	getCtx := context.Background()
+	g, _ := errgroup.WithContext(getCtx)
+	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
+	resources := Resources{}
 
-	return &Resources{
-		Pods:            pods.Items,
-		Nodes:           nodes.Items,
-		Pvs:             pvs.Items,
-		Pvcs:            pvcs.Items,
-		StorageClasses:  scs.Items,
-		SchedulerConfig: ss,
-	}, nil
+	sem.Acquire(getCtx, 1)
+	g.Go(func() error {
+		defer sem.Release(1)
+		pods, err := s.podService.List(ctx)
+		if err != nil {
+			return xerrors.Errorf("call list pods: %w", err)
+		}
+		resources.Pods = pods.Items
+		return nil
+	})
+
+	sem.Acquire(getCtx, 1)
+	g.Go(func() error {
+		defer sem.Release(1)
+		nodes, err := s.nodeService.List(ctx)
+		if err != nil {
+			return xerrors.Errorf("call list nodes: %w", err)
+		}
+		resources.Nodes = nodes.Items
+		return nil
+	})
+
+	sem.Acquire(getCtx, 1)
+	g.Go(func() error {
+		defer sem.Release(1)
+		pvs, err := s.pvService.List(ctx)
+		if err != nil {
+			return xerrors.Errorf("call list PersistentVolumes: %w", err)
+		}
+		resources.Pvs = pvs.Items
+		return nil
+	})
+
+	sem.Acquire(getCtx, 1)
+	g.Go(func() error {
+		defer sem.Release(1)
+		pvcs, err := s.pvcService.List(ctx)
+		if err != nil {
+			return xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
+		}
+		resources.Pvcs = pvcs.Items
+		return nil
+	})
+
+	sem.Acquire(getCtx, 1)
+	g.Go(func() error {
+		defer sem.Release(1)
+		scs, err := s.storageClassService.List(ctx)
+		if err != nil {
+			return xerrors.Errorf("to call list storageClasses")
+		}
+		resources.StorageClasses = scs.Items
+		return nil
+	})
+
+	sem.Acquire(getCtx, 1)
+	g.Go(func() error {
+		defer sem.Release(1)
+		ss := s.schedulerService.GetSchedulerConfig()
+		resources.SchedulerConfig = ss
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, xerrors.Errorf("get resources all: %w", err)
+	}
+	return &resources, nil
 }
 
 func (s *Service) Export(ctx context.Context) (*Resources, error) {
@@ -137,55 +182,91 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	// 	klog.Warningf("failed to start scheduler with imported configuration: %v", err)
 	// 	return nil, xerrors.Errorf("restart scheduler with imported configuration: %w", err)
 	// }
+	getCtx := context.Background()
+	g, _ := errgroup.WithContext(getCtx)
+	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
+
 	for i := range resources.StorageClasses {
 		sc := resources.StorageClasses[i]
-		sc.ObjectMetaApplyConfiguration.UID = nil
-		_, err := s.storageClassService.Apply(ctx, &sc)
-		if err != nil {
-			return nil, xerrors.Errorf("apply StorageClass: %w", err)
-		}
+		sem.Acquire(getCtx, 1)
+		g.Go(func() error {
+			defer sem.Release(1)
+			sc.ObjectMetaApplyConfiguration.UID = nil
+			_, err := s.storageClassService.Apply(ctx, &sc)
+			if err != nil {
+				return xerrors.Errorf("apply StorageClass: %w", err)
+			}
+			return nil
+		})
+
 	}
 	for i := range resources.Pvcs {
 		pvc := resources.Pvcs[i]
-		pvc.ObjectMetaApplyConfiguration.UID = nil
-		_, err := s.pvcService.Apply(ctx, &pvc)
-		if err != nil {
-			return nil, xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
-		}
+		sem.Acquire(getCtx, 1)
+		g.Go(func() error {
+			defer sem.Release(1)
+			pvc.ObjectMetaApplyConfiguration.UID = nil
+			_, err := s.pvcService.Apply(ctx, &pvc)
+			if err != nil {
+				return xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
+			}
+			return nil
+		})
 	}
 	for i := range resources.Pvs {
 		pv := resources.Pvs[i]
-		pv.ObjectMetaApplyConfiguration.UID = nil
-		if *pv.Status.Phase == "Bound" {
-			// PersistentVolumeClaims's UID has been changed to a new value.
-			pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name)
-			if err == nil {
-				pv.Spec.ClaimRef.UID = &pvc.UID
-			} else {
-				pv.Spec.ClaimRef.UID = nil
+		sem.Acquire(getCtx, 1)
+		g.Go(func() error {
+			defer sem.Release(1)
+			pv.ObjectMetaApplyConfiguration.UID = nil
+			if *pv.Status.Phase == "Bound" {
+				// PersistentVolumeClaims's UID has been changed to a new value.
+				pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name)
+				if err == nil {
+					pv.Spec.ClaimRef.UID = &pvc.UID
+				} else {
+					pv.Spec.ClaimRef.UID = nil
+				}
 			}
-		}
-		_, err := s.pvService.Apply(ctx, &pv)
-		if err != nil {
-			return nil, xerrors.Errorf("apply PersistentVolume: %w", err)
-		}
+			_, err := s.pvService.Apply(ctx, &pv)
+			if err != nil {
+				return xerrors.Errorf("apply PersistentVolume: %w", err)
+			}
+			return nil
+		})
+
 	}
 	for i := range resources.Nodes {
 		node := resources.Nodes[i]
-		node.ObjectMetaApplyConfiguration.UID = nil
-		_, err := s.nodeService.Apply(ctx, &node)
-		if err != nil {
-			return nil, xerrors.Errorf("apply Node: %w", err)
-		}
+		sem.Acquire(getCtx, 1)
+		g.Go(func() error {
+			defer sem.Release(1)
+			node.ObjectMetaApplyConfiguration.UID = nil
+			_, err := s.nodeService.Apply(ctx, &node)
+			if err != nil {
+				return xerrors.Errorf("apply Node: %w", err)
+			}
+			return nil
+		})
 	}
 	for i := range resources.Pods {
 		pod := resources.Pods[i]
-		pod.ObjectMetaApplyConfiguration.UID = nil
-		_, err := s.podService.Apply(ctx, &pod)
-		if err != nil {
-			return nil, xerrors.Errorf("apply Pod: %w", err)
-		}
+		sem.Acquire(getCtx, 1)
+		g.Go(func() error {
+			defer sem.Release(1)
+			pod.ObjectMetaApplyConfiguration.UID = nil
+			_, err := s.podService.Apply(ctx, &pod)
+			if err != nil {
+				return xerrors.Errorf("apply Pod: %w", err)
+			}
+			return nil
+		})
 	}
+
+	if err := g.Wait(); err != nil {
+		return nil, xerrors.Errorf("apply each resources: %w", err)
+	}
+
 	rs, err := s.get(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("load the resources after import: %w", err)
