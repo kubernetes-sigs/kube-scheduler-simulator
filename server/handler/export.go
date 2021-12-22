@@ -38,10 +38,10 @@ func (h *ExportHandler) Import(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	rs, err := h.service.Import(ctx, reqResources)
+	err := h.service.Import(ctx, reqResources)
 	if err != nil {
 		klog.Errorf("failed to import all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	return c.JSON(http.StatusOK, rs)
+	return c.NoContent(http.StatusOK)
 }

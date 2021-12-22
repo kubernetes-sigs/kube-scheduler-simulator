@@ -73,5 +73,5 @@ type PriorityClassService interface {
 
 type ResourcesService interface {
 	Export(ctx context.Context) (*export.Resources, error)
-	Import(ctx context.Context, resources *export.ResourcesApplyConfiguration) (*export.Resources, error)
+	Import(ctx context.Context, resources *export.ResourcesApplyConfiguration) error
 }

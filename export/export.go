@@ -187,7 +187,7 @@ func (s *Service) Export(ctx context.Context) (*Resources, error) {
 // (2) Apply each resource to the scheduler.
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
 // (3) Get all resources. (Separated the get function to unify the struct format.)
-func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfiguration) (*Resources, error) {
+func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfiguration) error {
 	// TODO: Issue: #12 PR: #13
 	// if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 	// 	klog.Warningf("failed to start scheduler with imported configuration: %v", err)
@@ -199,7 +199,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	for i := range resources.StorageClasses {
 		sc := resources.StorageClasses[i]
 		if err := sem.Acquire(ctx, 1); err != nil {
-			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+			return xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
 			defer sem.Release(1)
@@ -215,7 +215,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	for i := range resources.Pvcs {
 		pvc := resources.Pvcs[i]
 		if err := sem.Acquire(ctx, 1); err != nil {
-			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+			return xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
 			defer sem.Release(1)
@@ -230,7 +230,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	for i := range resources.Pvs {
 		pv := resources.Pvs[i]
 		if err := sem.Acquire(ctx, 1); err != nil {
-			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+			return xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
 			defer sem.Release(1)
@@ -255,7 +255,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	for i := range resources.Nodes {
 		node := resources.Nodes[i]
 		if err := sem.Acquire(ctx, 1); err != nil {
-			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+			return xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
 			defer sem.Release(1)
@@ -270,7 +270,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	for i := range resources.Pods {
 		pod := resources.Pods[i]
 		if err := sem.Acquire(ctx, 1); err != nil {
-			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+			return xerrors.Errorf("acquire semaphore: %w", err)
 		}
 		g.Go(func() error {
 			defer sem.Release(1)
@@ -282,14 +282,8 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 			return nil
 		})
 	}
-
 	if err := g.Wait(); err != nil {
-		return nil, xerrors.Errorf("apply each resources: %w", err)
+		return xerrors.Errorf("apply each resources: %w", err)
 	}
-
-	rs, err := s.get(ctx)
-	if err != nil {
-		return nil, xerrors.Errorf("load the resources after import: %w", err)
-	}
-	return rs, nil
+	return nil
 }
