@@ -94,7 +94,9 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
 	resources := Resources{}
 
-	sem.Acquire(getCtx, 1)
+	if err := sem.Acquire(getCtx, 1); err != nil {
+		return nil, xerrors.Errorf("acquire semaphore: %w", err)
+	}
 	g.Go(func() error {
 		defer sem.Release(1)
 		pods, err := s.podService.List(ctx)
@@ -105,7 +107,9 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	sem.Acquire(getCtx, 1)
+	if err := sem.Acquire(getCtx, 1); err != nil {
+		return nil, xerrors.Errorf("acquire semaphore: %w", err)
+	}
 	g.Go(func() error {
 		defer sem.Release(1)
 		nodes, err := s.nodeService.List(ctx)
@@ -116,7 +120,9 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	sem.Acquire(getCtx, 1)
+	if err := sem.Acquire(getCtx, 1); err != nil {
+		return nil, xerrors.Errorf("acquire semaphore: %w", err)
+	}
 	g.Go(func() error {
 		defer sem.Release(1)
 		pvs, err := s.pvService.List(ctx)
@@ -127,7 +133,9 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	sem.Acquire(getCtx, 1)
+	if err := sem.Acquire(getCtx, 1); err != nil {
+		return nil, xerrors.Errorf("acquire semaphore: %w", err)
+	}
 	g.Go(func() error {
 		defer sem.Release(1)
 		pvcs, err := s.pvcService.List(ctx)
@@ -138,7 +146,9 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	sem.Acquire(getCtx, 1)
+	if err := sem.Acquire(getCtx, 1); err != nil {
+		return nil, xerrors.Errorf("acquire semaphore: %w", err)
+	}
 	g.Go(func() error {
 		defer sem.Release(1)
 		scs, err := s.storageClassService.List(ctx)
@@ -149,7 +159,9 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		return nil
 	})
 
-	sem.Acquire(getCtx, 1)
+	if err := sem.Acquire(getCtx, 1); err != nil {
+		return nil, xerrors.Errorf("acquire semaphore: %w", err)
+	}
 	g.Go(func() error {
 		defer sem.Release(1)
 		ss := s.schedulerService.GetSchedulerConfig()
@@ -188,7 +200,9 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 
 	for i := range resources.StorageClasses {
 		sc := resources.StorageClasses[i]
-		sem.Acquire(getCtx, 1)
+		if err := sem.Acquire(getCtx, 1); err != nil {
+			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+		}
 		g.Go(func() error {
 			defer sem.Release(1)
 			sc.ObjectMetaApplyConfiguration.UID = nil
@@ -202,7 +216,9 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	for i := range resources.Pvcs {
 		pvc := resources.Pvcs[i]
-		sem.Acquire(getCtx, 1)
+		if err := sem.Acquire(getCtx, 1); err != nil {
+			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+		}
 		g.Go(func() error {
 			defer sem.Release(1)
 			pvc.ObjectMetaApplyConfiguration.UID = nil
@@ -215,7 +231,9 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	for i := range resources.Pvs {
 		pv := resources.Pvs[i]
-		sem.Acquire(getCtx, 1)
+		if err := sem.Acquire(getCtx, 1); err != nil {
+			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+		}
 		g.Go(func() error {
 			defer sem.Release(1)
 			pv.ObjectMetaApplyConfiguration.UID = nil
@@ -238,7 +256,9 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	for i := range resources.Nodes {
 		node := resources.Nodes[i]
-		sem.Acquire(getCtx, 1)
+		if err := sem.Acquire(getCtx, 1); err != nil {
+			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+		}
 		g.Go(func() error {
 			defer sem.Release(1)
 			node.ObjectMetaApplyConfiguration.UID = nil
@@ -251,7 +271,9 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	for i := range resources.Pods {
 		pod := resources.Pods[i]
-		sem.Acquire(getCtx, 1)
+		if err := sem.Acquire(getCtx, 1); err != nil {
+			return nil, xerrors.Errorf("acquire semaphore: %w", err)
+		}
 		g.Go(func() error {
 			defer sem.Release(1)
 			pod.ObjectMetaApplyConfiguration.UID = nil
