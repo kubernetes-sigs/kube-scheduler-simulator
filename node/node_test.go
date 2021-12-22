@@ -156,7 +156,7 @@ func TestService_DeleteAll(t *testing.T) {
 		wantErr                 bool
 	}{
 		{
-			name: "delete all nodes and pods on nodes",
+			name: "delete all nodes and pods",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
 				m.EXPECT().List(gomock.Any()).Return(&corev1.PodList{
 					Items: []corev1.Pod{
@@ -201,7 +201,25 @@ func TestService_DeleteAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "fail to delete no nodes",
+			name: "delete nodes with no pods",
+			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
+				m.EXPECT().List(gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				m.EXPECT().DeleteAll(gomock.Any()).Return(nil)
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				// add test data.
+				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node1",
+					},
+				}, metav1.CreateOptions{})
+				return c
+			},
+			wantErr: false,
+		},
+		{
+			name: "fail if delteing all pods returns error",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
 				m.EXPECT().List(gomock.Any()).Return(&corev1.PodList{
 					Items: []corev1.Pod{
@@ -230,23 +248,6 @@ func TestService_DeleteAll(t *testing.T) {
 				return c
 			},
 			wantErr: true,
-		},
-		{
-			name: "delete node with no pods",
-			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
-				m.EXPECT().List(gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
-			},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				c := fake.NewSimpleClientset()
-				// add test data.
-				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "node1",
-					},
-				}, metav1.CreateOptions{})
-				return c
-			},
-			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
