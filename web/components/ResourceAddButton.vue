@@ -126,8 +126,8 @@ export default defineComponent({
           break;
         case "PriorityClass":
           store = priorityclassstore;
-          // if store.count = 0, name suffix is 1.
-          targetTemplate = priorityclassTemplate((store.count + 1).toString());
+          // if store.count = 2, name suffix is 1.
+          targetTemplate = priorityclassTemplate((store.count - 1).toString());
           break;
       }
 
