@@ -1,5 +1,12 @@
 package export
 
+//go:generate mockgen -destination=./mock_$GOPACKAGE/pod.go . PodService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/node.go . NodeService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/pv.go . PersistentVolumeService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/pvc.go . PersistentVolumeClaimService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/storageClassc.go . StorageClassService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/scheduler.go . SchedulerService
+
 import (
 	"context"
 	"runtime"
