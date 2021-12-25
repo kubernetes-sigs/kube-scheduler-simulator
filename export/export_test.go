@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/xerrors"
 
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
@@ -20,7 +21,8 @@ func TestService_Export(t *testing.T) {
 		name                     string
 		prepareEachServiceMockFn func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, schedulers *mock_export.MockSchedulerService)
 		prepareFakeClientSetFn   func() *fake.Clientset
-		expectReturn             *Resources
+		wantReturn               *Resources
+		wantErr                  bool
 	}{
 		{
 			name: "export all resources",
@@ -37,7 +39,7 @@ func TestService_Export(t *testing.T) {
 				// add test data.
 				return c
 			},
-			expectReturn: &Resources{
+			wantReturn: &Resources{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -45,6 +47,97 @@ func TestService_Export(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
 			},
+			wantErr: false,
+		},
+		{
+			name: "export failure on List of PodService",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list pods"))
+				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
+				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
+				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantReturn: nil,
+			wantErr:    true,
+		},
+		{
+			name: "export failure on List of NodeService",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				nodes.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list nodes"))
+				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
+				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantReturn: nil,
+			wantErr:    true,
+		},
+		{
+			name: "export failure on List of PersistentVolumeService",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
+				pvs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumes"))
+				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantReturn: nil,
+			wantErr:    true,
+		},
+		{
+			name: "export failure on List of PersistentVolumeClaims",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
+				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
+				pvcs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumeClaims"))
+				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantReturn: nil,
+			wantErr:    true,
+		},
+		{
+			name: "export failure on List of storageClasses",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
+				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
+				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				storageClasss.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list storageClasses"))
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantReturn: nil,
+			wantErr:    true,
 		},
 	}
 	for _, tt := range tests {
@@ -64,8 +157,10 @@ func TestService_Export(t *testing.T) {
 			s := NewResourcesService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockSchedulerService)
 			r, err := s.Export(context.Background())
-			if diff := cmp.Diff(r, tt.expectReturn); diff != "" {
-				t.Fatalf("Export() %v test, error = %v,\n%s", tt.name, err, diff)
+
+			diffResponse := cmp.Diff(r, tt.wantReturn)
+			if diffResponse != "" || (err != nil) != tt.wantErr {
+				t.Fatalf("Export() %v test, \nerror = %v,\n%s", tt.name, err, diffResponse)
 			}
 		})
 	}
