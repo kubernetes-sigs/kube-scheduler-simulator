@@ -11,7 +11,7 @@ export const applySchedulerConfiguration = async (
       req
     );
     return res.data;
-  } catch (e) {
+  } catch (e: any) {
     onError(e);
   }
 };

@@ -4,6 +4,7 @@ import {
   V1PersistentVolumeClaim,
   V1Pod,
   V1StorageClass,
+  V1PriorityClass,
 } from "@kubernetes/client-node";
 import yaml from "js-yaml";
 
@@ -50,4 +51,13 @@ export const storageclassTemplate = (namesuffix: string): V1StorageClass => {
     return temp;
   }
   return { provisioner: "" };
+};
+
+export const priorityclassTemplate = (namesuffix: string): V1PriorityClass => {
+  if (process.env.PC_TEMPLATE) {
+    const temp = yaml.load(process.env.PC_TEMPLATE);
+    temp.metadata.name = temp.metadata.name + namesuffix;
+    return temp;
+  }
+  return { value: 1000, globalDefault: true };
 };

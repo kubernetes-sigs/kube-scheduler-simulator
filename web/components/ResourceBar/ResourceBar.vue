@@ -50,6 +50,7 @@ import NodeStoreKey from "../StoreKey/NodeStoreKey";
 import PersistentVolumeStoreKey from "../StoreKey/PVStoreKey";
 import PersistentVolumeClaimStoreKey from "../StoreKey/PVCStoreKey";
 import StorageClassStoreKey from "../StoreKey/StorageClassStoreKey";
+import PriorityClassStoreKey from "../StoreKey/PriorityClassStoreKey";
 import SchedulerConfigurationStoreKey from "../StoreKey/SchedulerConfigurationStoreKey";
 import YamlEditor from "./YamlEditor.vue";
 import SchedulingResults from "./SchedulingResults.vue";
@@ -61,6 +62,7 @@ import {
   V1PersistentVolume,
   V1Pod,
   V1StorageClass,
+  V1PriorityClassList,
 } from "@kubernetes/client-node";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 import { SchedulerConfiguration } from "~/api/v1/types";
@@ -71,6 +73,7 @@ type Resource =
   | V1PersistentVolumeClaim
   | V1PersistentVolume
   | V1StorageClass
+  | V1PriorityClassList
   | SchedulerConfiguration;
 
 interface Store {
@@ -117,6 +120,10 @@ export default defineComponent({
     const storageclassstore = inject(StorageClassStoreKey);
     if (!storageclassstore) {
       throw new Error(`${StorageClassStoreKey} is not provided`);
+    }
+    const priorityclassstore = inject(PriorityClassStoreKey);
+    if (!priorityclassstore) {
+      throw new Error(`${PriorityClassStoreKey} is not provided`);
     }
     const schedulerconfigurationstore = inject(SchedulerConfigurationStoreKey);
     if (!schedulerconfigurationstore) {
@@ -167,6 +174,12 @@ export default defineComponent({
     watch(sc, () => {
       store = storageclassstore;
       selected.value = sc.value;
+    });
+
+    const pc = computed(() => priorityclassstore.selected);
+    watch(pc, () => {
+      store = priorityclassstore;
+      selected.value = pc.value;
     });
 
     const config = computed(() => schedulerconfigurationstore.selected);
