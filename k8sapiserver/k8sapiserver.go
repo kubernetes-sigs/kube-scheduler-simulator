@@ -35,6 +35,7 @@ import (
 	"k8s.io/kubernetes/pkg/controlplane"
 	"k8s.io/kubernetes/pkg/kubeapiserver"
 	kubeletclient "k8s.io/kubernetes/pkg/kubelet/client"
+	"k8s.io/kubernetes/plugin/pkg/admission/priority"
 
 	generated "github.com/kubernetes-sigs/kube-scheduler-simulator/k8sapiserver/openapi"
 )
@@ -180,6 +181,7 @@ func (fakeLocalhost443Listener) Addr() net.Addr {
 // startAPIServer starts a kubernetes API server and an httpserver to handle api requests.
 //nolint:funlen
 func startAPIServer(controlPlaneConfig *controlplane.Config, s *httptest.Server, apiServerReceiver *APIServerHolder) (*controlplane.Instance, *httptest.Server, func(), error) {
+	ctx := context.Background()
 	var m *controlplane.Instance
 
 	stopCh := make(chan struct{})
@@ -199,6 +201,19 @@ func startAPIServer(controlPlaneConfig *controlplane.Config, s *httptest.Server,
 	}
 
 	controlPlaneConfig.ExtraConfig.VersionedInformers = informers.NewSharedInformerFactory(clientset, controlPlaneConfig.GenericConfig.LoopbackClientConfig.Timeout)
+
+	// initialize priority admission plugin.
+	// This plugin is needed to use PriorityClass.
+	// https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#priority
+	priorityPlugin := priority.NewPlugin()
+	priorityPlugin.SetExternalKubeClientSet(clientset)
+	informerFactory := informers.NewSharedInformerFactory(clientset, 0)
+	priorityPlugin.SetExternalKubeInformerFactory(informerFactory)
+	if err := priorityPlugin.ValidateInitialization(); err != nil {
+		return nil, nil, nil, xerrors.Errorf("initialize priority admission plugin: %w", err)
+	}
+
+	controlPlaneConfig.GenericConfig.AdmissionControl = priorityPlugin
 
 	controlPlaneConfig.GenericConfig.FlowControl = utilflowcontrol.New(
 		controlPlaneConfig.ExtraConfig.VersionedInformers,
@@ -247,6 +262,9 @@ func startAPIServer(controlPlaneConfig *controlplane.Config, s *httptest.Server,
 		klog.Errorf("last health content: %q", string(lastHealthContent))
 		return nil, nil, nil, xerrors.Errorf("last health content: %w", err)
 	}
+
+	informerFactory.Start(ctx.Done())
+	informerFactory.WaitForCacheSync(ctx.Done())
 
 	return m, s, closeFn, nil
 }
