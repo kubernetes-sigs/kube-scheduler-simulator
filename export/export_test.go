@@ -5,12 +5,16 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/xerrors"
 
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
+	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	v1 "k8s.io/client-go/applyconfigurations/core/v1"
+	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 )
@@ -164,4 +168,87 @@ func TestService_Export(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestService_Import(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                     string
+		prepareEachServiceMockFn func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, schedulers *mock_export.MockSchedulerService)
+		prepareFakeClientSetFn   func() *fake.Clientset
+		applyConfiguration       func() *ResourcesApplyConfiguration
+		wantErr                  bool
+	}{
+		{
+			name: "import all success",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration) {
+					assert.Equal(t, "Pod1", *cfg.Name)
+				})
+				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
+					assert.Equal(t, "Node1", *cfg.Name)
+				})
+				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
+					assert.Equal(t, "PV1", *cfg.Name)
+				})
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
+					assert.Equal(t, "PVC1", *cfg.Name)
+				})
+				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
+					assert.Equal(t, "StorageClass1", *cfg.Name)
+				})
+				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesApplyConfiguration {
+				var pods = []v1.PodApplyConfiguration{}
+				var nodes = []v1.NodeApplyConfiguration{}
+				var pvs = []v1.PersistentVolumeApplyConfiguration{}
+				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
+				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods = append(pods, *v1.Pod("Pod1", "default"))
+				nodes = append(nodes, *v1.Node("Node1"))
+				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
+				pvcs = append(pvcs, *v1.PersistentVolumeClaim("PVC1", "default"))
+				storageclasses = append(storageclasses, *confstoragev1.StorageClass("StorageClass1"))
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesApplyConfiguration{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  storageclasses,
+					SchedulerConfig: config,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mockSchedulerService := mock_export.NewMockSchedulerService(ctrl)
+			mockStorageClassService := mock_export.NewMockStorageClassService(ctrl)
+			mockPVCService := mock_export.NewMockPersistentVolumeClaimService(ctrl)
+			mockPVService := mock_export.NewMockPersistentVolumeService(ctrl)
+			mockNodeService := mock_export.NewMockNodeService(ctrl)
+			mockPodService := mock_export.NewMockPodService(ctrl)
+			fakeclientset := tt.prepareFakeClientSetFn()
+
+			s := NewResourcesService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockSchedulerService)
+			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockSchedulerService)
+
+			if err := s.Import(context.Background(), tt.applyConfiguration()); (err != nil) != tt.wantErr {
+				t.Fatalf("Import() %v test, \nerror = %v", tt.name, err)
+			}
+		})
+	}
+
 }
