@@ -4,13 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/xerrors"
-
-	"github.com/golang/mock/gomock"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
-	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,6 +15,9 @@ import (
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
+	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
 )
 
 func TestService_Export(t *testing.T) {
@@ -63,7 +63,6 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
-
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -81,7 +80,6 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
-
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -99,7 +97,6 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
-
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -117,7 +114,6 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumeClaims"))
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
-
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -135,7 +131,6 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list storageClasses"))
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
-
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -202,11 +197,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
 				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
@@ -248,11 +243,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("something wrong", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
 				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
@@ -294,11 +289,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("something wrong"))
 				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
@@ -340,11 +335,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
 				pvs = append(pvs, *v1.PersistentVolume("something wrong").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
@@ -386,11 +381,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
 				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
@@ -432,11 +427,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
 				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
@@ -480,11 +475,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
 				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1"))))
@@ -528,11 +523,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
 				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1"))))
@@ -574,11 +569,11 @@ func TestService_Import(t *testing.T) {
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesApplyConfiguration {
-				var pods = []v1.PodApplyConfiguration{}
-				var nodes = []v1.NodeApplyConfiguration{}
-				var pvs = []v1.PersistentVolumeApplyConfiguration{}
-				var pvcs = []v1.PersistentVolumeClaimApplyConfiguration{}
-				var storageclasses = []confstoragev1.StorageClassApplyConfiguration{}
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
 				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1"))))
@@ -623,5 +618,4 @@ func TestService_Import(t *testing.T) {
 			}
 		})
 	}
-
 }
