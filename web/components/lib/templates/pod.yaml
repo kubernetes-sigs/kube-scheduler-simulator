@@ -17,7 +17,7 @@ spec:
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
   restartPolicy: Always
-  terminationGracePeriodSeconds: 30
+  terminationGracePeriodSeconds: 0
   dnsPolicy: ClusterFirst
   securityContext: {}
   enableServiceLinks: true
