@@ -197,7 +197,6 @@ func (s *Service) Export(ctx context.Context) (*Resources, error) {
 func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfiguration) error {
 	// TODO: Issue: #12 PR: #13
 	// if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
-	// 	klog.Warningf("failed to start scheduler with imported configuration: %v", err)
 	// 	return nil, xerrors.Errorf("restart scheduler with imported configuration: %w", err)
 	// }
 	g, _ := errgroup.WithContext(ctx)
