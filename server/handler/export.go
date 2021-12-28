@@ -18,11 +18,11 @@ type ExportHandler struct {
 }
 
 type ResourcesApplyConfiguration struct {
-	Pods            []v1.PodApplyConfiguration                     `json:"podList"`
-	Nodes           []v1.NodeApplyConfiguration                    `json:"nodeList"`
-	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvList"`
-	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcList"`
-	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClassList"`
+	Pods            []v1.PodApplyConfiguration                     `json:"pods"`
+	Nodes           []v1.NodeApplyConfiguration                    `json:"nodes"`
+	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvs"`
+	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcs"`
+	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClasses"`
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
 }
 

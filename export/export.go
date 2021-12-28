@@ -34,20 +34,20 @@ type Service struct {
 
 // Resources  will used to compile all the resources for export.
 type Resources struct {
-	Pods            []corev1.Pod                              `json:"podList"`
-	Nodes           []corev1.Node                             `json:"nodeList"`
-	Pvs             []corev1.PersistentVolume                 `json:"pvList"`
-	Pvcs            []corev1.PersistentVolumeClaim            `json:"pvcList"`
-	StorageClasses  []storagev1.StorageClass                  `json:"storageClassList"`
+	Pods            []corev1.Pod                              `json:"pods"`
+	Nodes           []corev1.Node                             `json:"nodes"`
+	Pvs             []corev1.PersistentVolume                 `json:"pvs"`
+	Pvcs            []corev1.PersistentVolumeClaim            `json:"pvcs"`
+	StorageClasses  []storagev1.StorageClass                  `json:"storageClasses"`
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
 }
 
 type ResourcesApplyConfiguration struct {
-	Pods            []v1.PodApplyConfiguration                     `json:"podList"`
-	Nodes           []v1.NodeApplyConfiguration                    `json:"nodeList"`
-	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvList"`
-	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcList"`
-	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClassList"`
+	Pods            []v1.PodApplyConfiguration                     `json:"pods"`
+	Nodes           []v1.NodeApplyConfiguration                    `json:"nodes"`
+	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvs"`
+	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcs"`
+	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClasses"`
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
 }
 
