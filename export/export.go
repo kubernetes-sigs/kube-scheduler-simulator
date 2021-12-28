@@ -241,15 +241,18 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 		g.Go(func() error {
 			defer sem.Release(1)
 			pv.ObjectMetaApplyConfiguration.UID = nil
-			if *pv.Status.Phase == "Bound" {
-				// PersistentVolumeClaims's UID has been changed to a new value.
-				pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name)
-				if err == nil {
-					pv.Spec.ClaimRef.UID = &pvc.UID
-				} else {
-					pv.Spec.ClaimRef.UID = nil
+			if pv.Status != nil && pv.Status.Phase != nil {
+				if *pv.Status.Phase == "Bound" {
+					// PersistentVolumeClaims's UID has been changed to a new value.
+					pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name)
+					if err == nil {
+						pv.Spec.ClaimRef.UID = &pvc.UID
+					} else {
+						pv.Spec.ClaimRef.UID = nil
+					}
 				}
 			}
+
 			_, err := s.pvService.Apply(ctx, &pv)
 			if err != nil {
 				return xerrors.Errorf("apply PersistentVolume: %w", err)
