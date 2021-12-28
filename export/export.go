@@ -195,10 +195,9 @@ func (s *Service) Export(ctx context.Context) (*Resources, error) {
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
 // (3) Get all resources. (Separated the get function to unify the struct format.)
 func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfiguration) error {
-	// TODO: Issue: #12 PR: #13
-	// if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
-	// 	return nil, xerrors.Errorf("restart scheduler with imported configuration: %w", err)
-	// }
+	if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
+		return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
+	}
 	g, _ := errgroup.WithContext(ctx)
 	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
 
