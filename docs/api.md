@@ -490,3 +490,62 @@ empty
 | ----- | -------- | 
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
+
+## Export
+
+Export current scheduler resources in `json`.
+
+### HTTP Request
+
+`GET /api/v1/export`
+
+
+### Response
+
+`Content-Type: application/json; charset=UTF-8`
+
+```
+type ResourcesApplyConfiguration struct {
+	Pods            []v1.PodApplyConfiguration                     `json:"pods"`
+	Nodes           []v1.NodeApplyConfiguration                    `json:"nodes"`
+	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvs"`
+	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcs"`
+	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClasses"`
+	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
+}
+```
+
+| code  | description |
+| ----- | -------- |
+| 200   | |
+| 500 | something went wrong (see logs of the simulator server) |
+
+## Import
+
+Import scheduler resources from `json`.
+
+### HTTP Request
+
+`POST /api/v1/import`
+
+### Path Parameters
+
+`Content-Type: application/json; charset=UTF-8`
+
+```
+type ResourcesApplyConfiguration struct {
+	Pods            []v1.PodApplyConfiguration                     `json:"pods"`
+	Nodes           []v1.NodeApplyConfiguration                    `json:"nodes"`
+	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvs"`
+	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcs"`
+	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClasses"`
+	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
+}
+```
+
+### Response
+
+| code  | description |
+| ----- | -------- |
+| 200   | |
+| 500 | something went wrong (see logs of the simulator server) |
