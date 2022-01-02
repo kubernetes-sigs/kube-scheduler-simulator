@@ -504,16 +504,9 @@ Export current scheduler resources in `json`.
 
 `Content-Type: application/json; charset=UTF-8`
 
-```
-type ResourcesApplyConfiguration struct {
-	Pods            []v1.PodApplyConfiguration                     `json:"pods"`
-	Nodes           []v1.NodeApplyConfiguration                    `json:"nodes"`
-	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvs"`
-	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcs"`
-	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
-}
-```
+`ResourcesApplyConfiguration`(server/handler/export.go:L20)
+
+[Sample data](./api-samples/v1/export.md)
 
 | code  | description |
 | ----- | -------- |
@@ -528,20 +521,13 @@ Import scheduler resources from `json`.
 
 `POST /api/v1/import`
 
-### Path Parameters
+### Request Body
 
 `Content-Type: application/json; charset=UTF-8`
 
-```
-type ResourcesApplyConfiguration struct {
-	Pods            []v1.PodApplyConfiguration                     `json:"pods"`
-	Nodes           []v1.NodeApplyConfiguration                    `json:"nodes"`
-	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvs"`
-	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcs"`
-	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
-}
-```
+`ResourcesApplyConfiguration`(server/handler/export.go:L20)
+
+[Sample data](./api-samples/v1/import.md)
 
 ### Response
 
