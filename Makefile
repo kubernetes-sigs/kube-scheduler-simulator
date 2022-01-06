@@ -19,6 +19,10 @@ format:
 test:
 	go test ./...
 
+.PHONY: mod-download
+mod-download: ## Downloads the Go module
+		go mod download -x
+
 .PHONY: build
 build:
 	go build -o ./bin/simulator ./simulator.go
