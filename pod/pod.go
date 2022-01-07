@@ -3,6 +3,7 @@ package pod
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
@@ -54,7 +55,6 @@ func (s *Service) Apply(ctx context.Context, pod *v1.PodApplyConfiguration) (*co
 	if err != nil {
 		return nil, xerrors.Errorf("apply pod: %w", err)
 	}
-
 	return newpod, nil
 }
 
@@ -77,8 +77,35 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 
 // DelteAll deletes all pods.
 func (s *Service) DeleteAll(ctx context.Context) error {
-	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
-		return fmt.Errorf("delete all pods: %w", err)
+	pods, err := s.List(ctx)
+	if err != nil {
+		return fmt.Errorf("list pods: %w", err)
+	}
+
+	// if scheduled, delete it
+	var wg sync.WaitGroup
+	errCh := make(chan error, 1)
+	defer close(errCh)
+
+	for _, pod := range pods.Items {
+		wg.Add(1)
+		go func(pod corev1.Pod) {
+			defer wg.Done()
+			if pod.Spec.NodeName != "" {
+				err := s.Delete(ctx, pod.Name)
+				if err != nil {
+					errCh <- err
+				}
+			}
+		}(pod)
+	}
+
+	wg.Wait()
+
+	select {
+	case err := <-errCh:
+		return err
+	default:
 	}
 
 	return nil

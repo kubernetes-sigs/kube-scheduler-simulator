@@ -156,7 +156,7 @@ func TestService_DeleteAll(t *testing.T) {
 		wantErr                 bool
 	}{
 		{
-			name: "delete all nodes and pods",
+			name: "delete all nodes and pods scheduled on them",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
 				m.EXPECT().List(gomock.Any()).Return(&corev1.PodList{
 					Items: []corev1.Pod{
@@ -181,7 +181,7 @@ func TestService_DeleteAll(t *testing.T) {
 								Name: "other-pod1",
 							},
 							Spec: corev1.PodSpec{
-								NodeName: "node2",
+								NodeName: "",
 							},
 						},
 					},
