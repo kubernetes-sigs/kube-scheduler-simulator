@@ -23,6 +23,7 @@ Users can create resources below.
 - Persistent Volumes
 - Persistent Volume Claims
 - Storage Classes
+- Priority Classes
 
 When users request to create resources, the simulator server will create it with requesting kube-apiserver.
 
