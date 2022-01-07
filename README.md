@@ -9,6 +9,7 @@ On the simulator, you can create/edit/delete these resources to simulate a clust
 - Persistent Volumes
 - Persistent Volume Claims
 - Storage Classes
+- Priority Classes
 
 ![list resources](./docs/images/resources.png)
 
