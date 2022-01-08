@@ -186,7 +186,7 @@ func TestService_DeleteAll(t *testing.T) {
 						},
 					},
 				}, nil)
-				m.EXPECT().DeleteAll(gomock.Any()).Return(nil)
+				m.EXPECT().DeleteAllScheduledPod(gomock.Any()).Return(nil)
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -204,7 +204,7 @@ func TestService_DeleteAll(t *testing.T) {
 			name: "delete nodes with no pods",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
 				m.EXPECT().List(gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
-				m.EXPECT().DeleteAll(gomock.Any()).Return(nil)
+				m.EXPECT().DeleteAllScheduledPod(gomock.Any()).Return(nil)
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -241,7 +241,7 @@ func TestService_DeleteAll(t *testing.T) {
 						},
 					},
 				}, nil)
-				m.EXPECT().DeleteAll(gomock.Any()).Return(errors.New("error"))
+				m.EXPECT().DeleteAllScheduledPod(gomock.Any()).Return(errors.New("error"))
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
