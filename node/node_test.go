@@ -147,7 +147,7 @@ func TestService_Delete(t *testing.T) {
 	}
 }
 
-func TestService_DeleteAll(t *testing.T) {
+func TestService_DeleteAllScheduledPod(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                    string
