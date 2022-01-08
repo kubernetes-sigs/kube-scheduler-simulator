@@ -22,7 +22,7 @@ type Service struct {
 type PodService interface {
 	List(ctx context.Context) (*corev1.PodList, error)
 	Delete(ctx context.Context, name string) error
-	DeleteAll(ctx context.Context) error
+	DeleteAllScheduledPod(ctx context.Context) error
 }
 
 // NewNodeService initializes Service.
@@ -95,7 +95,7 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 // DeleteAll deletes all nodes.
 func (s *Service) DeleteAll(ctx context.Context) error {
 	// delete all pods
-	if err := s.podService.DeleteAll(ctx); err != nil {
+	if err := s.podService.DeleteAllScheduledPod(ctx); err != nil {
 		return xerrors.Errorf("delete all pods: %w", err)
 	}
 

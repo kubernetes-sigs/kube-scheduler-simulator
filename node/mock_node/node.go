@@ -49,18 +49,18 @@ func (mr *MockPodServiceMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPodService)(nil).Delete), arg0, arg1)
 }
 
-// DeleteAll mocks base method.
-func (m *MockPodService) DeleteAll(arg0 context.Context) error {
+// DeleteAllScheduledPod mocks base method.
+func (m *MockPodService) DeleteAllScheduledPod(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAll", arg0)
+	ret := m.ctrl.Call(m, "DeleteAllScheduledPod", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteAll indicates an expected call of DeleteAll.
-func (mr *MockPodServiceMockRecorder) DeleteAll(arg0 interface{}) *gomock.Call {
+// DeleteAllScheduledPod indicates an expected call of DeleteAllScheduledPod.
+func (mr *MockPodServiceMockRecorder) DeleteAllScheduledPod(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAll", reflect.TypeOf((*MockPodService)(nil).DeleteAll), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllScheduledPod", reflect.TypeOf((*MockPodService)(nil).DeleteAllScheduledPod), arg0)
 }
 
 // List mocks base method.

@@ -75,8 +75,8 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// DelteAll deletes all pods.
-func (s *Service) DeleteAll(ctx context.Context) error {
+// DelteAllScheduledPod deletes all scheduled pods.
+func (s *Service) DeleteAllScheduledPod(ctx context.Context) error {
 	pods, err := s.List(ctx)
 	if err != nil {
 		return fmt.Errorf("list pods: %w", err)
