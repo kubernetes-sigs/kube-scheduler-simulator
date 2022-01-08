@@ -18,6 +18,7 @@ type PodService interface {
 	List(ctx context.Context) (*corev1.PodList, error)
 	Apply(ctx context.Context, pod *configv1.PodApplyConfiguration) (*corev1.Pod, error)
 	Delete(ctx context.Context, name string) error
+	DeleteAll(ctx context.Context) error
 	DeleteAllScheduledPod(ctx context.Context) error
 }
 
