@@ -3,7 +3,6 @@ package pod
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
@@ -77,36 +76,10 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 
 // DelteAllScheduledPod deletes all scheduled pods.
 func (s *Service) DeleteAllScheduledPod(ctx context.Context) error {
-	pods, err := s.List(ctx)
-	if err != nil {
-		return fmt.Errorf("list pods: %w", err)
+	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{
+		FieldSelector: "spec.nodeName!=",
+	}); err != nil {
+		return fmt.Errorf("delete all scheduled pods: %w", err)
 	}
-
-	// if scheduled, delete it
-	var wg sync.WaitGroup
-	errCh := make(chan error, 1)
-	defer close(errCh)
-
-	for _, pod := range pods.Items {
-		wg.Add(1)
-		go func(pod corev1.Pod) {
-			defer wg.Done()
-			if pod.Spec.NodeName != "" {
-				err := s.Delete(ctx, pod.Name)
-				if err != nil {
-					errCh <- err
-				}
-			}
-		}(pod)
-	}
-
-	wg.Wait()
-
-	select {
-	case err := <-errCh:
-		return err
-	default:
-	}
-
 	return nil
 }
