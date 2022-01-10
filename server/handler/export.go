@@ -3,14 +3,14 @@ package handler
 import (
 	"net/http"
 
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 	"github.com/labstack/echo/v4"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
+	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/klog/v2"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
-
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 )
 
 type ExportHandler struct {
@@ -18,12 +18,13 @@ type ExportHandler struct {
 }
 
 type ResourcesApplyConfiguration struct {
-	Pods            []v1.PodApplyConfiguration                     `json:"pods"`
-	Nodes           []v1.NodeApplyConfiguration                    `json:"nodes"`
-	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvs"`
-	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcs"`
-	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
+	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
+	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
+	Pvs             []v1.PersistentVolumeApplyConfiguration           `json:"pvs"`
+	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration      `json:"pvcs"`
+	StorageClasses  []confstoragev1.StorageClassApplyConfiguration    `json:"storageClasses"`
+	PriorityClasses []schedulingcfgv1.PriorityClassApplyConfiguration `json:"priorityClasses"`
+	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
 }
 
 func NewExportHandler(s di.ResourcesService) *ExportHandler {
@@ -66,6 +67,7 @@ func convertToResourcesApplyConfiguration(r *ResourcesApplyConfiguration) *expor
 		Pvs:             r.Pvs,
 		Pvcs:            r.Pvcs,
 		StorageClasses:  r.StorageClasses,
+		PriorityClasses: r.PriorityClasses,
 		SchedulerConfig: r.SchedulerConfig,
 	}
 }

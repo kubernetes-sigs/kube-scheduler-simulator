@@ -6,6 +6,7 @@ package export
 //go:generate mockgen -destination=./mock_$GOPACKAGE/pvc.go . PersistentVolumeClaimService
 //go:generate mockgen -destination=./mock_$GOPACKAGE/storageClassc.go . StorageClassService
 //go:generate mockgen -destination=./mock_$GOPACKAGE/scheduler.go . SchedulerService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/priorityclass.go . PriorityService
 
 import (
 	"context"
@@ -15,21 +16,24 @@ import (
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
+	schedulingv1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
+	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 )
 
 type Service struct {
-	client              clientset.Interface
-	podService          PodService
-	nodeService         NodeService
-	pvService           PersistentVolumeService
-	pvcService          PersistentVolumeClaimService
-	storageClassService StorageClassService
-	schedulerService    SchedulerService
+	client               clientset.Interface
+	podService           PodService
+	nodeService          NodeService
+	pvService            PersistentVolumeService
+	pvcService           PersistentVolumeClaimService
+	storageClassService  StorageClassService
+	priorityclassService PriorityClassService
+	schedulerService     SchedulerService
 }
 
 // Resources  will used to compile all the resources for export.
@@ -39,16 +43,18 @@ type Resources struct {
 	Pvs             []corev1.PersistentVolume                 `json:"pvs"`
 	Pvcs            []corev1.PersistentVolumeClaim            `json:"pvcs"`
 	StorageClasses  []storagev1.StorageClass                  `json:"storageClasses"`
+	PriorityClasses []schedulingv1.PriorityClass              `json:"priorityClasses"`
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
 }
 
 type ResourcesApplyConfiguration struct {
-	Pods            []v1.PodApplyConfiguration                     `json:"pods"`
-	Nodes           []v1.NodeApplyConfiguration                    `json:"nodes"`
-	Pvs             []v1.PersistentVolumeApplyConfiguration        `json:"pvs"`
-	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration   `json:"pvcs"`
-	StorageClasses  []confstoragev1.StorageClassApplyConfiguration `json:"storageClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration      `json:"schedulerConfig"`
+	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
+	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
+	Pvs             []v1.PersistentVolumeApplyConfiguration           `json:"pvs"`
+	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration      `json:"pvcs"`
+	StorageClasses  []confstoragev1.StorageClassApplyConfiguration    `json:"storageClasses"`
+	PriorityClasses []schedulingcfgv1.PriorityClassApplyConfiguration `json:"priorityClasses"`
+	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
 }
 
 type PodService interface {
@@ -77,20 +83,26 @@ type StorageClassService interface {
 	Apply(ctx context.Context, storageClass *confstoragev1.StorageClassApplyConfiguration) (*storagev1.StorageClass, error)
 }
 
+type PriorityClassService interface {
+	List(ctx context.Context) (*schedulingv1.PriorityClassList, error)
+	Apply(ctx context.Context, priorityClass *schedulingcfgv1.PriorityClassApplyConfiguration) (*schedulingv1.PriorityClass, error)
+}
+
 type SchedulerService interface {
 	GetSchedulerConfig() *v1beta2config.KubeSchedulerConfiguration
 	RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error
 }
 
-func NewResourcesService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, storageClasss StorageClassService, schedulers SchedulerService) *Service {
+func NewResourcesService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, storageClasss StorageClassService, priorityClasss PriorityClassService, schedulers SchedulerService) *Service {
 	return &Service{
-		client:              client,
-		podService:          pods,
-		nodeService:         nodes,
-		pvService:           pvs,
-		pvcService:          pvcs,
-		storageClassService: storageClasss,
-		schedulerService:    schedulers,
+		client:               client,
+		podService:           pods,
+		nodeService:          nodes,
+		pvService:            pvs,
+		pvcService:           pvcs,
+		storageClassService:  storageClasss,
+		priorityclassService: priorityClasss,
+		schedulerService:     schedulers,
 	}
 }
 
@@ -170,6 +182,19 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 	}
 	g.Go(func() error {
 		defer sem.Release(1)
+		pcs, err := s.priorityclassService.List(ctx)
+		if err != nil {
+			return xerrors.Errorf("to call list priorityClasses")
+		}
+		resources.PriorityClasses = pcs.Items
+		return nil
+	})
+
+	if err := sem.Acquire(ctx, 1); err != nil {
+		return nil, xerrors.Errorf("acquire semaphore: %w", err)
+	}
+	g.Go(func() error {
+		defer sem.Release(1)
 		ss := s.schedulerService.GetSchedulerConfig()
 		resources.SchedulerConfig = ss
 		return nil
@@ -200,6 +225,22 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 	}
 	g, _ := errgroup.WithContext(ctx)
 	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
+
+	for i := range resources.PriorityClasses {
+		pc := resources.PriorityClasses[i]
+		if err := sem.Acquire(ctx, 1); err != nil {
+			return xerrors.Errorf("acquire semaphore: %w", err)
+		}
+		g.Go(func() error {
+			defer sem.Release(1)
+			pc.ObjectMetaApplyConfiguration.UID = nil
+			_, err := s.priorityclassService.Apply(ctx, &pc)
+			if err != nil {
+				return xerrors.Errorf("apply Node: %w", err)
+			}
+			return nil
+		})
+	}
 
 	for i := range resources.StorageClasses {
 		sc := resources.StorageClasses[i]
