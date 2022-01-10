@@ -6,7 +6,7 @@ package export
 //go:generate mockgen -destination=./mock_$GOPACKAGE/pvc.go . PersistentVolumeClaimService
 //go:generate mockgen -destination=./mock_$GOPACKAGE/storageClassc.go . StorageClassService
 //go:generate mockgen -destination=./mock_$GOPACKAGE/scheduler.go . SchedulerService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/priorityclass.go . PriorityService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/priorityclass.go . PriorityClassService
 
 import (
 	"context"
