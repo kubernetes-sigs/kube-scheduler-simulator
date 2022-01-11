@@ -7,8 +7,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
-	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
@@ -20,6 +18,9 @@ import (
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
+	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
 )
 
 func TestService_Export(t *testing.T) {
