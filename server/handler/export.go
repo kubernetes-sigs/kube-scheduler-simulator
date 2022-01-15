@@ -60,7 +60,7 @@ func (h *ExportHandler) Import(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// convert from ResourcesApplyConfiguration to export.ResourcesApplyConfiguration.
+// convertToResourcesApplyConfiguration converts from *ResourcesApplyConfiguration to *export.ResourcesApplyConfiguration.
 func convertToResourcesApplyConfiguration(r *ResourcesApplyConfiguration) *export.ResourcesApplyConfiguration {
 	return &export.ResourcesApplyConfiguration{
 		Pods:            r.Pods,
