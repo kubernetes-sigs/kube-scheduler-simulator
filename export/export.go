@@ -22,6 +22,7 @@ import (
 	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog/v2"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 )
 
@@ -171,7 +172,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		defer sem.Release(1)
 		scs, err := s.storageClassService.List(ctx)
 		if err != nil {
-			return xerrors.Errorf("to call list storageClasses")
+			return xerrors.Errorf("to call list storageClasses: %w", err)
 		}
 		resources.StorageClasses = scs.Items
 		return nil
@@ -184,7 +185,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 		defer sem.Release(1)
 		pcs, err := s.priorityclassService.List(ctx)
 		if err != nil {
-			return xerrors.Errorf("to call list priorityClasses")
+			return xerrors.Errorf("to call list priorityClasses: %w", err)
 		}
 		resources.PriorityClasses = pcs.Items
 		return nil
@@ -288,6 +289,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 					if err == nil {
 						pv.Spec.ClaimRef.UID = &pvc.UID
 					} else {
+						klog.Warningf("failed to Get PersistentVolumeClaims from the specified name: %v", err)
 						pv.Spec.ClaimRef.UID = nil
 					}
 				}

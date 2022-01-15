@@ -49,7 +49,7 @@ func (h *ExportHandler) Import(c echo.Context) error {
 	reqResources := new(ResourcesApplyConfiguration)
 	if err := c.Bind(reqResources); err != nil {
 		klog.Errorf("failed to bind import resources all request: %+v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 
 	err := h.service.Import(ctx, convertToResourcesApplyConfiguration(reqResources))
