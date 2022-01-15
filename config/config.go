@@ -6,6 +6,10 @@ import (
 	"strconv"
 
 	"golang.org/x/xerrors"
+	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
+
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
 )
 
 // ErrEmptyEnv represents the required environment variable don't exist.
@@ -13,9 +17,10 @@ var ErrEmptyEnv = errors.New("env is needed, but empty")
 
 // Config is configuration for simulator.
 type Config struct {
-	Port        int
-	EtcdURL     string
-	FrontendURL string
+	Port                int
+	EtcdURL             string
+	FrontendURL         string
+	InitialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
 }
 
 // NewConfig gets some settings from environment variables.
@@ -35,10 +40,16 @@ func NewConfig() (*Config, error) {
 		return nil, xerrors.Errorf("get frontend URL: %w", err)
 	}
 
+	initialschedulerCfg, err := getSchedulerCfg()
+	if err != nil {
+		return nil, xerrors.Errorf("get SchedulerCfg: %w", err)
+	}
+
 	return &Config{
-		Port:        port,
-		EtcdURL:     etcdurl,
-		FrontendURL: frontendurl,
+		Port:                port,
+		EtcdURL:             etcdurl,
+		FrontendURL:         frontendurl,
+		InitialSchedulerCfg: initialschedulerCfg,
 	}, nil
 }
 
@@ -72,4 +83,51 @@ func getFrontendURL() (string, error) {
 	}
 
 	return e, nil
+}
+
+// getSchedulerCfg reads KUBE_SCHEDULER_CONFIG_PATH which means initial kube-scheduler configuration
+// and converts it into *v1beta2config.KubeSchedulerConfiguration.
+// KUBE_SCHEDULER_CONFIG_PATH is not required.
+// If KUBE_SCHEDULER_CONFIG_PATH is not set, the default configuration of kube-scheduler will be used.
+func getSchedulerCfg() (*v1beta2config.KubeSchedulerConfiguration, error) {
+	dsc, err := defaultconfig.DefaultSchedulerConfig()
+	if err != nil {
+		return nil, xerrors.Errorf("create default scheduler config: %w", err)
+	}
+
+	e := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
+	if e == "" {
+		return dsc, nil
+	}
+
+	data, err := os.ReadFile(e)
+	if err != nil {
+		return nil, xerrors.Errorf("read scheduler config file: %w", err)
+	}
+
+	sc, err := decodeSchedulerCfg(data)
+	if err != nil {
+		return nil, xerrors.Errorf("decode scheduler config file: %w", err)
+	}
+
+	return sc, nil
+}
+
+func decodeSchedulerCfg(buf []byte) (*v1beta2config.KubeSchedulerConfiguration, error) {
+	decoder := scheme.Codecs.UniversalDeserializer()
+	obj, _, err := decoder.Decode(buf, nil, nil)
+	if err != nil {
+		return nil, xerrors.Errorf("load an k8s object from buffer: %w", err)
+	}
+
+	sc, ok := obj.(*v1beta2config.KubeSchedulerConfiguration)
+	if !ok {
+		return nil, xerrors.Errorf("convert to *v1beta2config.KubeSchedulerConfiguration, but got unexpected type: %T", obj)
+	}
+
+	err = sc.DecodeNestedObjects(decoder)
+	if err != nil {
+		return nil, xerrors.Errorf("decode nested plugin args: %w", err)
+	}
+	return sc, nil
 }
