@@ -236,7 +236,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfigura
 			pc.ObjectMetaApplyConfiguration.UID = nil
 			_, err := s.priorityclassService.Apply(ctx, &pc)
 			if err != nil {
-				return xerrors.Errorf("apply Node: %w", err)
+				return xerrors.Errorf("apply PriorityClass: %w", err)
 			}
 			return nil
 		})
