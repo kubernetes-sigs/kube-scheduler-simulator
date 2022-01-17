@@ -71,7 +71,7 @@ type PriorityClassService interface {
 	Delete(ctx context.Context, name string) error
 }
 
-type ResourcesService interface {
-	Export(ctx context.Context) (*export.Resources, error)
-	Import(ctx context.Context, resources *export.ResourcesApplyConfiguration) error
+type ExportService interface {
+	Export(ctx context.Context) (*export.ResourcesForExport, error)
+	Import(ctx context.Context, resources *export.ResourcesForImport) error
 }

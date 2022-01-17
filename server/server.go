@@ -40,7 +40,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	storageClassHandler := handler.NewStorageClassHandler(dic.StorageClassService())
 	schedulercfgHandler := handler.NewSchedulerConfigHandler(dic.SchedulerService())
 	priorityClassHandler := handler.NewPriorityClassHandler(dic.PriorityClassService())
-	exportHandler := handler.NewExportHandler(dic.ResourcesService())
+	exportHandler := handler.NewExportHandler(dic.ExportService())
 
 	// register apis
 	v1 := e.Group("/api/v1")

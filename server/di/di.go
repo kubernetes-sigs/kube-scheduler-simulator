@@ -25,7 +25,7 @@ type Container struct {
 	pvcService           PersistentVolumeClaimService
 	storageClassService  StorageClassService
 	schedulerService     SchedulerService
-	resourcesService     ResourcesService
+	exportService        ExportService
 	priorityClassService PriorityClassService
 }
 
@@ -44,7 +44,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	c.nodeService = node.NewNodeService(client, c.podService)
 
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
-	c.resourcesService = export.NewResourcesService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
+	c.exportService = export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
 	return c
 }
 
@@ -83,6 +83,7 @@ func (c *Container) PriorityClassService() PriorityClassService {
 	return c.priorityClassService
 }
 
-func (c *Container) ResourcesService() ResourcesService {
-	return c.resourcesService
+// ExportService returns ExportService.
+func (c *Container) ExportService() ExportService {
+	return c.exportService
 }

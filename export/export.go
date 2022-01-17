@@ -38,7 +38,7 @@ type Service struct {
 }
 
 // Resources denotes all resources and scheduler configuration for export.
-type Resources struct {
+type ResourcesForExport struct {
 	Pods            []corev1.Pod                              `json:"pods"`
 	Nodes           []corev1.Node                             `json:"nodes"`
 	Pvs             []corev1.PersistentVolume                 `json:"pvs"`
@@ -48,7 +48,7 @@ type Resources struct {
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
 }
 
-type ResourcesApplyConfiguration struct {
+type ResourcesForImport struct {
 	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
 	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
 	Pvs             []v1.PersistentVolumeApplyConfiguration           `json:"pvs"`
@@ -94,7 +94,7 @@ type SchedulerService interface {
 	RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error
 }
 
-func NewResourcesService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, storageClasss StorageClassService, priorityClasss PriorityClassService, schedulers SchedulerService) *Service {
+func NewExportService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, storageClasss StorageClassService, priorityClasss PriorityClassService, schedulers SchedulerService) *Service {
 	return &Service{
 		client:               client,
 		podService:           pods,
@@ -108,10 +108,10 @@ func NewResourcesService(client clientset.Interface, pods PodService, nodes Node
 }
 
 // Get all resources from each service.
-func (s *Service) get(ctx context.Context) (*Resources, error) {
+func (s *Service) get(ctx context.Context) (*ResourcesForExport, error) {
 	g, _ := errgroup.WithContext(ctx)
 	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
-	resources := Resources{}
+	resources := ResourcesForExport{}
 
 	if err := sem.Acquire(ctx, 1); err != nil {
 		return nil, xerrors.Errorf("acquire semaphore: %w", err)
@@ -207,7 +207,7 @@ func (s *Service) get(ctx context.Context) (*Resources, error) {
 	return &resources, nil
 }
 
-func (s *Service) Export(ctx context.Context) (*Resources, error) {
+func (s *Service) Export(ctx context.Context) (*ResourcesForExport, error) {
 	resources, err := s.get(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("export resources all: %w", err)
@@ -220,7 +220,7 @@ func (s *Service) Export(ctx context.Context) (*Resources, error) {
 // (2) Apply each resource to the scheduler.
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
 // (3) Get all resources. (Separated the get function to unify the struct format.)
-func (s *Service) Import(ctx context.Context, resources *ResourcesApplyConfiguration) error {
+func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) error {
 	if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 		return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
 	}

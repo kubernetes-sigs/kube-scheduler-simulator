@@ -15,10 +15,10 @@ import (
 )
 
 type ExportHandler struct {
-	service di.ResourcesService
+	service di.ExportService
 }
 
-type ResourcesApplyConfiguration struct {
+type ResourcesForImport struct {
 	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
 	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
 	Pvs             []v1.PersistentVolumeApplyConfiguration           `json:"pvs"`
@@ -28,7 +28,7 @@ type ResourcesApplyConfiguration struct {
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
 }
 
-func NewExportHandler(s di.ResourcesService) *ExportHandler {
+func NewExportHandler(s di.ExportService) *ExportHandler {
 	return &ExportHandler{service: s}
 }
 
@@ -46,7 +46,7 @@ func (h *ExportHandler) Export(c echo.Context) error {
 func (h *ExportHandler) Import(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	reqResources := new(ResourcesApplyConfiguration)
+	reqResources := new(ResourcesForImport)
 	if err := c.Bind(reqResources); err != nil {
 		klog.Errorf("failed to bind import resources all request: %+v", err)
 		return echo.NewHTTPError(http.StatusBadRequest)
@@ -61,8 +61,8 @@ func (h *ExportHandler) Import(c echo.Context) error {
 }
 
 // convertToResourcesApplyConfiguration converts from *ResourcesApplyConfiguration to *export.ResourcesApplyConfiguration.
-func convertToResourcesApplyConfiguration(r *ResourcesApplyConfiguration) *export.ResourcesApplyConfiguration {
-	return &export.ResourcesApplyConfiguration{
+func convertToResourcesApplyConfiguration(r *ResourcesForImport) *export.ResourcesForImport {
+	return &export.ResourcesForImport{
 		Pods:            r.Pods,
 		Nodes:           r.Nodes,
 		Pvs:             r.Pvs,
