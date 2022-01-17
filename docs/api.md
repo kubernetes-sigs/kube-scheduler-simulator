@@ -515,7 +515,7 @@ You can find sample requests/responses [here](./api-samples/v1/export.md)
 
 ## Import
 
-Import scheduler resources from `json`.
+Apply resources and scheduler configuration.
 
 ### HTTP Request
 
