@@ -502,8 +502,6 @@ Get all resources and current scheduler configuration.
 
 ### Response
 
-`Content-Type: application/json; charset=UTF-8`
-
 [ResourcesApplyConfiguration](server/handler/export.go:L20)
 
 You can find sample requests/responses [here](./api-samples/v1/export.md)
@@ -522,8 +520,6 @@ Apply resources and scheduler configuration.
 `POST /api/v1/import`
 
 ### Request Body
-
-`Content-Type: application/json; charset=UTF-8`
 
 [ResourcesApplyConfiguration](server/handler/export.go:L20)
 
