@@ -493,7 +493,7 @@ empty
 
 ## Export
 
-Export current scheduler resources in `json`.
+Get all resources and current scheduler configuration. 
 
 ### HTTP Request
 
