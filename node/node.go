@@ -99,7 +99,7 @@ func (s *Service) DeleteCollection(ctx context.Context) error {
 		FieldSelector: "spec.nodeName!=",
 	}
 	if err := s.podService.DeleteCollection(ctx, lopt); err != nil {
-		return xerrors.Errorf("delete all pods: %w", err)
+		return xerrors.Errorf("delete all scheduled pods: %w", err)
 	}
 
 	// delete all nodes
