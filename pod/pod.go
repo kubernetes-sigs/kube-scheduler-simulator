@@ -74,20 +74,10 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// DeleteAllPod deletes all pods.
-func (s *Service) DeleteAll(ctx context.Context) error {
-	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
-		return fmt.Errorf("delete all pods: %w", err)
-	}
-	return nil
-}
-
-// DelteAllScheduledPod deletes all scheduled pods.
-func (s *Service) DeleteAllScheduledPod(ctx context.Context) error {
-	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{
-		FieldSelector: "spec.nodeName!=",
-	}); err != nil {
-		return fmt.Errorf("delete all scheduled pods: %w", err)
+// DeleteCollection deletes all pods according to the list options.
+func (s *Service) DeleteCollection(ctx context.Context, lopt metav1.ListOptions) error {
+	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, lopt); err != nil {
+		return fmt.Errorf("delete collection of pods: %w", err)
 	}
 	return nil
 }

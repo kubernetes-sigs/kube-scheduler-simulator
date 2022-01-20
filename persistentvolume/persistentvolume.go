@@ -63,10 +63,10 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// DeleteAll deletes all persistentVolumes.
-func (s *Service) DeleteAll(ctx context.Context) error {
+// DeleteCollection deletes all persistentVolumes.
+func (s *Service) DeleteCollection(ctx context.Context) error {
 	if err := s.client.CoreV1().PersistentVolumes().DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
-		return xerrors.Errorf("delete all persistentVolumes: %w", err)
+		return xerrors.Errorf("delete collection of persistentVolumes: %w", err)
 	}
 
 	return nil

@@ -22,7 +22,7 @@ type Service struct {
 type PodService interface {
 	List(ctx context.Context) (*corev1.PodList, error)
 	Delete(ctx context.Context, name string) error
-	DeleteAllScheduledPod(ctx context.Context) error
+	DeleteCollection(ctx context.Context, lopt metav1.ListOptions) error
 }
 
 // NewNodeService initializes Service.
@@ -92,10 +92,13 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// DeleteAll deletes all nodes.
-func (s *Service) DeleteAll(ctx context.Context) error {
-	// delete all pods
-	if err := s.podService.DeleteAllScheduledPod(ctx); err != nil {
+// DeleteCollection deletes all nodes.
+func (s *Service) DeleteCollection(ctx context.Context) error {
+	// delete all scheduled pods
+	lopt := metav1.ListOptions{
+		FieldSelector: "spec.nodeName!=",
+	}
+	if err := s.podService.DeleteCollection(ctx, lopt); err != nil {
 		return xerrors.Errorf("delete all pods: %w", err)
 	}
 
