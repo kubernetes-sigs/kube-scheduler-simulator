@@ -48,6 +48,7 @@ type ResourcesForExport struct {
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
 }
 
+// ResourcesForImport denotes all resources and scheduler configuration for import.
 type ResourcesForImport struct {
 	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
 	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
