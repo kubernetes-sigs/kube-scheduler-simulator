@@ -37,7 +37,7 @@ type Service struct {
 	schedulerService     SchedulerService
 }
 
-// Resources denotes all resources and scheduler configuration for export.
+// ResourcesForExport denotes all resources and scheduler configuration for export.
 type ResourcesForExport struct {
 	Pods            []corev1.Pod                              `json:"pods"`
 	Nodes           []corev1.Node                             `json:"nodes"`
