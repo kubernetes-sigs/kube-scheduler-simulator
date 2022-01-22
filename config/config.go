@@ -90,13 +90,12 @@ func getFrontendURL() (string, error) {
 // KUBE_SCHEDULER_CONFIG_PATH is not required.
 // If KUBE_SCHEDULER_CONFIG_PATH is not set, the default configuration of kube-scheduler will be used.
 func getSchedulerCfg() (*v1beta2config.KubeSchedulerConfiguration, error) {
-	dsc, err := defaultconfig.DefaultSchedulerConfig()
-	if err != nil {
-		return nil, xerrors.Errorf("create default scheduler config: %w", err)
-	}
-
 	e := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
 	if e == "" {
+		dsc, err := defaultconfig.DefaultSchedulerConfig()
+		if err != nil {
+			return nil, xerrors.Errorf("create default scheduler config: %w", err)
+		}
 		return dsc, nil
 	}
 
