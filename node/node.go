@@ -93,17 +93,14 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 }
 
 // DeleteCollection deletes all nodes.
-func (s *Service) DeleteCollection(ctx context.Context) error {
+func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
 	// delete all scheduled pods
-	lopt := metav1.ListOptions{
-		FieldSelector: "spec.nodeName!=",
-	}
-	if err := s.podService.DeleteCollection(ctx, lopt); err != nil {
+	if err := s.podService.DeleteCollection(ctx, lopts); err != nil {
 		return xerrors.Errorf("delete all scheduled pods: %w", err)
 	}
 
 	// delete all nodes
-	if err := s.client.CoreV1().Nodes().DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
+	if err := s.client.CoreV1().Nodes().DeleteCollection(ctx, metav1.DeleteOptions{}, lopts); err != nil {
 		return xerrors.Errorf("delete all nodes: %w", err)
 	}
 

@@ -19,7 +19,7 @@ type PodService interface {
 	List(ctx context.Context) (*corev1.PodList, error)
 	Apply(ctx context.Context, pod *configv1.PodApplyConfiguration) (*corev1.Pod, error)
 	Delete(ctx context.Context, name string) error
-	DeleteCollection(ctx context.Context, lopt metav1.ListOptions) error
+	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
 // NodeService represents service for manage Nodes.
@@ -28,7 +28,7 @@ type NodeService interface {
 	List(ctx context.Context) (*corev1.NodeList, error)
 	Apply(ctx context.Context, node *configv1.NodeApplyConfiguration) (*corev1.Node, error)
 	Delete(ctx context.Context, name string) error
-	DeleteCollection(ctx context.Context) error
+	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
 // PersistentVolumeService represents service for manage Pods.
@@ -37,7 +37,7 @@ type PersistentVolumeService interface {
 	List(ctx context.Context) (*corev1.PersistentVolumeList, error)
 	Apply(ctx context.Context, pv *configv1.PersistentVolumeApplyConfiguration) (*corev1.PersistentVolume, error)
 	Delete(ctx context.Context, name string) error
-	DeleteCollection(ctx context.Context) error
+	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
 // PersistentVolumeClaimService represents service for manage Nodes.
@@ -46,7 +46,7 @@ type PersistentVolumeClaimService interface {
 	List(ctx context.Context) (*corev1.PersistentVolumeClaimList, error)
 	Apply(ctx context.Context, pvc *configv1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
 	Delete(ctx context.Context, name string) error
-	DeleteCollection(ctx context.Context) error
+	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
 // StorageClassService represents service for manage Pods.
@@ -55,7 +55,7 @@ type StorageClassService interface {
 	List(ctx context.Context) (*storagev1.StorageClassList, error)
 	Apply(ctx context.Context, sc *storageconfigv1.StorageClassApplyConfiguration) (*storagev1.StorageClass, error)
 	Delete(ctx context.Context, name string) error
-	DeleteCollection(ctx context.Context) error
+	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
 // SchedulerService represents service for manage scheduler.
@@ -73,5 +73,5 @@ type PriorityClassService interface {
 	List(ctx context.Context) (*v1.PriorityClassList, error)
 	Apply(ctx context.Context, priorityClass *schedulingv1.PriorityClassApplyConfiguration) (*v1.PriorityClass, error)
 	Delete(ctx context.Context, name string) error
-	DeleteCollection(ctx context.Context) error
+	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }

@@ -60,8 +60,8 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 }
 
 // DeleteCollection deletes all priority classes.
-func (s *Service) DeleteCollection(ctx context.Context) error {
-	if err := s.client.SchedulingV1().PriorityClasses().DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{}); err != nil {
+func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
+	if err := s.client.SchedulingV1().PriorityClasses().DeleteCollection(ctx, metav1.DeleteOptions{}, lopts); err != nil {
 		return xerrors.Errorf("delete collection of priorityClasses: %w", err)
 	}
 
