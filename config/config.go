@@ -124,8 +124,7 @@ func decodeSchedulerCfg(buf []byte) (*v1beta2config.KubeSchedulerConfiguration, 
 		return nil, xerrors.Errorf("convert to *v1beta2config.KubeSchedulerConfiguration, but got unexpected type: %T", obj)
 	}
 
-	err = sc.DecodeNestedObjects(decoder)
-	if err != nil {
+	if err = sc.DecodeNestedObjects(decoder); err != nil {
 		return nil, xerrors.Errorf("decode nested plugin args: %w", err)
 	}
 	return sc, nil
