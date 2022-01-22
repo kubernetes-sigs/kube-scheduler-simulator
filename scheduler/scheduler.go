@@ -27,12 +27,13 @@ type Service struct {
 
 	clientset           clientset.Interface
 	restclientCfg       *restclient.Config
+	initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
 	currentSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
 }
 
 // NewSchedulerService starts scheduler and return *Service.
-func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config) *Service {
-	return &Service{clientset: client, restclientCfg: restclientCfg}
+func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration) *Service {
+	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initialSchedulerCfg}
 }
 
 func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error {
@@ -51,11 +52,7 @@ func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration
 }
 
 func (s *Service) ResetScheduler() error {
-	cfg, err := defaultconfig.DefaultSchedulerConfig()
-	if err != nil {
-		return xerrors.Errorf("get default scheduler config: %w", err)
-	}
-	return s.RestartScheduler(cfg)
+	return s.RestartScheduler(s.initialSchedulerCfg)
 }
 
 // StartScheduler starts scheduler.

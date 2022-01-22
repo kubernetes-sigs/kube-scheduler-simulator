@@ -12,7 +12,6 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/config"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/k8sapiserver"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/pvcontroller"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/server"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 )
@@ -45,14 +44,9 @@ func startSimulator() error {
 	}
 	defer pvshutdown()
 
-	dic := di.NewDIContainer(client, restclientCfg)
+	dic := di.NewDIContainer(client, restclientCfg, cfg.InitialSchedulerCfg)
 
-	sc, err := defaultconfig.DefaultSchedulerConfig()
-	if err != nil {
-		return xerrors.Errorf("create scheduler config: %w", err)
-	}
-
-	if err := dic.SchedulerService().StartScheduler(sc); err != nil {
+	if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
 		return xerrors.Errorf("start scheduler: %w", err)
 	}
 	defer dic.SchedulerService().ShutdownScheduler()

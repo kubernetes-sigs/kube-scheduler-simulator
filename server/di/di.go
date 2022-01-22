@@ -6,6 +6,7 @@ package di
 import (
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
+	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/node"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/persistentvolume"
@@ -29,14 +30,14 @@ type Container struct {
 
 // NewDIContainer initializes Container.
 // It initializes all service and puts to Container.
-func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config) *Container {
+func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration) *Container {
 	c := &Container{}
 
 	// initializes each service
 	c.pvService = persistentvolume.NewPersistentVolumeService(client)
 	c.pvcService = persistentvolumeclaim.NewPersistentVolumeClaimService(client)
 	c.storageClassService = storageclass.NewStorageClassService(client)
-	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg)
+	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg, initialSchedulerCfg)
 	c.podService = pod.NewPodService(client)
 
 	c.nodeService = node.NewNodeService(client, c.podService)
