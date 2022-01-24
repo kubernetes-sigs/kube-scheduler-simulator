@@ -180,6 +180,9 @@ func TestService_DeleteCollection(t *testing.T) {
 				}, metav1.CreateOptions{})
 				return c
 			},
+			lopts: metav1.ListOptions{
+				FieldSelector: "spec.nodeName!=",
+			},
 			wantErr: false,
 		},
 		{
@@ -198,6 +201,9 @@ func TestService_DeleteCollection(t *testing.T) {
 				}, metav1.CreateOptions{})
 				return c
 			},
+			lopts: metav1.ListOptions{
+				FieldSelector: "spec.nodeName!=",
+			},
 			wantErr: false,
 		},
 		{
@@ -215,6 +221,9 @@ func TestService_DeleteCollection(t *testing.T) {
 					},
 				}, metav1.CreateOptions{})
 				return c
+			},
+			lopts: metav1.ListOptions{
+				FieldSelector: "spec.nodeName!=",
 			},
 			wantErr: true,
 		},
