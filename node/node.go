@@ -22,7 +22,7 @@ type Service struct {
 type PodService interface {
 	List(ctx context.Context) (*corev1.PodList, error)
 	Delete(ctx context.Context, name string) error
-	DeleteCollection(ctx context.Context, lopt metav1.ListOptions) error
+	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
 // NewNodeService initializes Service.
@@ -94,14 +94,25 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 
 // DeleteCollection deletes all nodes.
 func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
-	// delete all scheduled pods
-	if err := s.podService.DeleteCollection(ctx, lopts); err != nil {
-		return xerrors.Errorf("delete all scheduled pods: %w", err)
+
+	ns, err := s.client.CoreV1().Nodes().List(ctx, lopts)
+	if err != nil {
+		return xerrors.Errorf("list nodes: %w", err)
 	}
 
-	// delete all nodes
-	if err := s.client.CoreV1().Nodes().DeleteCollection(ctx, metav1.DeleteOptions{}, lopts); err != nil {
-		return xerrors.Errorf("delete all nodes: %w", err)
+	for _, n := range ns.Items {
+		// delete pods on specific node
+		lopts := metav1.ListOptions{
+			FieldSelector: "spec.nodeName=" + n.Name,
+		}
+		if err := s.podService.DeleteCollection(ctx, lopts); err != nil {
+			return xerrors.Errorf("failed to delete pods on node %s: %w", n.Name, err)
+		}
+
+		// delete specific node
+		if err := s.client.CoreV1().Nodes().Delete(ctx, n.Name, metav1.DeleteOptions{}); err != nil {
+			return xerrors.Errorf("delete node: %w", err)
+		}
 	}
 
 	return nil
