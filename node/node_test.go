@@ -153,21 +153,29 @@ func TestService_DeleteCollection(t *testing.T) {
 		name                    string
 		preparePodServiceMockFn func(m *mock_node.MockPodService)
 		prepareFakeClientSetFn  func() *fake.Clientset
+		lopts                   metav1.ListOptions
 		wantErr                 bool
 	}{
 		{
 			name: "delete all nodes and pods scheduled on them",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
 				m.EXPECT().DeleteCollection(gomock.Any(), metav1.ListOptions{
-					FieldSelector: "spec.nodeName!=",
+					FieldSelector: "spec.nodeName=node1",
+				}).Return(nil)
+				m.EXPECT().DeleteCollection(gomock.Any(), metav1.ListOptions{
+					FieldSelector: "spec.nodeName=node2",
 				}).Return(nil)
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
-				// add test data.
 				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node1",
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node2",
 					},
 				}, metav1.CreateOptions{})
 				return c
@@ -178,12 +186,11 @@ func TestService_DeleteCollection(t *testing.T) {
 			name: "delete nodes with no pods",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
 				m.EXPECT().DeleteCollection(gomock.Any(), metav1.ListOptions{
-					FieldSelector: "spec.nodeName!=",
+					FieldSelector: "spec.nodeName=node1",
 				}).Return(nil)
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
-				// add test data.
 				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node1",
@@ -197,11 +204,16 @@ func TestService_DeleteCollection(t *testing.T) {
 			name: "fail if deleteing all pods returns error",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
 				m.EXPECT().DeleteCollection(gomock.Any(), metav1.ListOptions{
-					FieldSelector: "spec.nodeName!=",
+					FieldSelector: "spec.nodeName=node1",
 				}).Return(errors.New("error"))
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
+				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node1",
+					},
+				}, metav1.CreateOptions{})
 				return c
 			},
 			wantErr: true,
@@ -217,7 +229,7 @@ func TestService_DeleteCollection(t *testing.T) {
 			fakeclientset := tt.prepareFakeClientSetFn()
 
 			s := NewNodeService(fakeclientset, mockPodService)
-			if err := s.DeleteCollection(context.Background()); (err != nil) != tt.wantErr {
+			if err := s.DeleteCollection(context.Background(), tt.lopts); (err != nil) != tt.wantErr {
 				t.Fatalf("DeleteCollection() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
