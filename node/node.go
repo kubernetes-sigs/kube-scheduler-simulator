@@ -94,7 +94,6 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 
 // DeleteCollection deletes all nodes.
 func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
-
 	ns, err := s.client.CoreV1().Nodes().List(ctx, lopts)
 	if err != nil {
 		return xerrors.Errorf("list nodes: %w", err)
