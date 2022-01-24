@@ -25,9 +25,11 @@ And, after pods are scheduled, you can see the results of
 
 ![result](./docs/images/result.jpg)
 
-You can configure the scheduler on the simulator through KubeSchedulerConfiguration.
+You can configure the scheduler on the simulator or by using environment variable through KubeSchedulerConfiguration.
 
 [Scheduler Configuration | Kubernetes](https://kubernetes.io/docs/reference/scheduling/config/)
+
+When you use environment variable, you can set yaml file path on it named `KUBE_SCHEDULER_CONFIG_PATH`. That will be set as initial configuration.
 
 Note: changes to any fields other than `.profiles` are disabled on simulator, since they do not affect the results of the scheduling.
 
