@@ -108,101 +108,34 @@ func NewExportService(client clientset.Interface, pods PodService, nodes NodeSer
 	}
 }
 
-// Get all resources from each service.
-func (s *Service) get(ctx context.Context) (*ResourcesForExport, error) {
+type ErrorGroupWithSemaphore struct {
+	g   *errgroup.Group
+	sem *semaphore.Weighted
+}
+
+func NewErrorGroupWithSemaphore(ctx context.Context) ErrorGroupWithSemaphore {
 	g, _ := errgroup.WithContext(ctx)
 	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
+	return ErrorGroupWithSemaphore{
+		g:   g,
+		sem: sem,
+	}
+}
+
+// Get all resources from each service.
+func (s *Service) get(ctx context.Context) (*ResourcesForExport, error) {
+	errgrp := NewErrorGroupWithSemaphore(ctx)
 	resources := ResourcesForExport{}
 
-	if err := sem.Acquire(ctx, 1); err != nil {
-		return nil, xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	g.Go(func() error {
-		defer sem.Release(1)
-		pods, err := s.podService.List(ctx)
-		if err != nil {
-			return xerrors.Errorf("call list pods: %w", err)
-		}
-		resources.Pods = pods.Items
-		return nil
-	})
+	errgrp.listPods(ctx, &s.podService, &resources)
+	errgrp.listNodes(ctx, &s.nodeService, &resources)
+	errgrp.listPvs(ctx, &s.pvService, &resources)
+	errgrp.listPvcs(ctx, &s.pvcService, &resources)
+	errgrp.listStorageClasses(ctx, &s.storageClassService, &resources)
+	errgrp.listPcs(ctx, &s.priorityclassService, &resources)
+	errgrp.getSchedulerConfig(ctx, &s.schedulerService, &resources)
 
-	if err := sem.Acquire(ctx, 1); err != nil {
-		return nil, xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	g.Go(func() error {
-		defer sem.Release(1)
-		nodes, err := s.nodeService.List(ctx)
-		if err != nil {
-			return xerrors.Errorf("call list nodes: %w", err)
-		}
-		resources.Nodes = nodes.Items
-		return nil
-	})
-
-	if err := sem.Acquire(ctx, 1); err != nil {
-		return nil, xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	g.Go(func() error {
-		defer sem.Release(1)
-		pvs, err := s.pvService.List(ctx)
-		if err != nil {
-			return xerrors.Errorf("call list PersistentVolumes: %w", err)
-		}
-		resources.Pvs = pvs.Items
-		return nil
-	})
-
-	if err := sem.Acquire(ctx, 1); err != nil {
-		return nil, xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	g.Go(func() error {
-		defer sem.Release(1)
-		pvcs, err := s.pvcService.List(ctx)
-		if err != nil {
-			return xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
-		}
-		resources.Pvcs = pvcs.Items
-		return nil
-	})
-
-	if err := sem.Acquire(ctx, 1); err != nil {
-		return nil, xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	g.Go(func() error {
-		defer sem.Release(1)
-		scs, err := s.storageClassService.List(ctx)
-		if err != nil {
-			return xerrors.Errorf("to call list storageClasses: %w", err)
-		}
-		resources.StorageClasses = scs.Items
-		return nil
-	})
-
-	if err := sem.Acquire(ctx, 1); err != nil {
-		return nil, xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	g.Go(func() error {
-		defer sem.Release(1)
-		pcs, err := s.priorityclassService.List(ctx)
-		if err != nil {
-			return xerrors.Errorf("to call list priorityClasses: %w", err)
-		}
-		resources.PriorityClasses = pcs.Items
-		return nil
-	})
-
-	if err := sem.Acquire(ctx, 1); err != nil {
-		return nil, xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	g.Go(func() error {
-		defer sem.Release(1)
-		ss := s.schedulerService.GetSchedulerConfig()
-		resources.SchedulerConfig = ss
-		return nil
-	})
-
-	if err := g.Wait(); err != nil {
+	if err := errgrp.g.Wait(); err != nil {
 		return nil, xerrors.Errorf("get resources all: %w", err)
 	}
 	return &resources, nil
@@ -225,68 +158,200 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) err
 	if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 		return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
 	}
-	g, _ := errgroup.WithContext(ctx)
-	sem := semaphore.NewWeighted(int64(runtime.GOMAXPROCS(0)))
+	errgrp := NewErrorGroupWithSemaphore(ctx)
+	errgrp.applyPcs(ctx, &s.priorityclassService, resources)
+	errgrp.applyStorageClasses(ctx, &s.storageClassService, resources)
+	errgrp.applyPvcs(ctx, &s.pvcService, resources)
+	errgrp.applyPvs(ctx, &s.pvService, &s.pvcService, resources)
+	errgrp.applyNodes(ctx, &s.nodeService, resources)
+	errgrp.applyPods(ctx, &s.podService, resources)
 
-	for i := range resources.PriorityClasses {
-		pc := resources.PriorityClasses[i]
-		if err := sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
+	if err := errgrp.g.Wait(); err != nil {
+		return xerrors.Errorf("apply each resources: %w", err)
+	}
+	return nil
+}
+
+func (eg *ErrorGroupWithSemaphore) listPods(ctx context.Context, s *PodService, r *ResourcesForExport) {
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		pods, err := (*s).List(ctx)
+		if err != nil {
+			return xerrors.Errorf("call list pods: %w", err)
 		}
-		g.Go(func() error {
-			defer sem.Release(1)
+		r.Pods = pods.Items
+		return nil
+	})
+}
+
+func (eg *ErrorGroupWithSemaphore) listNodes(ctx context.Context, s *NodeService, r *ResourcesForExport) {
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		nodes, err := (*s).List(ctx)
+		if err != nil {
+			return xerrors.Errorf("call list nodes: %w", err)
+		}
+		r.Nodes = nodes.Items
+		return nil
+	})
+}
+
+func (eg *ErrorGroupWithSemaphore) listPvs(ctx context.Context, s *PersistentVolumeService, r *ResourcesForExport) {
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		pvs, err := (*s).List(ctx)
+		if err != nil {
+			return xerrors.Errorf("call list PersistentVolumes: %w", err)
+		}
+		r.Pvs = pvs.Items
+		return nil
+	})
+}
+
+func (eg *ErrorGroupWithSemaphore) listPvcs(ctx context.Context, s *PersistentVolumeClaimService, r *ResourcesForExport) {
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		pvcs, err := (*s).List(ctx)
+		if err != nil {
+			return xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
+		}
+		r.Pvcs = pvcs.Items
+		return nil
+	})
+}
+
+func (eg *ErrorGroupWithSemaphore) listStorageClasses(ctx context.Context, s *StorageClassService, r *ResourcesForExport) {
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		scs, err := (*s).List(ctx)
+		if err != nil {
+			return xerrors.Errorf("to call list storageClasses: %w", err)
+		}
+		r.StorageClasses = scs.Items
+		return nil
+	})
+}
+
+func (eg *ErrorGroupWithSemaphore) listPcs(ctx context.Context, s *PriorityClassService, r *ResourcesForExport) {
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		pcs, err := (*s).List(ctx)
+		if err != nil {
+			return xerrors.Errorf("to call list priorityClasses: %w", err)
+		}
+		r.PriorityClasses = pcs.Items
+		return nil
+	})
+}
+
+func (eg *ErrorGroupWithSemaphore) getSchedulerConfig(ctx context.Context, s *SchedulerService, r *ResourcesForExport) {
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		ss := (*s).GetSchedulerConfig()
+		r.SchedulerConfig = ss
+		return nil
+	})
+}
+
+func (eg *ErrorGroupWithSemaphore) applyPcs(ctx context.Context, s *PriorityClassService, r *ResourcesForImport) {
+	for i := range r.PriorityClasses {
+		pc := r.PriorityClasses[i]
+		if err := eg.sem.Acquire(ctx, 1); err != nil {
+			klog.Fatalf("failed to acquire semaphore: %v", err)
+			return
+		}
+		eg.g.Go(func() error {
+			defer eg.sem.Release(1)
 			pc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.priorityclassService.Apply(ctx, &pc)
+			_, err := (*s).Apply(ctx, &pc)
 			if err != nil {
 				return xerrors.Errorf("apply PriorityClass: %w", err)
 			}
 			return nil
 		})
 	}
+}
 
-	for i := range resources.StorageClasses {
-		sc := resources.StorageClasses[i]
-		if err := sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
+func (eg *ErrorGroupWithSemaphore) applyStorageClasses(ctx context.Context, s *StorageClassService, r *ResourcesForImport) {
+	for i := range r.StorageClasses {
+		sc := r.StorageClasses[i]
+		if err := eg.sem.Acquire(ctx, 1); err != nil {
+			klog.Fatalf("failed to acquire semaphore: %v", err)
+			return
 		}
-		g.Go(func() error {
-			defer sem.Release(1)
+		eg.g.Go(func() error {
+			defer eg.sem.Release(1)
 			sc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.storageClassService.Apply(ctx, &sc)
+			_, err := (*s).Apply(ctx, &sc)
 			if err != nil {
 				return xerrors.Errorf("apply StorageClass: %w", err)
 			}
 			return nil
 		})
-
 	}
-	for i := range resources.Pvcs {
-		pvc := resources.Pvcs[i]
-		if err := sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
+}
+
+func (eg *ErrorGroupWithSemaphore) applyPvcs(ctx context.Context, s *PersistentVolumeClaimService, r *ResourcesForImport) {
+	for i := range r.Pvcs {
+		pvc := r.Pvcs[i]
+		if err := eg.sem.Acquire(ctx, 1); err != nil {
+			klog.Fatalf("failed to acquire semaphore: %v", err)
+			return
 		}
-		g.Go(func() error {
-			defer sem.Release(1)
+		eg.g.Go(func() error {
+			defer eg.sem.Release(1)
 			pvc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.pvcService.Apply(ctx, &pvc)
+			_, err := (*s).Apply(ctx, &pvc)
 			if err != nil {
 				return xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
 			}
 			return nil
 		})
 	}
-	for i := range resources.Pvs {
-		pv := resources.Pvs[i]
-		if err := sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
+}
+
+func (eg *ErrorGroupWithSemaphore) applyPvs(ctx context.Context, s *PersistentVolumeService, pvcs *PersistentVolumeClaimService, r *ResourcesForImport) {
+	for i := range r.Pvs {
+		pv := r.Pvs[i]
+		if err := eg.sem.Acquire(ctx, 1); err != nil {
+			klog.Fatalf("failed to acquire semaphore: %v", err)
+			return
 		}
-		g.Go(func() error {
-			defer sem.Release(1)
+		eg.g.Go(func() error {
+			defer eg.sem.Release(1)
 			pv.ObjectMetaApplyConfiguration.UID = nil
 			if pv.Status != nil && pv.Status.Phase != nil {
 				if *pv.Status.Phase == "Bound" {
 					// PersistentVolumeClaims's UID has been changed to a new value.
-					pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name)
+					pvc, err := (*pvcs).Get(ctx, *pv.Spec.ClaimRef.Name)
 					if err == nil {
 						pv.Spec.ClaimRef.UID = &pvc.UID
 					} else {
@@ -295,47 +360,49 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) err
 					}
 				}
 			}
-
-			_, err := s.pvService.Apply(ctx, &pv)
+			_, err := (*s).Apply(ctx, &pv)
 			if err != nil {
 				return xerrors.Errorf("apply PersistentVolume: %w", err)
 			}
 			return nil
 		})
-
 	}
-	for i := range resources.Nodes {
-		node := resources.Nodes[i]
-		if err := sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
+}
+
+func (eg *ErrorGroupWithSemaphore) applyNodes(ctx context.Context, s *NodeService, r *ResourcesForImport) {
+	for i := range r.Nodes {
+		node := r.Nodes[i]
+		if err := eg.sem.Acquire(ctx, 1); err != nil {
+			klog.Fatalf("failed to acquire semaphore: %v", err)
+			return
 		}
-		g.Go(func() error {
-			defer sem.Release(1)
+		eg.g.Go(func() error {
+			defer eg.sem.Release(1)
 			node.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.nodeService.Apply(ctx, &node)
+			_, err := (*s).Apply(ctx, &node)
 			if err != nil {
 				return xerrors.Errorf("apply Node: %w", err)
 			}
 			return nil
 		})
 	}
-	for i := range resources.Pods {
-		pod := resources.Pods[i]
-		if err := sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
+}
+
+func (eg *ErrorGroupWithSemaphore) applyPods(ctx context.Context, s *PodService, r *ResourcesForImport) {
+	for i := range r.Pods {
+		pod := r.Pods[i]
+		if err := eg.sem.Acquire(ctx, 1); err != nil {
+			klog.Fatalf("failed to acquire semaphore: %v", err)
+			return
 		}
-		g.Go(func() error {
-			defer sem.Release(1)
+		eg.g.Go(func() error {
+			defer eg.sem.Release(1)
 			pod.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.podService.Apply(ctx, &pod)
+			_, err := (*s).Apply(ctx, &pod)
 			if err != nil {
 				return xerrors.Errorf("apply Pod: %w", err)
 			}
 			return nil
 		})
 	}
-	if err := g.Wait(); err != nil {
-		return xerrors.Errorf("apply each resources: %w", err)
-	}
-	return nil
 }
