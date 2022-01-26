@@ -161,8 +161,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) err
 	errgrp := NewErrorGroupWithSemaphore(ctx)
 	errgrp.applyPcs(ctx, &s.priorityclassService, resources)
 	errgrp.applyStorageClasses(ctx, &s.storageClassService, resources)
-	errgrp.applyPvcs(ctx, &s.pvcService, resources)
-	errgrp.applyPvs(ctx, &s.pvService, &s.pvcService, resources)
+	s.applyPvsAndPvcs(ctx, resources, &errgrp)
 	errgrp.applyNodes(ctx, &s.nodeService, resources)
 	errgrp.applyPods(ctx, &s.podService, resources)
 
@@ -170,6 +169,37 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) err
 		return xerrors.Errorf("apply each resources: %w", err)
 	}
 	return nil
+}
+
+// The apply of PersistentVolume will be called after the apply of PersistentVolumeClaim is finish.
+// This is because that PersistentVolume search PersistentVolumeClaim and associate itself if they had relationship.
+func (s *Service) applyPvsAndPvcs(ctx context.Context, resources *ResourcesForImport, errgrp *ErrorGroupWithSemaphore) {
+	eg := NewErrorGroupWithSemaphore(ctx)
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		errgrp.applyPvcs(ctx, &s.pvcService, resources)
+		return nil
+	})
+	if err := eg.g.Wait(); err != nil {
+		klog.Fatalf("failed to apply pvcs: %v", err.Error())
+	}
+
+	if err := eg.sem.Acquire(ctx, 1); err != nil {
+		klog.Fatalf("failed to acquire semaphore: %v", err)
+		return
+	}
+	eg.g.Go(func() error {
+		defer eg.sem.Release(1)
+		errgrp.applyPvs(ctx, &s.pvService, &s.pvcService, resources)
+		return nil
+	})
+	if err := eg.g.Wait(); err != nil {
+		klog.Fatalf("failed to apply pvcs: %v", err.Error())
+	}
 }
 
 func (eg *ErrorGroupWithSemaphore) listPods(ctx context.Context, s *PodService, r *ResourcesForExport) {
