@@ -120,9 +120,5 @@ func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions
 		})
 	}
 
-	if err := eg.Wait(); err != nil {
-		return err
-	}
-
-	return nil
+	return eg.Wait()
 }
