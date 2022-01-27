@@ -5,6 +5,7 @@ package node
 import (
 	"context"
 
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,19 +100,28 @@ func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions
 		return xerrors.Errorf("list nodes: %w", err)
 	}
 
+	eg, ctx := errgroup.WithContext(ctx)
 	for _, n := range ns.Items {
-		// delete pods on specific node
-		lopts := metav1.ListOptions{
-			FieldSelector: "spec.nodeName=" + n.Name,
-		}
-		if err := s.podService.DeleteCollection(ctx, lopts); err != nil {
-			return xerrors.Errorf("failed to delete pods on node %s: %w", n.Name, err)
-		}
+		n := n
+		eg.Go(func() error {
+			// delete pods on specific node
+			lopts := metav1.ListOptions{
+				FieldSelector: "spec.nodeName=" + n.Name,
+			}
+			if err := s.podService.DeleteCollection(ctx, lopts); err != nil {
+				return xerrors.Errorf("failed to delete pods on node %s: %w\n", n.Name, err)
+			}
 
-		// delete specific node
-		if err := s.client.CoreV1().Nodes().Delete(ctx, n.Name, metav1.DeleteOptions{}); err != nil {
-			return xerrors.Errorf("delete node: %w", err)
-		}
+			// delete specific node
+			if err := s.client.CoreV1().Nodes().Delete(ctx, n.Name, metav1.DeleteOptions{}); err != nil {
+				return xerrors.Errorf("delete node: %w\n", err)
+			}
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
 	return nil
