@@ -25,7 +25,7 @@ And, after pods are scheduled, you can see the results of
 
 ![result](./docs/images/result.jpg)
 
-You can configure the scheduler on the simulator or by using environment variable through KubeSchedulerConfiguration.
+You can configure the scheduler on the simulator through KubeSchedulerConfiguration.
 
 [Scheduler Configuration | Kubernetes](https://kubernetes.io/docs/reference/scheduling/config/)
 
