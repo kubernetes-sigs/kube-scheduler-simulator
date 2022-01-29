@@ -66,3 +66,12 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 
 	return nil
 }
+
+// DeleteCollection deletes persistentVolumeClaims according to the list options.
+func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
+	if err := s.client.CoreV1().PersistentVolumeClaims(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, lopts); err != nil {
+		return xerrors.Errorf("delete collection of persistentVolumeClaims: %w", err)
+	}
+
+	return nil
+}

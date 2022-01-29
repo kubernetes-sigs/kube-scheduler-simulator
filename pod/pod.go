@@ -54,7 +54,6 @@ func (s *Service) Apply(ctx context.Context, pod *v1.PodApplyConfiguration) (*co
 	if err != nil {
 		return nil, xerrors.Errorf("apply pod: %w", err)
 	}
-
 	return newpod, nil
 }
 
@@ -72,5 +71,13 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 		return fmt.Errorf("delete pod: %w", err)
 	}
 
+	return nil
+}
+
+// DeleteCollection deletes pods according to the list options.
+func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
+	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, lopts); err != nil {
+		return fmt.Errorf("delete collection of pods: %w", err)
+	}
 	return nil
 }
