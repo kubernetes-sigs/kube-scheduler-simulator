@@ -74,7 +74,7 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// DeleteCollection deletes all pods according to the list options.
+// DeleteCollection deletes pods according to the list options.
 func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
 	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, lopts); err != nil {
 		return fmt.Errorf("delete collection of pods: %w", err)
