@@ -29,6 +29,8 @@ You can configure the scheduler on the simulator through KubeSchedulerConfigurat
 
 [Scheduler Configuration | Kubernetes](https://kubernetes.io/docs/reference/scheduling/config/)
 
+You can pass a KubeSchedulerConfiguration file via the environment variable `KUBE_SCHEDULER_CONFIG_PATH` and the simulator will start kube-scheduler with that configuration.
+
 Note: changes to any fields other than `.profiles` are disabled on simulator, since they do not affect the results of the scheduling.
 
 ![configure scheduler](./docs/images/schedulerconfiguration.jpg)
