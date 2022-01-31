@@ -181,7 +181,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) err
 	}
 
 	if err := errgrp.Grp.Wait(); err != nil {
-		return xerrors.Errorf("apply each resources: %w", err)
+		return xerrors.Errorf("apply resources: %w", err)
 	}
 
 	// `applyPvs` should be called after `applyPvcs` finished,
