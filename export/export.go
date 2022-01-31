@@ -112,7 +112,7 @@ func NewErrGroupWithSemaphore(ctx context.Context) ErrGroupWithSemaphore {
 	return ErrGroupWithSemaphore(util.NewErrGroupWithSemaphore(ctx))
 }
 
-// Get all resources from each service.
+// Get gets all resources from each service.
 func (s *Service) get(ctx context.Context) (*ResourcesForExport, error) {
 	errgrp := NewErrGroupWithSemaphore(ctx)
 	resources := ResourcesForExport{}
