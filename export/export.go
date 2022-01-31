@@ -153,7 +153,7 @@ func (s *Service) Export(ctx context.Context) (*ResourcesForExport, error) {
 	return resources, nil
 }
 
-// Import all resources from posted data.
+// Import imports all resources from posted data.
 // (1) Restart scheduler based on the data.
 // (2) Apply each resource to the scheduler.
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
