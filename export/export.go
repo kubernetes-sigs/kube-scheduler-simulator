@@ -184,8 +184,8 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) err
 		return xerrors.Errorf("apply each resources: %w", err)
 	}
 
-	// The apply of PersistentVolume will be called after the apply of PersistentVolumeClaim is finish.
-	// This is because that PersistentVolume search PersistentVolumeClaim and associate itself if they had relationship.
+	// `applyPvs` should be called after `applyPvcs` finished,
+	// because `applyPvs` look up PersistentVolumeClaim for `Spec.ClaimRef.UID` field.
 	if err := errgrp.applyPvs(ctx, &s.pvService, &s.pvcService, resources); err != nil {
 		return xerrors.Errorf("call applyPvs: %w", err)
 	}
