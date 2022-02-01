@@ -270,14 +270,14 @@ func newSimulatorPlugin(s store, p framework.Plugin, weight int32) framework.Plu
 
 func (pl *simulatorPlugin) Name() string { return pl.name }
 func (pl *simulatorPlugin) ScoreExtensions() framework.ScoreExtensions {
-	if pl.originalScorePlugin != nil {
-		return pl.originalScorePlugin.ScoreExtensions()
+	if pl.originalScorePlugin != nil && pl.originalScorePlugin.ScoreExtensions() != nil {
+		return pl
 	}
 	return nil
 }
 
 func (pl *simulatorPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
-	if pl.originalScorePlugin == nil {
+	if pl.originalScorePlugin == nil || pl.originalScorePlugin.ScoreExtensions() == nil {
 		// return nil not to affect scoring
 		return nil
 	}
