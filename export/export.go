@@ -185,7 +185,7 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) err
 		return xerrors.Errorf("call applyPvs: %w", err)
 	}
 	if err := errgrp.Grp.Wait(); err != nil {
-		return xerrors.Errorf("apply applyPvs: %w", err)
+		return xerrors.Errorf("apply PVs: %w", err)
 	}
 
 	return nil
