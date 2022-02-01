@@ -152,7 +152,6 @@ func (s *Service) Export(ctx context.Context) (*ResourcesForExport, error) {
 // (1) Restart scheduler based on the data.
 // (2) Apply each resource.
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
-// (3) Get all resources. (Separated the get function to unify the struct format.)
 func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) error {
 	if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 		return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
