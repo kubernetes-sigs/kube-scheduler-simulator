@@ -18,6 +18,7 @@ FROM node:16-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
+ENV NUXT_TELEMETRY_DISABLED 1
 
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nuxtjs -u 1001
