@@ -150,7 +150,7 @@ func (s *Service) Export(ctx context.Context) (*ResourcesForExport, error) {
 
 // Import imports all resources from posted data.
 // (1) Restart scheduler based on the data.
-// (2) Apply each resource to the scheduler.
+// (2) Apply each resource.
 //     * If UID is not nil, an error will occur. (try to find existing resource by UID)
 // (3) Get all resources. (Separated the get function to unify the struct format.)
 func (s *Service) Import(ctx context.Context, resources *ResourcesForImport) error {
