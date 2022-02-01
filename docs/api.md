@@ -13,7 +13,7 @@ get current scheduler configuration.
 [v1beta2.KubeSchedulerConfiguration](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/kube-scheduler/config/v1beta2/types.go#L44)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 
 
@@ -34,7 +34,7 @@ update scheduler configuration and restart scheduler with new configuration.
 empty
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -55,7 +55,7 @@ empty
 empty
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -76,7 +76,7 @@ apply nodes.
 [v1.Node](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L5027)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -93,7 +93,7 @@ list all nodes.
 [v1.NodeList](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L5050)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -117,7 +117,7 @@ get a node with name.
 [v1.Node](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L5027)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 404   | not found |
 | 500 | something went wrong (see logs of the simulator server) |
@@ -141,7 +141,7 @@ delete a node.
 empty
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -162,7 +162,7 @@ apply pods.
 [v1.pod](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L3720)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -179,7 +179,7 @@ list all pods.
 [v1.podList](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L3744)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -203,7 +203,7 @@ get a pod with name.
 [v1.pod](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L3720)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 404   | not found |
 | 500 | something went wrong (see logs of the simulator server) |
@@ -227,7 +227,7 @@ delete a pod.
 empty
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -248,7 +248,7 @@ apply persistent volumes.
 [v1.PersistentVolume](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L305)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -265,7 +265,7 @@ list all persistent volumes.
 [v1.PersistentVolumeList](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L419)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -289,7 +289,7 @@ get a persistent volume with name.
 [v1.PersistentVolume](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L305)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 404   | not found |
 | 500 | something went wrong (see logs of the simulator server) |
@@ -313,7 +313,7 @@ delete a persistent volume.
 empty
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -335,7 +335,7 @@ apply persistent volume claims.
 [v1.PersistentVolumeClaim](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L434)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -352,7 +352,7 @@ list all persistent volume claims.
 [v1.PersistentVolumeClaimList](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L456)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -376,7 +376,7 @@ get a persistent volume claim with name.
 [v1.PersistentVolumeClaim](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/core/v1/types.go#L434)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 404   | not found |
 | 500 | something went wrong (see logs of the simulator server) |
@@ -400,7 +400,7 @@ delete a persistent volume claim.
 empty
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -422,7 +422,7 @@ apply priority classes.
 [v1.PriorityClass](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/scheduling/v1/types.go#L30)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -439,7 +439,7 @@ list all priority classes.
 [v1.PriorityClassList](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/api/scheduling/v1/types.go#L65)
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
@@ -487,6 +487,46 @@ delete a priority class.
 empty
 
 | code  | description |
-| ----- | -------- | 
+| ----- | -------- |
+| 200   | |
+| 500 | something went wrong (see logs of the simulator server) |
+
+## Export
+
+Get all resources and current scheduler configuration. 
+
+### HTTP Request
+
+`GET /api/v1/export`
+
+
+### Response
+
+[ResourcesApplyConfiguration](server/handler/export.go:L20)
+
+You can find sample requests/responses [here](./api-samples/v1/export.md)
+
+| code  | description |
+| ----- | -------- |
+| 200   | |
+| 500 | something went wrong (see logs of the simulator server) |
+
+## Import
+
+Apply resources and scheduler configuration.
+
+### HTTP Request
+
+`POST /api/v1/import`
+
+### Request Body
+
+[ResourcesApplyConfiguration](server/handler/export.go:L20)
+
+You can find sample requests/responses [here](./api-samples/v1/import.md)
+### Response
+
+| code  | description |
+| ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |

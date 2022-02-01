@@ -11,6 +11,8 @@ import (
 	schedulingv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	storageconfigv1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/kube-scheduler/config/v1beta2"
+
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
 )
 
 // PodService represents service for manage Pods.
@@ -74,4 +76,9 @@ type PriorityClassService interface {
 	Apply(ctx context.Context, priorityClass *schedulingv1.PriorityClassApplyConfiguration) (*v1.PriorityClass, error)
 	Delete(ctx context.Context, name string) error
 	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
+}
+
+type ExportService interface {
+	Export(ctx context.Context) (*export.ResourcesForExport, error)
+	Import(ctx context.Context, resources *export.ResourcesForImport) error
 }

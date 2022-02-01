@@ -8,6 +8,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/node"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/persistentvolume"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/persistentvolumeclaim"
@@ -25,6 +26,7 @@ type Container struct {
 	pvcService           PersistentVolumeClaimService
 	storageClassService  StorageClassService
 	schedulerService     SchedulerService
+	exportService        ExportService
 	priorityClassService PriorityClassService
 }
 
@@ -43,6 +45,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	c.nodeService = node.NewNodeService(client, c.podService)
 
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
+	c.exportService = export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
 	return c
 }
 
@@ -79,4 +82,9 @@ func (c *Container) SchedulerService() SchedulerService {
 // PriorityClassService returns PriorityClassService.
 func (c *Container) PriorityClassService() PriorityClassService {
 	return c.priorityClassService
+}
+
+// ExportService returns ExportService.
+func (c *Container) ExportService() ExportService {
+	return c.exportService
 }
