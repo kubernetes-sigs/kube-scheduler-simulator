@@ -822,7 +822,9 @@ func Test_simulatorPlugin_ScoreExtensions(t *testing.T) {
 		{
 			name:                "success",
 			originalScorePlugin: fakeScorePlugin{},
-			want:                fakeScorePlugin{}.ScoreExtensions(),
+			want: &simulatorPlugin{
+				originalScorePlugin: fakeScorePlugin{},
+			},
 		},
 	}
 	for _, tt := range tests {
