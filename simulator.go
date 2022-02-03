@@ -30,7 +30,7 @@ func startSimulator() error {
 		return xerrors.Errorf("get config: %w", err)
 	}
 
-	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.ApiUrl, cfg.EtcdURL)
+	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.APIURL, cfg.EtcdURL)
 	if err != nil {
 		return xerrors.Errorf("start API server: %w", err)
 	}

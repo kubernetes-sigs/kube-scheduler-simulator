@@ -18,7 +18,7 @@ var ErrEmptyEnv = errors.New("env is needed, but empty")
 // Config is configuration for simulator.
 type Config struct {
 	Port                int
-	ApiUrl              string
+	APIURL              string
 	EtcdURL             string
 	FrontendURL         string
 	InitialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
@@ -50,7 +50,7 @@ func NewConfig() (*Config, error) {
 
 	return &Config{
 		Port:                port,
-		ApiUrl:              apiurl,
+		APIURL:              apiurl,
 		EtcdURL:             etcdurl,
 		FrontendURL:         frontendurl,
 		InitialSchedulerCfg: initialschedulerCfg,
