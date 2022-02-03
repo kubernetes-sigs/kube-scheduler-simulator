@@ -1,3 +1,3 @@
 ## API samples
 
-The sample requests/responses of APIs.
+These docs are examples of requests and responses of APIs.
