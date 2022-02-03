@@ -40,12 +40,26 @@ import (
 )
 
 // StartAPIServer starts API server, and it make panic when a error happen.
-func StartAPIServer(etcdURL string) (*restclient.Config, func(), error) {
+func StartAPIServer(apiURL string, etcdURL string) (*restclient.Config, func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		<-h.Initialized
 		h.M.GenericAPIServer.Handler.ServeHTTP(w, req)
-	}))
+	})
+
+	l, err := net.Listen("tcp", apiURL)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("Address already in used: %w", err)
+	}
+
+	s := &httptest.Server{
+		Listener: l,
+		Config: &http.Server{
+			Handler: handler,
+		},
+	}
+	s.Start()
+	klog.Info("Http serving on:", s.URL)
 
 	c := NewControlPlaneConfigWithOptions(s.URL, etcdURL)
 
