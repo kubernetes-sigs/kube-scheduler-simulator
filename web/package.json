@@ -21,6 +21,7 @@
     "@nuxtjs/composition-api": "^0.24.4",
     "@types/node": "^16.4.0",
     "core-js": "^3.9.1",
+    "file-saver": "^2.0.5",
     "js-yaml": "^4.1.0",
     "nuxt": "^2.15.3",
     "vue-monaco": "^1.2.2"
@@ -31,6 +32,7 @@
     "@nuxtjs/eslint-config-typescript": "^6.0.0",
     "@nuxtjs/eslint-module": "^3.0.2",
     "@nuxtjs/vuetify": "^1.11.3",
+    "@types/file-saver": "^2.0.5",
     "@typescript-eslint/eslint-plugin": "^4.29.3",
     "@typescript-eslint/parser": "^4.29.3",
     "@vue/eslint-config-typescript": "^7.0.0",
@@ -51,4 +53,3 @@
     "vue-jest": "^3.0.4"
   }
 }
-
