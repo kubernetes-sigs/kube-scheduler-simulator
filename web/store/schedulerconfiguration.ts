@@ -7,6 +7,7 @@ import { SchedulerConfiguration } from "~/api/v1/types";
 
 type stateType = {
   selectedConfig: selectedConfig | null;
+  schedulerconfigurations: SchedulerConfiguration[];
 };
 
 type selectedConfig = {
@@ -43,6 +44,13 @@ export default function schedulerconfigurationStore() {
           item: c,
           resourceKind: "SchedulerConfiguration",
         };
+      }
+    },
+
+    async fetch() {
+      const c = await getSchedulerConfiguration();
+      if (c) {
+        state.schedulerconfigurations = [c];
       }
     },
 
