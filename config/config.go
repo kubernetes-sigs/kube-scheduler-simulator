@@ -75,7 +75,6 @@ func NewConfig() (*Config, error) {
 	}, nil
 }
 
-// getPort gets Port from the environment variable named PORT.
 func getPort() (int, error) {
 	p := os.Getenv("PORT")
 	if p == "" {
