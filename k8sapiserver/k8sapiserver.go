@@ -40,14 +40,14 @@ import (
 )
 
 // StartAPIServer starts API server, and it make panic when a error happen.
-func StartAPIServer(apiURL string, etcdURL string) (*restclient.Config, func(), error) {
+func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config, func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		<-h.Initialized
 		h.M.GenericAPIServer.Handler.ServeHTTP(w, req)
 	})
 
-	l, err := net.Listen("tcp", apiURL)
+	l, err := net.Listen("tcp", kubeAPIServerURL)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("announces on the local network address: %w", err)
 	}
