@@ -18,7 +18,7 @@ var ErrEmptyEnv = errors.New("env is needed, but empty")
 // Config is configuration for simulator.
 type Config struct {
 	Port                int
-	APIURL              string
+	KubeAPIServerURL    string
 	EtcdURL             string
 	FrontendURL         string
 	InitialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
@@ -41,7 +41,7 @@ func NewConfig() (*Config, error) {
 		return nil, xerrors.Errorf("get frontend URL: %w", err)
 	}
 
-	apiurl := getAPIURL()
+	apiurl := getKubeAPIServerURL()
 
 	initialschedulerCfg, err := getSchedulerCfg()
 	if err != nil {
@@ -50,7 +50,7 @@ func NewConfig() (*Config, error) {
 
 	return &Config{
 		Port:                port,
-		APIURL:              apiurl,
+		KubeAPIServerURL:    apiurl,
 		EtcdURL:             etcdurl,
 		FrontendURL:         frontendurl,
 		InitialSchedulerCfg: initialschedulerCfg,
@@ -71,7 +71,7 @@ func getPort() (int, error) {
 	return port, nil
 }
 
-func getAPIURL() string {
+func getKubeAPIServerURL() string {
 	p := os.Getenv("KUBE_API_PORT")
 	if p == "" {
 		// we still want the simulator to behave as before,

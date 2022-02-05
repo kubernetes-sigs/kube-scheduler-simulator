@@ -49,7 +49,7 @@ func StartAPIServer(apiURL string, etcdURL string) (*restclient.Config, func(), 
 
 	l, err := net.Listen("tcp", apiURL)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("Address already in used: %w", err)
+		return nil, nil, xerrors.Errorf("announces on the local network address: %w", err)
 	}
 
 	s := &httptest.Server{
@@ -59,7 +59,7 @@ func StartAPIServer(apiURL string, etcdURL string) (*restclient.Config, func(), 
 		},
 	}
 	s.Start()
-	klog.Info("Http serving on:", s.URL)
+	klog.Info("kube-apiserver is started on :", s.URL)
 
 	c := NewControlPlaneConfigWithOptions(s.URL, etcdURL)
 
