@@ -493,7 +493,7 @@ empty
 
 ## Export
 
-Get all resources and current scheduler configuration. 
+Get all resources and current scheduler configuration.
 
 ### HTTP Request
 
@@ -502,7 +502,7 @@ Get all resources and current scheduler configuration.
 
 ### Response
 
-[ResourcesApplyConfiguration](server/handler/export.go:L20)
+[ResourcesForImport](/server/handler/export.go#L21)
 
 You can find sample requests/responses [here](./api-samples/v1/export.md)
 
@@ -521,7 +521,7 @@ Apply resources and scheduler configuration.
 
 ### Request Body
 
-[ResourcesApplyConfiguration](server/handler/export.go:L20)
+[ResourcesForImport](/server/handler/export.go#L21)
 
 You can find sample requests/responses [here](./api-samples/v1/import.md)
 ### Response
