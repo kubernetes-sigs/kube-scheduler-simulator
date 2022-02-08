@@ -32,7 +32,7 @@ type Container struct {
 
 // NewDIContainer initializes Container.
 // It initializes all service and puts to Container.
-func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration) *Container {
+func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration, externalImportEnabled bool) *Container {
 	c := &Container{}
 
 	// initializes each service
