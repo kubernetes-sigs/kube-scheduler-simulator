@@ -35,7 +35,7 @@ func NewExportHandler(s di.ExportService) *ExportHandler {
 func (h *ExportHandler) Export(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	rs, err := h.service.Export(ctx)
+	rs, err := h.service.Export(ctx, h.service.WithIgnoreErr())
 	if err != nil {
 		klog.Errorf("failed to export all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -52,7 +52,7 @@ func (h *ExportHandler) Import(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 
-	err := h.service.Import(ctx, convertToResourcesApplyConfiguration(reqResources))
+	err := h.service.Import(ctx, convertToResourcesApplyConfiguration(reqResources), h.service.WithIgnoreErr())
 	if err != nil {
 		klog.Errorf("failed to import all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
