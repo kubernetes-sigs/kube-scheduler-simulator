@@ -44,7 +44,7 @@ func startSimulator() error {
 	}
 	defer pvshutdown()
 
-	dic := di.NewDIContainer(client, restclientCfg, cfg.InitialSchedulerCfg)
+	dic := di.NewDIContainer(client, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled)
 
 	if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
 		return xerrors.Errorf("start scheduler: %w", err)
