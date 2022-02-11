@@ -1,7 +1,5 @@
 package reset
 
-//go:generate mockgen -destination=./mock_$GOPACKAGE/$GOFILE . NodeService,PersistentVolumeService,PersistentVolumeClaimService,StorageClassService,PriorityClassService,SchedulerService
-
 import (
 	"context"
 
