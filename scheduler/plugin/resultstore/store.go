@@ -87,6 +87,8 @@ func newData() *result {
 }
 
 func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	ctx := context.Background()
 
 	pod, ok := newObj.(*v1.Pod)
@@ -233,5 +235,7 @@ func (s *Store) applyWeightOnScore(pluginName string, score int64) int64 {
 }
 
 func (s *Store) DeleteData(k key) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	delete(s.results, k)
 }
