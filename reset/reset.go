@@ -4,6 +4,7 @@ import (
 	"context"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 )
 
 type NodeService interface {
@@ -32,6 +33,7 @@ type SchedulerService interface {
 
 // Service cleans up
 type Service struct {
+	client       clientset.Interface
 	nodeService  NodeService
 	pvService    PersistentVolumeService
 	pvcService   PersistentVolumeClaimService
@@ -42,6 +44,7 @@ type Service struct {
 
 // NewResetService initializes Service.
 func NewResetService(
+	client clientset.Interface,
 	nodeService NodeService,
 	pvService PersistentVolumeService,
 	pvcService PersistentVolumeClaimService,
@@ -50,6 +53,7 @@ func NewResetService(
 	schedService SchedulerService,
 ) *Service {
 	return &Service{
+		client:       client,
 		nodeService:  nodeService,
 		pvService:    pvService,
 		pvcService:   pvcService,

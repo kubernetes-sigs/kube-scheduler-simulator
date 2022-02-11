@@ -48,7 +48,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
 	c.exportService = export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
-	c.resetService = reset.NewReetService(client, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
+	c.resetService = reset.NewResetService(client, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
 	return c
 }
 
