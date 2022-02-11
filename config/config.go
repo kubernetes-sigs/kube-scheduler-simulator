@@ -16,6 +16,7 @@ import (
 var ErrEmptyEnv = errors.New("env is needed, but empty")
 
 // Config is configuration for simulator.
+// ExternalImportEnabled indicates whether the scheduler should enable the function to import from an existing cluster.
 type Config struct {
 	Port                  int
 	KubeAPIServerURL      string
