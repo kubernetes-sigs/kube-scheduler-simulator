@@ -31,7 +31,7 @@ type SchedulerService interface {
 	ResetScheduler() error
 }
 
-// Service cleans up
+// Service cleans up resources.
 type Service struct {
 	client       clientset.Interface
 	nodeService  NodeService
@@ -85,8 +85,4 @@ func (s *Service) Reset(ctx context.Context) error {
 	if err := s.pcService.DeleteCollection(ctx, emptyListOpts); err != nil {
 		return err
 	}
-	if err := s.schedService.ResetScheduler(); err != nil {
-		return err
-	}
-	return nil
-}
+	return s.schedService.ResetScheduler()
