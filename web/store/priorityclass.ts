@@ -17,6 +17,7 @@ type selectedPriorityClass = {
   isNew: boolean;
   item: V1PriorityClass;
   resourceKind: string;
+  isDeletable: boolean;
 };
 
 export default function priorityclassStore() {
@@ -44,6 +45,7 @@ export default function priorityclassStore() {
           isNew: isNew,
           item: n,
           resourceKind: "PC",
+          isDeletable: true,
         };
       }
     },

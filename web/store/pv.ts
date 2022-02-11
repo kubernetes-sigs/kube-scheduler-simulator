@@ -17,6 +17,7 @@ type selectedPersistentVolume = {
   isNew: boolean;
   item: V1PersistentVolume;
   resourceKind: string;
+  isDeletable: boolean;
 };
 
 export default function pvStore() {
@@ -44,6 +45,7 @@ export default function pvStore() {
           isNew: isNew,
           item: p,
           resourceKind: "PV",
+          isDeletable: true,
         };
       }
     },

@@ -17,6 +17,7 @@ type selectedStorageClass = {
   isNew: boolean;
   item: V1StorageClass;
   resourceKind: string;
+  isDeletable: boolean;
 };
 
 export default function storageclassStore() {
@@ -44,6 +45,7 @@ export default function storageclassStore() {
           isNew: isNew,
           item: n,
           resourceKind: "SC",
+          isDeletable: true,
         };
       }
     },

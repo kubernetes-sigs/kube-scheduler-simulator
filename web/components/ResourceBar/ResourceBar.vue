@@ -16,7 +16,7 @@
           editmode = !editmode;
         }
       "
-      :enable-delete-btn="selected && !selected.isNew"
+      :enable-delete-btn="selected && !selected.isNew && selected.isDeletable"
       :enable-editmode-switch="selected && !selected.isNew"
     />
 
@@ -90,6 +90,7 @@ interface SelectedItem {
   isNew: boolean;
   item: Resource;
   resourceKind: string;
+  isDeletable: boolean;
 }
 
 export default defineComponent({

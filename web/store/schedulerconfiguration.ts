@@ -14,6 +14,7 @@ type selectedConfig = {
   isNew: boolean;
   item: SchedulerConfiguration;
   resourceKind: string;
+  isDeletable: boolean;
 };
 
 export default function schedulerconfigurationStore() {
@@ -42,6 +43,7 @@ export default function schedulerconfigurationStore() {
           isNew: true,
           item: c,
           resourceKind: "SchedulerConfiguration",
+          isDeletable: true,
         };
       }
     },
