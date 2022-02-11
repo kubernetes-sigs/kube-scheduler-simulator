@@ -5,6 +5,7 @@ import (
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 	"github.com/labstack/echo/v4"
+	"k8s.io/klog/v2"
 )
 
 // ResetHandler is handler for clean up resources and scheduler configuration.
@@ -18,5 +19,10 @@ func NewResetHandler(s di.ResetService) *ResetHandler {
 }
 
 func (h *ResetHandler) Reset(c echo.Context) error {
-	return c.JSON(http.StatusOK, "aaa")
+	ctx := c.Request().Context()
+	if err := h.service.Reset(ctx); err != nil {
+		klog.Errorf("failed to reset all resources and schediler configuration: %+v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+	return c.NoContent(http.StatusAccepted)
 }
