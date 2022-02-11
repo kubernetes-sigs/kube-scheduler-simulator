@@ -41,13 +41,15 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	schedulercfgHandler := handler.NewSchedulerConfigHandler(dic.SchedulerService())
 	priorityClassHandler := handler.NewPriorityClassHandler(dic.PriorityClassService())
 	exportHandler := handler.NewExportHandler(dic.ExportService())
+	resetHandler := handler.NewResetHandler(dic.ResetService())
 
 	// register apis
 	v1 := e.Group("/api/v1")
 
 	v1.GET("/schedulerconfiguration", schedulercfgHandler.GetSchedulerConfig)
 	v1.POST("/schedulerconfiguration", schedulercfgHandler.ApplySchedulerConfig)
-	v1.PUT("/schedulerconfiguration", schedulercfgHandler.ResetScheduler)
+
+	v1.PUT("/reset", resetHandler.Reset)
 
 	v1.GET("/nodes", nodeHandler.ListNode)
 	v1.POST("/nodes", nodeHandler.ApplyNode)

@@ -82,3 +82,7 @@ type ExportService interface {
 	Export(ctx context.Context) (*export.ResourcesForExport, error)
 	Import(ctx context.Context, resources *export.ResourcesForImport) error
 }
+
+type ResetService interface {
+	Reset(ctx context.Context) error
+}
