@@ -26,6 +26,13 @@ export default function priorityclassStore() {
     priorityclasses: [],
   });
 
+  // `CheckIsDeletable` is to return whether this PriorityClass can be deleted.
+  // The name of it prefixed with `system-` is reserved by the system
+  // and it can't be deleted.
+  const checkIsDeletable = (n: V1PriorityClass) => {
+    return !!n.metadata?.name && !n.metadata?.name?.startsWith("system-");
+  };
+
   return {
     get priorityclasses() {
       return state.priorityclasses;
@@ -45,7 +52,7 @@ export default function priorityclassStore() {
           isNew: isNew,
           item: n,
           resourceKind: "PC",
-          isDeletable: true,
+          isDeletable: checkIsDeletable(n),
         };
       }
     },
