@@ -3,9 +3,10 @@ package handler
 import (
 	"net/http"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 	"github.com/labstack/echo/v4"
 	"k8s.io/klog/v2"
+
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
 )
 
 // ResetHandler is handler for clean up resources and scheduler configuration.
