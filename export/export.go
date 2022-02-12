@@ -148,7 +148,7 @@ func (s *Service) get(ctx context.Context, opts options) (*ResourcesForExport, e
 		return nil, xerrors.Errorf("call listStorageClasses: %w", err)
 	}
 	if err := s.listPcs(ctx, &resources, &errgrp, opts); err != nil {
-		return nil, xerrors.Errorf("call Pcs: %w", err)
+		return nil, xerrors.Errorf("call listPcs: %w", err)
 	}
 	if err := s.getSchedulerConfig(ctx, &resources, &errgrp); err != nil {
 		return nil, xerrors.Errorf("call getSchedulerConfig: %w", err)
