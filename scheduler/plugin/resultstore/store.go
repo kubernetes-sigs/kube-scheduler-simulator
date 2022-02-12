@@ -132,7 +132,7 @@ func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
 	}
 
 	// delete data from Store only if data is successfully added on pod's annotations.
-	s.DeleteData(k)
+	s.deleteData(k)
 }
 
 func (s *Store) addFilterResultToPod(pod *v1.Pod) error {
@@ -237,5 +237,9 @@ func (s *Store) applyWeightOnScore(pluginName string, score int64) int64 {
 func (s *Store) DeleteData(k key) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.deleteData(k)
+}
+
+func (s *Store) deleteData(k key) {
 	delete(s.results, k)
 }
