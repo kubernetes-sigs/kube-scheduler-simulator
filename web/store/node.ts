@@ -40,7 +40,7 @@ export default function nodeStore() {
           isNew: isNew,
           item: n,
           resourceKind: "Node",
-          isDeletable: false,
+          isDeletable: true,
         };
       }
     },
