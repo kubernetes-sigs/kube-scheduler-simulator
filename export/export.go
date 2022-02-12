@@ -177,19 +177,19 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
 
 	if err := s.applyPcs(ctx, resources, &errgrp, opts); err != nil {
-		return err
+		return xerrors.Errorf("call applyPcs: %w", err)
 	}
 	if err := s.applyStorageClasses(ctx, resources, &errgrp, opts); err != nil {
-		return err
+		return xerrors.Errorf("call applyStorageClasses: %w", err)
 	}
 	if err := s.applyPvcs(ctx, resources, &errgrp, opts); err != nil {
-		return err
+		return xerrors.Errorf("call applyPvcs: %w", err)
 	}
 	if err := s.applyNodes(ctx, resources, &errgrp, opts); err != nil {
-		return err
+		return xerrors.Errorf("call applyNodes: %w", err)
 	}
 	if err := s.applyPods(ctx, resources, &errgrp, opts); err != nil {
-		return err
+		return xerrors.Errorf("call applyPods: %w", err)
 	}
 
 	if err := errgrp.Grp.Wait(); err != nil {
@@ -199,7 +199,7 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts
 	// `applyPvs` should be called after `applyPvcs` finished,
 	// because `applyPvs` look up PersistentVolumeClaim for `Spec.ClaimRef.UID` field.
 	if err := s.applyPvs(ctx, resources, &errgrp, opts); err != nil {
-		return err
+		return xerrors.Errorf("call applyPvs: %w", err)
 	}
 	if err := errgrp.Grp.Wait(); err != nil {
 		return xerrors.Errorf("apply PVs: %w", err)
