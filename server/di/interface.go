@@ -81,5 +81,5 @@ type PriorityClassService interface {
 type ExportService interface {
 	Export(ctx context.Context, opts ...export.Option) (*export.ResourcesForExport, error)
 	Import(ctx context.Context, resources *export.ResourcesForImport, opts ...export.Option) error
-	WithIgnoreErr() export.Option
+	IgnoreErr() export.Option
 }

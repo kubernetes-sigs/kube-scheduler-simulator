@@ -195,7 +195,7 @@ func TestService_Export(t *testing.T) {
 	}
 }
 
-func TestService_Export_WithIgnoreErrOption(t *testing.T) {
+func TestService_Export_IgnoreErrOption(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                     string
@@ -405,11 +405,11 @@ func TestService_Export_WithIgnoreErrOption(t *testing.T) {
 
 			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
-			r, err := s.Export(context.Background(), s.WithIgnoreErr())
+			r, err := s.Export(context.Background(), s.IgnoreErr())
 
 			diffResponse := cmp.Diff(r, tt.wantReturn)
 			if diffResponse != "" || (err != nil) != tt.wantErr {
-				t.Fatalf("Export() WithIgnoreErr option, %v test, \nerror = %v, wantErr %v,\n%s", tt.name, err, tt.wantErr, diffResponse)
+				t.Fatalf("Export() IgnoreErr option, %v test, \nerror = %v, wantErr %v,\n%s", tt.name, err, tt.wantErr, diffResponse)
 			}
 		})
 	}
@@ -1472,8 +1472,8 @@ func TestService_Import_WithEgnoreErrOption(t *testing.T) {
 			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 
-			if err := s.Import(context.Background(), tt.applyConfiguration(), s.WithIgnoreErr()); (err != nil) != tt.wantErr {
-				t.Fatalf("Import() WithIgnoreErr option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
+			if err := s.Import(context.Background(), tt.applyConfiguration(), s.IgnoreErr()); (err != nil) != tt.wantErr {
+				t.Fatalf("Import() IgnoreErr option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
 			}
 		})
 	}

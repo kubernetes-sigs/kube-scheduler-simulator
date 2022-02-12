@@ -121,7 +121,9 @@ func (i ignoreErrOption) apply(opts *options) {
 	opts.ignoreErr = bool(i)
 }
 
-func (s *Service) WithIgnoreErr() Option {
+// IgnoreErr is the option to literally ignore errors.
+// If it is enabled, the method won't return any errors, but just log errors as error logs.
+func (s *Service) IgnoreErr() Option {
 	return ignoreErrOption(true)
 }
 
