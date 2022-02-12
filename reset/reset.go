@@ -86,3 +86,4 @@ func (s *Service) Reset(ctx context.Context) error {
 		return err
 	}
 	return s.schedService.ResetScheduler()
+}
