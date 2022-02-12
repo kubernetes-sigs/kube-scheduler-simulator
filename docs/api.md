@@ -40,7 +40,7 @@ empty
 
 ## Reset all resources and scheduler configutarion
 
-cleans up all resources and scheduler configuration.
+clean up all resources and scheduler configuration.
 
 ### HTTP Request
 
