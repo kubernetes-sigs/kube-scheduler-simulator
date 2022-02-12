@@ -7,7 +7,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
-type ResetService interface {
+type DeleteService interface {
 	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
@@ -20,20 +20,20 @@ type Service struct {
 	client clientset.Interface
 	// deleteServices has the all services for each resource.
 	// key: service name.
-	resetServices map[string]ResetService
-	schedService  SchedulerService
+	deleteServices map[string]DeleteService
+	schedService   SchedulerService
 }
 
 // NewResetService initializes Service.
 func NewResetService(
 	client clientset.Interface,
-	resetServices map[string]ResetService,
+	deleteServices map[string]DeleteService,
 	schedService SchedulerService,
 ) *Service {
 	return &Service{
-		client:        client,
-		resetServices: resetServices,
-		schedService:  schedService,
+		client:         client,
+		deleteServices: deleteServices,
+		schedService:   schedService,
 	}
 }
 
@@ -41,8 +41,8 @@ func NewResetService(
 func (s *Service) Reset(ctx context.Context) error {
 	// We need emptyListOpts to satisfy interface.
 	emptyListOpts := metav1.ListOptions{}
-	for _, rs := range s.resetServices {
-		if err := rs.DeleteCollection(ctx, emptyListOpts); err != nil {
+	for _, ds := range s.deleteServices {
+		if err := ds.DeleteCollection(ctx, emptyListOpts); err != nil {
 			return err
 		}
 	}

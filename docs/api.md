@@ -38,13 +38,13 @@ empty
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
-## Reset scheduler configuration
+## Reset all resources and scheduler configutarion
 
-restart scheduler with default configuration.
+cleans up all resources and scheduler configuration.
 
 ### HTTP Request
 
-`PUT /api/v1/schedulerconfiguration`
+`PUT /api/v1/reset`
 
 ### Request Body
 
