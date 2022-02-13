@@ -17,11 +17,13 @@ var ErrEmptyEnv = errors.New("env is needed, but empty")
 
 // Config is configuration for simulator.
 type Config struct {
-	Port                int
-	KubeAPIServerURL    string
-	EtcdURL             string
-	FrontendURL         string
-	InitialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
+	Port             int
+	KubeAPIServerURL string
+	EtcdURL          string
+	FrontendURL      string
+	// ExternalImportEnabled indicates whether the simulator will import resources from an existing cluster or not.
+	ExternalImportEnabled bool
+	InitialSchedulerCfg   *v1beta2config.KubeSchedulerConfiguration
 }
 
 // NewConfig gets some settings from environment variables.
@@ -43,17 +45,20 @@ func NewConfig() (*Config, error) {
 
 	apiurl := getKubeAPIServerURL()
 
+	externalimportenabled := getExternalImportEnabled()
+
 	initialschedulerCfg, err := getSchedulerCfg()
 	if err != nil {
 		return nil, xerrors.Errorf("get SchedulerCfg: %w", err)
 	}
 
 	return &Config{
-		Port:                port,
-		KubeAPIServerURL:    apiurl,
-		EtcdURL:             etcdurl,
-		FrontendURL:         frontendurl,
-		InitialSchedulerCfg: initialschedulerCfg,
+		Port:                  port,
+		KubeAPIServerURL:      apiurl,
+		EtcdURL:               etcdurl,
+		FrontendURL:           frontendurl,
+		InitialSchedulerCfg:   initialschedulerCfg,
+		ExternalImportEnabled: externalimportenabled,
 	}, nil
 }
 
@@ -129,6 +134,13 @@ func getSchedulerCfg() (*v1beta2config.KubeSchedulerConfiguration, error) {
 	}
 
 	return sc, nil
+}
+
+// getExternalImportEnabled reads EXTERNAL_IMPORT_ENABLED and convert it to bool.
+// This function will return `true` if `EXTERNAL_IMPORT_ENABLED` is "1".
+func getExternalImportEnabled() bool {
+	i := os.Getenv("EXTERNAL_IMPORT_ENABLED")
+	return i == "1"
 }
 
 func decodeSchedulerCfg(buf []byte) (*v1beta2config.KubeSchedulerConfiguration, error) {
