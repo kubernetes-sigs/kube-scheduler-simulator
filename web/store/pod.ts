@@ -15,6 +15,7 @@ export type SelectedPod = {
   isNew: boolean;
   item: V1Pod;
   resourceKind: string;
+  isDeletable: boolean;
 };
 
 export default function podStore() {
@@ -46,6 +47,7 @@ export default function podStore() {
           isNew: isNew,
           item: p,
           resourceKind: "Pod",
+          isDeletable: true,
         };
       }
     },

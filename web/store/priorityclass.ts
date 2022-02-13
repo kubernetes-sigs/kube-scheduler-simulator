@@ -17,6 +17,7 @@ type selectedPriorityClass = {
   isNew: boolean;
   item: V1PriorityClass;
   resourceKind: string;
+  isDeletable: boolean;
 };
 
 export default function priorityclassStore() {
@@ -24,6 +25,12 @@ export default function priorityclassStore() {
     selectedPriorityClass: null,
     priorityclasses: [],
   });
+
+  // `CheckIsDeletable` returns whether the given PriorityClass can be deleted or not.
+  // The PriorityClasses that have the name prefixed with `system-` are reserved by the system so can't be deleted.
+  const checkIsDeletable = (n: V1PriorityClass) => {
+    return !!n.metadata?.name && !n.metadata?.name?.startsWith("system-");
+  };
 
   return {
     get priorityclasses() {
@@ -44,6 +51,7 @@ export default function priorityclassStore() {
           isNew: isNew,
           item: n,
           resourceKind: "PC",
+          isDeletable: checkIsDeletable(n),
         };
       }
     },

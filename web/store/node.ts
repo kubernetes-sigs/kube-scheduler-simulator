@@ -12,6 +12,7 @@ type selectedNode = {
   isNew: boolean;
   item: V1Node;
   resourceKind: string;
+  isDeletable: boolean;
 };
 
 export default function nodeStore() {
@@ -39,6 +40,7 @@ export default function nodeStore() {
           isNew: isNew,
           item: n,
           resourceKind: "Node",
+          isDeletable: true,
         };
       }
     },
