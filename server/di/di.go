@@ -49,14 +49,15 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
 	c.exportService = export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
 
-	servicem := map[string]reset.DeleteService{
+	deleteServices := map[string]reset.DeleteService{
 		"node": c.nodeService,
+		"pod":  c.podService,
 		"pv":   c.pvService,
 		"pvc":  c.pvcService,
 		"sc":   c.storageClassService,
 		"pc":   c.priorityClassService,
 	}
-	c.resetService = reset.NewResetService(client, servicem, c.schedulerService)
+	c.resetService = reset.NewResetService(client, deleteServices, c.schedulerService)
 	return c
 }
 

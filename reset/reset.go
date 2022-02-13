@@ -3,6 +3,8 @@ package reset
 import (
 	"context"
 
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/xerrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 )
@@ -39,12 +41,22 @@ func NewResetService(
 
 // Reset cleans up all resources and scheduler configuration.
 func (s *Service) Reset(ctx context.Context) error {
-	// We need emptyListOpts to satisfy interface.
-	emptyListOpts := metav1.ListOptions{}
-	for _, ds := range s.deleteServices {
-		if err := ds.DeleteCollection(ctx, emptyListOpts); err != nil {
-			return err
-		}
+	eg, ctx := errgroup.WithContext(ctx)
+	for k, ds := range s.deleteServices {
+		ds := ds
+		k := k
+		eg.Go(func() error {
+			if err := ds.DeleteCollection(ctx, metav1.ListOptions{}); err != nil {
+				return xerrors.Errorf("delete collecton: %s: %w", k, err)
+			}
+			return nil
+		})
 	}
-	return s.schedService.ResetScheduler()
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+	if err := s.schedService.ResetScheduler(); err != nil {
+		return xerrors.Errorf("reset scheduler: %w", err)
+	}
+	return nil
 }
