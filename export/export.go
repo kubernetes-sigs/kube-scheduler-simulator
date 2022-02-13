@@ -10,6 +10,7 @@ package export
 
 import (
 	"context"
+	"strings"
 
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
@@ -339,7 +340,15 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.E
 			klog.Errorf("failed to call list priorityClasses: %v", err)
 			pcs = &schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}
 		}
-		r.PriorityClasses = pcs.Items
+		result := []schedulingv1.PriorityClass{}
+		// The name of a PriorityClass object cannot be prefixed with `system-`.
+		// It is reserved by the system and we cannot recreate it. No need to export.
+		for _, i := range pcs.Items {
+			if !strings.HasPrefix(i.GetObjectMeta().GetName(), "system-") {
+				result = append(result, i)
+			}
+		}
+		r.PriorityClasses = result
 		return nil
 	})
 	return nil
@@ -361,6 +370,11 @@ func (s *Service) getSchedulerConfig(ctx context.Context, r *ResourcesForExport,
 func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.ErrGroupWithSemaphore, opts options) error {
 	for i := range r.PriorityClasses {
 		pc := r.PriorityClasses[i]
+		// The name of PriorityClass that is prefixed with `system-`, is reserved by the system and we cannot recreate it.
+		// Therefore, filter it.
+		if strings.HasPrefix(*pc.Name, "system-") {
+			continue
+		}
 		if err := eg.Sem.Acquire(ctx, 1); err != nil {
 			return xerrors.Errorf("acquire semaphore: %w", err)
 		}
