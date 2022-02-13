@@ -21,7 +21,7 @@ type Config struct {
 	KubeAPIServerURL string
 	EtcdURL          string
 	FrontendURL      string
-	// ExternalImportEnabled indicates whether the scheduler should enable the function to import from an existing cluster.
+	// ExternalImportEnabled indicates whether the simulator will import resources from an existing cluster or not.
 	ExternalImportEnabled bool
 	InitialSchedulerCfg   *v1beta2config.KubeSchedulerConfiguration
 }
