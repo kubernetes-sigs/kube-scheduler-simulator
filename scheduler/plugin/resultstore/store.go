@@ -240,6 +240,8 @@ func (s *Store) DeleteData(k key) {
 	s.deleteData(k)
 }
 
+// deleteData deletes the result stored with the given key.
+// Note: we assume the store lock is already acquired.
 func (s *Store) deleteData(k key) {
 	delete(s.results, k)
 }
