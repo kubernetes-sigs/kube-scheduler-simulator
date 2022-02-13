@@ -210,7 +210,7 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts
 // Import imports all resources from posted data.
 // (1) Restart scheduler based on the data.
 // (2) Apply each resource.
-//     * If UID is not nil, an error will occur. (try to find existing resource by UID)
+//     * If UID is not nil, an error will occur. (This is because the api-server will try to find that in existing resources by UID)
 func (s *Service) Import(ctx context.Context, resources *ResourcesForImport, opts ...Option) error {
 	options := options{}
 	for _, o := range opts {
