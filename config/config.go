@@ -136,9 +136,8 @@ func getSchedulerCfg() (*v1beta2config.KubeSchedulerConfiguration, error) {
 	return sc, nil
 }
 
-// getExternalImportEnabled reads EXTERNAL_IMPORT_ENABLED.
-// This function will be return true only if that is "1".
-// This is means External Import is disabled, by default.
+// getExternalImportEnabled reads EXTERNAL_IMPORT_ENABLED and convert it to bool.
+// This function will return `true` if `EXTERNAL_IMPORT_ENABLED` is "1".
 func getExternalImportEnabled() bool {
 	i := os.Getenv("EXTERNAL_IMPORT_ENABLED")
 	return i == "1"
