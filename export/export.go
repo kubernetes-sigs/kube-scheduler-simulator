@@ -516,7 +516,9 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 	return nil
 }
 
-// The name of PriorityClass that is prefixed with `system-`, is reserved by the system.
+// isSystemPriorityClass returns whether the given name of PriorityClass is prefixed with `system-` or not.
+// The prefix `system-` is reserved by Kubernetes and cannot be used in the name of PriorityClass.
+// See: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
 func filterPriorityClass(name string) bool {
 	return strings.HasPrefix(name, "system-")
 }
