@@ -83,3 +83,7 @@ type ExportService interface {
 	Import(ctx context.Context, resources *export.ResourcesForImport, opts ...export.Option) error
 	IgnoreErr() export.Option
 }
+
+type ResetService interface {
+	Reset(ctx context.Context) error
+}

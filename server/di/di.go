@@ -14,6 +14,7 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/persistentvolumeclaim"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/pod"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/priorityclass"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/reset"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/storageclass"
 )
@@ -28,6 +29,7 @@ type Container struct {
 	schedulerService     SchedulerService
 	exportService        ExportService
 	priorityClassService PriorityClassService
+	resetService         ResetService
 }
 
 // NewDIContainer initializes Container.
@@ -46,6 +48,16 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
 	c.exportService = export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
+
+	deleteServices := map[string]reset.DeleteService{
+		"node":                    c.nodeService,
+		"pod":                     c.podService,
+		"persistent volume":       c.pvService,
+		"persistent volume claim": c.pvcService,
+		"storage class":           c.storageClassService,
+		"priority class":          c.priorityClassService,
+	}
+	c.resetService = reset.NewResetService(client, deleteServices, c.schedulerService)
 	return c
 }
 
@@ -87,4 +99,9 @@ func (c *Container) PriorityClassService() PriorityClassService {
 // ExportService returns ExportService.
 func (c *Container) ExportService() ExportService {
 	return c.exportService
+}
+
+// ResetService returns ResetService.
+func (c *Container) ResetService() ResetService {
+	return c.resetService
 }
