@@ -1491,7 +1491,7 @@ func TestFunction_listPcs(t *testing.T) {
 		wantErr                bool
 	}{
 		{
-			name: "filter the name it prefixed with `system-`",
+			name: "all pc which have name prefixed with `system-` should filter out",
 			preparePcServiceMockFn: func(pcs *mock_export.MockPriorityClassService) {
 				_pcs := []schedulingv1.PriorityClass{}
 				sysPc := schedulingv1.PriorityClass{}
