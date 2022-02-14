@@ -24,7 +24,7 @@
         <v-btn
           color="green darken-1"
           text
-          :disabled="data.is_import_button_disabled"
+          :disabled="data.isImportButtonDisabled"
           @click="ImportScheduler()"
         >
           Import
@@ -49,14 +49,14 @@ import PodStoreKey from "./StoreKey/PodStoreKey";
 interface SelectedItem {
   dialog: boolean;
   filedata: ResourcesForImport;
-  is_import_button_disabled: boolean;
+  isImportButtonDisabled: boolean;
 }
 
 export default defineComponent({
   setup() {
     const data = reactive({
       dialog: false,
-      is_import_button_disabled: true,
+      isImportButtonDisabled: true,
     } as SelectedItem);
     const priorityclassstore = inject(PriorityClassStoreKey);
     if (!priorityclassstore) {
@@ -116,7 +116,7 @@ export default defineComponent({
             reader.result as string
           );
           data.filedata = filedate;
-          data.is_import_button_disabled = false;
+          data.isImportButtonDisabled = false;
         } catch (e) {
           setServerErrorMessage("Failed to load the selected file.");
         }
