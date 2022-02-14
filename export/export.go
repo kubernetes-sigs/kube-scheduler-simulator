@@ -344,7 +344,7 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.E
 		// The name of a PriorityClass object cannot be prefixed with `system-`.
 		// It is reserved by the system and we cannot recreate it. No need to export.
 		for _, i := range pcs.Items {
-			if !filterPriorityClass(i.GetObjectMeta().GetName()) {
+			if !isSystemPriorityClass(i.GetObjectMeta().GetName()) {
 				result = append(result, i)
 			}
 		}
@@ -372,7 +372,7 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.
 		pc := r.PriorityClasses[i]
 		// The name of PriorityClass that is prefixed with `system-`, is reserved by the system and we cannot recreate it.
 		// Therefore, filter it.
-		if filterPriorityClass(*pc.Name) {
+		if isSystemPriorityClass(*pc.Name) {
 			continue
 		}
 		if err := eg.Sem.Acquire(ctx, 1); err != nil {
@@ -519,6 +519,6 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 // isSystemPriorityClass returns whether the given name of PriorityClass is prefixed with `system-` or not.
 // The prefix `system-` is reserved by Kubernetes and cannot be used in the name of PriorityClass.
 // See: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
-func filterPriorityClass(name string) bool {
+func isSystemPriorityClass(name string) bool {
 	return strings.HasPrefix(name, "system-")
 }
