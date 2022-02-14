@@ -3,6 +3,7 @@ package export
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
 	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/util"
 )
 
 func TestService_Export(t *testing.T) {
@@ -1474,6 +1476,172 @@ func TestService_Import_WithEgnoreErrOption(t *testing.T) {
 
 			if err := s.Import(context.Background(), tt.applyConfiguration(), s.IgnoreErr()); (err != nil) != tt.wantErr {
 				t.Fatalf("Import() IgnoreErr option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestFunction_listPcs(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                   string
+		preparePcServiceMockFn func(pcs *mock_export.MockPriorityClassService)
+		prepareFakeClientSetFn func() *fake.Clientset
+		wantResourcesForExport func() *ResourcesForExport
+		wantErr                bool
+	}{
+		{
+			name: "all pc which have name prefixed with `system-` should filter out",
+			preparePcServiceMockFn: func(pcs *mock_export.MockPriorityClassService) {
+				_pcs := []schedulingv1.PriorityClass{}
+				sysPc := schedulingv1.PriorityClass{}
+				sysPc.Name = "system-cluster-critical"
+				_pcs = append(_pcs, sysPc)
+				nonSysPc := schedulingv1.PriorityClass{}
+				nonSysPc.Name = "priority-class1"
+				_pcs = append(_pcs, nonSysPc)
+				pcslist := schedulingv1.PriorityClassList{}
+				pcslist.Items = _pcs
+				pcs.EXPECT().List(gomock.Any()).Return(&pcslist, nil)
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantResourcesForExport: func() *ResourcesForExport {
+				_pcs := []schedulingv1.PriorityClass{}
+				nonSysPc := schedulingv1.PriorityClass{}
+				nonSysPc.Name = "priority-class1"
+				_pcs = append(_pcs, nonSysPc)
+				return &ResourcesForExport{
+					Pods:            []corev1.Pod{},
+					Nodes:           []corev1.Node{},
+					Pvs:             []corev1.PersistentVolume{},
+					Pvcs:            []corev1.PersistentVolumeClaim{},
+					StorageClasses:  []storagev1.StorageClass{},
+					PriorityClasses: _pcs,
+					SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				}
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mockSchedulerService := mock_export.NewMockSchedulerService(ctrl)
+			mockPriorityClassService := mock_export.NewMockPriorityClassService(ctrl)
+			mockStorageClassService := mock_export.NewMockStorageClassService(ctrl)
+			mockPVCService := mock_export.NewMockPersistentVolumeClaimService(ctrl)
+			mockPVService := mock_export.NewMockPersistentVolumeService(ctrl)
+			mockNodeService := mock_export.NewMockNodeService(ctrl)
+			mockPodService := mock_export.NewMockPodService(ctrl)
+			fakeclientset := tt.prepareFakeClientSetFn()
+
+			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
+			tt.preparePcServiceMockFn(mockPriorityClassService)
+			ctx := context.Background()
+			errgrp := util.NewErrGroupWithSemaphore(ctx)
+			resources := &ResourcesForExport{
+				Pods:            []corev1.Pod{},
+				Nodes:           []corev1.Node{},
+				Pvs:             []corev1.PersistentVolume{},
+				Pvcs:            []corev1.PersistentVolumeClaim{},
+				StorageClasses:  []storagev1.StorageClass{},
+				PriorityClasses: []schedulingv1.PriorityClass{},
+				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+			}
+
+			err := s.listPcs(ctx, resources, &errgrp, options{})
+			if err := errgrp.Grp.Wait(); err != nil {
+				t.Fatalf("listPcs: %v", err)
+			}
+			diffResponse := cmp.Diff(resources, tt.wantResourcesForExport())
+			if diffResponse != "" || (err != nil) != tt.wantErr {
+				t.Fatalf("listPcs() %v test, \nerror = %v, wantErr %v\n%s", tt.name, err, tt.wantErr, diffResponse)
+			}
+		})
+	}
+}
+
+func TestFunction_applyPcs(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                     string
+		prepareEachServiceMockFn func(pcs *mock_export.MockPriorityClassService)
+		prepareFakeClientSetFn   func() *fake.Clientset
+		applyConfiguration       func() *ResourcesForImport
+		wantErr                  bool
+	}{
+		{
+			name: "all pc which have name prefixed with `system-` should filter out",
+			prepareEachServiceMockFn: func(pcs *mock_export.MockPriorityClassService) {
+				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).DoAndReturn(
+					func(ctx context.Context, pc *schedulingcfgv1.PriorityClassApplyConfiguration) (*schedulingv1.PriorityClass, error) {
+						if strings.HasPrefix(*pc.Name, "system-") {
+							return nil, xerrors.Errorf("apply PriorityClass of system")
+						}
+						return &schedulingv1.PriorityClass{}, nil
+					},
+				).AnyTimes()
+			},
+			applyConfiguration: func() *ResourcesForImport {
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				pcs = append(pcs, *schedulingcfgv1.PriorityClass("system-PriorityClass1"))
+				pcs = append(pcs, *schedulingcfgv1.PriorityClass("PriorityClass1"))
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForImport{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  storageclasses,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			ctx := context.Background()
+			errgrp := util.NewErrGroupWithSemaphore(ctx)
+
+			mockSchedulerService := mock_export.NewMockSchedulerService(ctrl)
+			mockPriorityClassService := mock_export.NewMockPriorityClassService(ctrl)
+			mockStorageClassService := mock_export.NewMockStorageClassService(ctrl)
+			mockPVCService := mock_export.NewMockPersistentVolumeClaimService(ctrl)
+			mockPVService := mock_export.NewMockPersistentVolumeService(ctrl)
+			mockNodeService := mock_export.NewMockNodeService(ctrl)
+			mockPodService := mock_export.NewMockPodService(ctrl)
+			fakeclientset := tt.prepareFakeClientSetFn()
+
+			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
+			tt.prepareEachServiceMockFn(mockPriorityClassService)
+
+			err := s.applyPcs(ctx, tt.applyConfiguration(), &errgrp, options{})
+			if err := errgrp.Grp.Wait(); err != nil {
+				t.Fatalf("applyPcs: %v", err)
+			}
+
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("applyPcs() %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
 			}
 		})
 	}

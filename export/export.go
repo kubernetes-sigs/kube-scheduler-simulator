@@ -10,6 +10,7 @@ package export
 
 import (
 	"context"
+	"strings"
 
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
@@ -339,7 +340,13 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.E
 			klog.Errorf("failed to call list priorityClasses: %v", err)
 			pcs = &schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}
 		}
-		r.PriorityClasses = pcs.Items
+		result := []schedulingv1.PriorityClass{}
+		for _, i := range pcs.Items {
+			if !isSystemPriorityClass(i.GetObjectMeta().GetName()) {
+				result = append(result, i)
+			}
+		}
+		r.PriorityClasses = result
 		return nil
 	})
 	return nil
@@ -361,6 +368,9 @@ func (s *Service) getSchedulerConfig(ctx context.Context, r *ResourcesForExport,
 func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.ErrGroupWithSemaphore, opts options) error {
 	for i := range r.PriorityClasses {
 		pc := r.PriorityClasses[i]
+		if isSystemPriorityClass(*pc.Name) {
+			continue
+		}
 		if err := eg.Sem.Acquire(ctx, 1); err != nil {
 			return xerrors.Errorf("acquire semaphore: %w", err)
 		}
@@ -500,4 +510,13 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 		})
 	}
 	return nil
+}
+
+// isSystemPriorityClass returns whether the given name of PriorityClass is prefixed with `system-` or not.
+// The `system-` prefix is reserved by Kubernetes, and users cannot create a PriorityClass with such a name.
+// See: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
+//
+// So, we need to exclude these PriorityClasses when import/export PriorityClasses.
+func isSystemPriorityClass(name string) bool {
+	return strings.HasPrefix(name, "system-")
 }
