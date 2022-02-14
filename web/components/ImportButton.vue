@@ -8,7 +8,7 @@
       <v-card-title class="text-h5 grey lighten-2"> Import </v-card-title>
 
       <v-card-text>
-        ※WARNING: Scheduler will be initialized before importing
+        WARNING: All current created resources will be deleted.
         <form>
           <input type="file" accept=".yml" @change="readfile" />
         </form>
