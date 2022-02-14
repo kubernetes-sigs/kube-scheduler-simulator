@@ -344,7 +344,7 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.E
 		// The name of a PriorityClass object cannot be prefixed with `system-`.
 		// It is reserved by the system and we cannot recreate it. No need to export.
 		for _, i := range pcs.Items {
-			if !strings.HasPrefix(i.GetObjectMeta().GetName(), "system-") {
+			if !filterPriorityClass(i.GetObjectMeta().GetName()) {
 				result = append(result, i)
 			}
 		}
@@ -372,7 +372,7 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.
 		pc := r.PriorityClasses[i]
 		// The name of PriorityClass that is prefixed with `system-`, is reserved by the system and we cannot recreate it.
 		// Therefore, filter it.
-		if strings.HasPrefix(*pc.Name, "system-") {
+		if filterPriorityClass(*pc.Name) {
 			continue
 		}
 		if err := eg.Sem.Acquire(ctx, 1); err != nil {
@@ -514,4 +514,9 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 		})
 	}
 	return nil
+}
+
+// The name of PriorityClass that is prefixed with `system-`, is reserved by the system.
+func filterPriorityClass(name string) bool {
+	return strings.HasPrefix(name, "system-")
 }
