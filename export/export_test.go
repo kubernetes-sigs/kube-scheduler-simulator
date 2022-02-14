@@ -1577,7 +1577,7 @@ func TestFunction_applyPcs(t *testing.T) {
 		wantErr                  bool
 	}{
 		{
-			name: "filter the name it prefixed with `system-`",
+			name: "all pc which have name prefixed with `system-` should filter out",
 			prepareEachServiceMockFn: func(pcs *mock_export.MockPriorityClassService) {
 				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).DoAndReturn(
 					func(ctx context.Context, pc *schedulingcfgv1.PriorityClassApplyConfiguration) (*schedulingv1.PriorityClass, error) {
