@@ -47,7 +47,7 @@ func (s *Service) Reset(ctx context.Context) error {
 		k := k
 		eg.Go(func() error {
 			if err := ds.DeleteCollection(ctx, metav1.ListOptions{}); err != nil {
-				return xerrors.Errorf("delete collecton: %s: %w", k, err)
+				return xerrors.Errorf("delete collecton of %s service: %w", k, err)
 			}
 			return nil
 		})
