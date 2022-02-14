@@ -36,15 +36,15 @@
 
 <script lang="ts">
 import { defineComponent, inject, reactive } from "@nuxtjs/composition-api";
-import { importScheduler, ResourcesForImport } from "../api/v1/export";
+import { importScheduler, ResourcesForImport } from "~/api/v1/export";
 import yaml from "js-yaml";
-import SnackBarStoreKey from "./StoreKey/SnackBarStoreKey";
-import PriorityClassStoreKey from "./StoreKey/PriorityClassStoreKey";
-import StorageClassStoreKey from "./StoreKey/StorageClassStoreKey";
-import PersistentVolumeClaimStoreKey from "./StoreKey/PVCStoreKey";
-import PersistentVolumeStoreKey from "./StoreKey/PVStoreKey";
-import NodeStoreKey from "./StoreKey/NodeStoreKey";
-import PodStoreKey from "./StoreKey/PodStoreKey";
+import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
+import PriorityClassStoreKey from "../StoreKey/PriorityClassStoreKey";
+import StorageClassStoreKey from "../StoreKey/StorageClassStoreKey";
+import PersistentVolumeClaimStoreKey from "../StoreKey/PVCStoreKey";
+import PersistentVolumeStoreKey from "../StoreKey/PVStoreKey";
+import NodeStoreKey from "../StoreKey/NodeStoreKey";
+import PodStoreKey from "../StoreKey/PodStoreKey";
 
 interface SelectedItem {
   dialog: boolean;

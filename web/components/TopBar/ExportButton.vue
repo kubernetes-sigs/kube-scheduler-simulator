@@ -25,10 +25,10 @@
 </template>
 
 <script lang="ts">
-import { exportScheduler } from "../api/v1/export";
+import { exportScheduler } from "~/api/v1/export";
 import { saveAs } from "file-saver";
 import { defineComponent, inject, reactive } from "@nuxtjs/composition-api";
-import SnackBarStoreKey from "./StoreKey/SnackBarStoreKey";
+import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 import yaml from "js-yaml";
 
 export default defineComponent({

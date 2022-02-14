@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import { inject, defineComponent } from "@nuxtjs/composition-api";
-import SchedulerConfigurationStoreKey from "./StoreKey/SchedulerConfigurationStoreKey";
+import SchedulerConfigurationStoreKey from "../StoreKey/SchedulerConfigurationStoreKey";
 import ExportButton from "./ExportButton.vue";
 import ImportButton from "./ImportButton.vue";
 
