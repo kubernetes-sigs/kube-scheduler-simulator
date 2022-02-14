@@ -40,7 +40,8 @@ empty
 
 ## Reset all resources and scheduler configutarion
 
-clean up all resources and scheduler configuration.
+clean up all resources and restore the initial scheduler configuration.
+(If you didn't pass the initial scheduler configuration via `KUBE_SCHEDULER_CONFIG_PATH`, the default scheduler configuration will be restored.)
 
 ### HTTP Request
 
