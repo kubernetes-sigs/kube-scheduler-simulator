@@ -38,13 +38,14 @@ empty
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
-## Reset scheduler configuration
+## Reset all resources and scheduler configutarion
 
-restart scheduler with default configuration.
+clean up all resources and restore the initial scheduler configuration.
+(If you didn't pass the initial scheduler configuration via `KUBE_SCHEDULER_CONFIG_PATH`, the default scheduler configuration will be restored.)
 
 ### HTTP Request
 
-`PUT /api/v1/schedulerconfiguration`
+`PUT /api/v1/reset`
 
 ### Request Body
 

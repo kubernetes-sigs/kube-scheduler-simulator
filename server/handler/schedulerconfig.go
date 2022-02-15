@@ -39,12 +39,3 @@ func (h *SchedulerConfigHandler) ApplySchedulerConfig(c echo.Context) error {
 
 	return c.NoContent(http.StatusAccepted)
 }
-
-func (h *SchedulerConfigHandler) ResetScheduler(c echo.Context) error {
-	if err := h.service.ResetScheduler(); err != nil {
-		klog.Errorf("failed to reset scheduler: %+v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
-	return c.NoContent(http.StatusAccepted)
-}

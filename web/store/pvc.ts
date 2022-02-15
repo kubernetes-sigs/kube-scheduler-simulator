@@ -17,6 +17,7 @@ type selectedPersistentVolumeClaim = {
   isNew: boolean;
   item: V1PersistentVolumeClaim;
   resourceKind: string;
+  isDeletable: boolean;
 };
 
 export default function pvcStore() {
@@ -44,6 +45,7 @@ export default function pvcStore() {
           isNew: isNew,
           item: n,
           resourceKind: "PVC",
+          isDeletable: true,
         };
       }
     },
