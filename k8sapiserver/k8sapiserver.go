@@ -2,7 +2,6 @@ package k8sapiserver
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"golang.org/x/xerrors"
+	extensionsapiserver "k8s.io/apiextensions-apiserver/pkg/apiserver"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
 	authauthenticator "k8s.io/apiserver/pkg/authentication/authenticator"
@@ -26,9 +26,12 @@ import (
 	utilflowcontrol "k8s.io/apiserver/pkg/util/flowcontrol"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
+
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/component-base/version"
 	"k8s.io/klog/v2"
+	aggregatorapiserver "k8s.io/kube-aggregator/pkg/apiserver"
+	aggregatorscheme "k8s.io/kube-aggregator/pkg/apiserver/scheme"
 	openapicommon "k8s.io/kube-openapi/pkg/common"
 	"k8s.io/kube-openapi/pkg/validation/spec"
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
@@ -40,7 +43,7 @@ import (
 )
 
 // StartAPIServer starts API server, and it make panic when a error happen.
-func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config, func(), error) {
+func StartAPIServer(kubeAPIServerURL string, etcdURL string) (func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		<-h.Initialized
@@ -49,7 +52,7 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 
 	l, err := net.Listen("tcp", kubeAPIServerURL)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("announces on the local network address: %w", err)
+		return nil, xerrors.Errorf("announces on the local network address: %w", err)
 	}
 
 	s := &httptest.Server{
@@ -61,18 +64,52 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 	s.Start()
 	klog.Info("kube-apiserver is started on :", s.URL)
 
-	c := NewControlPlaneConfigWithOptions(s.URL, etcdURL)
+	c, etcdOpt := NewControlPlaneConfigWithOptions(s.URL, etcdURL)
 
-	_, _, closeFn, err := startAPIServer(c, s, h)
+	clientset, err := clientset.NewForConfig(c.GenericConfig.LoopbackClientConfig)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("start API server: %w", err)
+		return nil, xerrors.Errorf("create clientset: %w", err)
 	}
 
-	cfg := &restclient.Config{
-		Host:          s.URL,
-		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
-		QPS:           5000.0,
-		Burst:         5000,
+	c.ExtraConfig.VersionedInformers = informers.NewSharedInformerFactory(clientset, c.GenericConfig.LoopbackClientConfig.Timeout)
+
+	c.GenericConfig.FlowControl = utilflowcontrol.New(
+		c.ExtraConfig.VersionedInformers,
+		clientset.FlowcontrolV1beta1(),
+		c.GenericConfig.MaxRequestsInFlight+c.GenericConfig.MaxMutatingRequestsInFlight,
+		c.GenericConfig.RequestTimeout/4,
+	)
+	c.ExtraConfig.ServiceIPRange = net.IPNet{IP: net.ParseIP("10.0.0.0"), Mask: net.CIDRMask(24, 32)}
+
+	apiExtensionsCfg, err := createAPIExtensionConfig(*c.GenericConfig, *etcdOpt, c.ExtraConfig.VersionedInformers)
+	if err != nil {
+		return nil, xerrors.Errorf("Create APIExtension Config error: %w", err)
+	}
+
+	apiExtensionServer, err := createAPIExtensionsServer(apiExtensionsCfg, genericapiserver.NewEmptyDelegate())
+	if err != nil {
+		return nil, xerrors.Errorf("Create APIExtension Server error: %w", err)
+	}
+
+	kubeAPIServer, err := createKubeAPIServer(c, apiExtensionServer.GenericAPIServer)
+	if err != nil {
+		return nil, xerrors.Errorf("Create KubeAPI Server error: %w", err)
+	}
+
+	// aggregator comes last in the chain
+	aggregatorConfig, err := createAggregatorConfig(*c.GenericConfig, *etcdOpt, apiExtensionsCfg.GenericConfig.SharedInformerFactory)
+	if err != nil {
+		return nil, xerrors.Errorf("Create Aggregator Config error: %w", err)
+	}
+
+	aggregatorServer, err := createAggregatorServer(aggregatorConfig, kubeAPIServer.GenericAPIServer, apiExtensionServer.Informers)
+	if err != nil {
+		return nil, xerrors.Errorf("Create Aggregator Server error: %w", err)
+	}
+
+	_, _, closeFn, err := startChainedAPIServer(c, aggregatorServer, s, h)
+	if err != nil {
+		return nil, xerrors.Errorf("start API server: %w", err)
 	}
 
 	shutdownFunc := func() {
@@ -81,11 +118,21 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 		s.Close()
 		klog.Info("destroyed API server")
 	}
-	return cfg, shutdownFunc, nil
+	return shutdownFunc, nil
+}
+
+func createKubeAPIServer(kubeAPIServerConfig *controlplane.Config, delegateAPIServer genericapiserver.DelegationTarget) (*controlplane.Instance, error) {
+	m, err := kubeAPIServerConfig.Complete().New(delegateAPIServer)
+	if err != nil {
+		// We log the error first so that even if closeFn crashes, the error is shown
+		klog.Errorf("error in bringing up the apiserver: %v", err)
+		return nil, err
+	}
+	return m, nil
 }
 
 func defaultOpenAPIConfig() *openapicommon.Config {
-	openAPIConfig := genericapiserver.DefaultOpenAPIConfig(generated.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(legacyscheme.Scheme))
+	openAPIConfig := genericapiserver.DefaultOpenAPIConfig(generated.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(legacyscheme.Scheme, extensionsapiserver.Scheme, aggregatorscheme.Scheme))
 	openAPIConfig.Info = &spec.Info{
 		InfoProps: spec.InfoProps{
 			Title:   "Kubernetes",
@@ -103,7 +150,7 @@ func defaultOpenAPIConfig() *openapicommon.Config {
 }
 
 //nolint:funlen
-func NewControlPlaneConfigWithOptions(serverURL, etcdURL string) *controlplane.Config {
+func NewControlPlaneConfigWithOptions(serverURL, etcdURL string) (*controlplane.Config, *options.EtcdOptions) {
 	etcdOptions := options.NewEtcdOptions(storagebackend.NewDefaultConfig(uuid.New().String(), nil))
 	etcdOptions.StorageConfig.Transport.ServerList = []string{etcdURL}
 
@@ -171,7 +218,7 @@ func NewControlPlaneConfigWithOptions(serverURL, etcdURL string) *controlplane.C
 
 	cfg.GenericConfig.OpenAPIConfig = defaultOpenAPIConfig()
 
-	return cfg
+	return cfg, etcdOptions
 }
 
 type fakeLocalhost443Listener struct{}
@@ -193,8 +240,8 @@ func (fakeLocalhost443Listener) Addr() net.Addr {
 
 // startAPIServer starts a kubernetes API server and an httpserver to handle api requests.
 //nolint:funlen
-func startAPIServer(controlPlaneConfig *controlplane.Config, s *httptest.Server, apiServerReceiver *APIServerHolder) (*controlplane.Instance, *httptest.Server, func(), error) {
-	var m *controlplane.Instance
+func startChainedAPIServer(controlPlaneConfig *controlplane.Config, server *aggregatorapiserver.APIAggregator, s *httptest.Server, apiServerReceiver *APIServerHolder) (*controlplane.Instance, *httptest.Server, func(), error) {
+	m := &controlplane.Instance{GenericAPIServer: server.GenericAPIServer}
 
 	stopCh := make(chan struct{})
 	closeFn := func() {
@@ -206,32 +253,9 @@ func startAPIServer(controlPlaneConfig *controlplane.Config, s *httptest.Server,
 		close(stopCh)
 		s.Close()
 	}
-
-	clientset, err := clientset.NewForConfig(controlPlaneConfig.GenericConfig.LoopbackClientConfig)
-	if err != nil {
-		return nil, nil, nil, xerrors.Errorf("create clientset: %w", err)
-	}
-
-	controlPlaneConfig.ExtraConfig.VersionedInformers = informers.NewSharedInformerFactory(clientset, controlPlaneConfig.GenericConfig.LoopbackClientConfig.Timeout)
-
-	controlPlaneConfig.GenericConfig.FlowControl = utilflowcontrol.New(
-		controlPlaneConfig.ExtraConfig.VersionedInformers,
-		clientset.FlowcontrolV1beta1(),
-		controlPlaneConfig.GenericConfig.MaxRequestsInFlight+controlPlaneConfig.GenericConfig.MaxMutatingRequestsInFlight,
-		controlPlaneConfig.GenericConfig.RequestTimeout/4,
-	)
-	controlPlaneConfig.ExtraConfig.ServiceIPRange = net.IPNet{IP: net.ParseIP("10.0.0.0"), Mask: net.CIDRMask(24, 32)}
-
-	m, err = controlPlaneConfig.Complete().New(genericapiserver.NewEmptyDelegate())
-	if err != nil {
-		// We log the error first so that even if closeFn crashes, the error is shown
-		klog.Errorf("error in bringing up the apiserver: %v", err)
-		closeFn()
-		return nil, nil, nil, fmt.Errorf("bringing up the apiserver: %w", err)
-	}
 	apiServerReceiver.SetAPIServer(m)
 
-	m.GenericAPIServer.PrepareRun()
+	server.PrepareRun()
 	m.GenericAPIServer.RunPostStartHooks(stopCh)
 
 	cfg := *controlPlaneConfig.GenericConfig.LoopbackClientConfig

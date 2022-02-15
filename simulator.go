@@ -6,7 +6,9 @@ import (
 	"syscall"
 
 	"golang.org/x/xerrors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientset "k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/config"
@@ -30,11 +32,18 @@ func startSimulator() error {
 		return xerrors.Errorf("get config: %w", err)
 	}
 
-	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL)
+	apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL)
 	if err != nil {
 		return xerrors.Errorf("start API server: %w", err)
 	}
 	defer apiShutdown()
+
+	restclientCfg := &restclient.Config{
+		Host:          "http://" + cfg.KubeAPIServerURL,
+		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
+		QPS:           5000.0,
+		Burst:         5000,
+	}
 
 	client := clientset.NewForConfigOrDie(restclientCfg)
 
