@@ -109,10 +109,14 @@ func NewExportService(client clientset.Interface, pods PodService, nodes NodeSer
 }
 
 type options struct {
-	ignoreErr bool
+	ignoreErr     bool
+	ignoreRestart bool
 }
 
-type ignoreErrOption bool
+type (
+	ignoreErrOption     bool
+	ignoreRestartOption bool
+)
 
 type Option interface {
 	apply(*options)
@@ -122,10 +126,20 @@ func (i ignoreErrOption) apply(opts *options) {
 	opts.ignoreErr = bool(i)
 }
 
+func (i ignoreRestartOption) apply(opts *options) {
+	opts.ignoreRestart = bool(i)
+}
+
 // IgnoreErr is the option to literally ignore errors.
 // If it is enabled, the method won't return any errors, but just log errors as error logs.
 func (s *Service) IgnoreErr() Option {
 	return ignoreErrOption(true)
+}
+
+// IgnoreErr is the option to ignore restarting the scheduler
+// If it is enabled, the scheduler will not be restarted when the Import function is called.
+func (s *Service) IgnoreRestart() Option {
+	return ignoreRestartOption(true)
 }
 
 // Get gets all resources from each service.
@@ -217,8 +231,10 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport, opt
 	for _, o := range opts {
 		o.apply(&options)
 	}
-	if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
-		return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
+	if !options.ignoreRestart {
+		if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
+			return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
+		}
 	}
 	if err := s.apply(ctx, resources, options); err != nil {
 		return xerrors.Errorf("import resources all: %w", err)
