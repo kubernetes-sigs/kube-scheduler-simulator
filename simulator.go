@@ -44,7 +44,15 @@ func startSimulator() error {
 	}
 	defer pvshutdown()
 
-	dic := di.NewDIContainer(client, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled)
+	existingClusterClient := &clientset.Clientset{}
+	if cfg.ExternalImportEnabled {
+		existingClusterClient, err = clientset.NewForConfig(cfg.ExternalKubeClientCfg)
+		if err != nil {
+			return xerrors.Errorf("creates a new Clientset for the ExternalKubeClientCfg: %w", err)
+		}
+	}
+
+	dic := di.NewDIContainer(client, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, existingClusterClient, cfg.ExternalKubeClientCfg)
 
 	if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
 		return xerrors.Errorf("start scheduler: %w", err)
@@ -58,6 +66,15 @@ func startSimulator() error {
 		return xerrors.Errorf("start simulator server: %w", err)
 	}
 	defer shutdownFn3()
+
+	// If ExternalImportEnabled is enabled, the simulator import resources
+	// from the existing cluster that indicated by the `KUBECONFIG`.
+	if cfg.ExternalImportEnabled {
+		// This must be called after `StartScheduler`
+		if err := dic.ReplicateExistingClusterService().ImportFromExistingCluster(); err != nil {
+			return xerrors.Errorf("import existing cluster: %w", err)
+		}
+	}
 
 	// wait the signal
 	quit := make(chan os.Signal, 1)
