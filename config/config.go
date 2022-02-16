@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	"golang.org/x/xerrors"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
@@ -23,6 +25,8 @@ type Config struct {
 	FrontendURL      string
 	// ExternalImportEnabled indicates whether the simulator will import resources from an existing cluster or not.
 	ExternalImportEnabled bool
+	// ExternalKubeClientCfg
+	ExternalKubeClientCfg *rest.Config
 	InitialSchedulerCfg   *v1beta2config.KubeSchedulerConfiguration
 }
 
@@ -46,6 +50,13 @@ func NewConfig() (*Config, error) {
 	apiurl := getKubeAPIServerURL()
 
 	externalimportenabled := getExternalImportEnabled()
+	externalKubeClientCfg := &rest.Config{}
+	if externalimportenabled {
+		externalKubeClientCfg, err = GetKubeClientConfig()
+		if err != nil {
+			return nil, xerrors.Errorf("get kube clientconfig: %w", err)
+		}
+	}
 
 	initialschedulerCfg, err := getSchedulerCfg()
 	if err != nil {
@@ -59,6 +70,7 @@ func NewConfig() (*Config, error) {
 		FrontendURL:           frontendurl,
 		InitialSchedulerCfg:   initialschedulerCfg,
 		ExternalImportEnabled: externalimportenabled,
+		ExternalKubeClientCfg: externalKubeClientCfg,
 	}, nil
 }
 
@@ -159,4 +171,14 @@ func decodeSchedulerCfg(buf []byte) (*v1beta2config.KubeSchedulerConfiguration, 
 		return nil, xerrors.Errorf("decode nested plugin args: %w", err)
 	}
 	return sc, nil
+}
+
+func GetKubeClientConfig() (*rest.Config, error) {
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
+	config, err := kubeConfig.ClientConfig()
+	if err != nil {
+		return nil, xerrors.Errorf("get client config: %w", err)
+	}
+	return config, nil
 }
