@@ -113,6 +113,7 @@ func (c *Container) ResetService() ResetService {
 }
 
 // ReplicateExistingClusterService returns ReplicateExistingClusterService.
+// Note: this service will return nil when `externalImportEnabled` is false.
 func (c *Container) ReplicateExistingClusterService() ReplicateExistingClusterService {
 	return c.replicateEcService
 }
