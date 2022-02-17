@@ -1,5 +1,7 @@
 package replicateexistingcluster
 
+//go:generate mockgen -destination=./mock_$GOPACKAGE/export.go . ExportService
+
 import (
 	"context"
 	"encoding/json"
@@ -19,12 +21,19 @@ import (
 // existingClusterExportService is used to reference and export some resources from existing cluster that is indicated by KUBECONFIG.
 // simulatorExportService is used to import(replicate) the resources to the simulator.
 type Service struct {
-	existingClusterExportService *export.Service
-	simulatorExportService       *export.Service
+	existingClusterExportService ExportService
+	simulatorExportService       ExportService
+}
+
+type ExportService interface {
+	Export(ctx context.Context, opts ...export.Option) (*export.ResourcesForExport, error)
+	Import(ctx context.Context, resources *export.ResourcesForImport, opts ...export.Option) error
+	IgnoreErr() export.Option
+	IgnoreRestart() export.Option
 }
 
 // NewReplicateExistingClusterService initializes Service.
-func NewReplicateExistingClusterService(exportService *export.Service, existingClusterExportService *export.Service) *Service {
+func NewReplicateExistingClusterService(exportService ExportService, existingClusterExportService ExportService) *Service {
 	return &Service{
 		existingClusterExportService: existingClusterExportService,
 		simulatorExportService:       exportService,
