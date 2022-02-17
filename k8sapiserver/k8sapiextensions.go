@@ -22,15 +22,6 @@ func createAPIExtensionConfig(kubeAPIServerConfig genericapiserver.Config, oldet
 	genericConfig.PostStartHooks = map[string]genericapiserver.PostStartHookConfigEntry{}
 	genericConfig.RESTOptionsGetter = nil
 
-	// admissionOpts := &genericoptions.AdmissionOptions{}
-
-	// adminPlugin := make(admission.PluginInitializer, 0)
-	// admissionOpts.ApplyTo(
-	// 	&genericConfig,
-	// 	versionedInformers,
-	// 	genericConfig.LoopbackClientConfig,
-	// 	feature.DefaultFeatureGate,
-	// )
 	etcdOptions := oldetcdOptions
 	etcdOptions.StorageConfig.Paging = utilfeature.DefaultFeatureGate.Enabled(features.APIListChunking)
 	etcdOptions.StorageConfig.Codec = apiextensionsapiserver.Codecs.LegacyCodec(v1beta1.SchemeGroupVersion, v1.SchemeGroupVersion)
