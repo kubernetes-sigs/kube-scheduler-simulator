@@ -118,7 +118,7 @@ func (c *Container) ReplicateExistingClusterService() ReplicateExistingClusterSe
 	return c.replicateEcService
 }
 
-// `prepareExportServiceForReplicateExistingClusterService` creates each resource services
+// createExportServiceForReplicateExistingClusterService creates each services
 // that will be used for the ExportService for an existing cluster.
 func createExportServiceForReplicateExistingClusterService(externalClient clientset.Interface, externalRestClientCfg *restclient.Config) *export.Service {
 	pvService := persistentvolume.NewPersistentVolumeService(externalClient)
