@@ -25,7 +25,8 @@ type Config struct {
 	FrontendURL      string
 	// ExternalImportEnabled indicates whether the simulator will import resources from an existing cluster or not.
 	ExternalImportEnabled bool
-	// ExternalKubeClientCfg
+	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
+	// This field is non-empty only when ExternalImportEnabled == true.
 	ExternalKubeClientCfg *rest.Config
 	InitialSchedulerCfg   *v1beta2config.KubeSchedulerConfiguration
 }
