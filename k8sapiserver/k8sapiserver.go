@@ -26,7 +26,6 @@ import (
 	utilflowcontrol "k8s.io/apiserver/pkg/util/flowcontrol"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
-
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/component-base/version"
 	"k8s.io/klog/v2"
@@ -255,7 +254,11 @@ func startChainedAPIServer(controlPlaneConfig *controlplane.Config, server *aggr
 	}
 	apiServerReceiver.SetAPIServer(m)
 
-	server.PrepareRun()
+	_, err := server.PrepareRun()
+	if err != nil {
+		return nil, nil, nil, xerrors.Errorf("K8s API Server prepare run: %w", err)
+	}
+
 	m.GenericAPIServer.RunPostStartHooks(stopCh)
 
 	cfg := *controlPlaneConfig.GenericConfig.LoopbackClientConfig
