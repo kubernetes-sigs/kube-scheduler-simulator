@@ -41,7 +41,9 @@ func NewReplicateExistingClusterService(exportService ExportService, existingClu
 }
 
 // ImportFromExistingCluster gets resources from existing cluster via existingClusterExportService
-// and then apply those to the simulator without restarting it via simulatorExportService.
+// and then apply those resources to the simulator.
+// Note: this method doesn't handle scheduler configuration.
+// If users want to use their scheduler configuration, they need to use `KUBE_SCHEDULER_CONFIG_PATH` env.
 func (s *Service) ImportFromExistingCluster() error {
 	ctx := context.Background()
 	expRes, err := s.existingClusterExportService.Export(ctx)
