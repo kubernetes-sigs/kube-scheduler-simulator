@@ -22,16 +22,16 @@ import (
 
 // Container saves and provides dependencies.
 type Container struct {
-	nodeService          NodeService
-	podService           PodService
-	pvService            PersistentVolumeService
-	pvcService           PersistentVolumeClaimService
-	storageClassService  StorageClassService
-	schedulerService     SchedulerService
-	exportService        ExportService
-	priorityClassService PriorityClassService
-	resetService         ResetService
-	replicateEcService   ReplicateExistingClusterService
+	nodeService                     NodeService
+	podService                      PodService
+	pvService                       PersistentVolumeService
+	pvcService                      PersistentVolumeClaimService
+	storageClassService             StorageClassService
+	schedulerService                SchedulerService
+	exportService                   ExportService
+	priorityClassService            PriorityClassService
+	resetService                    ResetService
+	replicateExistingClusterService ReplicateExistingClusterService
 }
 
 // NewDIContainer initializes Container.
@@ -62,7 +62,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	c.exportService = exportService
 	if externalImportEnabled {
 		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, externalRestClientCfg)
-		c.replicateEcService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
+		c.replicateExistingClusterService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
 	}
 	return c
 }
@@ -115,7 +115,7 @@ func (c *Container) ResetService() ResetService {
 // ReplicateExistingClusterService returns ReplicateExistingClusterService.
 // Note: this service will return nil when `externalImportEnabled` is false.
 func (c *Container) ReplicateExistingClusterService() ReplicateExistingClusterService {
-	return c.replicateEcService
+	return c.replicateExistingClusterService
 }
 
 // createExportServiceForReplicateExistingClusterService creates each services
