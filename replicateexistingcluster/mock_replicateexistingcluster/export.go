@@ -68,18 +68,18 @@ func (mr *MockExportServiceMockRecorder) IgnoreErr() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IgnoreErr", reflect.TypeOf((*MockExportService)(nil).IgnoreErr))
 }
 
-// IgnoreRestart mocks base method
-func (m *MockExportService) IgnoreRestart() export.Option {
+// IgnoreSchedulerConfiguration mocks base method
+func (m *MockExportService) IgnoreSchedulerConfiguration() export.Option {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IgnoreRestart")
+	ret := m.ctrl.Call(m, "IgnoreSchedulerConfiguration")
 	ret0, _ := ret[0].(export.Option)
 	return ret0
 }
 
-// IgnoreRestart indicates an expected call of IgnoreRestart
-func (mr *MockExportServiceMockRecorder) IgnoreRestart() *gomock.Call {
+// IgnoreSchedulerConfiguration indicates an expected call of IgnoreSchedulerConfiguration
+func (mr *MockExportServiceMockRecorder) IgnoreSchedulerConfiguration() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IgnoreRestart", reflect.TypeOf((*MockExportService)(nil).IgnoreRestart))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IgnoreSchedulerConfiguration", reflect.TypeOf((*MockExportService)(nil).IgnoreSchedulerConfiguration))
 }
 
 // Import mocks base method

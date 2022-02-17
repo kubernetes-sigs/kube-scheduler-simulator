@@ -1647,7 +1647,7 @@ func TestFunction_applyPcs(t *testing.T) {
 	}
 }
 
-func TestService_Import_WithIgnoreRestartOption(t *testing.T) {
+func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                     string
@@ -1712,8 +1712,8 @@ func TestService_Import_WithIgnoreRestartOption(t *testing.T) {
 			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 
-			if err := s.Import(context.Background(), tt.applyConfiguration(), s.IgnoreRestart()); (err != nil) != tt.wantErr {
-				t.Fatalf("Import() with IgnoreRestart option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
+			if err := s.Import(context.Background(), tt.applyConfiguration(), s.IgnoreSchedulerConfiguration()); (err != nil) != tt.wantErr {
+				t.Fatalf("Import() with ignoreSchedulerConfiguration option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
 			}
 		})
 	}

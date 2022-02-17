@@ -29,7 +29,7 @@ type ExportService interface {
 	Export(ctx context.Context, opts ...export.Option) (*export.ResourcesForExport, error)
 	Import(ctx context.Context, resources *export.ResourcesForImport, opts ...export.Option) error
 	IgnoreErr() export.Option
-	IgnoreRestart() export.Option
+	IgnoreSchedulerConfiguration() export.Option
 }
 
 // NewReplicateExistingClusterService initializes Service.
@@ -55,7 +55,7 @@ func (s *Service) ImportFromExistingCluster() error {
 		return xerrors.Errorf("call cnvtToResourcesForImportFromResourcesForExport: %w", err)
 	}
 	// Import to the simulator.
-	if err := s.simulatorExportService.Import(ctx, impRes, s.simulatorExportService.IgnoreErr(), s.simulatorExportService.IgnoreRestart()); err != nil {
+	if err := s.simulatorExportService.Import(ctx, impRes, s.simulatorExportService.IgnoreErr(), s.simulatorExportService.IgnoreSchedulerConfiguration()); err != nil {
 		return xerrors.Errorf("call Import of the simulater export service: %w", err)
 	}
 	return nil
