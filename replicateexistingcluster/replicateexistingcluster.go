@@ -40,7 +40,7 @@ func NewReplicateExistingClusterService(exportService ExportService, existingClu
 	}
 }
 
-// ImportFromExistingCluster get resources from existing cluster via existingClusterExportService
+// ImportFromExistingCluster gets resources from existing cluster via existingClusterExportService
 // and then apply those to the simulator without restarting it via simulatorExportService.
 func (s *Service) ImportFromExistingCluster() error {
 	ctx := context.Background()
