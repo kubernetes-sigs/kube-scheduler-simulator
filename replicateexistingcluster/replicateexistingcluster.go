@@ -17,8 +17,8 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
 )
 
-// Service manages two exportServices.
-// existingClusterExportService is used to reference and export some resources from existing cluster that is indicated by KUBECONFIG.
+// Service has two exportServices.
+// existingClusterExportService is used to export resources from an existing cluster.
 // simulatorExportService is used to import(replicate) the resources to the simulator.
 type Service struct {
 	existingClusterExportService ExportService
