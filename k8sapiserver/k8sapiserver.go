@@ -42,6 +42,7 @@ import (
 )
 
 // StartAPIServer starts API server, and it make panic when a error happen.
+//nolint:funlen
 func StartAPIServer(kubeAPIServerURL string, etcdURL string) (func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -238,7 +239,6 @@ func (fakeLocalhost443Listener) Addr() net.Addr {
 }
 
 // startAPIServer starts a kubernetes API server and an httpserver to handle api requests.
-//nolint:funlen
 func startChainedAPIServer(controlPlaneConfig *controlplane.Config, server *aggregatorapiserver.APIAggregator, s *httptest.Server, apiServerReceiver *APIServerHolder) (*controlplane.Instance, *httptest.Server, func(), error) {
 	m := &controlplane.Instance{GenericAPIServer: server.GenericAPIServer}
 

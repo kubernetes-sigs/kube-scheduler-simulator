@@ -1,11 +1,11 @@
 package k8sapiserver
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 
+	"golang.org/x/xerrors"
 	apiextensionsinformers "k8s.io/apiextensions-apiserver/pkg/client/informers/externalversions"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -132,6 +132,7 @@ func makeAPIServiceAvailableHealthCheck(name string, apiServices []*v1.APIServic
 	}
 
 	// Watch add/update events for APIServices
+	//nolint:forcetypeassert,predeclared
 	apiServiceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(obj interface{}) { handleAPIServiceChange(obj.(*v1.APIService)) },
 		UpdateFunc: func(old, new interface{}) { handleAPIServiceChange(new.(*v1.APIService)) },
@@ -142,7 +143,7 @@ func makeAPIServiceAvailableHealthCheck(name string, apiServices []*v1.APIServic
 		pendingServiceNamesLock.RLock()
 		defer pendingServiceNamesLock.RUnlock()
 		if pendingServiceNames.Len() > 0 {
-			return fmt.Errorf("missing APIService: %v", pendingServiceNames.List())
+			return xerrors.Errorf("missing APIService: %v", pendingServiceNames.List())
 		}
 		return nil
 	})
