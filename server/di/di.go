@@ -58,11 +58,11 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 		"priority class":          c.priorityClassService,
 	}
 	c.resetService = reset.NewResetService(client, deleteServices, c.schedulerService)
-	_exportService := export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
-	c.exportService = _exportService
+	exportService := export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
+	c.exportService = exportService
 	if externalImportEnabled {
 		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, externalRestClientCfg)
-		c.replicateEcService = replicateexistingcluster.NewReplicateExistingClusterService(_exportService, existingClusterExportService)
+		c.replicateEcService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
 	}
 	return c
 }
