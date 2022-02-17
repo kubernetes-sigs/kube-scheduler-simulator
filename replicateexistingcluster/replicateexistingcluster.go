@@ -54,7 +54,7 @@ func (s *Service) ImportFromExistingCluster() error {
 	}
 	// Import to the simulator without restarting it.
 	if err := s.simulatorExportService.Import(ctx, impRes, s.simulatorExportService.IgnoreErr(), s.simulatorExportService.IgnoreRestart()); err != nil {
-		return xerrors.Errorf("call Import: %w", err)
+		return xerrors.Errorf("call Import of the simulater export service: %w", err)
 	}
 	return nil
 }
