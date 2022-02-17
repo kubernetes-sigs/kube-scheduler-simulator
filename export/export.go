@@ -137,7 +137,8 @@ func (s *Service) IgnoreErr() Option {
 }
 
 // IgnoreRestart is the option to ignore the scheduler configuration in the given ResourcesForImport.
-// If it is enabled, the scheduler will not be restarted when the Import function is called.
+// Note: this option is only for Import method.
+// If it is enabled, the scheduler will not be restarted in import method.
 func (s *Service) IgnoreRestart() Option {
 	return ignoreRestartOption(true)
 }
