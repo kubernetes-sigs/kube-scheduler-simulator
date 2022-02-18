@@ -99,98 +99,126 @@ func cnvtToResourcesForImportFromResourcesForExport(expRes *export.ResourcesForE
 }
 
 func cnvtPodListToApplyConfigurationList(pods []corev1.Pod) ([]v1.PodApplyConfiguration, error) {
-	plist := []v1.PodApplyConfiguration{}
-
-	for _, p := range pods {
-		_p, err := json.Marshal(p)
-		if err != nil {
-			return nil, xerrors.Errorf("call Marshal to cnvt Pod: %w", err)
+	rto := make([]v1.PodApplyConfiguration, len(pods))
+	for i, p := range pods {
+		if err := convertToApplyConfiguration(p, &rto[i]); err != nil {
+			return nil, xerrors.Errorf("convert Pod to apply configuration: %w", err)
 		}
-		pod := &v1.PodApplyConfiguration{}
-		if err := json.Unmarshal(_p, &pod); err != nil {
-			return nil, xerrors.Errorf("call Unmarshal to cnvt to PodApplyConfiguration: %w", err)
-		}
-		plist = append(plist, *pod)
 	}
-	return plist, nil
+	return rto, nil
 }
 
 func cnvtNodeListToApplyConfigurationList(nodes []corev1.Node) ([]v1.NodeApplyConfiguration, error) {
-	nlist := []v1.NodeApplyConfiguration{}
-	for _, n := range nodes {
-		_n, err := json.Marshal(n)
-		if err != nil {
-			return nil, xerrors.Errorf("call Marshal to cnvt Node: %w", err)
+	rto := make([]v1.NodeApplyConfiguration, len(nodes))
+	for i, n := range nodes {
+		if err := convertToApplyConfiguration(n, &rto[i]); err != nil {
+			return nil, xerrors.Errorf("convert Node to apply configuration: %w", err)
 		}
-		var node v1.NodeApplyConfiguration
-		if err := json.Unmarshal(_n, &node); err != nil {
-			return nil, xerrors.Errorf("call Unmarshal to cnvt to NodeApplyConfiguration: %w", err)
-		}
-		nlist = append(nlist, node)
 	}
-	return nlist, nil
+	return rto, nil
 }
 
 func cnvtPvListToApplyConfigurationList(pvs []corev1.PersistentVolume) ([]v1.PersistentVolumeApplyConfiguration, error) {
-	pvlist := []v1.PersistentVolumeApplyConfiguration{}
-	for _, p := range pvs {
-		_p, err := json.Marshal(p)
-		if err != nil {
-			return nil, xerrors.Errorf("call Marshal to cnvt PersistentVolume: %w", err)
+	rto := make([]v1.PersistentVolumeApplyConfiguration, len(pvs))
+	for i, p := range pvs {
+		if err := convertToApplyConfiguration(p, &rto[i]); err != nil {
+			return nil, xerrors.Errorf("convert PersistentVolume to apply configuration: %w", err)
 		}
-		var pv v1.PersistentVolumeApplyConfiguration
-		if err := json.Unmarshal(_p, &pv); err != nil {
-			return nil, xerrors.Errorf("call Unmarshal to cnvt to PersistentVolumeApplyConfiguration: %w", err)
-		}
-		pvlist = append(pvlist, pv)
 	}
-	return pvlist, nil
+	return rto, nil
 }
 
 func cnvtPvcListToApplyConfigurationList(pvcs []corev1.PersistentVolumeClaim) ([]v1.PersistentVolumeClaimApplyConfiguration, error) {
-	pvclist := []v1.PersistentVolumeClaimApplyConfiguration{}
-	for _, p := range pvcs {
-		_p, err := json.Marshal(p)
-		if err != nil {
-			return nil, xerrors.Errorf("call Marshal to cnvt PersistentVolumeClaim: %w", err)
+	rto := make([]v1.PersistentVolumeClaimApplyConfiguration, len(pvcs))
+	for i, p := range pvcs {
+		if err := convertToApplyConfiguration(p, &rto[i]); err != nil {
+			return nil, xerrors.Errorf("convert PersistentVolumeClaim to apply configuration: %w", err)
 		}
-		var pvc v1.PersistentVolumeClaimApplyConfiguration
-		if err := json.Unmarshal(_p, &pvc); err != nil {
-			return nil, xerrors.Errorf("call Unmarshal to cnvt to PersistentVolumeClaimApplyConfiguration: %w", err)
-		}
-		pvclist = append(pvclist, pvc)
 	}
-	return pvclist, nil
+	return rto, nil
 }
 
 func cnvtStorageClassesListToApplyConfigurationList(scs []storagev1.StorageClass) ([]cfgstoragev1.StorageClassApplyConfiguration, error) {
-	sclist := []cfgstoragev1.StorageClassApplyConfiguration{}
-	for _, s := range scs {
-		_s, err := json.Marshal(s)
-		if err != nil {
-			return nil, xerrors.Errorf("call Marshal to cnvt StorageClass: %w", err)
+	rto := make([]cfgstoragev1.StorageClassApplyConfiguration, len(scs))
+	for i, s := range scs {
+		if err := convertToApplyConfiguration(s, &rto[i]); err != nil {
+			return nil, xerrors.Errorf("convert StorageClass to apply configuration: %w", err)
 		}
-		var sc cfgstoragev1.StorageClassApplyConfiguration
-		if err := json.Unmarshal(_s, &sc); err != nil {
-			return nil, xerrors.Errorf("call Unmarshal to cnvt to StorageClassApplyConfiguration: %w", err)
-		}
-		sclist = append(sclist, sc)
 	}
-	return sclist, nil
+	return rto, nil
 }
 
 func cnvtPriorityClassesListToApplyConfigurationList(pcs []schedulingv1.PriorityClass) ([]schedulingcfgv1.PriorityClassApplyConfiguration, error) {
-	pclist := []schedulingcfgv1.PriorityClassApplyConfiguration{}
-	for _, p := range pcs {
-		_p, err := json.Marshal(p)
-		if err != nil {
-			return nil, xerrors.Errorf("call Marshal to cnvt StorageClass: %w", err)
+	rto := make([]schedulingcfgv1.PriorityClassApplyConfiguration, len(pcs))
+	for i, p := range pcs {
+		if err := convertToApplyConfiguration(p, &rto[i]); err != nil {
+			return nil, xerrors.Errorf("convert PriorityClasses to apply configuration: %w", err)
 		}
-		var pc schedulingcfgv1.PriorityClassApplyConfiguration
-		if err := json.Unmarshal(_p, &pc); err != nil {
-			return nil, xerrors.Errorf("call Unmarshal to cnvt to StorageClassApplyConfiguration: %w", err)
-		}
-		pclist = append(pclist, pc)
 	}
-	return pclist, nil
+	return rto, nil
+}
+
+func convertToApplyConfiguration(in interface{}, out interface{}) error {
+	_in, err := json.Marshal(in)
+	if err != nil {
+		return xerrors.Errorf("call Marshal to cnvt object: %w", err)
+	}
+	switch in.(type) {
+	case corev1.Pod:
+		typedout, ok := out.(*v1.PodApplyConfiguration)
+		if !ok {
+			return xerrors.New("unexpected type was given as out")
+		}
+		if err := json.Unmarshal(_in, &typedout); err != nil {
+			return xerrors.Errorf("call Unmarshal to cnvt Pod: %w", err)
+		}
+		return nil
+	case corev1.Node:
+		typedout, ok := out.(*v1.NodeApplyConfiguration)
+		if !ok {
+			return xerrors.New("unexpected type was given as out")
+		}
+		if err := json.Unmarshal(_in, &typedout); err != nil {
+			return xerrors.Errorf("call Unmarshal to cnvt Node: %w", err)
+		}
+		return nil
+	case corev1.PersistentVolume:
+		typedout, ok := out.(*v1.PersistentVolumeApplyConfiguration)
+		if !ok {
+			return xerrors.New("unexpected type was given as out")
+		}
+		if err := json.Unmarshal(_in, &typedout); err != nil {
+			return xerrors.Errorf("call Unmarshal to cnvt PersistentVolume: %w", err)
+		}
+		return nil
+	case corev1.PersistentVolumeClaim:
+		typedout, ok := out.(*v1.PersistentVolumeClaimApplyConfiguration)
+		if !ok {
+			return xerrors.New("unexpected type was given as out")
+		}
+		if err := json.Unmarshal(_in, &typedout); err != nil {
+			return xerrors.Errorf("call Unmarshal to cnvt PersistentVolumeClaim: %w", err)
+		}
+		return nil
+	case storagev1.StorageClass:
+		typedout, ok := out.(*cfgstoragev1.StorageClassApplyConfiguration)
+		if !ok {
+			return xerrors.New("unexpected type was given as out")
+		}
+		if err := json.Unmarshal(_in, &typedout); err != nil {
+			return xerrors.Errorf("call Unmarshal to cnvt StorageClass: %w", err)
+		}
+		return nil
+	case schedulingv1.PriorityClass:
+		typedout, ok := out.(*schedulingcfgv1.PriorityClassApplyConfiguration)
+		if !ok {
+			return xerrors.New("unexpected type was given as out")
+		}
+		if err := json.Unmarshal(_in, &typedout); err != nil {
+			return xerrors.Errorf("call Unmarshal to cnvt PriorityClass: %w", err)
+		}
+		return nil
+	default:
+		return xerrors.Errorf("unknown type")
+	}
 }
