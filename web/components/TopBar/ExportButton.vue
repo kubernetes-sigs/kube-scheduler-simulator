@@ -7,7 +7,9 @@
     <v-card>
       <v-card-title class="text-h5 grey lighten-2"> Export </v-card-title>
 
-      <v-card-text> Export the current scheduler. </v-card-text>
+      <v-card-text>
+        Export the current created resources and scheduler configuration.
+      </v-card-text>
 
       <v-divider></v-divider>
 
