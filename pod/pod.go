@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog/v2"
 )
 
 // Service manages pods.
@@ -41,6 +42,9 @@ func (s *Service) List(ctx context.Context) (*corev1.PodList, error) {
 	pl, err := s.client.CoreV1().Pods(defaultNamespaceName).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, xerrors.Errorf("list pods: %w", err)
+	}
+	for _, p := range pl.Items {
+		klog.Infof("aaaaaaaaaaaaaaaaaaaaaaaaaa %s\n", p.Name)
 	}
 	return pl, nil
 }
@@ -76,7 +80,10 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 
 // DeleteCollection deletes pods according to the list options.
 func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
-	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{}, lopts); err != nil {
+	noGrace := int64(0)
+	if err := s.client.CoreV1().Pods(defaultNamespaceName).DeleteCollection(ctx, metav1.DeleteOptions{
+		GracePeriodSeconds: &noGrace,
+	}, lopts); err != nil {
 		return fmt.Errorf("delete collection of pods: %w", err)
 	}
 	return nil
