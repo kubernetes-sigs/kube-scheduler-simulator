@@ -92,6 +92,11 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 	for i := range pc {
 		name := pc[i].Name
 		ret := pluginConfig[name].DeepCopy()
+		// If ret is nil, to reference ret.Object is occurred invalid memory address or nil pointer dereference.
+		// To avoid this error, if ret is nil, we continue to next loop.
+		if ret == nil {
+			continue
+		}
 
 		// v1beta2.PluginConfig may have data in pc[i].Args.Raw as []byte.
 		// We have to encoding it in this case.
