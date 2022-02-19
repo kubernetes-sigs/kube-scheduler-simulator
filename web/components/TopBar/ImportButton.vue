@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="data.dialog" width="500">
     <template #activator="{ on }">
-      <v-btn color="primary ma-2" v-on="on"> Import </v-btn>
+      <v-btn color="ma-2" v-on="on"> Import </v-btn>
     </template>
 
     <v-card>
