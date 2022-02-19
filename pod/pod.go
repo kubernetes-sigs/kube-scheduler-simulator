@@ -9,7 +9,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/klog/v2"
 )
 
 // Service manages pods.
@@ -42,9 +41,6 @@ func (s *Service) List(ctx context.Context) (*corev1.PodList, error) {
 	pl, err := s.client.CoreV1().Pods(defaultNamespaceName).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, xerrors.Errorf("list pods: %w", err)
-	}
-	for _, p := range pl.Items {
-		klog.Infof("aaaaaaaaaaaaaaaaaaaaaaaaaa %s\n", p.Name)
 	}
 	return pl, nil
 }
