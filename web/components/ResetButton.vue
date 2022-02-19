@@ -1,8 +1,6 @@
 <template>
   <v-sheet class="transparent">
-    <v-btn color="primary ma-2" dark @click="reset()">
-      Reset Alll Resources</v-btn
-    >
+    <v-btn color="error ma-2" dark @click="reset()"> Reset All Resources</v-btn>
   </v-sheet>
 </template>
 
