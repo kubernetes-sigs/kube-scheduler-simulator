@@ -42,9 +42,9 @@ func (s *Service) ImportFromExistingCluster(ctx context.Context) error {
 	if err != nil {
 		return xerrors.Errorf("call Export of existingClusterExportService: %w", err)
 	}
-	impRes, err := export.ConvertToResourcesForImportFromResourcesForExport(expRes)
+	impRes, err := export.ConvertResourcesForImportToResourcesForExport(expRes)
 	if err != nil {
-		return xerrors.Errorf("call convertToResourcesForImportFromResourcesForExport: %w", err)
+		return xerrors.Errorf("call ConvertResourcesForImportToResourcesForExport: %w", err)
 	}
 	// Import to the simulator.
 	if err := s.simulatorExportService.Import(ctx, impRes, s.simulatorExportService.IgnoreErr(), s.simulatorExportService.IgnoreSchedulerConfiguration()); err != nil {

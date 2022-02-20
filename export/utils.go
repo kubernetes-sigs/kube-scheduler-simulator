@@ -12,7 +12,7 @@ import (
 	cfgstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 )
 
-func ConvertToResourcesForImportFromResourcesForExport(expRes *ResourcesForExport) (*ResourcesForImport, error) {
+func ConvertResourcesForImportToResourcesForExport(expRes *ResourcesForExport) (*ResourcesForImport, error) {
 	pods, err := convertPodListToApplyConfigurationList(expRes.Pods)
 	if err != nil {
 		return nil, xerrors.Errorf("call convertPodListToApplyConfigurationList: %w", err)
