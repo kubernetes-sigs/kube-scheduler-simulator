@@ -90,5 +90,5 @@ type ResetService interface {
 
 // ReplicateExistingClusterService represents a service to import resources from the existing cluster.
 type ReplicateExistingClusterService interface {
-	ImportFromExistingCluster() error
+	ImportFromExistingCluster(ctx context.Context) error
 }

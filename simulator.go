@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -70,8 +71,9 @@ func startSimulator() error {
 	// If ExternalImportEnabled is enabled, the simulator import resources
 	// from the existing cluster that indicated by the `KUBECONFIG`.
 	if cfg.ExternalImportEnabled {
+		ctx := context.Background()
 		// This must be called after `StartScheduler`
-		if err := dic.ReplicateExistingClusterService().ImportFromExistingCluster(); err != nil {
+		if err := dic.ReplicateExistingClusterService().ImportFromExistingCluster(ctx); err != nil {
 			return xerrors.Errorf("import existing cluster: %w", err)
 		}
 	}

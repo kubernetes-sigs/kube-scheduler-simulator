@@ -1,6 +1,7 @@
 package replicateexistingcluster
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -63,7 +64,7 @@ func TestService_ImportFromExistingCluster(t *testing.T) {
 			s := NewReplicateExistingClusterService(mockSimulatorExportService, mockClusterExportService)
 			tt.prepareEachServiceMockFn(mockSimulatorExportService, mockClusterExportService)
 
-			if err := s.ImportFromExistingCluster(); (err != nil) != tt.wantErr {
+			if err := s.ImportFromExistingCluster(context.Background()); (err != nil) != tt.wantErr {
 				t.Fatalf("ImportFromExistingCluster() %v test, \nerror = %v", tt.name, err)
 			}
 		})
