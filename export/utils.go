@@ -44,7 +44,6 @@ func ConvertToResourcesForImportFromResourcesForExport(expRes *ResourcesForExpor
 		Pvcs:            pvcs,
 		StorageClasses:  scs,
 		PriorityClasses: pcs,
-		// existingClusterExportService can't export the SchedulerConfig.
 		SchedulerConfig: expRes.SchedulerConfig,
 	}, nil
 }
