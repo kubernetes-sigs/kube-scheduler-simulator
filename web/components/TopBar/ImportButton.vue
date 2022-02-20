@@ -12,7 +12,12 @@
         Note that all current created resources will be deleted and then
         resources are imported..
         <form>
-          <input type="file" accept=".yml" @change="readfile" />
+          <input
+            v-if="data.dialog"
+            type="file"
+            accept=".yml"
+            @change="readfile"
+          />
         </form>
       </v-card-text>
 
@@ -37,7 +42,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, reactive } from "@nuxtjs/composition-api";
+import {
+  defineComponent,
+  inject,
+  reactive,
+  watch,
+} from "@nuxtjs/composition-api";
 import { importScheduler, ResourcesForImport } from "~/api/v1/export";
 import yaml from "js-yaml";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
@@ -92,6 +102,15 @@ export default defineComponent({
     const setServerErrorMessage = (error: string) => {
       snackbarstore.setServerErrorMessage(error);
     };
+
+    watch(data, (newValue, _) => {
+      if (!newValue.dialog) {
+        // reset filedata
+        data.filedata = {} as ResourcesForImport;
+        data.isImportButtonDisabled = true;
+      }
+    });
+
     const ImportScheduler = async () => {
       importScheduler(data.filedata as ResourcesForImport)
         .then(() => {
@@ -114,14 +133,17 @@ export default defineComponent({
 
       reader.onload = function () {
         try {
-          const filedate: ResourcesForImport = yaml.load(
+          const filedata: ResourcesForImport = yaml.load(
             reader.result as string
           );
-          data.filedata = filedate;
+          data.filedata = filedata;
           data.isImportButtonDisabled = false;
         } catch (e) {
           setServerErrorMessage("Failed to load the selected file.");
         }
+      };
+      reader.onabort = function () {
+        console.log("aaaa");
       };
       reader.readAsText(file);
     }
