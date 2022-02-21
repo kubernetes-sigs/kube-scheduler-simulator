@@ -2,25 +2,35 @@ import {
   V1PersistentVolume,
   V1PersistentVolumeList,
 } from "@kubernetes/client-node";
-import { instance } from "@/api/v1/index";
+import { k8sInstance } from "@/api/v1/index";
 
 export const applyPersistentVolume = async (
   req: V1PersistentVolume,
   onError: (_: string) => void
 ) => {
   try {
-    const res = await instance.post<V1PersistentVolume>(
-      `/persistentvolumes`,
-      req
+    if (!req.metadata?.name) {
+      onError("metadata.name is not provided");
+      return;
+    }
+    const res = await k8sInstance.patch<V1PersistentVolume>(
+      `/persistentvolumes/${req.metadata.name}?fieldManager=simulator`,
+      req,
+      { headers: { "Content-Type": "application/strategic-merge-patch+json" } }
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    try {
+      const res = await createPersistentvolumes(req, onError);
+      return res;
+    } catch (e: any) {
+      onError(e);
+    }
   }
 };
 
 export const listPersistentVolume = async () => {
-  const res = await instance.get<V1PersistentVolumeList>(
+  const res = await k8sInstance.get<V1PersistentVolumeList>(
     `/persistentvolumes`,
     {}
   );
@@ -28,7 +38,7 @@ export const listPersistentVolume = async () => {
 };
 
 export const getPersistentVolume = async (name: string) => {
-  const res = await instance.get<V1PersistentVolume>(
+  const res = await k8sInstance.get<V1PersistentVolume>(
     `/persistentvolumes/${name}`,
     {}
   );
@@ -36,6 +46,21 @@ export const getPersistentVolume = async (name: string) => {
 };
 
 export const deletePersistentVolume = async (name: string) => {
-  const res = await instance.delete(`/persistentvolumes/${name}`, {});
+  const res = await k8sInstance.delete(`/persistentvolumes/${name}`, {});
   return res.data;
+};
+
+const createPersistentvolumes = async (
+  req: V1PersistentVolume,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sInstance.post<V1PersistentVolume>(
+      `/persistentvolumes?fieldManager=simulator`,
+      req
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };

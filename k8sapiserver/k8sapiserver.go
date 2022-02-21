@@ -40,7 +40,7 @@ import (
 )
 
 // StartAPIServer starts API server, and it make panic when a error happen.
-func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config, func(), error) {
+func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.Config, func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		<-h.Initialized
@@ -61,7 +61,7 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 	s.Start()
 	klog.Info("kube-apiserver is started on :", s.URL)
 
-	c := NewControlPlaneConfigWithOptions(s.URL, etcdURL)
+	c := NewControlPlaneConfigWithOptions(s.URL, etcdURL, frontendURL)
 
 	_, _, closeFn, err := startAPIServer(c, s, h)
 	if err != nil {
@@ -103,7 +103,7 @@ func defaultOpenAPIConfig() *openapicommon.Config {
 }
 
 //nolint:funlen
-func NewControlPlaneConfigWithOptions(serverURL, etcdURL string) *controlplane.Config {
+func NewControlPlaneConfigWithOptions(serverURL, etcdURL, frontendURL string) *controlplane.Config {
 	etcdOptions := options.NewEtcdOptions(storagebackend.NewDefaultConfig(uuid.New().String(), nil))
 	etcdOptions.StorageConfig.Transport.ServerList = []string{etcdURL}
 
@@ -129,6 +129,8 @@ func NewControlPlaneConfigWithOptions(serverURL, etcdURL string) *controlplane.C
 	genericConfig.Version = &kubeVersion
 
 	genericConfig.SecureServing = &genericapiserver.SecureServingInfo{Listener: fakeLocalhost443Listener{}}
+
+	genericConfig.CorsAllowedOriginList = []string{frontendURL}
 
 	err = etcdOptions.ApplyWithStorageFactoryTo(storageFactory, genericConfig)
 	if err != nil {

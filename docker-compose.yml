@@ -7,8 +7,11 @@ services:
       - PORT=1212
       - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-etcd:2379
       - FRONTEND_URL=http://localhost:3000
+      - KUBE_API_HOST=0.0.0.0
+      - KUBE_API_PORT=3131
     ports:
       - "1212:1212"
+      - "3131:3131"
     restart: always
     tty: true
     networks:

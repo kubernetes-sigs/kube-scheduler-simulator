@@ -60,6 +60,8 @@ export default {
   // Build Configuration: https://go.nuxtjs.dev/config-build
   env: {
     BASE_URL: process.env.BASE_URL || "http://localhost:1212",
+    KUBE_API_SERVER_URL:
+      process.env.KUBE_API_SERVER_URL || "http://localhost:3131",
     POD_TEMPLATE: fs.readFileSync(
       "./components/lib/templates/pod.yaml",
       "utf8"
