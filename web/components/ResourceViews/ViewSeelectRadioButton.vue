@@ -11,7 +11,7 @@
   </v-container>
 </template>
 
-<script lng="ts">
+<script lang="ts">
 import { defineComponent, computed } from "@nuxtjs/composition-api";
 
 export default defineComponent({

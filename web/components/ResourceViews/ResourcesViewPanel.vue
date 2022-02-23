@@ -13,7 +13,7 @@
   </div>
 </template>
 
-<script lng="ts">
+<script lang="ts">
 import { defineComponent, ref } from "@nuxtjs/composition-api";
 import ResourcesList from "./Lists/ResourcesList.vue";
 import ResourcesDataTable from "./DataTables/ResourcesDataTable.vue";
