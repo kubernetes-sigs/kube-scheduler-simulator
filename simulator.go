@@ -60,14 +60,6 @@ func startSimulator() error {
 	}
 	defer dic.SchedulerService().ShutdownScheduler()
 
-	// start simulator server
-	s := server.NewSimulatorServer(cfg, dic)
-	shutdownFn3, err := s.Start(cfg.Port)
-	if err != nil {
-		return xerrors.Errorf("start simulator server: %w", err)
-	}
-	defer shutdownFn3()
-
 	// If ExternalImportEnabled is enabled, the simulator import resources
 	// from the existing cluster that indicated by the `KUBECONFIG`.
 	if cfg.ExternalImportEnabled {
@@ -77,6 +69,14 @@ func startSimulator() error {
 			return xerrors.Errorf("import existing cluster: %w", err)
 		}
 	}
+
+	// start simulator server
+	s := server.NewSimulatorServer(cfg, dic)
+	shutdownFn3, err := s.Start(cfg.Port)
+	if err != nil {
+		return xerrors.Errorf("start simulator server: %w", err)
+	}
+	defer shutdownFn3()
 
 	// wait the signal
 	quit := make(chan os.Signal, 1)
