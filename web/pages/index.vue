@@ -41,6 +41,7 @@ import UnscheduledPodList from "~/components/UnscheduledPodList.vue";
 import PVList from "~/components/PVList.vue";
 import PVCList from "~/components/PVCList.vue";
 import StorageClassList from "~/components/StorageClassList.vue";
+import PriorityClassList from "~/components/PriorityClassList.vue";
 import PodStoreProvider from "~/components/StoreProvider/PodStoreProvider.vue";
 import SnackbarStoreProvider from "~/components/StoreProvider/SnackbarStoreProvider.vue";
 import ResourceAddButton from "~/components/ResourceAddButton.vue";
@@ -57,6 +58,7 @@ export default defineComponent({
     StorageClassList,
     NodeList,
     UnscheduledPodList,
+    PriorityClassList,
     PodStoreProvider,
     ResourceAddButton,
     ResourceBar,
