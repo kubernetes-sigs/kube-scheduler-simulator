@@ -8,7 +8,7 @@
       <ResourcesList />
     </div>
     <div v-else-if="selectedViewType === 1">
-      <!-- TODO: -->
+      <ResourcesDataTable />
     </div>
   </div>
 </template>
@@ -16,11 +16,13 @@
 <script lng="ts">
 import { defineComponent, ref } from "@nuxtjs/composition-api";
 import ResourcesList from "./Lists/ResourcesList.vue";
+import ResourcesDataTable from "./DataTables/ResourcesDataTable.vue";
 import ViewSelectRadioButton from "./ViewSeelectRadioButton.vue";
 
 export default defineComponent({
   components: {
     ResourcesList,
+    ResourcesDataTable,
     ViewSelectRadioButton,
   },
   setup() {
