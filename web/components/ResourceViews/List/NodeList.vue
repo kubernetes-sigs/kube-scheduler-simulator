@@ -29,11 +29,11 @@ import {
   onMounted,
   defineComponent,
 } from "@nuxtjs/composition-api";
-import NodeStoreKey from "./StoreKey/NodeStoreKey";
+import NodeStoreKey from "../../StoreKey/NodeStoreKey";
 import PodList from "./PodList.vue";
 import { V1Node } from "@kubernetes/client-node";
-import PodStoreKey from "./StoreKey/PodStoreKey";
-import {} from "./lib/util";
+import PodStoreKey from "../../StoreKey/PodStoreKey";
+import {} from "../../lib/util";
 
 export default defineComponent({
   components: { PodList },

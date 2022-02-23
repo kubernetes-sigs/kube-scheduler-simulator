@@ -31,8 +31,8 @@ import {
   onMounted,
   defineComponent,
 } from "@nuxtjs/composition-api";
-import {} from "./lib/util";
-import StorageClassStoreKey from "./StoreKey/StorageClassStoreKey";
+import {} from "../../lib/util";
+import StorageClassStoreKey from "../../StoreKey/StorageClassStoreKey";
 export default defineComponent({
   setup() {
     const store = inject(StorageClassStoreKey);
