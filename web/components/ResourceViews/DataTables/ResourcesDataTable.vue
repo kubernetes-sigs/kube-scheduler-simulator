@@ -1,7 +1,7 @@
 <template>
   <div>
+    <PodDataTable />
     <NodeDataTable />
-    <UnscheduledPodDataTable />
     <PVDataTable />
     <PVCDataTable />
     <StorageClassDataTable />
@@ -11,8 +11,8 @@
 
 <script lng="ts">
 import { defineComponent } from "@nuxtjs/composition-api";
+import PodDataTable from "./PodDataTable.vue";
 import NodeDataTable from "./NodeDataTable.vue";
-import UnscheduledPodDataTable from "./UnscheduledPodDataTable.vue";
 import PVDataTable from "./PVDataTable.vue";
 import PVCDataTable from "./PVCDataTable.vue";
 import StorageClassDataTable from "./StorageClassDataTable.vue";
@@ -20,8 +20,8 @@ import PriorityClassDataTable from "./PriorityClassDataTable.vue";
 
 export default defineComponent({
   components: {
+    PodDataTable,
     NodeDataTable,
-    UnscheduledPodDataTable,
     PVDataTable,
     PVCDataTable,
     StorageClassDataTable,
