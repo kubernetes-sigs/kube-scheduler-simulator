@@ -50,7 +50,7 @@ export default defineComponent({
     };
     onMounted(getPodList);
     const pods = computed(() => {
-      return [].concat(
+      return Array<V1Pod>().concat(
         ...Object.values(store.pods).map((p) => {
           return p;
         })
