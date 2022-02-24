@@ -67,13 +67,28 @@ export default defineComponent({
         value: "metadata.name",
         sortable: true,
       },
-      { text: "Labels", value: "metadata.labels", sortable: true },
+      {
+        text: "Namespace",
+        value: "metadata.namespace",
+        sortable: true,
+      },
+      {
+        text: "Conditions",
+        value: "status.conditions[0].type",
+        sortable: true,
+      },
+      { text: "Status", value: "status.phase", sortable: true },
+      { text: "Capacity", value: "status.capacity", sortable: true },
       {
         text: "Creation-Time",
         value: "metadata.creationTimestamp",
         sortable: true,
       },
-      { text: "Status", value: "status.phase", sortable: true },
+      {
+        text: "Update-Time",
+        value: "metadata.managedFields[0].time",
+        sortable: true,
+      },
     ];
     return {
       nodes,

@@ -56,13 +56,25 @@ export default defineComponent({
         value: "metadata.name",
         sortable: true,
       },
-      { text: "Labels", value: "metadata.labels", sortable: true },
+      { text: "Namespace", value: "metadata.namespace", sortable: true },
+      { text: "Status", value: "status.phase", sortable: true },
+      { text: "VolumeName", value: "spec.volumeName", sortable: true },
+      { text: "VolumeMode", value: "spec.volumeMode", sortable: true },
+      {
+        text: "Capacity",
+        value: "spec.resources.requests.storage",
+        sortable: true,
+      },
       {
         text: "Creation-Time",
         value: "metadata.creationTimestamp",
         sortable: true,
       },
-      { text: "Status", value: "status.phase", sortable: true },
+      {
+        text: "Update-Time",
+        value: "metadata.managedFields[0].time",
+        sortable: true,
+      },
     ];
     return {
       pvcs,

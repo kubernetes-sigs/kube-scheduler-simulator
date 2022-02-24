@@ -57,12 +57,23 @@ export default defineComponent({
         value: "metadata.name",
         sortable: true,
       },
+      { text: "Namespace", value: "metadata.namespace", sortable: true },
       { text: "Provisioner", value: "provisioner", sortable: true },
       { text: "Parameters", value: "parameters", sortable: true },
       { text: "Reclaim-Policy", value: "reclaimPolicy", sortable: true },
       {
         text: "Volume-Binding-Mode",
         value: "volumeBindingMode",
+        sortable: true,
+      },
+      {
+        text: "Creation-Time",
+        value: "metadata.creationTimestamp",
+        sortable: true,
+      },
+      {
+        text: "Update-Time",
+        value: "metadata.managedFields[0].time",
         sortable: true,
       },
     ];

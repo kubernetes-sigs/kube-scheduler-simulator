@@ -58,9 +58,20 @@ export default defineComponent({
         value: "metadata.name",
         sortable: true,
       },
+      { text: "Namespace", value: "metadata.namespace", sortable: true },
       { text: "Value", value: "value", sortable: true },
       { text: "Global-Default", value: "globalDefault", sortable: true },
-      { text: "Description", value: "description", sortable: true },
+      { text: "Preemption-Policy", value: "preemptionPolicy", sortable: true },
+      {
+        text: "Creation-Time",
+        value: "metadata.creationTimestamp",
+        sortable: true,
+      },
+      {
+        text: "Update-Time",
+        value: "metadata.managedFields[0].time",
+        sortable: true,
+      },
     ];
     return {
       priorityclasses,
