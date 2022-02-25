@@ -57,7 +57,6 @@ export default defineComponent({
 
     const nodes = computed(() => nstore.nodes);
     const onClick = (node: V1Node) => {
-      console.log("aaa");
       nstore.select(node, false);
     };
     const search = "";
