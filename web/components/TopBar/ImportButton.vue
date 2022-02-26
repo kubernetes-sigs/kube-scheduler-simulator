@@ -12,7 +12,7 @@
       <v-card-text>
         Import resources and scheduler configuration.<br />
         Note that all current created resources will be deleted and then
-        resources are imported..
+        resources are imported.
         <form>
           <input
             v-if="data.dialog"
