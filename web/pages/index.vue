@@ -8,7 +8,7 @@
               <PriorityClassStoreProvider>
                 <SnackbarStoreProvider>
                   <ResourceBar />
-                  <SchedulerConfigurationEditButton />
+                  <TopBar />
                   <ResourceAddButton />
                   <NodeList />
                   <UnscheduledPodList />
@@ -29,7 +29,7 @@
 
 <script lang="ts">
 import { defineComponent } from "@nuxtjs/composition-api";
-import SchedulerConfigurationEditButton from "~/components/SchedulerConfigurationEditButton.vue";
+import TopBar from "~/components/TopBar/TopBar.vue";
 import NodeStoreProvider from "~/components/StoreProvider/NodeStoreProvider.vue";
 import PVStoreProvider from "~/components/StoreProvider/PVStoreProvider.vue";
 import PVCStoreProvider from "~/components/StoreProvider/PVCStoreProvider.vue";
@@ -65,7 +65,7 @@ export default defineComponent({
     StorageClassStoreProvider,
     PVStoreProvider,
     PVCStoreProvider,
-    SchedulerConfigurationEditButton,
+    TopBar,
     SchedulerConfigurationStoreProvider,
     PriorityClassStoreProvider,
   },

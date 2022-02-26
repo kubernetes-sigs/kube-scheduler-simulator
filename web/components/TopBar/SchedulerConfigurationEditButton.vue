@@ -1,12 +1,12 @@
 <template>
-  <v-btn class="ma-2" @click="onClick">
+  <v-btn class="ma-2" @click="onClick()">
     <v-icon> mdi-cog </v-icon>
   </v-btn>
 </template>
 
 <script lang="ts">
 import { inject, defineComponent } from "@nuxtjs/composition-api";
-import SchedulerConfigurationStoreKey from "./StoreKey/SchedulerConfigurationStoreKey";
+import SchedulerConfigurationStoreKey from "../StoreKey/SchedulerConfigurationStoreKey";
 
 export default defineComponent({
   setup() {
