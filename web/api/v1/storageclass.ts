@@ -1,5 +1,6 @@
 import { V1StorageClass, V1StorageClassList } from "@kubernetes/client-node";
 import { k8sStorageInstance } from "@/api/v1/index";
+import axios from "axios";
 
 export const applyStorageClass = async (
   req: V1StorageClass,
@@ -17,12 +18,11 @@ export const applyStorageClass = async (
     );
     return res.data;
   } catch (e: any) {
-    try {
+    if (axios.isAxiosError(e) && e.response && e.response.status === 404) {
       const res = await createStorageclasses(req, onError);
       return res;
-    } catch (e: any) {
-      onError(e);
     }
+    onError(e);
   }
 };
 

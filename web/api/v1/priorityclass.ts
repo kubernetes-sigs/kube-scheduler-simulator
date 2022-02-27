@@ -1,5 +1,6 @@
 import { V1PriorityClass, V1PriorityClassList } from "@kubernetes/client-node";
 import { k8sSchedulingInstance } from "@/api/v1/index";
+import axios from "axios";
 
 export const applyPriorityClass = async (
   req: V1PriorityClass,
@@ -17,12 +18,11 @@ export const applyPriorityClass = async (
     );
     return res.data;
   } catch (e: any) {
-    try {
+    if (axios.isAxiosError(e) && e.response && e.response.status === 404) {
       const res = await createPriorityClass(req, onError);
       return res;
-    } catch (e: any) {
-      onError(e);
     }
+    onError(e);
   }
 };
 

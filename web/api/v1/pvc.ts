@@ -3,6 +3,7 @@ import {
   V1PersistentVolumeClaimList,
 } from "@kubernetes/client-node";
 import { k8sInstance, namespaceURL } from "@/api/v1/index";
+import axios from "axios";
 
 export const applyPersistentVolumeClaim = async (
   req: V1PersistentVolumeClaim,
@@ -21,12 +22,11 @@ export const applyPersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    try {
+    if (axios.isAxiosError(e) && e.response && e.response.status === 404) {
       const res = await createPersistentVolumeClaim(req, onError);
       return res;
-    } catch (e: any) {
-      onError(e);
     }
+    onError(e);
   }
 };
 

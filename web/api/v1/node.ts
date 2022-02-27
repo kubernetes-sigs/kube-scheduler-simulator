@@ -1,5 +1,6 @@
 import { V1Node, V1NodeList } from "@kubernetes/client-node";
 import { k8sInstance } from "@/api/v1/index";
+import axios from "axios";
 
 export const applyNode = async (req: V1Node, onError: (_: string) => void) => {
   try {
@@ -14,12 +15,11 @@ export const applyNode = async (req: V1Node, onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    try {
+    if (axios.isAxiosError(e) && e.response && e.response.status === 404) {
       const res = await createNode(req, onError);
       return res;
-    } catch (e: any) {
-      onError(e);
     }
+    onError(e);
   }
 };
 

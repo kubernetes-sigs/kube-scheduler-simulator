@@ -1,5 +1,6 @@
 import { V1Pod, V1PodList } from "@kubernetes/client-node";
 import { k8sInstance, namespaceURL } from "@/api/v1/index";
+import axios from "axios";
 
 export const applyPod = async (req: V1Pod, onError: (_: string) => void) => {
   try {
@@ -14,12 +15,11 @@ export const applyPod = async (req: V1Pod, onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    try {
+    if (axios.isAxiosError(e) && e.response && e.response.status === 404) {
       const res = await createPod(req, onError);
       return res;
-    } catch (e: any) {
-      onError(e);
     }
+    onError(e);
   }
 };
 
