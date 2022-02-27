@@ -50,7 +50,6 @@ import ResourceAddButton from "~/components/ResourceAddButton.vue";
 import ResourceBar from "~/components/ResourceBar/ResourceBar.vue";
 import Snackbar from "~/components/Snackbar.vue";
 import ResetProvider from "~/components/StoreProvider/ResetProvider.vue";
-import ResetButton from "~/components/ResetButton.vue";
 
 export default defineComponent({
   components: {
@@ -73,7 +72,6 @@ export default defineComponent({
     SchedulerConfigurationStoreProvider,
     PriorityClassStoreProvider,
     ResetProvider,
-    ResetButton,
   },
 });
 </script>
