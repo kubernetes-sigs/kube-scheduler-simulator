@@ -1080,7 +1080,7 @@ func TestService_Import(t *testing.T) {
 	}
 }
 
-func TestService_Import_WithEgnoreErrOption(t *testing.T) {
+func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                     string
