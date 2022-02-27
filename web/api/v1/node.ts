@@ -23,19 +23,34 @@ export const applyNode = async (req: V1Node, onError: (_: string) => void) => {
   }
 };
 
-export const listNode = async () => {
-  const res = await k8sInstance.get<V1NodeList>(`/nodes`, {});
-  return res.data;
+export const listNode = async (onError: (_: string) => void) => {
+  try {
+    const res = await k8sInstance.get<V1NodeList>(`/nodes`, {});
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const getNode = async (name: string) => {
-  const res = await k8sInstance.get<V1Node>(`/nodes/${name}`, {});
-  return res.data;
+export const getNode = async (name: string, onError: (_: string) => void) => {
+  try {
+    const res = await k8sInstance.get<V1Node>(`/nodes/${name}`, {});
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const deleteNode = async (name: string) => {
-  const res = await k8sInstance.delete(`/nodes/${name}`, {});
-  return res.data;
+export const deleteNode = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sInstance.delete(`/nodes/${name}`, {});
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
 const createNode = async (req: V1Node, onError: (_: string) => void) => {

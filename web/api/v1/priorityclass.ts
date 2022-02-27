@@ -26,28 +26,46 @@ export const applyPriorityClass = async (
   }
 };
 
-export const listPriorityClass = async () => {
-  const res = await k8sSchedulingInstance.get<V1PriorityClassList>(
-    `/priorityclasses`,
-    {}
-  );
-  return res.data;
+export const listPriorityClass = async (onError: (_: string) => void) => {
+  try {
+    const res = await k8sSchedulingInstance.get<V1PriorityClassList>(
+      `/priorityclasses`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const getPriorityClass = async (name: string) => {
-  const res = await k8sSchedulingInstance.get<V1PriorityClass>(
-    `/priorityclasses/${name}`,
-    {}
-  );
-  return res.data;
+export const getPriorityClass = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sSchedulingInstance.get<V1PriorityClass>(
+      `/priorityclasses/${name}`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const deletePriorityClass = async (name: string) => {
-  const res = await k8sSchedulingInstance.delete(
-    `/priorityclasses/${name}`,
-    {}
-  );
-  return res.data;
+export const deletePriorityClass = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sSchedulingInstance.delete(
+      `/priorityclasses/${name}`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
 const createPriorityClass = async (

@@ -23,22 +23,37 @@ export const applyPod = async (req: V1Pod, onError: (_: string) => void) => {
   }
 };
 
-export const listPod = async () => {
-  const res = await k8sInstance.get<V1PodList>(namespaceURL + `/pods`, {});
-  return res.data;
+export const listPod = async (onError: (_: string) => void) => {
+  try {
+    const res = await k8sInstance.get<V1PodList>(namespaceURL + `/pods`, {});
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const getPod = async (name: string) => {
-  const res = await k8sInstance.get<V1Pod>(namespaceURL + `/pods/${name}`, {});
-  return res.data;
+export const getPod = async (name: string, onError: (_: string) => void) => {
+  try {
+    const res = await k8sInstance.get<V1Pod>(
+      namespaceURL + `/pods/${name}`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const deletePod = async (name: string) => {
-  const res = await k8sInstance.delete(
-    namespaceURL + `/pods/${name}?gracePeriodSeconds=0`,
-    {}
-  );
-  return res.data;
+export const deletePod = async (name: string, onError: (_: string) => void) => {
+  try {
+    const res = await k8sInstance.delete(
+      namespaceURL + `/pods/${name}?gracePeriodSeconds=0`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
 const createPod = async (req: V1Pod, onError: (_: string) => void) => {

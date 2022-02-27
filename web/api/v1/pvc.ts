@@ -30,28 +30,48 @@ export const applyPersistentVolumeClaim = async (
   }
 };
 
-export const listPersistentVolumeClaim = async () => {
-  const res = await k8sInstance.get<V1PersistentVolumeClaimList>(
-    namespaceURL + `/persistentvolumeclaims`,
-    {}
-  );
-  return res.data;
+export const listPersistentVolumeClaim = async (
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sInstance.get<V1PersistentVolumeClaimList>(
+      namespaceURL + `/persistentvolumeclaims`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const getPersistentVolumeClaim = async (name: string) => {
-  const res = await k8sInstance.get<V1PersistentVolumeClaim>(
-    namespaceURL + `/persistentvolumeclaims/${name}`,
-    {}
-  );
-  return res.data;
+export const getPersistentVolumeClaim = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sInstance.get<V1PersistentVolumeClaim>(
+      namespaceURL + `/persistentvolumeclaims/${name}`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const deletePersistentVolumeClaim = async (name: string) => {
-  const res = await k8sInstance.delete(
-    namespaceURL + `/persistentvolumeclaims/${name}`,
-    {}
-  );
-  return res.data;
+export const deletePersistentVolumeClaim = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sInstance.delete(
+      namespaceURL + `/persistentvolumeclaims/${name}`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
 const createPersistentVolumeClaim = async (

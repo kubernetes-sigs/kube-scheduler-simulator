@@ -29,25 +29,43 @@ export const applyPersistentVolume = async (
   }
 };
 
-export const listPersistentVolume = async () => {
-  const res = await k8sInstance.get<V1PersistentVolumeList>(
-    `/persistentvolumes`,
-    {}
-  );
-  return res.data;
+export const listPersistentVolume = async (onError: (_: string) => void) => {
+  try {
+    const res = await k8sInstance.get<V1PersistentVolumeList>(
+      `/persistentvolumes`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const getPersistentVolume = async (name: string) => {
-  const res = await k8sInstance.get<V1PersistentVolume>(
-    `/persistentvolumes/${name}`,
-    {}
-  );
-  return res.data;
+export const getPersistentVolume = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sInstance.get<V1PersistentVolume>(
+      `/persistentvolumes/${name}`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const deletePersistentVolume = async (name: string) => {
-  const res = await k8sInstance.delete(`/persistentvolumes/${name}`, {});
-  return res.data;
+export const deletePersistentVolume = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sInstance.delete(`/persistentvolumes/${name}`, {});
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
 const createPersistentvolumes = async (

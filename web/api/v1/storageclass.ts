@@ -26,25 +26,43 @@ export const applyStorageClass = async (
   }
 };
 
-export const listStorageClass = async () => {
-  const res = await k8sStorageInstance.get<V1StorageClassList>(
-    `/storageclasses`,
-    {}
-  );
-  return res.data;
+export const listStorageClass = async (onError: (_: string) => void) => {
+  try {
+    const res = await k8sStorageInstance.get<V1StorageClassList>(
+      `/storageclasses`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const getStorageClass = async (name: string) => {
-  const res = await k8sStorageInstance.get<V1StorageClass>(
-    `/storageclasses/${name}`,
-    {}
-  );
-  return res.data;
+export const getStorageClass = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sStorageInstance.get<V1StorageClass>(
+      `/storageclasses/${name}`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
-export const deleteStorageClass = async (name: string) => {
-  const res = await k8sStorageInstance.delete(`/storageclasses/${name}`, {});
-  return res.data;
+export const deleteStorageClass = async (
+  name: string,
+  onError: (_: string) => void
+) => {
+  try {
+    const res = await k8sStorageInstance.delete(`/storageclasses/${name}`, {});
+    return res.data;
+  } catch (e: any) {
+    onError(e);
+  }
 };
 
 const createStorageclasses = async (

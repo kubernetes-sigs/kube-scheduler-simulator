@@ -54,8 +54,10 @@ export default function storageclassStore() {
       state.selectedStorageClass = null;
     },
 
-    async fetchlist() {
-      state.storageclasses = (await listStorageClass()).items;
+    async fetchlist(onError: (_: string) => void) {
+      const storageclasses = await listStorageClass(onError);
+      if (!storageclasses) return;
+      state.storageclasses = storageclasses.items;
     },
 
     async apply(
@@ -64,24 +66,26 @@ export default function storageclassStore() {
       onError: (_: string) => void
     ) {
       await applyStorageClass(n, onError);
-      await this.fetchlist();
+      await this.fetchlist(onError);
     },
 
-    async fetchSelected() {
+    async fetchSelected(onError: (_: string) => void) {
       if (
         state.selectedStorageClass?.item.metadata?.name &&
         !this.selected?.isNew
       ) {
         const s = await getStorageClass(
-          state.selectedStorageClass.item.metadata.name
+          state.selectedStorageClass.item.metadata.name,
+          onError
         );
+        if (!s) return;
         this.select(s, false);
       }
     },
 
-    async delete(name: string) {
-      await deleteStorageClass(name);
-      await this.fetchlist();
+    async delete(name: string, onError: (_: string) => void) {
+      await deleteStorageClass(name, onError);
+      await this.fetchlist(onError);
     },
   };
 }
