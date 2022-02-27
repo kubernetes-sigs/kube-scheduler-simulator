@@ -6,18 +6,20 @@
           <SchedulerConfigurationStoreProvider>
             <StorageClassStoreProvider>
               <PriorityClassStoreProvider>
-                <SnackbarStoreProvider>
-                  <ResourceBar />
-                  <TopBar />
-                  <ResourceAddButton />
-                  <NodeList />
-                  <UnscheduledPodList />
-                  <PVList />
-                  <PVCList />
-                  <StorageClassList />
-                  <PriorityClassList />
-                  <Snackbar />
-                </SnackbarStoreProvider>
+                <ResetProvider>
+                  <SnackbarStoreProvider>
+                    <ResourceBar />
+                    <TopBar />
+                    <ResourceAddButton />
+                    <NodeList />
+                    <UnscheduledPodList />
+                    <PVList />
+                    <PVCList />
+                    <StorageClassList />
+                    <PriorityClassList />
+                    <Snackbar />
+                  </SnackbarStoreProvider>
+                </ResetProvider>
               </PriorityClassStoreProvider>
             </StorageClassStoreProvider>
           </SchedulerConfigurationStoreProvider>
