@@ -87,3 +87,8 @@ type ExportService interface {
 type ResetService interface {
 	Reset(ctx context.Context) error
 }
+
+// ReplicateExistingClusterService represents a service to import resources from the existing cluster.
+type ReplicateExistingClusterService interface {
+	ImportFromExistingCluster(ctx context.Context) error
+}
