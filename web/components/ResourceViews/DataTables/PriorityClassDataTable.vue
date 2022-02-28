@@ -3,14 +3,16 @@
     <v-col>
       <v-card class="ma-2" outlined>
         <v-card-title class="mb-1">
-          PriorityClasses <v-spacer></v-spacer>
-          <v-text-field
-            v-model="search"
-            append-icon="mdi-magnify"
-            label="Search"
-            single-line
-            hide-details
-          ></v-text-field
+          <v-row
+            ><v-col>PriorityClasses<v-spacer></v-spacer> </v-col
+            ><v-col>
+              <v-text-field
+                v-model="search"
+                append-icon="mdi-magnify"
+                label="Search"
+                single-line
+                hide-details
+              ></v-text-field></v-col></v-row
         ></v-card-title>
         <v-data-table
           :headers="headers"
