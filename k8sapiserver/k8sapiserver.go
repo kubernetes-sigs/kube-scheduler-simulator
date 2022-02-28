@@ -3,12 +3,15 @@ package k8sapiserver
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
+	generated "github.com/kubernetes-sigs/kube-scheduler-simulator/k8sapiserver/openapi"
 	"golang.org/x/xerrors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -31,57 +34,72 @@ import (
 	"k8s.io/klog/v2"
 	openapicommon "k8s.io/kube-openapi/pkg/common"
 	"k8s.io/kube-openapi/pkg/validation/spec"
+	apiserverapp "k8s.io/kubernetes/cmd/kube-apiserver/app"
+	apiserveropts "k8s.io/kubernetes/cmd/kube-apiserver/app/options"
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
 	"k8s.io/kubernetes/pkg/controlplane"
 	"k8s.io/kubernetes/pkg/kubeapiserver"
+	authzmodes "k8s.io/kubernetes/pkg/kubeapiserver/authorizer/modes"
 	kubeletclient "k8s.io/kubernetes/pkg/kubelet/client"
-
-	generated "github.com/kubernetes-sigs/kube-scheduler-simulator/k8sapiserver/openapi"
 )
 
+// This key is for testing purposes only and is not considered secure.
+const ecdsaPrivateKey = `-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIEZmTmUhuanLjPA2CLquXivuwBDHTt5XYwgIr/kA1LtRoAoGCCqGSM49
+AwEHoUQDQgAEH6cuzP8XuD5wal6wf9M6xDljTOPLX2i8uIp/C/ASqiIGUeeKQtX0
+/IR3qCXyThP/dbCiHrF3v1cuhBOHY8CLVg==
+-----END EC PRIVATE KEY-----`
+
 // StartAPIServer starts API server, and it make panic when a error happen.
-func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config, func(), error) {
-	h := &APIServerHolder{Initialized: make(chan struct{})}
-	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		<-h.Initialized
-		h.M.GenericAPIServer.Handler.ServeHTTP(w, req)
-	})
+func StartAPIServer(kubeAPIServerURL string, etcdURL string, stopCh <-chan struct{}) (*restclient.Config, func(), error) {
 
 	l, err := net.Listen("tcp", kubeAPIServerURL)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("announces on the local network address: %w", err)
 	}
 
-	s := &httptest.Server{
-		Listener: l,
-		Config: &http.Server{
-			Handler: handler,
-		},
+	_, ok := l.Addr().(*net.TCPAddr)
+	if !ok {
+		l.Close()
+		return nil, nil, xerrors.Errorf("invalid listen address: %q", l.Addr().String())
 	}
-	s.Start()
-	klog.Info("kube-apiserver is started on :", s.URL)
 
-	c := NewControlPlaneConfigWithOptions(s.URL, etcdURL)
-
-	_, _, closeFn, err := startAPIServer(c, s, h)
+	serverOpts := apiserveropts.NewServerRunOptions()
+	serverOpts.Etcd.StorageConfig.Transport.ServerList = []string{etcdURL}
+	serverOpts.SecureServing.Listener = l
+	serverOpts.SecureServing.ExternalAddress = l.Addr().(*net.TCPAddr).IP
+	serverOpts.Authorization.Modes = []string{authzmodes.ModeAlwaysAllow}
+	saSigningKeyFile, err := ioutil.TempFile("/tmp", "insecure_test_key")
 	if err != nil {
-		return nil, nil, xerrors.Errorf("start API server: %w", err)
+		return nil, nil, xerrors.Errorf("create temp file failed: %v", err)
+	}
+	defer os.RemoveAll(saSigningKeyFile.Name())
+	if err = ioutil.WriteFile(saSigningKeyFile.Name(), []byte(ecdsaPrivateKey), 0666); err != nil {
+		return nil, nil, xerrors.Errorf("write file %s failed: %v", saSigningKeyFile.Name(), err)
+	}
+	serverOpts.ServiceAccountSigningKeyFile = saSigningKeyFile.Name()
+	serverOpts.Authentication.ServiceAccounts.Issuers = []string{"https://foo.bar.example.com"}
+	serverOpts.Authentication.ServiceAccounts.KeyFiles = []string{saSigningKeyFile.Name()}
+	serverOpts.APIEnablement.RuntimeConfig.Set("api/all=true")
+	completedOpts, err := apiserverapp.Complete(serverOpts)
+
+	klog.InfoS("Starting kube-apiserver on ...", "PORT", serverOpts.SecureServing.BindPort)
+	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts, nil)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	cfg := &restclient.Config{
-		Host:          s.URL,
-		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
-		QPS:           5000.0,
-		Burst:         5000,
-	}
+	errCh := make(chan error)
+	go func(stopCh <-chan struct{}) {
+		prepared, err := aggregatorServer.PrepareRun()
+		if err != nil {
+			errCh <- err
+		} else if err := prepared.Run(stopCh); err != nil {
+			errCh <- err
+		}
+	}(stopCh)
 
-	shutdownFunc := func() {
-		klog.Info("destroying API server")
-		closeFn()
-		s.Close()
-		klog.Info("destroyed API server")
-	}
-	return cfg, shutdownFunc, nil
+	return aggregatorServer.GenericAPIServer.LoopbackClientConfig, nil, nil
 }
 
 func defaultOpenAPIConfig() *openapicommon.Config {
