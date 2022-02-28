@@ -33,7 +33,8 @@ type Service struct {
 
 // NewSchedulerService starts scheduler and return *Service.
 func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration) *Service {
-	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initialSchedulerCfg}
+	initCfg := initialSchedulerCfg.DeepCopy()
+	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg}
 }
 
 func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error {

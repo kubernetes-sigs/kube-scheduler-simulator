@@ -50,6 +50,11 @@ export default function snackbarStore() {
       this.setMessageType("error");
       this.open();
     },
+    setServerInfoMessage(message: string) {
+      state.message = message;
+      this.setMessageType("info");
+      this.open();
+    },
     setMessageType(messageType: MessageType) {
       state.messageType = messageType;
     },
