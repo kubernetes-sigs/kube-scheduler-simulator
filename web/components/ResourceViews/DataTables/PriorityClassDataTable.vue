@@ -61,8 +61,8 @@ export default defineComponent({
         sortable: true,
       },
       { text: "Value", value: "value", sortable: true },
-      { text: "Global-Default", value: "globalDefault", sortable: true },
-      { text: "Preemption-Policy", value: "preemptionPolicy", sortable: true },
+      { text: "GlobalDefault", value: "globalDefault", sortable: true },
+      { text: "PreemptionPolicy", value: "preemptionPolicy", sortable: true },
       {
         text: "CreationTime",
         value: "metadata.creationTimestamp",
