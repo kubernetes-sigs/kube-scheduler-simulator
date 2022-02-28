@@ -1,36 +1,31 @@
 <template>
   <div>
-    <ViewSelectRadioButton
-      v-model="selectedViewType"
-      :radio-labels="viewTypeLabels"
-    />
-    <div v-if="selectedViewType === 0">
-      <ResourcesList />
-    </div>
-    <div v-else-if="selectedViewType === 1">
+    <div v-if="IsAlphaTableViewEnabled()">
       <ResourcesDataTable />
+    </div>
+    <div v-else>
+      <ResourcesList />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "@nuxtjs/composition-api";
+import { defineComponent } from "@nuxtjs/composition-api";
 import ResourcesList from "./Lists/ResourcesList.vue";
 import ResourcesDataTable from "./DataTables/ResourcesDataTable.vue";
-import ViewSelectRadioButton from "./ViewSeelectRadioButton.vue";
 
 export default defineComponent({
   components: {
     ResourcesList,
     ResourcesDataTable,
-    ViewSelectRadioButton,
   },
   setup() {
-    const viewTypeLabels = ["List", "Table"];
-    const selectedViewType = ref(0);
+    const IsAlphaTableViewEnabled = () => {
+      return process.env.ALPHA_TABLE_VIEWS == "1";
+    };
+
     return {
-      viewTypeLabels,
-      selectedViewType,
+      IsAlphaTableViewEnabled,
     };
   },
 });
