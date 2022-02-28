@@ -1646,3 +1646,75 @@ func TestFunction_applyPcs(t *testing.T) {
 		})
 	}
 }
+
+func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                     string
+		prepareEachServiceMockFn func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService)
+		prepareFakeClientSetFn   func() *fake.Clientset
+		applyConfiguration       func() *ResourcesForImport
+		wantErr                  bool
+	}{
+		{
+			name: "Import does not call RestartScheduler",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
+				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
+				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil)
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
+				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil)
+				// If the Import function call this, it will return the error.
+				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(xerrors.Errorf("restart scheduler was called"))
+			},
+			applyConfiguration: func() *ResourcesForImport {
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForImport{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  storageclasses,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mockSchedulerService := mock_export.NewMockSchedulerService(ctrl)
+			mockPriorityClassService := mock_export.NewMockPriorityClassService(ctrl)
+			mockStorageClassService := mock_export.NewMockStorageClassService(ctrl)
+			mockPVCService := mock_export.NewMockPersistentVolumeClaimService(ctrl)
+			mockPVService := mock_export.NewMockPersistentVolumeService(ctrl)
+			mockNodeService := mock_export.NewMockNodeService(ctrl)
+			mockPodService := mock_export.NewMockPodService(ctrl)
+			fakeclientset := tt.prepareFakeClientSetFn()
+
+			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
+			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
+
+			if err := s.Import(context.Background(), tt.applyConfiguration(), s.IgnoreSchedulerConfiguration()); (err != nil) != tt.wantErr {
+				t.Fatalf("Import() with ignoreSchedulerConfiguration option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
+			}
+		})
+	}
+}
