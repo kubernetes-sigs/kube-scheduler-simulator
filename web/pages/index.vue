@@ -6,18 +6,20 @@
           <SchedulerConfigurationStoreProvider>
             <StorageClassStoreProvider>
               <PriorityClassStoreProvider>
-                <SnackbarStoreProvider>
-                  <ResourceBar />
-                  <TopBar />
-                  <ResourceAddButton />
-                  <NodeList />
-                  <UnscheduledPodList />
-                  <PVList />
-                  <PVCList />
-                  <StorageClassList />
-                  <PriorityClassList />
-                  <Snackbar />
-                </SnackbarStoreProvider>
+                <ResetProvider>
+                  <SnackbarStoreProvider>
+                    <ResourceBar />
+                    <TopBar />
+                    <ResourceAddButton />
+                    <NodeList />
+                    <UnscheduledPodList />
+                    <PVList />
+                    <PVCList />
+                    <StorageClassList />
+                    <PriorityClassList />
+                    <Snackbar />
+                  </SnackbarStoreProvider>
+                </ResetProvider>
               </PriorityClassStoreProvider>
             </StorageClassStoreProvider>
           </SchedulerConfigurationStoreProvider>
@@ -47,6 +49,7 @@ import SnackbarStoreProvider from "~/components/StoreProvider/SnackbarStoreProvi
 import ResourceAddButton from "~/components/ResourceAddButton.vue";
 import ResourceBar from "~/components/ResourceBar/ResourceBar.vue";
 import Snackbar from "~/components/Snackbar.vue";
+import ResetProvider from "~/components/StoreProvider/ResetProvider.vue";
 
 export default defineComponent({
   components: {
@@ -68,6 +71,7 @@ export default defineComponent({
     TopBar,
     SchedulerConfigurationStoreProvider,
     PriorityClassStoreProvider,
+    ResetProvider,
   },
 });
 </script>
