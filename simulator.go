@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,11 +30,12 @@ func startSimulator() error {
 		return xerrors.Errorf("get config: %w", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	restclientCfg, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL, ctx.Done())
+	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL)
 	if err != nil {
 		return xerrors.Errorf("start API server: %w", err)
+	}
+	if apiShutdown != nil {
+		defer apiShutdown()
 	}
 
 	client := clientset.NewForConfigOrDie(restclientCfg)
