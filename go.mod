@@ -34,19 +34,18 @@ replace (
 require (
 	github.com/golang/mock v1.4.4
 	github.com/golangci/golangci-lint v1.41.1
-	github.com/google/go-cmp v0.5.5 // indirect
-	github.com/google/uuid v1.1.2
+	github.com/google/go-cmp v0.5.5
 	github.com/labstack/echo/v4 v4.5.0
 	github.com/labstack/gommon v0.3.0
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	k8s.io/api v1.22.0
 	k8s.io/apiextensions-apiserver v0.0.0
 	k8s.io/apimachinery v1.22.0
 	k8s.io/apiserver v1.22.0
 	k8s.io/client-go v1.22.0
-	k8s.io/component-base v0.22.0
+	k8s.io/component-base v0.23.4 // indirect
 	k8s.io/klog/v2 v2.9.0
 	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e
 	k8s.io/kube-scheduler v1.22.0
