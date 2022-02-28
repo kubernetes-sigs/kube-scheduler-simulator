@@ -61,17 +61,17 @@ export default defineComponent({
       { text: "Parameters", value: "parameters", sortable: true },
       { text: "Reclaim-Policy", value: "reclaimPolicy", sortable: true },
       {
-        text: "Volume-Binding-Mode",
+        text: "VolumeBindingMode",
         value: "volumeBindingMode",
         sortable: true,
       },
       {
-        text: "Creation-Time",
+        text: "CreationTime",
         value: "metadata.creationTimestamp",
         sortable: true,
       },
       {
-        text: "Update-Time",
+        text: "UpdateTime",
         value: "metadata.managedFields[0].time",
         sortable: true,
       },

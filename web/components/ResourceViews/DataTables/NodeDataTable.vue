@@ -70,12 +70,12 @@ export default defineComponent({
       { text: "Memory", value: "status.capacity.memory", sortable: true },
       { text: "Pods", value: "status.capacity.pods", sortable: true },
       {
-        text: "Creation-Time",
+        text: "CreationTime",
         value: "metadata.creationTimestamp",
         sortable: true,
       },
       {
-        text: "Update-Time",
+        text: "UpdateTime",
         value: "metadata.managedFields[0].time",
         sortable: true,
       },
