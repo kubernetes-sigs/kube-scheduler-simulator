@@ -58,7 +58,6 @@ export default defineComponent({
         value: "metadata.name",
         sortable: true,
       },
-      { text: "Namespace", value: "metadata.namespace", sortable: true },
       { text: "Value", value: "value", sortable: true },
       { text: "Global-Default", value: "globalDefault", sortable: true },
       { text: "Preemption-Policy", value: "preemptionPolicy", sortable: true },

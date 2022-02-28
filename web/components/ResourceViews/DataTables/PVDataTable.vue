@@ -56,17 +56,11 @@ export default defineComponent({
         value: "metadata.name",
         sortable: true,
       },
-      { text: "Namespace", value: "metadata.namespace", sortable: true },
       { text: "Status", value: "status.phase", sortable: true },
       { text: "VolumeMode", value: "spec.volumeMode", sortable: true },
       {
         text: "Capacity",
         value: "spec.resources.requests.storage",
-        sortable: true,
-      },
-      {
-        text: "PVReclaimPolicy",
-        value: "spec.persistentVolumeReclaimPolicy",
         sortable: true,
       },
       {

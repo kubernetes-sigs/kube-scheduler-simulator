@@ -66,18 +66,9 @@ export default defineComponent({
         value: "metadata.name",
         sortable: true,
       },
-      {
-        text: "Namespace",
-        value: "metadata.namespace",
-        sortable: true,
-      },
-      {
-        text: "Conditions",
-        value: "status.conditions[0].type",
-        sortable: true,
-      },
-      { text: "Status", value: "status.phase", sortable: true },
-      { text: "Capacity", value: "status.capacity", sortable: true },
+      { text: "CPU", value: "status.capacity.cpu", sortable: true },
+      { text: "Memory", value: "status.capacity.memory", sortable: true },
+      { text: "Pods", value: "status.capacity.pods", sortable: true },
       {
         text: "Creation-Time",
         value: "metadata.creationTimestamp",

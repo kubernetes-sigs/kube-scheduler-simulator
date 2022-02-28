@@ -57,7 +57,6 @@ export default defineComponent({
         value: "metadata.name",
         sortable: true,
       },
-      { text: "Namespace", value: "metadata.namespace", sortable: true },
       { text: "Provisioner", value: "provisioner", sortable: true },
       { text: "Parameters", value: "parameters", sortable: true },
       { text: "Reclaim-Policy", value: "reclaimPolicy", sortable: true },

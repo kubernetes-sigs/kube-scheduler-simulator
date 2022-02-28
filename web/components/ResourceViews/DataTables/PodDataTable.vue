@@ -70,7 +70,6 @@ export default defineComponent({
         value: "status.conditions[0].type",
         sortable: true,
       },
-      { text: "Status", value: "status.phase", sortable: true },
       {
         text: "Creation-Time",
         value: "metadata.creationTimestamp",

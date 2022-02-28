@@ -57,7 +57,6 @@ export default defineComponent({
         sortable: true,
       },
       { text: "Namespace", value: "metadata.namespace", sortable: true },
-      { text: "Status", value: "status.phase", sortable: true },
       { text: "VolumeName", value: "spec.volumeName", sortable: true },
       { text: "VolumeMode", value: "spec.volumeMode", sortable: true },
       {
