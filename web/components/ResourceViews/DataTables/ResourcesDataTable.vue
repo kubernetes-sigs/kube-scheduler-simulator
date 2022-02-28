@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script lng="ts">
+<script lang="ts">
 import { defineComponent } from "@nuxtjs/composition-api";
 import PodDataTable from "./PodDataTable.vue";
 import NodeDataTable from "./NodeDataTable.vue";
