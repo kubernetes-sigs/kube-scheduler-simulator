@@ -1,12 +1,12 @@
 <template>
   <v-dialog v-model="data.dialog" width="500">
     <template #activator="{ on }">
-      <v-btn class="ma-5 mb-0" color="error" v-on="on"> Reset </v-btn>
+      <v-btn class="ma-2" color="error" v-on="on"> Reset </v-btn>
     </template>
 
     <v-card>
       <v-card-title class="2">
-        Are you sure to reset all resources and scheduler configuration ?
+        Are you sure to reset all resources and scheduler configuration?
       </v-card-title>
       <v-divider></v-divider>
       <v-divider></v-divider>
