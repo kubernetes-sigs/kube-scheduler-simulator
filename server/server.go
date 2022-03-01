@@ -46,6 +46,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	// register apis
 	v1 := e.Group("/api/v1")
 
+	v1.GET("/schedulerconfigversion", schedulercfgHandler.GetSchedulerConfigVersion)
 	v1.GET("/schedulerconfiguration", schedulercfgHandler.GetSchedulerConfig)
 	v1.POST("/schedulerconfiguration", schedulercfgHandler.ApplySchedulerConfig)
 

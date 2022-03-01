@@ -2,6 +2,7 @@ import { reactive } from "@nuxtjs/composition-api";
 import {
   applySchedulerConfiguration,
   getSchedulerConfiguration,
+  getSchedulerConfigVersion,
 } from "~/api/v1/schedulerconfiguration";
 import { SchedulerConfiguration } from "~/api/v1/types";
 
@@ -46,6 +47,10 @@ export default function schedulerconfigurationStore() {
           isDeletable: true,
         };
       }
+    },
+
+    fetchVersion() {
+      return getSchedulerConfigVersion();
     },
 
     async apply(cfg: SchedulerConfiguration, onError: (_: string) => void) {

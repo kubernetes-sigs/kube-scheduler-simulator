@@ -62,6 +62,7 @@ type StorageClassService interface {
 
 // SchedulerService represents service for manage scheduler.
 type SchedulerService interface {
+	GetSchedulerConfigVersion() string
 	GetSchedulerConfig() *v1beta2.KubeSchedulerConfiguration
 	RestartScheduler(cfg *v1beta2.KubeSchedulerConfiguration) error
 	StartScheduler(cfg *v1beta2.KubeSchedulerConfiguration) error

@@ -123,6 +123,10 @@ func (s *Service) GetSchedulerConfig() *v1beta2config.KubeSchedulerConfiguration
 	return s.currentSchedulerCfg
 }
 
+func (s *Service) GetSchedulerConfigVersion() string {
+	return v1beta2config.SchemeGroupVersion.Version
+}
+
 // convertConfigurationForSimulator convert KubeSchedulerConfiguration to apply scheduler on simulator
 // (1) It excludes non-allowed changes. Now, we accept only changes to Profiles.Plugins field.
 // (2) It replaces filter/score default-plugins with plugins for simulator.

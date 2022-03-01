@@ -22,3 +22,8 @@ export const getSchedulerConfiguration = async () => {
   );
   return res.data;
 };
+
+export const getSchedulerConfigVersion = async () => {
+  const res = await instance.get<string>(`/schedulerconfigversion`);
+  return res;
+};

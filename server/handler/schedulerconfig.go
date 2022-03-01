@@ -21,6 +21,11 @@ func NewSchedulerConfigHandler(s di.SchedulerService) *SchedulerConfigHandler {
 	}
 }
 
+func (h *SchedulerConfigHandler) GetSchedulerConfigVersion(c echo.Context) error {
+	version := h.service.GetSchedulerConfigVersion()
+	return c.JSON(http.StatusOK, version)
+}
+
 func (h *SchedulerConfigHandler) GetSchedulerConfig(c echo.Context) error {
 	cfg := h.service.GetSchedulerConfig()
 	return c.JSON(http.StatusOK, cfg)
