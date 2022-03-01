@@ -12,6 +12,9 @@ import (
 )
 
 // NodeHandler is handler for manage nodes.
+//
+// Deprecated: NodeHandler exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 type NodeHandler struct {
 	service di.NodeService
 }
@@ -22,6 +25,9 @@ func NewNodeHandler(s di.NodeService) *NodeHandler {
 }
 
 // ApplyNode handles the endpoint for applying node.
+//
+// Deprecated: ApplyNode exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *NodeHandler) ApplyNode(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -41,6 +47,9 @@ func (h *NodeHandler) ApplyNode(c echo.Context) error {
 }
 
 // GetNode handles the endpoint for getting node.
+//
+// Deprecated: GetNode exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *NodeHandler) GetNode(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -59,6 +68,9 @@ func (h *NodeHandler) GetNode(c echo.Context) error {
 }
 
 // ListNode handles the endpoint for listing node.
+//
+// Deprecated: ListNode exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *NodeHandler) ListNode(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -72,6 +84,9 @@ func (h *NodeHandler) ListNode(c echo.Context) error {
 }
 
 // DeleteNode handles the endpoint for deleting node.
+//
+// Deprecated: DeleteNode exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *NodeHandler) DeleteNode(c echo.Context) error {
 	ctx := c.Request().Context()
 

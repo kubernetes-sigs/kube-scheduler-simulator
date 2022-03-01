@@ -12,6 +12,9 @@ import (
 )
 
 // PriorityClassHandler is a handler for managing priorityClass.
+//
+// Deprecated: PriorityClassHandler exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 type PriorityClassHandler struct {
 	service di.PriorityClassService
 }
@@ -22,6 +25,9 @@ func NewPriorityClassHandler(s di.PriorityClassService) *PriorityClassHandler {
 }
 
 // ApplyPriorityClass handles the endpoint for applying priorityClass.
+//
+// Deprecated: ApplyPriorityClass exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PriorityClassHandler) ApplyPriorityClass(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -41,6 +47,9 @@ func (h *PriorityClassHandler) ApplyPriorityClass(c echo.Context) error {
 }
 
 // GetPriorityClass handles the endpoint for getting priorityClass.
+//
+// Deprecated: GetPriorityClass exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PriorityClassHandler) GetPriorityClass(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -59,6 +68,9 @@ func (h *PriorityClassHandler) GetPriorityClass(c echo.Context) error {
 }
 
 // ListPriorityClass handles the endpoint for listing priorityClass.
+//
+// Deprecated: ListPriorityClass exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PriorityClassHandler) ListPriorityClass(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -72,6 +84,9 @@ func (h *PriorityClassHandler) ListPriorityClass(c echo.Context) error {
 }
 
 // DeletePriorityClass handles the endpoint for deleting priorityClass.
+//
+// Deprecated: DeletePriorityClass exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PriorityClassHandler) DeletePriorityClass(c echo.Context) error {
 	ctx := c.Request().Context()
 
