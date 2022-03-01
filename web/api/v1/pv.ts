@@ -25,7 +25,7 @@ export const applyPersistentVolume = async (
       const res = await createPersistentvolumes(req, onError);
       return res;
     }
-    onError(e);
+    onError("Caused by applyPersistentVolume: " + e);
   }
 };
 
@@ -37,7 +37,7 @@ export const listPersistentVolume = async (onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by listPersistentVolume: " + e);
   }
 };
 
@@ -52,7 +52,7 @@ export const getPersistentVolume = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by getPersistentVolume: " + e);
   }
 };
 
@@ -64,7 +64,7 @@ export const deletePersistentVolume = async (
     const res = await k8sInstance.delete(`/persistentvolumes/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by deletePersistentVolume: " + e);
   }
 };
 
@@ -79,6 +79,6 @@ const createPersistentvolumes = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by createPersistentvolumes: " + e);
   }
 };

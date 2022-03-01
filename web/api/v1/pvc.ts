@@ -26,7 +26,7 @@ export const applyPersistentVolumeClaim = async (
       const res = await createPersistentVolumeClaim(req, onError);
       return res;
     }
-    onError(e);
+    onError("Caused by applyPersistentVolumeClaim: " + e);
   }
 };
 
@@ -40,7 +40,7 @@ export const listPersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by listPersistentVolumeClaim: " + e);
   }
 };
 
@@ -55,7 +55,7 @@ export const getPersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by getPersistentVolumeClaim: " + e);
   }
 };
 
@@ -70,7 +70,7 @@ export const deletePersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by deletePersistentVolumeClaim: " + e);
   }
 };
 
@@ -85,6 +85,6 @@ const createPersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by createPersistentVolumeClaim: " + e);
   }
 };

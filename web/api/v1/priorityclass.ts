@@ -22,7 +22,7 @@ export const applyPriorityClass = async (
       const res = await createPriorityClass(req, onError);
       return res;
     }
-    onError(e);
+    onError("Caused by applyPriorityClass: " + e);
   }
 };
 
@@ -34,7 +34,7 @@ export const listPriorityClass = async (onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by listPriorityClass: " + e);
   }
 };
 
@@ -49,7 +49,7 @@ export const getPriorityClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by getPriorityClass: " + e);
   }
 };
 
@@ -64,7 +64,7 @@ export const deletePriorityClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by deletePriorityClass: " + e);
   }
 };
 
@@ -79,6 +79,6 @@ const createPriorityClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by createPriorityClass: " + e);
   }
 };

@@ -19,7 +19,7 @@ export const applyNode = async (req: V1Node, onError: (_: string) => void) => {
       const res = await createNode(req, onError);
       return res;
     }
-    onError(e);
+    onError("Caused by applyNode: " + e);
   }
 };
 
@@ -28,7 +28,7 @@ export const listNode = async (onError: (_: string) => void) => {
     const res = await k8sInstance.get<V1NodeList>(`/nodes`, {});
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by listNode: " + e);
   }
 };
 
@@ -37,7 +37,7 @@ export const getNode = async (name: string, onError: (_: string) => void) => {
     const res = await k8sInstance.get<V1Node>(`/nodes/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by getNode: " + e);
   }
 };
 
@@ -49,7 +49,7 @@ export const deleteNode = async (
     const res = await k8sInstance.delete(`/nodes/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by deleteNode: " + e);
   }
 };
 
@@ -61,6 +61,6 @@ const createNode = async (req: V1Node, onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by createNode: " + e);
   }
 };

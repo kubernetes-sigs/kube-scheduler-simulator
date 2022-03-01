@@ -19,10 +19,10 @@ export const applyStorageClass = async (
     return res.data;
   } catch (e: any) {
     if (axios.isAxiosError(e) && e.response && e.response.status === 404) {
-      const res = await createStorageclasses(req, onError);
+      const res = await createStorageClass(req, onError);
       return res;
     }
-    onError(e);
+    onError("Caused by applyStorageClass: " + e);
   }
 };
 
@@ -34,7 +34,7 @@ export const listStorageClass = async (onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by listStorageClass: " + e);
   }
 };
 
@@ -49,7 +49,7 @@ export const getStorageClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by getStorageClass: " + e);
   }
 };
 
@@ -61,11 +61,11 @@ export const deleteStorageClass = async (
     const res = await k8sStorageInstance.delete(`/storageclasses/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by deleteStorageClass: " + e);
   }
 };
 
-const createStorageclasses = async (
+const createStorageClass = async (
   req: V1StorageClass,
   onError: (_: string) => void
 ) => {
@@ -76,6 +76,6 @@ const createStorageclasses = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    onError("Caused by createStorageClass: " + e);
   }
 };
