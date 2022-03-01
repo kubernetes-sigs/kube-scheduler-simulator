@@ -19,7 +19,7 @@ export const applyPod = async (req: V1Pod, onError: (_: string) => void) => {
       const res = await createPod(req, onError);
       return res;
     }
-    onError("Caused by applyPod: " + e);
+    onError("failed to applyPod: " + e);
   }
 };
 
@@ -28,7 +28,7 @@ export const listPod = async (onError: (_: string) => void) => {
     const res = await k8sInstance.get<V1PodList>(namespaceURL + `/pods`, {});
     return res.data;
   } catch (e: any) {
-    onError("Caused by listPod: " + e);
+    onError("failed to listPod: " + e);
   }
 };
 
@@ -40,7 +40,7 @@ export const getPod = async (name: string, onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError("Caused by getPod: " + e);
+    onError("failed to getPod: " + e);
   }
 };
 
@@ -52,7 +52,7 @@ export const deletePod = async (name: string, onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError("Caused by deletePod: " + e);
+    onError("failed to deletePod: " + e);
   }
 };
 
@@ -64,6 +64,6 @@ const createPod = async (req: V1Pod, onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError("Caused by createPod: " + e);
+    onError("failed to createPod: " + e);
   }
 };

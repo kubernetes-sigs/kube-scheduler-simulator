@@ -22,7 +22,7 @@ export const applyStorageClass = async (
       const res = await createStorageClass(req, onError);
       return res;
     }
-    onError("Caused by applyStorageClass: " + e);
+    onError("failed to applyStorageClass: " + e);
   }
 };
 
@@ -34,7 +34,7 @@ export const listStorageClass = async (onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError("Caused by listStorageClass: " + e);
+    onError("failed to listStorageClass: " + e);
   }
 };
 
@@ -49,7 +49,7 @@ export const getStorageClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("Caused by getStorageClass: " + e);
+    onError("failed to getStorageClass: " + e);
   }
 };
 
@@ -61,7 +61,7 @@ export const deleteStorageClass = async (
     const res = await k8sStorageInstance.delete(`/storageclasses/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError("Caused by deleteStorageClass: " + e);
+    onError("failed to deleteStorageClass: " + e);
   }
 };
 
@@ -76,6 +76,6 @@ const createStorageClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("Caused by createStorageClass: " + e);
+    onError("failed to createStorageClass: " + e);
   }
 };
