@@ -61,7 +61,7 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 				weight = *pl.Weight
 			}
 
-			return newSimulatorPlugin(store, p, weight), nil
+			return newWrappedPlugin(store, p, weight), nil
 		}
 		ret[pluginName(pl.Name)] = factory
 	}
@@ -233,9 +233,9 @@ type store interface {
 	AddScoreResult(namespace, podName, nodeName, pluginName string, score int64)
 }
 
-// simulatorPlugin behaves as if it is original plugin, but it records result of plugin.
-// All simulatorPlugin's name is originalPlugin name + pluginSuffix.
-type simulatorPlugin struct {
+// wrappedPlugin behaves as if it is original plugin, but it records result of plugin.
+// All wrappedPlugin's name is originalPlugin name + pluginSuffix.
+type wrappedPlugin struct {
 	name                 string
 	originalFilterPlugin framework.FilterPlugin
 	originalScorePlugin  framework.ScorePlugin
@@ -252,9 +252,9 @@ func pluginName(pluginName string) string {
 	return pluginName + pluginSuffix
 }
 
-// newSimulatorPlugin makes simulatorPlugin from score or/and filter plugin.
-func newSimulatorPlugin(s store, p framework.Plugin, weight int32) framework.Plugin {
-	plg := &simulatorPlugin{
+// newWrappedPlugin makes wrappedPlugin from score or/and filter plugin.
+func newWrappedPlugin(s store, p framework.Plugin, weight int32) framework.Plugin {
+	plg := &wrappedPlugin{
 		name:   pluginName(p.Name()),
 		weight: weight,
 		store:  s,
@@ -273,15 +273,15 @@ func newSimulatorPlugin(s store, p framework.Plugin, weight int32) framework.Plu
 	return plg
 }
 
-func (pl *simulatorPlugin) Name() string { return pl.name }
-func (pl *simulatorPlugin) ScoreExtensions() framework.ScoreExtensions {
+func (pl *wrappedPlugin) Name() string { return pl.name }
+func (pl *wrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
 	if pl.originalScorePlugin != nil && pl.originalScorePlugin.ScoreExtensions() != nil {
 		return pl
 	}
 	return nil
 }
 
-func (pl *simulatorPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
+func (pl *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
 	if pl.originalScorePlugin == nil || pl.originalScorePlugin.ScoreExtensions() == nil {
 		// return nil not to affect scoring
 		return nil
@@ -300,7 +300,7 @@ func (pl *simulatorPlugin) NormalizeScore(ctx context.Context, state *framework.
 	return nil
 }
 
-func (pl *simulatorPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
+func (pl *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	if pl.originalScorePlugin == nil {
 		// return zero-score and nil not to affect scoring
 		return 0, nil
@@ -317,7 +317,7 @@ func (pl *simulatorPlugin) Score(ctx context.Context, state *framework.CycleStat
 	return score, s
 }
 
-func (pl *simulatorPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
+func (pl *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
 	if pl.originalFilterPlugin == nil {
 		// return nil not to affect filtering
 		return nil

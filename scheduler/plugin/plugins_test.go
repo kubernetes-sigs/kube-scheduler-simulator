@@ -453,7 +453,7 @@ func Test_defaultFilterScorePlugins(t *testing.T) {
 	}
 }
 
-func Test_newSimulatorPlugin(t *testing.T) {
+func Test_newWrappedPlugin(t *testing.T) {
 	t.Parallel()
 	fakeclientset := fake.NewSimpleClientset()
 	store := resultstore.New(informers.NewSharedInformerFactory(fakeclientset, 0), nil, nil)
@@ -475,7 +475,7 @@ func Test_newSimulatorPlugin(t *testing.T) {
 				p:      fakeFilterPlugin{},
 				weight: 0,
 			},
-			want: &simulatorPlugin{
+			want: &wrappedPlugin{
 				name:                 "fakeFilterPluginForSimulator",
 				originalFilterPlugin: fakeFilterPlugin{},
 				originalScorePlugin:  nil,
@@ -490,7 +490,7 @@ func Test_newSimulatorPlugin(t *testing.T) {
 				p:      fakeScorePlugin{},
 				weight: 1,
 			},
-			want: &simulatorPlugin{
+			want: &wrappedPlugin{
 				name:                 "fakeScorePluginForSimulator",
 				originalFilterPlugin: nil,
 				originalScorePlugin:  fakeScorePlugin{},
@@ -505,7 +505,7 @@ func Test_newSimulatorPlugin(t *testing.T) {
 				p:      fakeFilterScorePlugin{},
 				weight: 1,
 			},
-			want: &simulatorPlugin{
+			want: &wrappedPlugin{
 				name:                 "fakeFilterScorePluginForSimulator",
 				originalFilterPlugin: fakeFilterScorePlugin{},
 				originalScorePlugin:  fakeFilterScorePlugin{},
@@ -518,7 +518,7 @@ func Test_newSimulatorPlugin(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := newSimulatorPlugin(tt.args.s, tt.args.p, tt.args.weight)
+			got := newWrappedPlugin(tt.args.s, tt.args.p, tt.args.weight)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -548,7 +548,7 @@ func Test_pluginName(t *testing.T) {
 	}
 }
 
-func Test_simulatorPlugin_Filter(t *testing.T) {
+func Test_wrappedPlugin_Filter(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
@@ -617,7 +617,7 @@ func Test_simulatorPlugin_Filter(t *testing.T) {
 
 			s := mock_plugin.NewMockstore(ctrl)
 			tt.prepareStoreFn(s)
-			pl := &simulatorPlugin{
+			pl := &wrappedPlugin{
 				originalFilterPlugin: tt.originalFilterPlugin,
 				store:                s,
 			}
@@ -627,7 +627,7 @@ func Test_simulatorPlugin_Filter(t *testing.T) {
 	}
 }
 
-func Test_simulatorPlugin_Name(t *testing.T) {
+func Test_wrappedPlugin_Name(t *testing.T) {
 	t.Parallel()
 	type fields struct {
 		name string
@@ -647,7 +647,7 @@ func Test_simulatorPlugin_Name(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			pl := &simulatorPlugin{
+			pl := &wrappedPlugin{
 				name: tt.fields.name,
 			}
 			if got := pl.Name(); got != tt.want {
@@ -657,7 +657,7 @@ func Test_simulatorPlugin_Name(t *testing.T) {
 	}
 }
 
-func Test_simulatorPlugin_NormalizeScore(t *testing.T) {
+func Test_wrappedPlugin_NormalizeScore(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
@@ -732,7 +732,7 @@ func Test_simulatorPlugin_NormalizeScore(t *testing.T) {
 
 			s := mock_plugin.NewMockstore(ctrl)
 			tt.prepareStoreFn(s)
-			pl := &simulatorPlugin{
+			pl := &wrappedPlugin{
 				originalScorePlugin: tt.originalScorePlugin,
 				store:               s,
 			}
@@ -742,7 +742,7 @@ func Test_simulatorPlugin_NormalizeScore(t *testing.T) {
 	}
 }
 
-func Test_simulatorPlugin_Score(t *testing.T) {
+func Test_wrappedPlugin_Score(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
@@ -801,7 +801,7 @@ func Test_simulatorPlugin_Score(t *testing.T) {
 
 			s := mock_plugin.NewMockstore(ctrl)
 			tt.prepareStoreFn(s)
-			pl := &simulatorPlugin{
+			pl := &wrappedPlugin{
 				originalScorePlugin: tt.originalScorePlugin,
 				store:               s,
 			}
@@ -812,7 +812,7 @@ func Test_simulatorPlugin_Score(t *testing.T) {
 	}
 }
 
-func Test_simulatorPlugin_ScoreExtensions(t *testing.T) {
+func Test_wrappedPlugin_ScoreExtensions(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                string
@@ -822,7 +822,7 @@ func Test_simulatorPlugin_ScoreExtensions(t *testing.T) {
 		{
 			name:                "success",
 			originalScorePlugin: fakeScorePlugin{},
-			want: &simulatorPlugin{
+			want: &wrappedPlugin{
 				originalScorePlugin: fakeScorePlugin{},
 			},
 		},
@@ -831,7 +831,7 @@ func Test_simulatorPlugin_ScoreExtensions(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			pl := &simulatorPlugin{
+			pl := &wrappedPlugin{
 				originalScorePlugin: tt.originalScorePlugin,
 			}
 			got := pl.ScoreExtensions()
