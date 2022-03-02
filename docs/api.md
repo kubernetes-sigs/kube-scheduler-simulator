@@ -60,6 +60,10 @@ empty
 | 202   | |
 | 500 | something went wrong (see logs of the simulator server) |
 
+---
+## **deprecated APIs**
+
+The following APIs are deprecated. They will be removed in the near future.
 ## Apply Node
 
 apply nodes.
