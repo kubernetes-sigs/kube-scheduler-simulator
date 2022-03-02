@@ -21,7 +21,7 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/plugin/resultstore"
 )
 
-func TestConvertForSimulator(t *testing.T) {
+func TestConvertWrapped(t *testing.T) {
 	t.Parallel()
 	var weight1 int32 = 1
 	var weight2 int32 = 2
@@ -65,8 +65,8 @@ func TestConvertForSimulator(t *testing.T) {
 			want: &v1beta2.Plugins{
 				Filter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
-						{Name: "PodTopologySpreadForSimulator"},
-						{Name: "InterPodAffinityForSimulator"},
+						{Name: "PodTopologySpreadWrapped"},
+						{Name: "InterPodAffinityWrapped"},
 					},
 					Disabled: []v1beta2.Plugin{
 						{
@@ -76,8 +76,8 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 				Score: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
-						{Name: "PodTopologySpreadForSimulator", Weight: &weight2},
-						{Name: "TaintTolerationForSimulator", Weight: &weight1},
+						{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+						{Name: "TaintTolerationWrapped", Weight: &weight1},
 					},
 					Disabled: []v1beta2.Plugin{
 						{
@@ -116,8 +116,8 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 				Score: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
-						{Name: "PodTopologySpreadForSimulator", Weight: &weight2},
-						{Name: "TaintTolerationForSimulator", Weight: &weight1},
+						{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+						{Name: "TaintTolerationWrapped", Weight: &weight1},
 					},
 					Disabled: []v1beta2.Plugin{
 						{
@@ -135,7 +135,7 @@ func TestConvertForSimulator(t *testing.T) {
 			t.Parallel()
 			got, err := ConvertForSimulator(tt.arg)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ConvertForSimulator() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ConvertWrapped() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			assert.Equal(t, tt.want, got)
@@ -239,9 +239,9 @@ func Test_NewPluginConfig(t *testing.T) {
 							},
 						}
 					}
-					if pc[i].Name == "InterPodAffinityForSimulator" {
+					if pc[i].Name == "InterPodAffinityWrapped" {
 						pc[i] = v1beta2.PluginConfig{
-							Name: "InterPodAffinityForSimulator",
+							Name: "InterPodAffinityWrapped",
 							Args: runtime.RawExtension{
 								Object: &v1beta2.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
@@ -305,9 +305,9 @@ func Test_NewPluginConfig(t *testing.T) {
 							},
 						}
 					}
-					if pc[i].Name == "InterPodAffinityForSimulator" {
+					if pc[i].Name == "InterPodAffinityWrapped" {
 						pc[i] = v1beta2.PluginConfig{
-							Name: "InterPodAffinityForSimulator",
+							Name: "InterPodAffinityWrapped",
 							Args: runtime.RawExtension{
 								Object: &v1beta2.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
@@ -362,9 +362,9 @@ func Test_NewPluginConfig(t *testing.T) {
 							},
 						}
 					}
-					if pc[i].Name == "InterPodAffinityForSimulator" {
+					if pc[i].Name == "InterPodAffinityWrapped" {
 						pc[i] = v1beta2.PluginConfig{
-							Name: "InterPodAffinityForSimulator",
+							Name: "InterPodAffinityWrapped",
 							Args: runtime.RawExtension{
 								Object: &v1beta2.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
@@ -476,7 +476,7 @@ func Test_newWrappedPlugin(t *testing.T) {
 				weight: 0,
 			},
 			want: &wrappedPlugin{
-				name:                 "fakeFilterPluginForSimulator",
+				name:                 "fakeFilterPluginWrapped",
 				originalFilterPlugin: fakeFilterPlugin{},
 				originalScorePlugin:  nil,
 				weight:               0,
@@ -491,7 +491,7 @@ func Test_newWrappedPlugin(t *testing.T) {
 				weight: 1,
 			},
 			want: &wrappedPlugin{
-				name:                 "fakeScorePluginForSimulator",
+				name:                 "fakeScorePluginWrapped",
 				originalFilterPlugin: nil,
 				originalScorePlugin:  fakeScorePlugin{},
 				weight:               1,
@@ -506,7 +506,7 @@ func Test_newWrappedPlugin(t *testing.T) {
 				weight: 1,
 			},
 			want: &wrappedPlugin{
-				name:                 "fakeFilterScorePluginForSimulator",
+				name:                 "fakeFilterScorePluginWrapped",
 				originalFilterPlugin: fakeFilterScorePlugin{},
 				originalScorePlugin:  fakeFilterScorePlugin{},
 				weight:               1,
@@ -534,7 +534,7 @@ func Test_pluginName(t *testing.T) {
 		{
 			name:       "success",
 			pluginName: "pluginname",
-			want:       "pluginnameForSimulator",
+			want:       "pluginnameWrapped",
 		},
 	}
 	for _, tt := range tests {
@@ -639,8 +639,8 @@ func Test_wrappedPlugin_Name(t *testing.T) {
 	}{
 		{
 			name:   "success",
-			fields: fields{name: "pluginForSimulator"},
-			want:   "pluginForSimulator",
+			fields: fields{name: "pluginWrapped"},
+			want:   "pluginWrapped",
 		},
 	}
 	for _, tt := range tests {
@@ -953,7 +953,7 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 			},
 		},
 		{
-			Name: "NodeResourcesBalancedAllocationForSimulator",
+			Name: "NodeResourcesBalancedAllocationWrapped",
 			Args: runtime.RawExtension{
 				Object: &v1beta2.NodeResourcesBalancedAllocationArgs{
 					TypeMeta: metav1.TypeMeta{
@@ -974,7 +974,7 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 			},
 		},
 		{
-			Name: "InterPodAffinityForSimulator",
+			Name: "InterPodAffinityWrapped",
 			Args: runtime.RawExtension{
 				Object: &v1beta2.InterPodAffinityArgs{
 					TypeMeta: metav1.TypeMeta{
@@ -986,7 +986,7 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 			},
 		},
 		{
-			Name: "NodeResourcesFitForSimulator",
+			Name: "NodeResourcesFitWrapped",
 			Args: runtime.RawExtension{
 				Object: &v1beta2.NodeResourcesFitArgs{
 					TypeMeta: metav1.TypeMeta{
@@ -1010,7 +1010,7 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 			},
 		},
 		{
-			Name: "NodeAffinityForSimulator",
+			Name: "NodeAffinityWrapped",
 			Args: runtime.RawExtension{
 				Object: &v1beta2.NodeAffinityArgs{
 					TypeMeta: metav1.TypeMeta{
@@ -1021,7 +1021,7 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 			},
 		},
 		{
-			Name: "PodTopologySpreadForSimulator",
+			Name: "PodTopologySpreadWrapped",
 			Args: runtime.RawExtension{
 				Object: &v1beta2.PodTopologySpreadArgs{
 					TypeMeta: metav1.TypeMeta{
@@ -1033,7 +1033,7 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 			},
 		},
 		{
-			Name: "VolumeBindingForSimulator",
+			Name: "VolumeBindingWrapped",
 			Args: runtime.RawExtension{
 				Object: &v1beta2.VolumeBindingArgs{
 					TypeMeta: metav1.TypeMeta{
