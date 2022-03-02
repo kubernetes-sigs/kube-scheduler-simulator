@@ -245,7 +245,7 @@ type wrappedPlugin struct {
 }
 
 const (
-	pluginSuffix = "ForSimulator"
+	pluginSuffix = "Wrapped"
 )
 
 func pluginName(pluginName string) string {
