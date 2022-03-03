@@ -33,7 +33,7 @@ You can pass a KubeSchedulerConfiguration file via the environment variable `KUB
 
 Note: changes to any fields other than `.profiles` are disabled on simulator, since they do not affect the results of the scheduling.
 
-![configure scheduler](./docs/images/schedulerconfiguration.jpg)
+![configure scheduler](./docs/images/schedulerconfiguration.png)
 
 ## Background
 
