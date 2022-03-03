@@ -141,11 +141,11 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 				profile2 := cfg.Profiles[0].DeepCopy()
 				profile2.SchedulerName = nondefaultschedulername
 				profile2.Plugins.Score.Enabled = []config.Plugin{
-					{Name: "NodeResourcesBalancedAllocationForSimulator", Weight: 1},
-					{Name: "InterPodAffinityForSimulator", Weight: 1},
-					{Name: "NodeAffinityForSimulator", Weight: 1},
-					{Name: "PodTopologySpreadForSimulator", Weight: 2},
-					{Name: "TaintTolerationForSimulator", Weight: 1},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: 1},
+					{Name: "InterPodAffinityWrapped", Weight: 1},
+					{Name: "NodeAffinityWrapped", Weight: 1},
+					{Name: "PodTopologySpreadWrapped", Weight: 2},
+					{Name: "TaintTolerationWrapped", Weight: 1},
 				}
 				cfg.Profiles = append(cfg.Profiles, *profile2)
 				return &cfg
@@ -220,9 +220,9 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							},
 						}
 					}
-					if profile2.PluginConfig[i].Name == "InterPodAffinityForSimulator" {
+					if profile2.PluginConfig[i].Name == "InterPodAffinityWrapped" {
 						profile2.PluginConfig[i] = config.PluginConfig{
-							Name: "InterPodAffinityForSimulator",
+							Name: "InterPodAffinityWrapped",
 							Args: &config.InterPodAffinityArgs{
 								HardPodAffinityWeight: hardPodAffinityWeight,
 							},
@@ -261,11 +261,11 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				cfg.Profiles[0].Plugins.Score.Enabled = []config.Plugin{
-					{Name: "NodeResourcesBalancedAllocationForSimulator", Weight: 1},
-					{Name: "InterPodAffinityForSimulator", Weight: 1},
-					{Name: "NodeAffinityForSimulator", Weight: 1},
-					{Name: "PodTopologySpreadForSimulator", Weight: 2},
-					{Name: "TaintTolerationForSimulator", Weight: 1},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: 1},
+					{Name: "InterPodAffinityWrapped", Weight: 1},
+					{Name: "NodeAffinityWrapped", Weight: 1},
+					{Name: "PodTopologySpreadWrapped", Weight: 2},
+					{Name: "TaintTolerationWrapped", Weight: 1},
 				}
 				return &cfg
 			}(),
@@ -305,30 +305,30 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 	versioned, _ := defaultconfig.DefaultSchedulerConfig()
 	cfg := versioned.DeepCopy()
 	cfg.Profiles[0].Plugins.Filter.Enabled = []v1beta2config.Plugin{
-		{Name: "NodeUnschedulableForSimulator"},
-		{Name: "NodeNameForSimulator"},
-		{Name: "TaintTolerationForSimulator"},
-		{Name: "NodeAffinityForSimulator"},
-		{Name: "NodePortsForSimulator"},
-		{Name: "NodeResourcesFitForSimulator"},
-		{Name: "VolumeRestrictionsForSimulator"},
-		{Name: "EBSLimitsForSimulator"},
-		{Name: "GCEPDLimitsForSimulator"},
-		{Name: "NodeVolumeLimitsForSimulator"},
-		{Name: "AzureDiskLimitsForSimulator"},
-		{Name: "VolumeBindingForSimulator"},
-		{Name: "VolumeZoneForSimulator"},
-		{Name: "PodTopologySpreadForSimulator"},
-		{Name: "InterPodAffinityForSimulator"},
+		{Name: "NodeUnschedulableWrapped"},
+		{Name: "NodeNameWrapped"},
+		{Name: "TaintTolerationWrapped"},
+		{Name: "NodeAffinityWrapped"},
+		{Name: "NodePortsWrapped"},
+		{Name: "NodeResourcesFitWrapped"},
+		{Name: "VolumeRestrictionsWrapped"},
+		{Name: "EBSLimitsWrapped"},
+		{Name: "GCEPDLimitsWrapped"},
+		{Name: "NodeVolumeLimitsWrapped"},
+		{Name: "AzureDiskLimitsWrapped"},
+		{Name: "VolumeBindingWrapped"},
+		{Name: "VolumeZoneWrapped"},
+		{Name: "PodTopologySpreadWrapped"},
+		{Name: "InterPodAffinityWrapped"},
 	}
 	cfg.Profiles[0].Plugins.Score.Enabled = []v1beta2config.Plugin{
-		{Name: "NodeResourcesBalancedAllocationForSimulator", Weight: &weight1},
-		{Name: "ImageLocalityForSimulator", Weight: &weight1},
-		{Name: "InterPodAffinityForSimulator", Weight: &weight1},
-		{Name: "NodeResourcesFitForSimulator", Weight: &weight1},
-		{Name: "NodeAffinityForSimulator", Weight: &weight1},
-		{Name: "PodTopologySpreadForSimulator", Weight: &weight2},
-		{Name: "TaintTolerationForSimulator", Weight: &weight1},
+		{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
+		{Name: "ImageLocalityWrapped", Weight: &weight1},
+		{Name: "InterPodAffinityWrapped", Weight: &weight1},
+		{Name: "NodeResourcesFitWrapped", Weight: &weight1},
+		{Name: "NodeAffinityWrapped", Weight: &weight1},
+		{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+		{Name: "TaintTolerationWrapped", Weight: &weight1},
 	}
 	pcMap := map[string]runtime.RawExtension{}
 	for _, c := range cfg.Profiles[0].PluginConfig {
@@ -337,27 +337,27 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 
 	var newpc []v1beta2config.PluginConfig
 	newpc = append(newpc, v1beta2config.PluginConfig{
-		Name: "NodeResourcesBalancedAllocationForSimulator",
+		Name: "NodeResourcesBalancedAllocationWrapped",
 		Args: pcMap["NodeResourcesBalancedAllocation"],
 	})
 	newpc = append(newpc, v1beta2config.PluginConfig{
-		Name: "InterPodAffinityForSimulator",
+		Name: "InterPodAffinityWrapped",
 		Args: pcMap["InterPodAffinity"],
 	})
 	newpc = append(newpc, v1beta2config.PluginConfig{
-		Name: "NodeResourcesFitForSimulator",
+		Name: "NodeResourcesFitWrapped",
 		Args: pcMap["NodeResourcesFit"],
 	})
 	newpc = append(newpc, v1beta2config.PluginConfig{
-		Name: "NodeAffinityForSimulator",
+		Name: "NodeAffinityWrapped",
 		Args: pcMap["NodeAffinity"],
 	})
 	newpc = append(newpc, v1beta2config.PluginConfig{
-		Name: "PodTopologySpreadForSimulator",
+		Name: "PodTopologySpreadWrapped",
 		Args: pcMap["PodTopologySpread"],
 	})
 	newpc = append(newpc, v1beta2config.PluginConfig{
-		Name: "VolumeBindingForSimulator",
+		Name: "VolumeBindingWrapped",
 		Args: pcMap["VolumeBinding"],
 	})
 
