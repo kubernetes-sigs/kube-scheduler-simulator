@@ -1,6 +1,6 @@
 <template>
   <DataTable
-    :label="`Pods`"
+    :title="`Pods`"
     :headers="headers"
     :items="pods"
     :on-click="onClick"

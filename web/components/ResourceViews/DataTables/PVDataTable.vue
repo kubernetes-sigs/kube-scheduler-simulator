@@ -1,6 +1,6 @@
 <template>
   <DataTable
-    :label="`PersistentVolumes`"
+    :title="`PersistentVolumes`"
     :headers="headers"
     :items="pvs"
     :on-click="onClick"

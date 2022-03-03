@@ -4,7 +4,7 @@
       <v-card class="ma-2" outlined>
         <v-card-title class="mb-1">
           <v-row
-            ><v-col> {{ label }} <v-spacer></v-spacer> </v-col
+            ><v-col> {{ title }} <v-spacer></v-spacer> </v-col
             ><v-col>
               <v-text-field
                 v-model="search"
@@ -35,7 +35,7 @@ export default defineComponent({
       type: Array,
       default: () => [],
     },
-    label: {
+    title: {
       type: String,
       default: "",
     },

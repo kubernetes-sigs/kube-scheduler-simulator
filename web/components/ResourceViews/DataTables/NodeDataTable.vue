@@ -1,6 +1,6 @@
 <template>
   <DataTable
-    :label="`Nodes`"
+    :title="`Nodes`"
     :headers="headers"
     :items="nodes"
     :on-click="onClick"

@@ -1,6 +1,6 @@
 <template>
   <DataTable
-    :label="`PriorityClasses`"
+    :title="`PriorityClasses`"
     :headers="headers"
     :items="priorityclasses"
     :on-click="onClick"
