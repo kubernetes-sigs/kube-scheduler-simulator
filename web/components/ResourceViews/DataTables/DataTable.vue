@@ -19,6 +19,7 @@
           :items-per-page="5"
           :search="search"
           multi-sort
+          class="row-pointer"
           @click:row="onClick"
         ></v-data-table>
       </v-card>
@@ -57,3 +58,9 @@ export default defineComponent({
   },
 });
 </script>
+
+<style>
+.row-pointer > .v-data-table__wrapper > table > tbody > tr:hover {
+  cursor: pointer;
+}
+</style>
