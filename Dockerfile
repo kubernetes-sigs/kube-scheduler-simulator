@@ -8,10 +8,8 @@ ENV GO111MODULE=on
 WORKDIR /go/src/simulator-server
 
 COPY go.mod go.sum ./
-RUN go mod download
-
 COPY . .
-RUN go build -v -o ./bin/simulator simulator.go
+RUN make build
 
 FROM alpine:3.14.0
 

@@ -16,16 +16,20 @@ format:
 	golangci-lint run --fix ./...
 
 .PHONY: test
-test:
+test: openapi
 	go test ./...
 
 .PHONY: mod-download
 mod-download: ## Downloads the Go module
-		go mod download -x
+	go mod download -x
+
+.PHONY: vendor
+vendor: mod-download
+	go mod vendor
 
 .PHONY: build
-build:
-	go build -o ./bin/simulator ./simulator.go
+build: openapi 
+	go build -v -o ./bin/simulator ./simulator.go
 
 .PHONY: start
 start: build
@@ -33,18 +37,18 @@ start: build
 
 # re-generate openapi file for running api-server
 .PHONY: openapi
-openapi:
+openapi: vendor
 	./hack/openapi.sh
 
 .PHONY: docker_build
 docker_build: docker_build_server docker_build_front
 
 .PHONY: docker_build_server
-docker_build_server:
+docker_build_server: 
 	docker build -t simulator-server .
 
 .PHONY: docker_build_front
-docker_build_front:
+docker_build_front: 
 	docker build -t simulator-frontend ./web/
 
 .PHONY: docker_up
