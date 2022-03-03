@@ -1,30 +1,10 @@
 <template>
-  <v-row>
-    <v-col>
-      <v-card class="ma-2" outlined>
-        <v-card-title class="mb-1">
-          <v-row
-            ><v-col>Pods<v-spacer></v-spacer> </v-col
-            ><v-col>
-              <v-text-field
-                v-model="search"
-                append-icon="mdi-magnify"
-                label="Search"
-                single-line
-                hide-details
-              ></v-text-field></v-col
-          ></v-row> </v-card-title
-        ><v-data-table
-          :headers="headers"
-          :items="pods"
-          :items-per-page="5"
-          :search="search"
-          multi-sort
-          @click:row="onClick"
-        ></v-data-table>
-      </v-card>
-    </v-col>
-  </v-row>
+  <DataTable
+    :label="`Pods`"
+    :headers="headers"
+    :items="pods"
+    :on-click="onClick"
+  />
 </template>
 
 <script lang="ts">
@@ -35,10 +15,14 @@ import {
   onMounted,
   defineComponent,
 } from "@nuxtjs/composition-api";
+import DataTable from "./DataTable.vue";
 import {} from "../../lib/util";
 import PodStoreKey from "../../StoreKey/PodStoreKey";
 
 export default defineComponent({
+  components: {
+    DataTable,
+  },
   setup() {
     const store = inject(PodStoreKey);
     if (!store) {
