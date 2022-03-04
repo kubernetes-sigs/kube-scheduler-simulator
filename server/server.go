@@ -51,34 +51,58 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 
 	v1.PUT("/reset", resetHandler.Reset)
 
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/nodes", nodeHandler.ListNode)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.POST("/nodes", nodeHandler.ApplyNode)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/nodes/:name", nodeHandler.GetNode)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.DELETE("/nodes/:name", nodeHandler.DeleteNode)
 
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/pods", podHandler.ListPod)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.POST("/pods", podHandler.ApplyPod)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/pods/:name", podHandler.GetPod)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.DELETE("/pods/:name", podHandler.DeletePod)
 
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/persistentvolumes", pvHandler.ListPersistentVolume)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.POST("/persistentvolumes", pvHandler.ApplyPersistentVolume)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/persistentvolumes/:name", pvHandler.GetPersistentVolume)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.DELETE("/persistentvolumes/:name", pvHandler.DeletePersistentVolume)
 
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/persistentvolumeclaims", pvcHandler.ListPersistentVolumeClaim)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.POST("/persistentvolumeclaims", pvcHandler.ApplyPersistentVolumeClaim)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/persistentvolumeclaims/:name", pvcHandler.GetPersistentVolumeClaim)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.DELETE("/persistentvolumeclaims/:name", pvcHandler.DeletePersistentVolumeClaim)
 
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/storageclasses", storageClassHandler.ListStorageClass)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.POST("/storageclasses", storageClassHandler.ApplyStorageClass)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/storageclasses/:name", storageClassHandler.GetStorageClass)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.DELETE("/storageclasses/:name", storageClassHandler.DeleteStorageClass)
 
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/priorityclasses", priorityClassHandler.ListPriorityClass)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.POST("/priorityclasses", priorityClassHandler.ApplyPriorityClass)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.GET("/priorityclasses/:name", priorityClassHandler.GetPriorityClass)
+	//nolint: staticcheck // we need to use deprecated APIs for now.
 	v1.DELETE("/priorityclasses/:name", priorityClassHandler.DeletePriorityClass)
 
 	v1.GET("/export", exportHandler.Export)
