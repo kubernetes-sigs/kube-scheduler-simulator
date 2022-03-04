@@ -1,6 +1,5 @@
 import { V1PriorityClass, V1PriorityClassList } from "@kubernetes/client-node";
 import { k8sSchedulingInstance } from "@/api/v1/index";
-import axios from "axios";
 
 export const applyPriorityClass = async (
   req: V1PriorityClass,
@@ -11,17 +10,15 @@ export const applyPriorityClass = async (
       onError("metadata.name is not provided");
       return;
     }
+    req.kind = "PriorityClass";
+    req.apiVersion = "scheduling.k8s.io/v1";
     const res = await k8sSchedulingInstance.patch<V1PriorityClass>(
       `/priorityclasses/${req.metadata.name}?fieldManager=simulator`,
       req,
-      { headers: { "Content-Type": "application/strategic-merge-patch+json" } }
+      { headers: { "Content-Type": "application/apply-patch+yaml" } }
     );
     return res.data;
   } catch (e: any) {
-    if (axios.isAxiosError(e) && e.response && e.response.status === 404) {
-      const res = await createPriorityClass(req, onError);
-      return res;
-    }
     onError("failed to applyPriorityClass: " + e);
   }
 };
@@ -65,20 +62,5 @@ export const deletePriorityClass = async (
     return res.data;
   } catch (e: any) {
     onError("failed to deletePriorityClass: " + e);
-  }
-};
-
-const createPriorityClass = async (
-  req: V1PriorityClass,
-  onError: (_: string) => void
-) => {
-  try {
-    const res = await k8sSchedulingInstance.post<V1PriorityClass>(
-      `/priorityclasses?fieldManager=simulator`,
-      req
-    );
-    return res.data;
-  } catch (e: any) {
-    onError("failed to createPriorityClass: " + e);
   }
 };

@@ -1,6 +1,5 @@
 import { V1StorageClass, V1StorageClassList } from "@kubernetes/client-node";
 import { k8sStorageInstance } from "@/api/v1/index";
-import axios from "axios";
 
 export const applyStorageClass = async (
   req: V1StorageClass,
@@ -11,17 +10,15 @@ export const applyStorageClass = async (
       onError("metadata.name is not provided");
       return;
     }
+    req.kind = "StorageClass";
+    req.apiVersion = "storage.k8s.io/v1";
     const res = await k8sStorageInstance.patch<V1StorageClass>(
       `/storageclasses/${req.metadata.name}?fieldManager=simulator`,
       req,
-      { headers: { "Content-Type": "application/strategic-merge-patch+json" } }
+      { headers: { "Content-Type": "application/apply-patch+yaml" } }
     );
     return res.data;
   } catch (e: any) {
-    if (axios.isAxiosError(e) && e.response && e.response.status === 404) {
-      const res = await createStorageClass(req, onError);
-      return res;
-    }
     onError("failed to applyStorageClass: " + e);
   }
 };
@@ -62,20 +59,5 @@ export const deleteStorageClass = async (
     return res.data;
   } catch (e: any) {
     onError("failed to deleteStorageClass: " + e);
-  }
-};
-
-const createStorageClass = async (
-  req: V1StorageClass,
-  onError: (_: string) => void
-) => {
-  try {
-    const res = await k8sStorageInstance.post<V1StorageClass>(
-      `/storageclasses?fieldManager=simulator`,
-      req
-    );
-    return res.data;
-  } catch (e: any) {
-    onError("failed to createStorageClass: " + e);
   }
 };
