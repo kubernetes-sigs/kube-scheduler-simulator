@@ -1,15 +1,12 @@
 package plugin
 
 import (
-	"context"
 	"encoding/json"
 
 	"golang.org/x/xerrors"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/klog/v2"
 	"k8s.io/kube-scheduler/config/v1beta2"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins"
@@ -18,8 +15,6 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
 	schedulingresultstore "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/plugin/resultstore"
 )
-
-//go:generate mockgen -destination=./mock/$GOFILE -source=$GOFILE
 
 func NewRegistry(informerFactory informers.SharedInformerFactory, client clientset.Interface) (map[string]schedulerRuntime.PluginFactory, error) {
 	defaultScorePluginWeight := map[string]int32{}
@@ -225,110 +220,4 @@ func defaultFilterScorePlugins() ([]v1beta2.Plugin, error) {
 	defaultpls := append(defaultscorepls, defaultfilterpls...)
 
 	return defaultpls, nil
-}
-
-type store interface {
-	AddNormalizedScoreResult(namespace, podName, nodeName, pluginName string, normalizedscore int64)
-	AddFilterResult(namespace, podName, nodeName, pluginName, reason string)
-	AddScoreResult(namespace, podName, nodeName, pluginName string, score int64)
-}
-
-// wrappedPlugin behaves as if it is original plugin, but it records result of plugin.
-// All wrappedPlugin's name is originalPlugin name + pluginSuffix.
-type wrappedPlugin struct {
-	name                 string
-	originalFilterPlugin framework.FilterPlugin
-	originalScorePlugin  framework.ScorePlugin
-	weight               int32
-
-	store store
-}
-
-const (
-	pluginSuffix = "Wrapped"
-)
-
-func pluginName(pluginName string) string {
-	return pluginName + pluginSuffix
-}
-
-// newWrappedPlugin makes wrappedPlugin from score or/and filter plugin.
-func newWrappedPlugin(s store, p framework.Plugin, weight int32) framework.Plugin {
-	plg := &wrappedPlugin{
-		name:   pluginName(p.Name()),
-		weight: weight,
-		store:  s,
-	}
-
-	fp, ok := p.(framework.FilterPlugin)
-	if ok {
-		plg.originalFilterPlugin = fp
-	}
-
-	sp, ok := p.(framework.ScorePlugin)
-	if ok {
-		plg.originalScorePlugin = sp
-	}
-
-	return plg
-}
-
-func (w *wrappedPlugin) Name() string { return w.name }
-func (w *wrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
-	if w.originalScorePlugin != nil && w.originalScorePlugin.ScoreExtensions() != nil {
-		return w
-	}
-	return nil
-}
-
-func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
-	if w.originalScorePlugin == nil || w.originalScorePlugin.ScoreExtensions() == nil {
-		// return nil not to affect scoring
-		return nil
-	}
-
-	s := w.originalScorePlugin.ScoreExtensions().NormalizeScore(ctx, state, pod, scores)
-	if !s.IsSuccess() {
-		klog.Errorf("failed to run normalize score: %v, %v", s.Code(), s.Message())
-		return s
-	}
-
-	for _, s := range scores {
-		w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, s.Name, w.originalScorePlugin.Name(), s.Score)
-	}
-
-	return nil
-}
-
-func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
-	if w.originalScorePlugin == nil {
-		// return zero-score and nil not to affect scoring
-		return 0, nil
-	}
-
-	score, s := w.originalScorePlugin.Score(ctx, state, pod, nodeName)
-	if !s.IsSuccess() {
-		klog.Errorf("failed to run score plugin: %v, %v", s.Code(), s.Message())
-		return score, s
-	}
-
-	w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, w.originalScorePlugin.Name(), score)
-
-	return score, s
-}
-
-func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
-	if w.originalFilterPlugin == nil {
-		// return nil not to affect filtering
-		return nil
-	}
-
-	s := w.originalFilterPlugin.Filter(ctx, state, pod, nodeInfo)
-	if s.IsSuccess() {
-		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), schedulingresultstore.PassedFilterMessage)
-		return s
-	}
-
-	w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), s.Message())
-	return s
 }
