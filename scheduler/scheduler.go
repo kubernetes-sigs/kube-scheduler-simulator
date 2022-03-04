@@ -69,7 +69,9 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 
 	evtBroadcaster.StartRecordingToSink(ctx.Done())
 
-	cfg, converted, err := convertConfigurationForSimulator(versionedcfg)
+	s.currentSchedulerCfg = versionedcfg.DeepCopy()
+
+	cfg, err := convertConfigurationForSimulator(versionedcfg)
 	if err != nil {
 		cancel()
 		return xerrors.Errorf("convert scheduler config to apply: %w", err)
@@ -100,8 +102,6 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 		return xerrors.Errorf("create scheduler: %w", err)
 	}
 
-	s.currentSchedulerCfg = converted.DeepCopy()
-
 	informerFactory.Start(ctx.Done())
 	informerFactory.WaitForCacheSync(ctx.Done())
 
@@ -127,8 +127,7 @@ func (s *Service) GetSchedulerConfig() *v1beta2config.KubeSchedulerConfiguration
 // (1) It excludes non-allowed changes. Now, we accept only changes to Profiles.Plugins field.
 // (2) It replaces filter/score default-plugins with plugins for simulator.
 // (3) It convert KubeSchedulerConfiguration from v1beta2config.KubeSchedulerConfiguration to config.KubeSchedulerConfiguration.
-// (4) It also creates a converted v1beta2config.KubeSchedulerConfiguration for UI display/edit/re-apply.
-func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConfiguration) (*config.KubeSchedulerConfiguration, *v1beta2config.KubeSchedulerConfiguration, error) {
+func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConfiguration) (*config.KubeSchedulerConfiguration, error) {
 	if len(versioned.Profiles) == 0 {
 		defaultSchedulerName := v1.DefaultSchedulerName
 		versioned.Profiles = []v1beta2config.KubeSchedulerProfile{
@@ -146,20 +145,20 @@ func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConf
 
 		plugins, err := plugin.ConvertForSimulator(versioned.Profiles[i].Plugins)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("convert plugins for simulator: %w", err)
+			return nil, xerrors.Errorf("convert plugins for simulator: %w", err)
 		}
 		versioned.Profiles[i].Plugins = plugins
 
 		pluginConfigForSimulatorPlugins, err := plugin.NewPluginConfig(versioned.Profiles[i].PluginConfig)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("get plugin configs: %w", err)
+			return nil, xerrors.Errorf("get plugin configs: %w", err)
 		}
 		versioned.Profiles[i].PluginConfig = pluginConfigForSimulatorPlugins
 	}
 
 	defaultCfg, err := defaultconfig.DefaultSchedulerConfig()
 	if err != nil {
-		return nil, nil, xerrors.Errorf("get default scheduler config: %w", err)
+		return nil, xerrors.Errorf("get default scheduler config: %w", err)
 	}
 
 	// set default value to all field other than Profiles.
@@ -169,9 +168,9 @@ func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConf
 	v1beta2.SetDefaults_KubeSchedulerConfiguration(versioned)
 	cfg := config.KubeSchedulerConfiguration{}
 	if err := scheme.Scheme.Convert(versioned, &cfg, nil); err != nil {
-		return nil, nil, xerrors.Errorf("convert configuration: %w", err)
+		return nil, xerrors.Errorf("convert configuration: %w", err)
 	}
 	cfg.SetGroupVersionKind(v1beta2config.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
 
-	return &cfg, versioned, nil
+	return &cfg, nil
 }

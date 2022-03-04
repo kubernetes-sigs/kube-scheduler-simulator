@@ -2,7 +2,6 @@ package scheduler
 
 import (
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -276,46 +275,27 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			gotCfg, gotVersioned, err := convertConfigurationForSimulator(tt.args.versioned)
+			got, err := convertConfigurationForSimulator(tt.args.versioned)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("convertConfigurationForSimulator() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			assert.Equal(t, tt.want.TypeMeta, gotVersioned.TypeMeta)
-			assert.Equal(t, tt.want.TypeMeta, gotCfg.TypeMeta)
-			assertMatchingProfiles(t, tt.want, gotCfg, gotVersioned)
-			assert.Equal(t, tt.want, gotCfg)
-		})
-	}
-}
+			if len(got.Profiles) != len(tt.want.Profiles) {
+				t.Errorf("unmatch length of profiles, want: %v, got: %v", len(tt.want.Profiles), len(got.Profiles))
+				return
+			}
 
-// Limited matching to test that the returned profiles match the wanted profiles.
-func assertMatchingProfiles(t *testing.T, want *config.KubeSchedulerConfiguration, gotCfg *config.KubeSchedulerConfiguration, gotVersioned *v1beta2config.KubeSchedulerConfiguration) {
-	t.Helper()
-	assert.Equal(t, len(want.Profiles), len(gotCfg.Profiles),
-		"unmatch length of config profiles, want: %v, got: %v", len(want.Profiles), len(gotCfg.Profiles))
-	assert.Equal(t, len(want.Profiles), len(gotVersioned.Profiles),
-		"unmatch length of versioned profiles, want: %v, got: %v", len(want.Profiles), len(gotVersioned.Profiles))
+			for k := range got.Profiles {
+				sort.SliceStable(got.Profiles[k].PluginConfig, func(i, j int) bool {
+					return got.Profiles[k].PluginConfig[i].Name < got.Profiles[k].PluginConfig[j].Name
+				})
+				sort.SliceStable(tt.want.Profiles[k].PluginConfig, func(i, j int) bool {
+					return tt.want.Profiles[k].PluginConfig[i].Name < tt.want.Profiles[k].PluginConfig[j].Name
+				})
+			}
 
-	for k := range gotCfg.Profiles {
-		sort.SliceStable(gotCfg.Profiles[k].PluginConfig, func(i, j int) bool {
-			return gotCfg.Profiles[k].PluginConfig[i].Name < gotCfg.Profiles[k].PluginConfig[j].Name
+			assert.Equal(t, tt.want, got)
 		})
-		sort.SliceStable(gotVersioned.Profiles[k].PluginConfig, func(i, j int) bool {
-			return gotVersioned.Profiles[k].PluginConfig[i].Name < gotVersioned.Profiles[k].PluginConfig[j].Name
-		})
-		sort.SliceStable(want.Profiles[k].PluginConfig, func(i, j int) bool {
-			return want.Profiles[k].PluginConfig[i].Name < want.Profiles[k].PluginConfig[j].Name
-		})
-	}
-
-	for i := range want.Profiles {
-		for j := range want.Profiles[i].PluginConfig {
-			assert.Equal(t, want.Profiles[i].PluginConfig[j].Name, gotVersioned.Profiles[i].PluginConfig[j].Name)
-			assert.Contains(t,
-				gotVersioned.Profiles[i].PluginConfig[j].Args.Object.GetObjectKind().GroupVersionKind().Kind,
-				strings.Split(gotVersioned.Profiles[i].PluginConfig[j].Name, "ForSimulator")[0])
-		}
 	}
 }
 
