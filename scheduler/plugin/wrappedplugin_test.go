@@ -514,7 +514,7 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 	}
 	tests := []struct {
 		name              string
-		prepareEachMockFn func(ctx context.Context, m *mock_plugin.MockStore, p *mock_plugin.MockScorePlugin, se *mock_plugin.MockScorePluginExtender, as args)
+		prepareEachMockFn func(ctx context.Context, s *mock_plugin.MockStore, p *mock_plugin.MockScorePlugin, se *mock_plugin.MockScorePluginExtender, as args)
 		args              args
 		want              int64
 		wantstatus        *framework.Status
