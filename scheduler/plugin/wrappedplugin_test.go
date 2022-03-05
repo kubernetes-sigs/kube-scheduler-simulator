@@ -200,7 +200,7 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 	}
 	tests := []struct {
 		name              string
-		prepareEachMockFn func(ctx context.Context, m *mock_plugin.MockStore, p *mock_plugin.MockFilterPlugin, fe *mock_plugin.MockFilterPluginExtender, as args)
+		prepareEachMockFn func(ctx context.Context, s *mock_plugin.MockStore, p *mock_plugin.MockFilterPlugin, fe *mock_plugin.MockFilterPluginExtender, as args)
 		args              args
 		wantstatus        *framework.Status
 	}{
@@ -431,6 +431,246 @@ func Test_wrappedPlugin_NormalizeScore(t *testing.T) {
 			}
 			got := pl.NormalizeScore(context.Background(), nil, tt.args.pod, tt.args.scores)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		pod    *v1.Pod
+		scores framework.NodeScoreList
+	}
+	tests := []struct {
+		name                      string
+		prepareEachMockFn         func(ctx context.Context, s *mock_plugin.MockStore, se *mock_plugin.MockScoreExtensions, sp *mock_plugin.MockScorePlugin, spe *mock_plugin.MockNormalizeScorePluginExtender, as args)
+		calOnBeforeNormalizeScore func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList)
+		args                      args
+		wantScores                framework.NodeScoreList
+		wantstatus                *framework.Status
+	}{
+		{
+			name: "return nil when NormalizeScore is successful",
+			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, se *mock_plugin.MockScoreExtensions, sp *mock_plugin.MockScorePlugin, spe *mock_plugin.MockNormalizeScorePluginExtender, as args) {
+				calOnNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) {
+					for i := range scores {
+						scores[i].Score += 1000
+					}
+				}
+				calOnAfterNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList, fstatus *framework.Status) {
+					for i := range scores {
+						scores[i].Score += 1000
+					}
+				}
+				success1 := framework.NewStatus(framework.Success, "BeforeNormalizeScore returned")
+				success2 := framework.NewStatus(framework.Success, "NormalizeScore returned")
+				success3 := framework.NewStatus(framework.Success, "AfterNormalizeScore returned")
+				spe.EXPECT().BeforeNormalizeScore(ctx, nil, as.pod, as.scores).Return(success1).Do(calOnNormalizeScore)
+				sp.EXPECT().ScoreExtensions().Return(se).Times(2)
+				se.EXPECT().NormalizeScore(ctx, nil, as.pod, as.scores).Return(success2).Do(calOnNormalizeScore)
+				spe.EXPECT().AfterNormalizeScore(ctx, nil, as.pod, as.scores, success2).Return(success3).Do(calOnAfterNormalizeScore)
+				sp.EXPECT().Name().Return("fakeNormalizeScorePlugin").AnyTimes()
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "BeforefakeNormalizeScorePlugin", int64(1000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "BeforefakeNormalizeScorePlugin", int64(1010))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "fakeNormalizeScorePlugin", int64(2000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "fakeNormalizeScorePlugin", int64(2010))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "AfterfakeNormalizeScorePlugin", int64(3000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "AfterfakeNormalizeScorePlugin", int64(3010))
+			},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				scores: []framework.NodeScore{
+					{
+						Name:  "node1",
+						Score: 0,
+					},
+					{
+						Name:  "node2",
+						Score: 10,
+					},
+				},
+			},
+			wantScores: []framework.NodeScore{
+				{
+					Name:  "node1",
+					Score: 3000,
+				},
+				{
+					Name:  "node2",
+					Score: 3010,
+				},
+			},
+			wantstatus: nil,
+		},
+		{
+			name: "return AfterNormalizeScore's results when NormalizeScore is fails",
+			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, se *mock_plugin.MockScoreExtensions, sp *mock_plugin.MockScorePlugin, spe *mock_plugin.MockNormalizeScorePluginExtender, as args) {
+				calOnNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) {
+					for i := range scores {
+						scores[i].Score += 1000
+					}
+				}
+				calOnAfterNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList, fstatus *framework.Status) {
+					for i := range scores {
+						scores[i].Score += 1000
+					}
+				}
+				success1 := framework.NewStatus(framework.Success, "BeforeNormalizeScore returned")
+				failure := framework.NewStatus(framework.Error, "NormalizeScore returned")
+				success3 := framework.NewStatus(framework.Success, "AfterNormalizeScore returned")
+				spe.EXPECT().BeforeNormalizeScore(ctx, nil, as.pod, as.scores).Return(success1).Do(calOnNormalizeScore)
+				sp.EXPECT().ScoreExtensions().Return(se).Times(2)
+				se.EXPECT().NormalizeScore(ctx, nil, as.pod, as.scores).Return(failure).Do(calOnNormalizeScore)
+				spe.EXPECT().AfterNormalizeScore(ctx, nil, as.pod, as.scores, failure).Return(success3).Do(calOnAfterNormalizeScore)
+				sp.EXPECT().Name().Return("fakeNormalizeScorePlugin").AnyTimes()
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "BeforefakeNormalizeScorePlugin", int64(1000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "BeforefakeNormalizeScorePlugin", int64(1010))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "AfterfakeNormalizeScorePlugin", int64(3000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "AfterfakeNormalizeScorePlugin", int64(3010))
+				// NormalizeScore isnt't stores own results if return error.
+			},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				scores: []framework.NodeScore{
+					{
+						Name:  "node1",
+						Score: 0,
+					},
+					{
+						Name:  "node2",
+						Score: 10,
+					},
+				},
+			},
+			wantScores: []framework.NodeScore{
+				{
+					Name:  "node1",
+					Score: 3000,
+				},
+				{
+					Name:  "node2",
+					Score: 3010,
+				},
+			},
+			wantstatus: framework.NewStatus(framework.Success, "AfterNormalizeScore returned"),
+		},
+		{
+			name: "return nil, when NormalizeScore is successful and AfterNormalizeScore is fails",
+			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, se *mock_plugin.MockScoreExtensions, sp *mock_plugin.MockScorePlugin, spe *mock_plugin.MockNormalizeScorePluginExtender, as args) {
+				calOnNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) {
+					for i := range scores {
+						scores[i].Score += 1000
+					}
+				}
+				calOnAfterNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList, fstatus *framework.Status) {
+					for i := range scores {
+						scores[i].Score += 1000
+					}
+				}
+				success1 := framework.NewStatus(framework.Success, "BeforeNormalizeScore returned")
+				success2 := framework.NewStatus(framework.Success, "NormalizeScore returned")
+				failure := framework.NewStatus(framework.Error, "AfterNormalizeScore returned")
+				spe.EXPECT().BeforeNormalizeScore(ctx, nil, as.pod, as.scores).Return(success1).Do(calOnNormalizeScore)
+				sp.EXPECT().ScoreExtensions().Return(se).Times(2)
+				se.EXPECT().NormalizeScore(ctx, nil, as.pod, as.scores).Return(success2).Do(calOnNormalizeScore)
+				spe.EXPECT().AfterNormalizeScore(ctx, nil, as.pod, as.scores, success2).Return(failure).Do(calOnAfterNormalizeScore)
+				sp.EXPECT().Name().Return("fakeNormalizeScorePlugin").AnyTimes()
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "BeforefakeNormalizeScorePlugin", int64(1000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "BeforefakeNormalizeScorePlugin", int64(1010))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "fakeNormalizeScorePlugin", int64(2000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "fakeNormalizeScorePlugin", int64(2010))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "AfterfakeNormalizeScorePlugin", int64(3000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "AfterfakeNormalizeScorePlugin", int64(3010))
+			},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				scores: []framework.NodeScore{
+					{
+						Name:  "node1",
+						Score: 0,
+					},
+					{
+						Name:  "node2",
+						Score: 10,
+					},
+				},
+			},
+			wantScores: []framework.NodeScore{
+				{
+					Name:  "node1",
+					Score: 3000,
+				},
+				{
+					Name:  "node2",
+					Score: 3010,
+				},
+			},
+			wantstatus: nil,
+		},
+		{
+			name: "return BeforeNormalizeScore when BeforeNormalizeScore is fails",
+			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, se *mock_plugin.MockScoreExtensions, sp *mock_plugin.MockScorePlugin, spe *mock_plugin.MockNormalizeScorePluginExtender, as args) {
+				calOnNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) {
+					for i := range scores {
+						scores[i].Score += 1000
+					}
+				}
+				success1 := framework.NewStatus(framework.Error, "BeforeNormalizeScore returned")
+				spe.EXPECT().BeforeNormalizeScore(ctx, nil, as.pod, as.scores).Return(success1).Do(calOnNormalizeScore)
+				sp.EXPECT().ScoreExtensions().Return(se).Times(1)
+				sp.EXPECT().Name().Return("fakeNormalizeScorePlugin").AnyTimes()
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "BeforefakeNormalizeScorePlugin", int64(1000))
+				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "BeforefakeNormalizeScorePlugin", int64(1010))
+			},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				scores: []framework.NodeScore{
+					{
+						Name:  "node1",
+						Score: 0,
+					},
+					{
+						Name:  "node2",
+						Score: 10,
+					},
+				},
+			},
+			wantScores: []framework.NodeScore{
+				{
+					Name:  "node1",
+					Score: 1000,
+				},
+				{
+					Name:  "node2",
+					Score: 1010,
+				},
+			},
+			wantstatus: framework.NewStatus(framework.Error, "BeforeNormalizeScore returned"),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			s := mock_plugin.NewMockStore(ctrl)
+			se := mock_plugin.NewMockScoreExtensions(ctrl)
+			sp := mock_plugin.NewMockScorePlugin(ctrl)
+
+			spe := mock_plugin.NewMockNormalizeScorePluginExtender(ctrl)
+			e := &Extenders{
+				normalizeScorePluginExtender: spe,
+			}
+			ctx := context.Background()
+			tt.prepareEachMockFn(ctx, s, se, sp, spe, tt.args)
+			pl, ok := newWrappedPlugin(s, sp, 0, WithExtendersOption(e)).(*wrappedPlugin)
+			if !ok { // should never happen
+				t.Fatalf("Assert to wrapped plugin: %v", ok)
+			}
+			gotstatus := pl.NormalizeScore(ctx, nil, tt.args.pod, tt.args.scores)
+			assert.Equal(t, tt.wantScores, tt.args.scores)
+			assert.Equal(t, tt.wantstatus, gotstatus)
 		})
 	}
 }
