@@ -30,6 +30,7 @@ AwEHoUQDQgAEH6cuzP8XuD5wal6wf9M6xDljTOPLX2i8uIp/C/ASqiIGUeeKQtX0
 -----END EC PRIVATE KEY-----`
 
 // StartAPIServer starts both the secure k8sAPIServer and proxy server to handle insecure serving, and it make panic when a error happen.
+//nolint:funlen
 func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config, func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -51,23 +52,15 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 	klog.InfoS("starting proxy server", "URL", s.URL)
 	s.Start()
 
-	serverOpts := apiserveropts.NewServerRunOptions()
-	serverOpts.Etcd.StorageConfig.Transport.ServerList = []string{etcdURL}
-	serverOpts.Authorization.Modes = []string{authzmodes.ModeRBAC}
-	serverOpts.Authentication.Anonymous.Allow = true
-	serverOpts.APIEnablement.RuntimeConfig.Set("api/all=true")
-	saSigningKeyFile, err := ioutil.TempFile("/tmp", "insecure_test_key")
+	serverOpts, err := createK8SAPIServerOpts(etcdURL)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("create temp file failed: %v", err)
+		return nil, nil, err
 	}
-	defer os.RemoveAll(saSigningKeyFile.Name())
-	if err = ioutil.WriteFile(saSigningKeyFile.Name(), []byte(ecdsaPrivateKey), 0666); err != nil {
-		return nil, nil, xerrors.Errorf("write file %s failed: %v", saSigningKeyFile.Name(), err)
-	}
-	serverOpts.ServiceAccountSigningKeyFile = saSigningKeyFile.Name()
-	serverOpts.Authentication.ServiceAccounts.Issuers = []string{"https://foo.bar.example.com"}
-	serverOpts.Authentication.ServiceAccounts.KeyFiles = []string{saSigningKeyFile.Name()}
+
 	completedOpts, err := apiserverapp.Complete(serverOpts)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("complete k8s api server options: %w", err)
+	}
 
 	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts, nil)
 	if err != nil {
@@ -100,9 +93,55 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 		}
 	}(stopCh)
 
-	client, err := kubernetes.NewForConfig(aggregatorServer.GenericAPIServer.LoopbackClientConfig)
+	err = createClusterRoleAndRoleBindings(aggregatorServer.GenericAPIServer.LoopbackClientConfig)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to create a client: %v", err)
+		return nil, nil, err
+	}
+
+	shutdownFunc := func() {
+		klog.Info("destroying API server")
+		closeFn()
+		s.Close()
+		klog.Info("destroyed API server")
+	}
+
+	cfg := &restclient.Config{
+		Host:          s.URL,
+		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
+		QPS:           5000.0,
+		Burst:         5000,
+	}
+
+	return cfg, shutdownFunc, nil
+}
+
+func createK8SAPIServerOpts(etcdURL string) (*apiserveropts.ServerRunOptions, error) {
+	serverOpts := apiserveropts.NewServerRunOptions()
+	serverOpts.Etcd.StorageConfig.Transport.ServerList = []string{etcdURL}
+	serverOpts.Authorization.Modes = []string{authzmodes.ModeRBAC}
+	serverOpts.Authentication.Anonymous.Allow = true
+	err := serverOpts.APIEnablement.RuntimeConfig.Set("api/all=true")
+	if err != nil {
+		return nil, xerrors.Errorf("k8s api server set runtime config: %w", err)
+	}
+	saSigningKeyFile, err := ioutil.TempFile("/tmp", "insecure_test_key")
+	if err != nil {
+		return nil, xerrors.Errorf("create temp file failed: %v", err)
+	}
+	defer os.RemoveAll(saSigningKeyFile.Name())
+	if err = ioutil.WriteFile(saSigningKeyFile.Name(), []byte(ecdsaPrivateKey), 0o600); err != nil {
+		return nil, xerrors.Errorf("write file %s failed: %v", saSigningKeyFile.Name(), err)
+	}
+	serverOpts.ServiceAccountSigningKeyFile = saSigningKeyFile.Name()
+	serverOpts.Authentication.ServiceAccounts.Issuers = []string{"https://foo.bar.example.com"}
+	serverOpts.Authentication.ServiceAccounts.KeyFiles = []string{saSigningKeyFile.Name()}
+	return serverOpts, nil
+}
+
+func createClusterRoleAndRoleBindings(loopbackCfg *restclient.Config) error {
+	client, err := kubernetes.NewForConfig(loopbackCfg)
+	if err != nil {
+		return xerrors.Errorf("failed to create a client: %v", err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -132,9 +171,8 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 			},
 		},
 	}, metav1.CreateOptions{})
-
 	if err != nil {
-		return nil, nil, xerrors.Errorf("create RBAC cluster roles: %w", err)
+		return xerrors.Errorf("create RBAC cluster roles: %w", err)
 	}
 
 	_, err = client.RbacV1().ClusterRoleBindings().Create(ctx, &rbacv1.ClusterRoleBinding{
@@ -155,24 +193,10 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 	}, metav1.CreateOptions{})
 
 	if err != nil {
-		return nil, nil, xerrors.Errorf("create RBAC cluster role bindings: %w", err)
+		return xerrors.Errorf("create RBAC cluster role bindings: %w", err)
 	}
 
-	shutdownFunc := func() {
-		klog.Info("destroying API server")
-		closeFn()
-		s.Close()
-		klog.Info("destroyed API server")
-	}
-
-	cfg := &restclient.Config{
-		Host:          s.URL,
-		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
-		QPS:           5000.0,
-		Burst:         5000,
-	}
-
-	return cfg, shutdownFunc, nil
+	return nil
 }
 
 // APIServerHolder implements.
