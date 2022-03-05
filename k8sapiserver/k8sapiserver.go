@@ -148,9 +148,6 @@ func createK8SAPIServerOpts(etcdURL, frontendURL string) (*apiserverappopts.Serv
 	serverOpts.Admission.GenericAdmission.DisablePlugins = apiserveropts.AllOrderedPlugins
 	serverOpts.Admission.GenericAdmission.EnablePlugins = []string{}
 
-	// CORS allow origin
-	serverOpts.GenericServerRunOptions.CorsAllowedOriginList = []string{frontendURL}
-
 	return serverOpts, cleanupFunc, nil
 }
 
