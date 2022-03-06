@@ -34,9 +34,7 @@ func startSimulator() error {
 	if err != nil {
 		return xerrors.Errorf("start API server: %w", err)
 	}
-	if apiShutdown != nil {
-		defer apiShutdown()
-	}
+	defer apiShutdown()
 
 	client := clientset.NewForConfigOrDie(restclientCfg)
 
