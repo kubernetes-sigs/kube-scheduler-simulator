@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
+	"k8s.io/kube-aggregator/pkg/apiserver"
 	apiserverapp "k8s.io/kubernetes/cmd/kube-apiserver/app"
 	apiserveropts "k8s.io/kubernetes/cmd/kube-apiserver/app/options"
 	"k8s.io/kubernetes/pkg/controlplane"
@@ -52,19 +53,9 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 	klog.InfoS("starting proxy server", "URL", s.URL)
 	s.Start()
 
-	serverOpts, err := createK8SAPIServerOpts(etcdURL)
+	aggregatorServer, err := createK8SAPIChainedServer(etcdURL)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	completedOpts, err := apiserverapp.Complete(serverOpts)
-	if err != nil {
-		return nil, nil, xerrors.Errorf("complete k8s api server options: %w", err)
-	}
-
-	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts, nil)
-	if err != nil {
-		return nil, nil, err
+		return nil, nil, xerrors.Errorf("start k8s api chained server: %w", err)
 	}
 
 	var m *controlplane.Instance
@@ -136,6 +127,25 @@ func createK8SAPIServerOpts(etcdURL string) (*apiserveropts.ServerRunOptions, er
 	serverOpts.Authentication.ServiceAccounts.Issuers = []string{"https://foo.bar.example.com"}
 	serverOpts.Authentication.ServiceAccounts.KeyFiles = []string{saSigningKeyFile.Name()}
 	return serverOpts, nil
+}
+
+func createK8SAPIChainedServer(etcdURL string) (*apiserver.APIAggregator, error) {
+	serverOpts, err := createK8SAPIServerOpts(etcdURL)
+	if err != nil {
+		return nil, err
+	}
+
+	completedOpts, err := apiserverapp.Complete(serverOpts)
+	if err != nil {
+		return nil, xerrors.Errorf("complete k8s api server options: %w", err)
+	}
+
+	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return aggregatorServer, nil
 }
 
 func createClusterRoleAndRoleBindings(loopbackCfg *restclient.Config) error {

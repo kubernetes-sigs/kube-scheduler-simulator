@@ -1647,6 +1647,7 @@ k8s.io/csi-translation-lib/plugins
 ## explicit
 k8s.io/klog/v2
 # k8s.io/kube-aggregator v0.0.0 => k8s.io/kube-aggregator v0.22.0
+## explicit
 k8s.io/kube-aggregator/pkg/apis/apiregistration
 k8s.io/kube-aggregator/pkg/apis/apiregistration/install
 k8s.io/kube-aggregator/pkg/apis/apiregistration/v1
