@@ -28,7 +28,7 @@ vendor: mod-download
 	go mod vendor
 
 .PHONY: build
-build: openapi 
+build:  
 	go build -v -o ./bin/simulator ./simulator.go
 
 .PHONY: start
