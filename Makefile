@@ -16,7 +16,7 @@ format:
 	golangci-lint run --fix ./...
 
 .PHONY: test
-test: openapi
+test: 
 	go test ./...
 
 .PHONY: mod-download
