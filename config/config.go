@@ -8,7 +8,7 @@ import (
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	v1beta3config "k8s.io/kube-scheduler/config/v1beta3"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
@@ -28,7 +28,7 @@ type Config struct {
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
 	// This field is non-empty only when ExternalImportEnabled == true.
 	ExternalKubeClientCfg *rest.Config
-	InitialSchedulerCfg   *v1beta2config.KubeSchedulerConfiguration
+	InitialSchedulerCfg   *v1beta3config.KubeSchedulerConfiguration
 }
 
 // NewConfig gets some settings from environment variables.
@@ -123,10 +123,10 @@ func getFrontendURL() (string, error) {
 }
 
 // getSchedulerCfg reads KUBE_SCHEDULER_CONFIG_PATH which means initial kube-scheduler configuration
-// and converts it into *v1beta2config.KubeSchedulerConfiguration.
+// and converts it into *v1beta3config.KubeSchedulerConfiguration.
 // KUBE_SCHEDULER_CONFIG_PATH is not required.
 // If KUBE_SCHEDULER_CONFIG_PATH is not set, the default configuration of kube-scheduler will be used.
-func getSchedulerCfg() (*v1beta2config.KubeSchedulerConfiguration, error) {
+func getSchedulerCfg() (*v1beta3config.KubeSchedulerConfiguration, error) {
 	e := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
 	if e == "" {
 		dsc, err := defaultconfig.DefaultSchedulerConfig()
@@ -156,16 +156,16 @@ func getExternalImportEnabled() bool {
 	return i == "1"
 }
 
-func decodeSchedulerCfg(buf []byte) (*v1beta2config.KubeSchedulerConfiguration, error) {
+func decodeSchedulerCfg(buf []byte) (*v1beta3config.KubeSchedulerConfiguration, error) {
 	decoder := scheme.Codecs.UniversalDeserializer()
 	obj, _, err := decoder.Decode(buf, nil, nil)
 	if err != nil {
 		return nil, xerrors.Errorf("load an k8s object from buffer: %w", err)
 	}
 
-	sc, ok := obj.(*v1beta2config.KubeSchedulerConfiguration)
+	sc, ok := obj.(*v1beta3config.KubeSchedulerConfiguration)
 	if !ok {
-		return nil, xerrors.Errorf("convert to *v1beta2config.KubeSchedulerConfiguration, but got unexpected type: %T", obj)
+		return nil, xerrors.Errorf("convert to *v1beta3config.KubeSchedulerConfiguration, but got unexpected type: %T", obj)
 	}
 
 	if err = sc.DecodeNestedObjects(decoder); err != nil {

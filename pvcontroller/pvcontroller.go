@@ -36,7 +36,7 @@ func StartPersistentVolumeController(client clientset.Interface) (
 		return nil, fmt.Errorf("construct persistentvolume controller: %w", err)
 	}
 
-	go volumeController.Run(ctx.Done())
+	go volumeController.Run(ctx)
 	informerFactory.Start(ctx.Done())
 	informerFactory.WaitForCacheSync(ctx.Done())
 

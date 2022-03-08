@@ -7,4 +7,4 @@ git submodule update --init
 
 cd submodules/kubernetes
 make kube-apiserver
-cp pkg/generated/openapi/zz_generated.openapi.go "../${OPENAPIFILE}"
+cp pkg/generated/openapi/zz_generated.openapi.go "../../${OPENAPIFILE}"

@@ -6,36 +6,37 @@ package mock_export
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/scheduling/v1"
 	v10 "k8s.io/client-go/applyconfigurations/scheduling/v1"
-	reflect "reflect"
 )
 
-// MockPriorityClassService is a mock of PriorityClassService interface
+// MockPriorityClassService is a mock of PriorityClassService interface.
 type MockPriorityClassService struct {
 	ctrl     *gomock.Controller
 	recorder *MockPriorityClassServiceMockRecorder
 }
 
-// MockPriorityClassServiceMockRecorder is the mock recorder for MockPriorityClassService
+// MockPriorityClassServiceMockRecorder is the mock recorder for MockPriorityClassService.
 type MockPriorityClassServiceMockRecorder struct {
 	mock *MockPriorityClassService
 }
 
-// NewMockPriorityClassService creates a new mock instance
+// NewMockPriorityClassService creates a new mock instance.
 func NewMockPriorityClassService(ctrl *gomock.Controller) *MockPriorityClassService {
 	mock := &MockPriorityClassService{ctrl: ctrl}
 	mock.recorder = &MockPriorityClassServiceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockPriorityClassService) EXPECT() *MockPriorityClassServiceMockRecorder {
 	return m.recorder
 }
 
-// Apply mocks base method
+// Apply mocks base method.
 func (m *MockPriorityClassService) Apply(arg0 context.Context, arg1 *v10.PriorityClassApplyConfiguration) (*v1.PriorityClass, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
@@ -44,13 +45,13 @@ func (m *MockPriorityClassService) Apply(arg0 context.Context, arg1 *v10.Priorit
 	return ret0, ret1
 }
 
-// Apply indicates an expected call of Apply
+// Apply indicates an expected call of Apply.
 func (mr *MockPriorityClassServiceMockRecorder) Apply(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockPriorityClassService)(nil).Apply), arg0, arg1)
 }
 
-// List mocks base method
+// List mocks base method.
 func (m *MockPriorityClassService) List(arg0 context.Context) (*v1.PriorityClassList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0)
@@ -59,7 +60,7 @@ func (m *MockPriorityClassService) List(arg0 context.Context) (*v1.PriorityClass
 	return ret0, ret1
 }
 
-// List indicates an expected call of List
+// List indicates an expected call of List.
 func (mr *MockPriorityClassServiceMockRecorder) List(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPriorityClassService)(nil).List), arg0)

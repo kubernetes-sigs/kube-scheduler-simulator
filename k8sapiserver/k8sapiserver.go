@@ -216,7 +216,7 @@ func startAPIServer(controlPlaneConfig *controlplane.Config, s *httptest.Server,
 
 	controlPlaneConfig.GenericConfig.FlowControl = utilflowcontrol.New(
 		controlPlaneConfig.ExtraConfig.VersionedInformers,
-		clientset.FlowcontrolV1beta1(),
+		clientset.FlowcontrolV1beta2(),
 		controlPlaneConfig.GenericConfig.MaxRequestsInFlight+controlPlaneConfig.GenericConfig.MaxMutatingRequestsInFlight,
 		controlPlaneConfig.GenericConfig.RequestTimeout/4,
 	)

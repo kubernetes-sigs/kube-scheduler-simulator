@@ -8,7 +8,7 @@ import (
 	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/klog/v2"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	v1beta3config "k8s.io/kube-scheduler/config/v1beta3"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/server/di"
@@ -25,7 +25,7 @@ type ResourcesForImport struct {
 	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration      `json:"pvcs"`
 	StorageClasses  []confstoragev1.StorageClassApplyConfiguration    `json:"storageClasses"`
 	PriorityClasses []schedulingcfgv1.PriorityClassApplyConfiguration `json:"priorityClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
+	SchedulerConfig *v1beta3config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
 }
 
 func NewExportHandler(s di.ExportService) *ExportHandler {

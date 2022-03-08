@@ -6,36 +6,37 @@ package mock_export
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/core/v1"
 	v10 "k8s.io/client-go/applyconfigurations/core/v1"
-	reflect "reflect"
 )
 
-// MockPersistentVolumeService is a mock of PersistentVolumeService interface
+// MockPersistentVolumeService is a mock of PersistentVolumeService interface.
 type MockPersistentVolumeService struct {
 	ctrl     *gomock.Controller
 	recorder *MockPersistentVolumeServiceMockRecorder
 }
 
-// MockPersistentVolumeServiceMockRecorder is the mock recorder for MockPersistentVolumeService
+// MockPersistentVolumeServiceMockRecorder is the mock recorder for MockPersistentVolumeService.
 type MockPersistentVolumeServiceMockRecorder struct {
 	mock *MockPersistentVolumeService
 }
 
-// NewMockPersistentVolumeService creates a new mock instance
+// NewMockPersistentVolumeService creates a new mock instance.
 func NewMockPersistentVolumeService(ctrl *gomock.Controller) *MockPersistentVolumeService {
 	mock := &MockPersistentVolumeService{ctrl: ctrl}
 	mock.recorder = &MockPersistentVolumeServiceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockPersistentVolumeService) EXPECT() *MockPersistentVolumeServiceMockRecorder {
 	return m.recorder
 }
 
-// Apply mocks base method
+// Apply mocks base method.
 func (m *MockPersistentVolumeService) Apply(arg0 context.Context, arg1 *v10.PersistentVolumeApplyConfiguration) (*v1.PersistentVolume, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
@@ -44,13 +45,13 @@ func (m *MockPersistentVolumeService) Apply(arg0 context.Context, arg1 *v10.Pers
 	return ret0, ret1
 }
 
-// Apply indicates an expected call of Apply
+// Apply indicates an expected call of Apply.
 func (mr *MockPersistentVolumeServiceMockRecorder) Apply(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockPersistentVolumeService)(nil).Apply), arg0, arg1)
 }
 
-// List mocks base method
+// List mocks base method.
 func (m *MockPersistentVolumeService) List(arg0 context.Context) (*v1.PersistentVolumeList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0)
@@ -59,7 +60,7 @@ func (m *MockPersistentVolumeService) List(arg0 context.Context) (*v1.Persistent
 	return ret0, ret1
 }
 
-// List indicates an expected call of List
+// List indicates an expected call of List.
 func (mr *MockPersistentVolumeServiceMockRecorder) List(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPersistentVolumeService)(nil).List), arg0)

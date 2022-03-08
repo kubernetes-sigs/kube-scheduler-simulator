@@ -21,7 +21,7 @@ import (
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	v1beta3config "k8s.io/kube-scheduler/config/v1beta3"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/util"
 )
@@ -45,7 +45,7 @@ type ResourcesForExport struct {
 	Pvcs            []corev1.PersistentVolumeClaim            `json:"pvcs"`
 	StorageClasses  []storagev1.StorageClass                  `json:"storageClasses"`
 	PriorityClasses []schedulingv1.PriorityClass              `json:"priorityClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
+	SchedulerConfig *v1beta3config.KubeSchedulerConfiguration `json:"schedulerConfig"`
 }
 
 // ResourcesForImport denotes all resources and scheduler configuration for import.
@@ -56,7 +56,7 @@ type ResourcesForImport struct {
 	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration      `json:"pvcs"`
 	StorageClasses  []confstoragev1.StorageClassApplyConfiguration    `json:"storageClasses"`
 	PriorityClasses []schedulingcfgv1.PriorityClassApplyConfiguration `json:"priorityClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
+	SchedulerConfig *v1beta3config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
 }
 
 type PodService interface {
@@ -91,8 +91,8 @@ type PriorityClassService interface {
 }
 
 type SchedulerService interface {
-	GetSchedulerConfig() *v1beta2config.KubeSchedulerConfiguration
-	RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error
+	GetSchedulerConfig() *v1beta3config.KubeSchedulerConfiguration
+	RestartScheduler(cfg *v1beta3config.KubeSchedulerConfiguration) error
 }
 
 func NewExportService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, storageClasss StorageClassService, priorityClasss PriorityClassService, schedulers SchedulerService) *Service {

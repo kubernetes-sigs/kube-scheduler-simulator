@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	v1beta3config "k8s.io/kube-scheduler/config/v1beta3"
 )
 
 func Test_decodeSchedulerCfg(t *testing.T) {
@@ -16,13 +16,13 @@ func Test_decodeSchedulerCfg(t *testing.T) {
 	tests := []struct {
 		name    string
 		buf     []byte
-		want    *v1beta2config.KubeSchedulerConfiguration
+		want    *v1beta3config.KubeSchedulerConfiguration
 		wantErr bool
 	}{
 		{
 			name: "success with normal configuration",
 			buf: []byte(`
-apiVersion: kubescheduler.config.k8s.io/v1beta2
+apiVersion: kubescheduler.config.k8s.io/v1beta3
 kind: KubeSchedulerConfiguration
 profiles:
 - pluginConfig:
@@ -34,20 +34,20 @@ profiles:
         type: MostAllocated
     name: NodeResourcesFit
 `),
-			want: &v1beta2config.KubeSchedulerConfiguration{
+			want: &v1beta3config.KubeSchedulerConfiguration{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "KubeSchedulerConfiguration",
-					APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+					APIVersion: "kubescheduler.config.k8s.io/v1beta3",
 				},
-				Profiles: []v1beta2config.KubeSchedulerProfile{
+				Profiles: []v1beta3config.KubeSchedulerProfile{
 					{
-						PluginConfig: []v1beta2config.PluginConfig{
+						PluginConfig: []v1beta3config.PluginConfig{
 							{
 								Name: "NodeResourcesFit",
 								Args: runtime.RawExtension{
-									Object: &v1beta2config.NodeResourcesFitArgs{
-										ScoringStrategy: &v1beta2config.ScoringStrategy{
-											Resources: []v1beta2config.ResourceSpec{
+									Object: &v1beta3config.NodeResourcesFitArgs{
+										ScoringStrategy: &v1beta3config.ScoringStrategy{
+											Resources: []v1beta3config.ResourceSpec{
 												{
 													Name:   "cpu",
 													Weight: 1,
@@ -66,7 +66,7 @@ profiles:
 		{
 			name: "fail because of wrong apiVersion",
 			buf: []byte(`
-apiVersion: kubescheduler.config.k8s.io/v1beta1
+apiVersion: kubescheduler.config.k8s.io/v1beta2
 kind: KubeSchedulerConfiguration
 profiles:
 - pluginConfig:

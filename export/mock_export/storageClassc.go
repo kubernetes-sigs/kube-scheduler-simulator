@@ -6,36 +6,37 @@ package mock_export
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/storage/v1"
 	v10 "k8s.io/client-go/applyconfigurations/storage/v1"
-	reflect "reflect"
 )
 
-// MockStorageClassService is a mock of StorageClassService interface
+// MockStorageClassService is a mock of StorageClassService interface.
 type MockStorageClassService struct {
 	ctrl     *gomock.Controller
 	recorder *MockStorageClassServiceMockRecorder
 }
 
-// MockStorageClassServiceMockRecorder is the mock recorder for MockStorageClassService
+// MockStorageClassServiceMockRecorder is the mock recorder for MockStorageClassService.
 type MockStorageClassServiceMockRecorder struct {
 	mock *MockStorageClassService
 }
 
-// NewMockStorageClassService creates a new mock instance
+// NewMockStorageClassService creates a new mock instance.
 func NewMockStorageClassService(ctrl *gomock.Controller) *MockStorageClassService {
 	mock := &MockStorageClassService{ctrl: ctrl}
 	mock.recorder = &MockStorageClassServiceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockStorageClassService) EXPECT() *MockStorageClassServiceMockRecorder {
 	return m.recorder
 }
 
-// Apply mocks base method
+// Apply mocks base method.
 func (m *MockStorageClassService) Apply(arg0 context.Context, arg1 *v10.StorageClassApplyConfiguration) (*v1.StorageClass, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
@@ -44,13 +45,13 @@ func (m *MockStorageClassService) Apply(arg0 context.Context, arg1 *v10.StorageC
 	return ret0, ret1
 }
 
-// Apply indicates an expected call of Apply
+// Apply indicates an expected call of Apply.
 func (mr *MockStorageClassServiceMockRecorder) Apply(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockStorageClassService)(nil).Apply), arg0, arg1)
 }
 
-// List mocks base method
+// List mocks base method.
 func (m *MockStorageClassService) List(arg0 context.Context) (*v1.StorageClassList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0)
@@ -59,7 +60,7 @@ func (m *MockStorageClassService) List(arg0 context.Context) (*v1.StorageClassLi
 	return ret0, ret1
 }
 
-// List indicates an expected call of List
+// List indicates an expected call of List.
 func (mr *MockStorageClassServiceMockRecorder) List(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockStorageClassService)(nil).List), arg0)

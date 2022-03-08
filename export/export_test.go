@@ -18,7 +18,7 @@ import (
 	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	v1beta3config "k8s.io/kube-scheduler/config/v1beta3"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
 	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
@@ -43,7 +43,7 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -57,7 +57,7 @@ func TestService_Export(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			},
 			wantErr: false,
 		},
@@ -70,7 +70,7 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -88,7 +88,7 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -106,7 +106,7 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -124,7 +124,7 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumeClaims"))
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -142,7 +142,7 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list storageClasses"))
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -160,7 +160,7 @@ func TestService_Export(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list priorityClasses"))
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -215,7 +215,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -229,7 +229,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			},
 			wantErr: false,
 		},
@@ -242,7 +242,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -255,7 +255,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			},
 			wantErr: false,
 		},
@@ -268,7 +268,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -281,7 +281,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			},
 			wantErr: false,
 		},
@@ -294,7 +294,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -307,7 +307,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			},
 			wantErr: false,
 		},
@@ -320,7 +320,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumeClaims"))
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -333,7 +333,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			},
 			wantErr: false,
 		},
@@ -346,7 +346,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list storageClasses"))
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -359,7 +359,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			},
 			wantErr: false,
 		},
@@ -372,7 +372,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				pvcs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list priorityClasses"))
-				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta3config.KubeSchedulerConfiguration{})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -385,7 +385,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			},
 			wantErr: false,
 		},
@@ -438,7 +438,6 @@ func TestService_Import(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -487,10 +486,6 @@ func TestService_Import(t *testing.T) {
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
-				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
-					assert.Equal(t, "PV1", *cfg.Name)
-				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -539,10 +534,6 @@ func TestService_Import(t *testing.T) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply node"))
-				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
-					assert.Equal(t, "PV1", *cfg.Name)
-				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -594,7 +585,6 @@ func TestService_Import(t *testing.T) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply PersistentVolume"))
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -645,10 +635,6 @@ func TestService_Import(t *testing.T) {
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
-				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
-					assert.Equal(t, "PV1", *cfg.Name)
-				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply PersistentVolumeClaim"))
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
 					assert.Equal(t, "StorageClass1", *cfg.Name)
@@ -697,10 +683,6 @@ func TestService_Import(t *testing.T) {
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
-				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
-					assert.Equal(t, "PV1", *cfg.Name)
-				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -749,10 +731,6 @@ func TestService_Import(t *testing.T) {
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
-				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
-					assert.Equal(t, "PV1", *cfg.Name)
-				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -953,8 +931,6 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "success import pv and pvc from json string (UID be set to nil)",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
-				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
 					assert.Empty(t, cfg.ObjectMetaApplyConfiguration.UID)
@@ -963,14 +939,12 @@ func TestService_Import(t *testing.T) {
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "pvc1", *cfg.Name)
 				})
-				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
-				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil)
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesForImport {
 				j := `{"pods":[],"nodes":[],`
 				j += `"pvs":[{"metadata":{"name":"pv1","uid":"b0184e68-5ba6-4533-b3fd-bde9416ad03d","resourceVersion":"565","creationTimestamp":"2021-12-28T01:06:35Z","annotations":{"pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:35Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:capacity":{"f:storage":{}},"f:hostPath":{"f:path":{},"f:type":{}},"f:persistentVolumeReclaimPolicy":{},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:35Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:phase":{}}},"subresource":"status"},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:claimRef":{}}}}]},"spec":{"capacity":{"storage":"1Gi"},"hostPath":{"path":"/tmp/data","type":"DirectoryOrCreate"},"accessModes":["ReadWriteOnce"],"claimRef":{"kind":"PersistentVolumeClaim","namespace":"default","name":"pvc1","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","apiVersion":"v1","resourceVersion":"557"},"persistentVolumeReclaimPolicy":"Delete","volumeMode":"Filesystem"},"status":{"phase":"Bound"}}]`
-				j += `,"pvcs":[{"metadata":{"name":"pvc1","namespace":"default","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","resourceVersion":"567","creationTimestamp":"2021-12-28T01:06:32Z","annotations":{"pv.kubernetes.io/bind-completed":"yes","pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:32Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:resources":{"f:requests":{"f:storage":{}}},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bind-completed":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:volumeName":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:accessModes":{},"f:capacity":{".":{},"f:storage":{}},"f:phase":{}}},"subresource":"status"}]},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"volumeName":"pv1","volumeMode":"Filesystem"},"status":{"phase":"Bound","accessModes":["ReadWriteOnce"],"capacity":{"storage":"1Gi"}}}],"storageClasses":[],"priorityClasses":[],"schedulerConfig":{"parallelism":16,"leaderElection":{"leaderElect":true,"leaseDuration":"15s","renewDeadline":"10s","retryPeriod":"2s","resourceLock":"leases","resourceName":"kube-scheduler","resourceNamespace":"kube-system"},"clientConnection":{"kubeconfig":"","acceptContentTypes":"","contentType":"application/vnd.kubernetes.protobuf","qps":50,"burst":100},"healthzBindAddress":"0.0.0.0:10251","metricsBindAddress":"0.0.0.0:10251","enableProfiling":true,"enableContentionProfiling":true,"percentageOfNodesToScore":0,"podInitialBackoffSeconds":1,"podMaxBackoffSeconds":10,"profiles":[{"schedulerName":"default-scheduler","plugins":{"queueSort":{"enabled":[{"name":"PrioritySort"}]},"preFilter":{"enabled":[{"name":"NodeResourcesFit"},{"name":"NodePorts"},{"name":"VolumeRestrictions"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"},{"name":"VolumeBinding"},{"name":"NodeAffinity"}]},"filter":{"enabled":[{"name":"NodeUnschedulable"},{"name":"NodeName"},{"name":"TaintToleration"},{"name":"NodeAffinity"},{"name":"NodePorts"},{"name":"NodeResourcesFit"},{"name":"VolumeRestrictions"},{"name":"EBSLimits"},{"name":"GCEPDLimits"},{"name":"NodeVolumeLimits"},{"name":"AzureDiskLimits"},{"name":"VolumeBinding"},{"name":"VolumeZone"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"}]},"postFilter":{"enabled":[{"name":"DefaultPreemption"}]},"preScore":{"enabled":[{"name":"InterPodAffinity"},{"name":"PodTopologySpread"},{"name":"TaintToleration"},{"name":"NodeAffinity"}]},"score":{"enabled":[{"name":"NodeResourcesBalancedAllocation","weight":1},{"name":"ImageLocality","weight":1},{"name":"InterPodAffinity","weight":1},{"name":"NodeResourcesFit","weight":1},{"name":"NodeAffinity","weight":1},{"name":"PodTopologySpread","weight":2},{"name":"TaintToleration","weight":1}]},"reserve":{"enabled":[{"name":"VolumeBinding"}]},"permit":{},"preBind":{"enabled":[{"name":"VolumeBinding"}]},"bind":{"enabled":[{"name":"DefaultBinder"}]},"postBind":{}},"pluginConfig":[{"name":"DefaultPreemption","args":{"kind":"DefaultPreemptionArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","minCandidateNodesPercentage":10,"minCandidateNodesAbsolute":100}},{"name":"InterPodAffinity","args":{"kind":"InterPodAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","hardPodAffinityWeight":1}},{"name":"NodeAffinity","args":{"kind":"NodeAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2"}},{"name":"NodeResourcesBalancedAllocation","args":{"kind":"NodeResourcesBalancedAllocationArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}},{"name":"NodeResourcesFit","args":{"kind":"NodeResourcesFitArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","scoringStrategy":{"type":"LeastAllocated","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}}},{"name":"PodTopologySpread","args":{"kind":"PodTopologySpreadArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","defaultingType":"System"}},{"name":"VolumeBinding","args":{"kind":"VolumeBindingArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","bindTimeoutSeconds":600}}]}]}}`
+				j += `,"pvcs":[{"metadata":{"name":"pvc1","namespace":"default","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","resourceVersion":"567","creationTimestamp":"2021-12-28T01:06:32Z","annotations":{"pv.kubernetes.io/bind-completed":"yes","pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:32Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:resources":{"f:requests":{"f:storage":{}}},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bind-completed":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:volumeName":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:accessModes":{},"f:capacity":{".":{},"f:storage":{}},"f:phase":{}}},"subresource":"status"}]},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"volumeName":"pv1","volumeMode":"Filesystem"},"status":{"phase":"Bound","accessModes":["ReadWriteOnce"],"capacity":{"storage":"1Gi"}}}],"storageClasses":[],"priorityClasses":[],"schedulerConfig":{"parallelism":16,"leaderElection":{"leaderElect":true,"leaseDuration":"15s","renewDeadline":"10s","retryPeriod":"2s","resourceLock":"leases","resourceName":"kube-scheduler","resourceNamespace":"kube-system"},"clientConnection":{"kubeconfig":"","acceptContentTypes":"","contentType":"application/vnd.kubernetes.protobuf","qps":50,"burst":100},"healthzBindAddress":"0.0.0.0:10251","metricsBindAddress":"0.0.0.0:10251","enableProfiling":true,"enableContentionProfiling":true,"percentageOfNodesToScore":0,"podInitialBackoffSeconds":1,"podMaxBackoffSeconds":10,"profiles":[{"schedulerName":"default-scheduler","plugins":{"queueSort":{"enabled":[{"name":"PrioritySort"}]},"preFilter":{"enabled":[{"name":"NodeResourcesFit"},{"name":"NodePorts"},{"name":"VolumeRestrictions"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"},{"name":"VolumeBinding"},{"name":"NodeAffinity"}]},"filter":{"enabled":[{"name":"NodeUnschedulable"},{"name":"NodeName"},{"name":"TaintToleration"},{"name":"NodeAffinity"},{"name":"NodePorts"},{"name":"NodeResourcesFit"},{"name":"VolumeRestrictions"},{"name":"EBSLimits"},{"name":"GCEPDLimits"},{"name":"NodeVolumeLimits"},{"name":"AzureDiskLimits"},{"name":"VolumeBinding"},{"name":"VolumeZone"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"}]},"postFilter":{"enabled":[{"name":"DefaultPreemption"}]},"preScore":{"enabled":[{"name":"InterPodAffinity"},{"name":"PodTopologySpread"},{"name":"TaintToleration"},{"name":"NodeAffinity"}]},"score":{"enabled":[{"name":"NodeResourcesBalancedAllocation","weight":1},{"name":"ImageLocality","weight":1},{"name":"InterPodAffinity","weight":1},{"name":"NodeResourcesFit","weight":1},{"name":"NodeAffinity","weight":1},{"name":"PodTopologySpread","weight":2},{"name":"TaintToleration","weight":1}]},"reserve":{"enabled":[{"name":"VolumeBinding"}]},"permit":{},"preBind":{"enabled":[{"name":"VolumeBinding"}]},"bind":{"enabled":[{"name":"DefaultBinder"}]},"postBind":{}},"pluginConfig":[{"name":"DefaultPreemption","args":{"kind":"DefaultPreemptionArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","minCandidateNodesPercentage":10,"minCandidateNodesAbsolute":100}},{"name":"InterPodAffinity","args":{"kind":"InterPodAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","hardPodAffinityWeight":1}},{"name":"NodeAffinity","args":{"kind":"NodeAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3"}},{"name":"NodeResourcesBalancedAllocation","args":{"kind":"NodeResourcesBalancedAllocationArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}},{"name":"NodeResourcesFit","args":{"kind":"NodeResourcesFitArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","scoringStrategy":{"type":"LeastAllocated","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}}},{"name":"PodTopologySpread","args":{"kind":"PodTopologySpreadArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","defaultingType":"System"}},{"name":"VolumeBinding","args":{"kind":"VolumeBindingArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","bindTimeoutSeconds":600}}]}]}}`
 				b := []byte(j)
 				r := ResourcesForImport{}
 				if err := json.Unmarshal(b, &r); err != nil {
@@ -987,25 +961,20 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "success import when pv.Status is not exist",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
-				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
 					assert.Empty(t, cfg.Status)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "pvc1", *cfg.Name)
 				})
-				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
-				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil)
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesForImport {
 				j := `{"pods":[],"nodes":[],`
 				// delete status object
 				j += `"pvs":[{"metadata":{"name":"pv1","uid":"b0184e68-5ba6-4533-b3fd-bde9416ad03d","resourceVersion":"565","creationTimestamp":"2021-12-28T01:06:35Z","annotations":{"pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:35Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:capacity":{"f:storage":{}},"f:hostPath":{"f:path":{},"f:type":{}},"f:persistentVolumeReclaimPolicy":{},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:35Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:phase":{}}},"subresource":"status"},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:claimRef":{}}}}]},"spec":{"capacity":{"storage":"1Gi"},"hostPath":{"path":"/tmp/data","type":"DirectoryOrCreate"},"accessModes":["ReadWriteOnce"],"claimRef":{"kind":"PersistentVolumeClaim","namespace":"default","name":"pvc1","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","apiVersion":"v1","resourceVersion":"557"},"persistentVolumeReclaimPolicy":"Delete","volumeMode":"Filesystem"}}]`
-				j += `,"pvcs":[{"metadata":{"name":"pvc1","namespace":"default","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","resourceVersion":"567","creationTimestamp":"2021-12-28T01:06:32Z","annotations":{"pv.kubernetes.io/bind-completed":"yes","pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:32Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:resources":{"f:requests":{"f:storage":{}}},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bind-completed":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:volumeName":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:accessModes":{},"f:capacity":{".":{},"f:storage":{}},"f:phase":{}}},"subresource":"status"}]},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"volumeName":"pv1","volumeMode":"Filesystem"},"status":{"phase":"Bound","accessModes":["ReadWriteOnce"],"capacity":{"storage":"1Gi"}}}],"storageClasses":[],"priorityClasses":[],"schedulerConfig":{"parallelism":16,"leaderElection":{"leaderElect":true,"leaseDuration":"15s","renewDeadline":"10s","retryPeriod":"2s","resourceLock":"leases","resourceName":"kube-scheduler","resourceNamespace":"kube-system"},"clientConnection":{"kubeconfig":"","acceptContentTypes":"","contentType":"application/vnd.kubernetes.protobuf","qps":50,"burst":100},"healthzBindAddress":"0.0.0.0:10251","metricsBindAddress":"0.0.0.0:10251","enableProfiling":true,"enableContentionProfiling":true,"percentageOfNodesToScore":0,"podInitialBackoffSeconds":1,"podMaxBackoffSeconds":10,"profiles":[{"schedulerName":"default-scheduler","plugins":{"queueSort":{"enabled":[{"name":"PrioritySort"}]},"preFilter":{"enabled":[{"name":"NodeResourcesFit"},{"name":"NodePorts"},{"name":"VolumeRestrictions"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"},{"name":"VolumeBinding"},{"name":"NodeAffinity"}]},"filter":{"enabled":[{"name":"NodeUnschedulable"},{"name":"NodeName"},{"name":"TaintToleration"},{"name":"NodeAffinity"},{"name":"NodePorts"},{"name":"NodeResourcesFit"},{"name":"VolumeRestrictions"},{"name":"EBSLimits"},{"name":"GCEPDLimits"},{"name":"NodeVolumeLimits"},{"name":"AzureDiskLimits"},{"name":"VolumeBinding"},{"name":"VolumeZone"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"}]},"postFilter":{"enabled":[{"name":"DefaultPreemption"}]},"preScore":{"enabled":[{"name":"InterPodAffinity"},{"name":"PodTopologySpread"},{"name":"TaintToleration"},{"name":"NodeAffinity"}]},"score":{"enabled":[{"name":"NodeResourcesBalancedAllocation","weight":1},{"name":"ImageLocality","weight":1},{"name":"InterPodAffinity","weight":1},{"name":"NodeResourcesFit","weight":1},{"name":"NodeAffinity","weight":1},{"name":"PodTopologySpread","weight":2},{"name":"TaintToleration","weight":1}]},"reserve":{"enabled":[{"name":"VolumeBinding"}]},"permit":{},"preBind":{"enabled":[{"name":"VolumeBinding"}]},"bind":{"enabled":[{"name":"DefaultBinder"}]},"postBind":{}},"pluginConfig":[{"name":"DefaultPreemption","args":{"kind":"DefaultPreemptionArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","minCandidateNodesPercentage":10,"minCandidateNodesAbsolute":100}},{"name":"InterPodAffinity","args":{"kind":"InterPodAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","hardPodAffinityWeight":1}},{"name":"NodeAffinity","args":{"kind":"NodeAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2"}},{"name":"NodeResourcesBalancedAllocation","args":{"kind":"NodeResourcesBalancedAllocationArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}},{"name":"NodeResourcesFit","args":{"kind":"NodeResourcesFitArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","scoringStrategy":{"type":"LeastAllocated","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}}},{"name":"PodTopologySpread","args":{"kind":"PodTopologySpreadArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","defaultingType":"System"}},{"name":"VolumeBinding","args":{"kind":"VolumeBindingArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","bindTimeoutSeconds":600}}]}]}}`
+				j += `,"pvcs":[{"metadata":{"name":"pvc1","namespace":"default","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","resourceVersion":"567","creationTimestamp":"2021-12-28T01:06:32Z","annotations":{"pv.kubernetes.io/bind-completed":"yes","pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:32Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:resources":{"f:requests":{"f:storage":{}}},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bind-completed":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:volumeName":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:accessModes":{},"f:capacity":{".":{},"f:storage":{}},"f:phase":{}}},"subresource":"status"}]},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"volumeName":"pv1","volumeMode":"Filesystem"},"status":{"phase":"Bound","accessModes":["ReadWriteOnce"],"capacity":{"storage":"1Gi"}}}],"storageClasses":[],"priorityClasses":[],"schedulerConfig":{"parallelism":16,"leaderElection":{"leaderElect":true,"leaseDuration":"15s","renewDeadline":"10s","retryPeriod":"2s","resourceLock":"leases","resourceName":"kube-scheduler","resourceNamespace":"kube-system"},"clientConnection":{"kubeconfig":"","acceptContentTypes":"","contentType":"application/vnd.kubernetes.protobuf","qps":50,"burst":100},"healthzBindAddress":"0.0.0.0:10251","metricsBindAddress":"0.0.0.0:10251","enableProfiling":true,"enableContentionProfiling":true,"percentageOfNodesToScore":0,"podInitialBackoffSeconds":1,"podMaxBackoffSeconds":10,"profiles":[{"schedulerName":"default-scheduler","plugins":{"queueSort":{"enabled":[{"name":"PrioritySort"}]},"preFilter":{"enabled":[{"name":"NodeResourcesFit"},{"name":"NodePorts"},{"name":"VolumeRestrictions"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"},{"name":"VolumeBinding"},{"name":"NodeAffinity"}]},"filter":{"enabled":[{"name":"NodeUnschedulable"},{"name":"NodeName"},{"name":"TaintToleration"},{"name":"NodeAffinity"},{"name":"NodePorts"},{"name":"NodeResourcesFit"},{"name":"VolumeRestrictions"},{"name":"EBSLimits"},{"name":"GCEPDLimits"},{"name":"NodeVolumeLimits"},{"name":"AzureDiskLimits"},{"name":"VolumeBinding"},{"name":"VolumeZone"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"}]},"postFilter":{"enabled":[{"name":"DefaultPreemption"}]},"preScore":{"enabled":[{"name":"InterPodAffinity"},{"name":"PodTopologySpread"},{"name":"TaintToleration"},{"name":"NodeAffinity"}]},"score":{"enabled":[{"name":"NodeResourcesBalancedAllocation","weight":1},{"name":"ImageLocality","weight":1},{"name":"InterPodAffinity","weight":1},{"name":"NodeResourcesFit","weight":1},{"name":"NodeAffinity","weight":1},{"name":"PodTopologySpread","weight":2},{"name":"TaintToleration","weight":1}]},"reserve":{"enabled":[{"name":"VolumeBinding"}]},"permit":{},"preBind":{"enabled":[{"name":"VolumeBinding"}]},"bind":{"enabled":[{"name":"DefaultBinder"}]},"postBind":{}},"pluginConfig":[{"name":"DefaultPreemption","args":{"kind":"DefaultPreemptionArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","minCandidateNodesPercentage":10,"minCandidateNodesAbsolute":100}},{"name":"InterPodAffinity","args":{"kind":"InterPodAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","hardPodAffinityWeight":1}},{"name":"NodeAffinity","args":{"kind":"NodeAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v13eta2"}},{"name":"NodeResourcesBalancedAllocation","args":{"kind":"NodeResourcesBalancedAllocationArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}},{"name":"NodeResourcesFit","args":{"kind":"NodeResourcesFitArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","scoringStrategy":{"type":"LeastAllocated","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}}},{"name":"PodTopologySpread","args":{"kind":"PodTopologySpreadArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","defaultingType":"System"}},{"name":"VolumeBinding","args":{"kind":"VolumeBindingArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","bindTimeoutSeconds":600}}]}]}}`
 				b := []byte(j)
 				r := ResourcesForImport{}
 				if err := json.Unmarshal(b, &r); err != nil {
@@ -1022,25 +991,20 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "success import when pv.Status.Phase is not exist",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
-				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
 					assert.Empty(t, cfg.Status.Phase)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "pvc1", *cfg.Name)
 				})
-				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
-				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil)
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
 			applyConfiguration: func() *ResourcesForImport {
 				j := `{"pods":[],"nodes":[],`
 				// delete Phase key&value
 				j += `"pvs":[{"metadata":{"name":"pv1","uid":"b0184e68-5ba6-4533-b3fd-bde9416ad03d","resourceVersion":"565","creationTimestamp":"2021-12-28T01:06:35Z","annotations":{"pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:35Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:capacity":{"f:storage":{}},"f:hostPath":{"f:path":{},"f:type":{}},"f:persistentVolumeReclaimPolicy":{},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:35Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:phase":{}}},"subresource":"status"},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:claimRef":{}}}}]},"spec":{"capacity":{"storage":"1Gi"},"hostPath":{"path":"/tmp/data","type":"DirectoryOrCreate"},"accessModes":["ReadWriteOnce"],"claimRef":{"kind":"PersistentVolumeClaim","namespace":"default","name":"pvc1","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","apiVersion":"v1","resourceVersion":"557"},"persistentVolumeReclaimPolicy":"Delete","volumeMode":"Filesystem"},"status":{}}]`
-				j += `,"pvcs":[{"metadata":{"name":"pvc1","namespace":"default","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","resourceVersion":"567","creationTimestamp":"2021-12-28T01:06:32Z","annotations":{"pv.kubernetes.io/bind-completed":"yes","pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:32Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:resources":{"f:requests":{"f:storage":{}}},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bind-completed":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:volumeName":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:accessModes":{},"f:capacity":{".":{},"f:storage":{}},"f:phase":{}}},"subresource":"status"}]},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"volumeName":"pv1","volumeMode":"Filesystem"},"status":{"phase":"Bound","accessModes":["ReadWriteOnce"],"capacity":{"storage":"1Gi"}}}],"storageClasses":[],"priorityClasses":[],"schedulerConfig":{"parallelism":16,"leaderElection":{"leaderElect":true,"leaseDuration":"15s","renewDeadline":"10s","retryPeriod":"2s","resourceLock":"leases","resourceName":"kube-scheduler","resourceNamespace":"kube-system"},"clientConnection":{"kubeconfig":"","acceptContentTypes":"","contentType":"application/vnd.kubernetes.protobuf","qps":50,"burst":100},"healthzBindAddress":"0.0.0.0:10251","metricsBindAddress":"0.0.0.0:10251","enableProfiling":true,"enableContentionProfiling":true,"percentageOfNodesToScore":0,"podInitialBackoffSeconds":1,"podMaxBackoffSeconds":10,"profiles":[{"schedulerName":"default-scheduler","plugins":{"queueSort":{"enabled":[{"name":"PrioritySort"}]},"preFilter":{"enabled":[{"name":"NodeResourcesFit"},{"name":"NodePorts"},{"name":"VolumeRestrictions"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"},{"name":"VolumeBinding"},{"name":"NodeAffinity"}]},"filter":{"enabled":[{"name":"NodeUnschedulable"},{"name":"NodeName"},{"name":"TaintToleration"},{"name":"NodeAffinity"},{"name":"NodePorts"},{"name":"NodeResourcesFit"},{"name":"VolumeRestrictions"},{"name":"EBSLimits"},{"name":"GCEPDLimits"},{"name":"NodeVolumeLimits"},{"name":"AzureDiskLimits"},{"name":"VolumeBinding"},{"name":"VolumeZone"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"}]},"postFilter":{"enabled":[{"name":"DefaultPreemption"}]},"preScore":{"enabled":[{"name":"InterPodAffinity"},{"name":"PodTopologySpread"},{"name":"TaintToleration"},{"name":"NodeAffinity"}]},"score":{"enabled":[{"name":"NodeResourcesBalancedAllocation","weight":1},{"name":"ImageLocality","weight":1},{"name":"InterPodAffinity","weight":1},{"name":"NodeResourcesFit","weight":1},{"name":"NodeAffinity","weight":1},{"name":"PodTopologySpread","weight":2},{"name":"TaintToleration","weight":1}]},"reserve":{"enabled":[{"name":"VolumeBinding"}]},"permit":{},"preBind":{"enabled":[{"name":"VolumeBinding"}]},"bind":{"enabled":[{"name":"DefaultBinder"}]},"postBind":{}},"pluginConfig":[{"name":"DefaultPreemption","args":{"kind":"DefaultPreemptionArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","minCandidateNodesPercentage":10,"minCandidateNodesAbsolute":100}},{"name":"InterPodAffinity","args":{"kind":"InterPodAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","hardPodAffinityWeight":1}},{"name":"NodeAffinity","args":{"kind":"NodeAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2"}},{"name":"NodeResourcesBalancedAllocation","args":{"kind":"NodeResourcesBalancedAllocationArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}},{"name":"NodeResourcesFit","args":{"kind":"NodeResourcesFitArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","scoringStrategy":{"type":"LeastAllocated","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}}},{"name":"PodTopologySpread","args":{"kind":"PodTopologySpreadArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","defaultingType":"System"}},{"name":"VolumeBinding","args":{"kind":"VolumeBindingArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta2","bindTimeoutSeconds":600}}]}]}}`
+				j += `,"pvcs":[{"metadata":{"name":"pvc1","namespace":"default","uid":"fb6d1964-41e3-4541-a200-4d76f62b2254","resourceVersion":"567","creationTimestamp":"2021-12-28T01:06:32Z","annotations":{"pv.kubernetes.io/bind-completed":"yes","pv.kubernetes.io/bound-by-controller":"yes"},"managedFields":[{"manager":"simulator","operation":"Apply","apiVersion":"v1","time":"2021-12-28T01:06:32Z","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:accessModes":{},"f:resources":{"f:requests":{"f:storage":{}}},"f:volumeMode":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:pv.kubernetes.io/bind-completed":{},"f:pv.kubernetes.io/bound-by-controller":{}}},"f:spec":{"f:volumeName":{}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2021-12-28T01:06:36Z","fieldsType":"FieldsV1","fieldsV1":{"f:status":{"f:accessModes":{},"f:capacity":{".":{},"f:storage":{}},"f:phase":{}}},"subresource":"status"}]},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"volumeName":"pv1","volumeMode":"Filesystem"},"status":{"phase":"Bound","accessModes":["ReadWriteOnce"],"capacity":{"storage":"1Gi"}}}],"storageClasses":[],"priorityClasses":[],"schedulerConfig":{"parallelism":16,"leaderElection":{"leaderElect":true,"leaseDuration":"15s","renewDeadline":"10s","retryPeriod":"2s","resourceLock":"leases","resourceName":"kube-scheduler","resourceNamespace":"kube-system"},"clientConnection":{"kubeconfig":"","acceptContentTypes":"","contentType":"application/vnd.kubernetes.protobuf","qps":50,"burst":100},"healthzBindAddress":"0.0.0.0:10251","metricsBindAddress":"0.0.0.0:10251","enableProfiling":true,"enableContentionProfiling":true,"percentageOfNodesToScore":0,"podInitialBackoffSeconds":1,"podMaxBackoffSeconds":10,"profiles":[{"schedulerName":"default-scheduler","plugins":{"queueSort":{"enabled":[{"name":"PrioritySort"}]},"preFilter":{"enabled":[{"name":"NodeResourcesFit"},{"name":"NodePorts"},{"name":"VolumeRestrictions"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"},{"name":"VolumeBinding"},{"name":"NodeAffinity"}]},"filter":{"enabled":[{"name":"NodeUnschedulable"},{"name":"NodeName"},{"name":"TaintToleration"},{"name":"NodeAffinity"},{"name":"NodePorts"},{"name":"NodeResourcesFit"},{"name":"VolumeRestrictions"},{"name":"EBSLimits"},{"name":"GCEPDLimits"},{"name":"NodeVolumeLimits"},{"name":"AzureDiskLimits"},{"name":"VolumeBinding"},{"name":"VolumeZone"},{"name":"PodTopologySpread"},{"name":"InterPodAffinity"}]},"postFilter":{"enabled":[{"name":"DefaultPreemption"}]},"preScore":{"enabled":[{"name":"InterPodAffinity"},{"name":"PodTopologySpread"},{"name":"TaintToleration"},{"name":"NodeAffinity"}]},"score":{"enabled":[{"name":"NodeResourcesBalancedAllocation","weight":1},{"name":"ImageLocality","weight":1},{"name":"InterPodAffinity","weight":1},{"name":"NodeResourcesFit","weight":1},{"name":"NodeAffinity","weight":1},{"name":"PodTopologySpread","weight":2},{"name":"TaintToleration","weight":1}]},"reserve":{"enabled":[{"name":"VolumeBinding"}]},"permit":{},"preBind":{"enabled":[{"name":"VolumeBinding"}]},"bind":{"enabled":[{"name":"DefaultBinder"}]},"postBind":{}},"pluginConfig":[{"name":"DefaultPreemption","args":{"kind":"DefaultPreemptionArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","minCandidateNodesPercentage":10,"minCandidateNodesAbsolute":100}},{"name":"InterPodAffinity","args":{"kind":"InterPodAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","hardPodAffinityWeight":1}},{"name":"NodeAffinity","args":{"kind":"NodeAffinityArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3"}},{"name":"NodeResourcesBalancedAllocation","args":{"kind":"NodeResourcesBalancedAllocationArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}},{"name":"NodeResourcesFit","args":{"kind":"NodeResourcesFitArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","scoringStrategy":{"type":"LeastAllocated","resources":[{"name":"cpu","weight":1},{"name":"memory","weight":1}]}}},{"name":"PodTopologySpread","args":{"kind":"PodTopologySpreadArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","defaultingType":"System"}},{"name":"VolumeBinding","args":{"kind":"VolumeBindingArgs","apiVersion":"kubescheduler.config.k8s.io/v1beta3","bindTimeoutSeconds":600}}]}]}}`
 				b := []byte(j)
 				r := ResourcesForImport{}
 				if err := json.Unmarshal(b, &r); err != nil {
@@ -1101,7 +1065,6 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -1153,7 +1116,6 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -1205,7 +1167,6 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -1257,7 +1218,6 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply PersistentVolume"))
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -1311,7 +1271,6 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply PersistentVolumeClaim"))
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
 					assert.Equal(t, "StorageClass1", *cfg.Name)
@@ -1363,7 +1322,6 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -1415,7 +1373,6 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
@@ -1520,7 +1477,7 @@ func TestFunction_listPcs(t *testing.T) {
 					Pvcs:            []corev1.PersistentVolumeClaim{},
 					StorageClasses:  []storagev1.StorageClass{},
 					PriorityClasses: _pcs,
-					SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+					SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 				}
 			},
 			wantErr: false,
@@ -1552,7 +1509,7 @@ func TestFunction_listPcs(t *testing.T) {
 				Pvcs:            []corev1.PersistentVolumeClaim{},
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
-				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				SchedulerConfig: &v1beta3config.KubeSchedulerConfiguration{},
 			}
 
 			err := s.listPcs(ctx, resources, &errgrp, options{})
@@ -1659,15 +1616,8 @@ func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 		{
 			name: "Import does not call RestartScheduler",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
-				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
-				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil)
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
-				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
-				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil)
-				// If the Import function call this, it will return the error.
-				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(xerrors.Errorf("restart scheduler was called"))
+				// RestartScheduler must be called zero times.
+				schedulers.EXPECT().RestartScheduler(gomock.Any()).Times(0)
 			},
 			applyConfiguration: func() *ResourcesForImport {
 				pods := []v1.PodApplyConfiguration{}
