@@ -112,6 +112,19 @@ It starts etcd and simulator-server locally.
 
 To run the frontend, please see [README.md](web/README.md) on ./web dir.
 
+## Existing cluster importing
+The simulator can import existing clusters.
+This allows for batch inclusion of resources from external clusters.
+It is enabled by an `EXTERNAL_IMPORT_ENABLED` environment variables is `1`.
+
+The following environment variables configure this function:
+- `EXTERNAL_IMPORT_ENABLED`:If it is `1`, this importing function is enabled.
+  The scheduler starts importing from external clusters as soon as it starts.
+- `KUBECONFIG`:The cluster from which you are importing is indicated by this environment variable.
+  [Read more](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#the-kubeconfig-environment-variable)
+- `KUBE_SCHEDULER_CONFIG_PATH`:This is an optional. The simulator can't import the scheduler configuration from existing cluster via `kube-apiserver`.
+  If you set the file path to this variable, then you could import the scheduler configuration.
+
 ## Contributing
 
 see [CONTRIBUTING.md](CONTRIBUTING.md)
