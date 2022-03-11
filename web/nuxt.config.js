@@ -81,5 +81,8 @@ export default {
       "./components/lib/templates/priorityclass.yaml",
       "utf8"
     ),
+    // ALPHA_TABLE_VIEWS is a optional parameter for the datatable view. This is an alpha feature.
+    // If this value is set to "1", the datatable view will be enabled.
+    ALPHA_TABLE_VIEWS: process.env.ALPHA_TABLE_VIEWS || "0",
   },
 };

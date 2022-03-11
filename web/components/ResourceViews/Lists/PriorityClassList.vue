@@ -30,8 +30,8 @@ import {
   onMounted,
   defineComponent,
 } from "@nuxtjs/composition-api";
-import {} from "./lib/util";
-import PriorityClassStoreKey from "./StoreKey/PriorityClassStoreKey";
+import {} from "../../lib/util";
+import PriorityClassStoreKey from "../../StoreKey/PriorityClassStoreKey";
 export default defineComponent({
   setup() {
     const store = inject(PriorityClassStoreKey);

@@ -12,9 +12,11 @@ import {
   onMounted,
   defineComponent,
 } from "@nuxtjs/composition-api";
-import {} from "./lib/util";
-import PodStoreKey from "./StoreKey/PodStoreKey";
+import {} from "../../lib/util";
+import PodStoreKey from "../../StoreKey/PodStoreKey";
+import PodList from "./PodList.vue";
 export default defineComponent({
+  components: { PodList },
   setup() {
     const store = inject(PodStoreKey);
     if (!store) {
