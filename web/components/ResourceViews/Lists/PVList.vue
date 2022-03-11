@@ -31,8 +31,8 @@ import {
   onMounted,
   defineComponent,
 } from "@nuxtjs/composition-api";
-import {} from "./lib/util";
-import PersistentVolumeStoreKey from "./StoreKey/PVStoreKey";
+import {} from "../../lib/util";
+import PersistentVolumeStoreKey from "../../StoreKey/PVStoreKey";
 export default defineComponent({
   setup() {
     const store = inject(PersistentVolumeStoreKey);

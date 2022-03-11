@@ -24,8 +24,8 @@ import {
   onMounted,
   defineComponent,
 } from "@nuxtjs/composition-api";
-import {} from "./lib/util";
-import PodStoreKey from "./StoreKey/PodStoreKey";
+import {} from "../../lib/util";
+import PodStoreKey from "../../StoreKey/PodStoreKey";
 export default defineComponent({
   props: {
     nodeName: {
