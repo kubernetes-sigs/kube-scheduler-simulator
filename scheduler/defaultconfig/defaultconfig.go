@@ -10,6 +10,7 @@ import (
 func DefaultSchedulerConfig() (*v1beta2.KubeSchedulerConfiguration, error) {
 	var versionedCfg v1beta2.KubeSchedulerConfiguration
 	scheme.Scheme.Default(&versionedCfg)
+	versionedCfg.SetGroupVersionKind(v1beta2.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
 
 	return &versionedCfg, nil
 }

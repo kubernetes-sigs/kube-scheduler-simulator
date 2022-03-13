@@ -170,6 +170,7 @@ func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConf
 	if err := scheme.Scheme.Convert(versioned, &cfg, nil); err != nil {
 		return nil, xerrors.Errorf("convert configuration: %w", err)
 	}
+	cfg.SetGroupVersionKind(v1beta2config.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
 
 	return &cfg, nil
 }

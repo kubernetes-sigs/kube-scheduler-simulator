@@ -365,5 +365,6 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 
 	converted := config.KubeSchedulerConfiguration{}
 	scheme.Scheme.Convert(cfg, &converted, nil)
+	converted.SetGroupVersionKind(v1beta2config.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
 	return converted
 }
