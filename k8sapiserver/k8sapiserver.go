@@ -18,9 +18,10 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/kube-aggregator/pkg/apiserver"
 	apiserverapp "k8s.io/kubernetes/cmd/kube-apiserver/app"
-	apiserveropts "k8s.io/kubernetes/cmd/kube-apiserver/app/options"
+	apiserverappopts "k8s.io/kubernetes/cmd/kube-apiserver/app/options"
 	"k8s.io/kubernetes/pkg/controlplane"
 	authzmodes "k8s.io/kubernetes/pkg/kubeapiserver/authorizer/modes"
+	apiserveropts "k8s.io/kubernetes/pkg/kubeapiserver/options"
 )
 
 // This key is for testing purposes only and is not considered secure.
@@ -106,31 +107,46 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 	return cfg, shutdownFunc, nil
 }
 
-func createK8SAPIServerOpts(etcdURL string) (*apiserveropts.ServerRunOptions, error) {
-	serverOpts := apiserveropts.NewServerRunOptions()
+func createK8SAPIServerOpts(etcdURL string) (*apiserverappopts.ServerRunOptions, func(), error) {
+	serverOpts := apiserverappopts.NewServerRunOptions()
+
+	// set up etcd
 	serverOpts.Etcd.StorageConfig.Transport.ServerList = []string{etcdURL}
+
+	// set up RBAC authorization and annoymous auth.
 	serverOpts.Authorization.Modes = []string{authzmodes.ModeRBAC}
 	serverOpts.Authentication.Anonymous.Allow = true
 	err := serverOpts.APIEnablement.RuntimeConfig.Set("api/all=true")
 	if err != nil {
-		return nil, xerrors.Errorf("k8s api server set runtime config: %w", err)
+		return nil, nil, xerrors.Errorf("k8s api server set runtime config: %w", err)
 	}
+
+	// setup fake key for secure serving
 	saSigningKeyFile, err := ioutil.TempFile("/tmp", "insecure_test_key")
 	if err != nil {
-		return nil, xerrors.Errorf("create temp file failed: %v", err)
+		return nil, nil, xerrors.Errorf("create temp file failed: %v", err)
 	}
-	defer os.RemoveAll(saSigningKeyFile.Name())
+	cleanupFunc := func() {
+		os.RemoveAll(saSigningKeyFile.Name())
+	}
+
 	if err = ioutil.WriteFile(saSigningKeyFile.Name(), []byte(ecdsaPrivateKey), 0o600); err != nil {
-		return nil, xerrors.Errorf("write file %s failed: %v", saSigningKeyFile.Name(), err)
+		return nil, nil, xerrors.Errorf("write file %s failed: %v", saSigningKeyFile.Name(), err)
 	}
 	serverOpts.ServiceAccountSigningKeyFile = saSigningKeyFile.Name()
 	serverOpts.Authentication.ServiceAccounts.Issuers = []string{"https://foo.bar.example.com"}
 	serverOpts.Authentication.ServiceAccounts.KeyFiles = []string{saSigningKeyFile.Name()}
-	return serverOpts, nil
+
+	// disable admission plugins to avoid node taints, service account, cert approval etc.
+	serverOpts.Admission.GenericAdmission.DisablePlugins = apiserveropts.AllOrderedPlugins
+	serverOpts.Admission.GenericAdmission.EnablePlugins = []string{}
+
+	return serverOpts, cleanupFunc, nil
 }
 
 func createK8SAPIChainedServer(etcdURL string) (*apiserver.APIAggregator, error) {
-	serverOpts, err := createK8SAPIServerOpts(etcdURL)
+	serverOpts, cleanupFunc, err := createK8SAPIServerOpts(etcdURL)
+	defer cleanupFunc()
 	if err != nil {
 		return nil, err
 	}
