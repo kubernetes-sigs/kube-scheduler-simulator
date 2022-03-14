@@ -149,19 +149,28 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 	}
 
 	if w.normalizeScorePluginExtender != nil {
-		if s := w.doBeforeNormalizeScoreAndStoreResult(ctx, state, pod, scores); !s.IsSuccess() {
+		s := w.normalizeScorePluginExtender.BeforeNormalizeScore(ctx, state, pod, scores)
+		for _, score := range scores {
+			w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, score.Name, resultBeforePrefix+w.originalScorePlugin.Name(), score.Score)
+		}
+		if !s.IsSuccess() {
 			return s
 		}
 	}
-	orignstatus := w.originalScorePlugin.ScoreExtensions().NormalizeScore(ctx, state, pod, scores)
-	if !orignstatus.IsSuccess() {
-		klog.Errorf("failed to run normalize score: %v, %v", orignstatus.Code(), orignstatus.Message())
+
+	s := w.originalScorePlugin.ScoreExtensions().NormalizeScore(ctx, state, pod, scores)
+	if !s.IsSuccess() {
+		klog.Errorf("failed to run normalize score: %v, %v", s.Code(), s.Message())
 		// If it is not nil, we wiil return the results of AfterNormalizeScore.
 		if w.normalizeScorePluginExtender != nil {
-			return w.doAfterNormalizeScoreAndStoreResult(ctx, state, pod, scores, orignstatus)
+			afterStatus := w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, s)
+			for _, score := range scores {
+				w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, score.Name, resultAfterPrefix+w.originalScorePlugin.Name(), score.Score)
+			}
+			return afterStatus
 		}
 		// Otherwise, we will return the original results.
-		return orignstatus
+		return s
 	}
 
 	for _, s := range scores {
@@ -169,26 +178,13 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 	}
 	// If it is not nil, we wiil run AfterNormalizeScore.
 	if w.normalizeScorePluginExtender != nil {
-		_ = w.doAfterNormalizeScoreAndStoreResult(ctx, state, pod, scores, orignstatus)
+		_ = w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, s)
+		for _, score := range scores {
+			w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, score.Name, resultAfterPrefix+w.originalScorePlugin.Name(), score.Score)
+		}
 	}
 
 	return nil
-}
-
-func (w *wrappedPlugin) doBeforeNormalizeScoreAndStoreResult(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
-	s := w.normalizeScorePluginExtender.BeforeNormalizeScore(ctx, state, pod, scores)
-	for _, score := range scores {
-		w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, score.Name, resultBeforePrefix+w.originalScorePlugin.Name(), score.Score)
-	}
-	return s
-}
-
-func (w *wrappedPlugin) doAfterNormalizeScoreAndStoreResult(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList, orignstatus *framework.Status) *framework.Status {
-	s := w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, orignstatus)
-	for _, score := range scores {
-		w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, score.Name, resultAfterPrefix+w.originalScorePlugin.Name(), score.Score)
-	}
-	return s
 }
 
 // Score wraps original Score plugin of Scheduler Framework.
@@ -201,33 +197,26 @@ func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, 
 	}
 
 	if w.scorePluginExtender != nil {
-		score, s := w.doBeforeScoreAndStoreResult(ctx, state, pod, nodeName)
+		score, s := w.scorePluginExtender.BeforeScore(ctx, state, pod, nodeName)
+		w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, resultBeforePrefix+w.originalScorePlugin.Name(), score)
 		if !s.IsSuccess() {
 			return score, s
 		}
 	}
+
 	score, s := w.originalScorePlugin.Score(ctx, state, pod, nodeName)
 	if !s.IsSuccess() {
 		klog.Errorf("failed to run score plugin: %v, %v", s.Code(), s.Message())
 	} else {
 		w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, w.originalScorePlugin.Name(), score)
 	}
+
 	// If it is not nil, we wiil return the results of AfterScore.
 	if w.scorePluginExtender != nil {
-		return w.doAfterScoreAndStoreResult(ctx, state, pod, nodeName, score, s)
+		afterScore, afterStatus := w.scorePluginExtender.AfterScore(ctx, state, pod, nodeName, score, s)
+		w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, resultAfterPrefix+w.originalScorePlugin.Name(), afterScore)
+		return afterScore, afterStatus
 	}
-	return score, s
-}
-
-func (w *wrappedPlugin) doBeforeScoreAndStoreResult(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
-	score, s := w.scorePluginExtender.BeforeScore(ctx, state, pod, nodeName)
-	w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, resultBeforePrefix+w.originalScorePlugin.Name(), score)
-	return score, s
-}
-
-func (w *wrappedPlugin) doAfterScoreAndStoreResult(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string, score int64, status *framework.Status) (int64, *framework.Status) {
-	score, s := w.scorePluginExtender.AfterScore(ctx, state, pod, nodeName, score, status)
-	w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, resultAfterPrefix+w.originalScorePlugin.Name(), score)
 	return score, s
 }
 
@@ -241,31 +230,25 @@ func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState,
 	}
 
 	if w.filterPluginExtender != nil {
-		if s := w.doBeforeFilterAndStoreResult(ctx, state, pod, nodeInfo); !s.IsSuccess() {
+		s := w.filterPluginExtender.BeforeFilter(ctx, state, pod, nodeInfo)
+		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, resultBeforePrefix+w.originalFilterPlugin.Name(), s.Message())
+		if !s.IsSuccess() {
 			return s
 		}
 	}
+
 	s := w.originalFilterPlugin.Filter(ctx, state, pod, nodeInfo)
 	if s.IsSuccess() {
 		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), schedulingresultstore.PassedFilterMessage)
 	} else {
 		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), s.Message())
 	}
+
 	// If it is not nil, we wiil return the results of AfterFilter.
 	if w.filterPluginExtender != nil {
-		return w.doAfterFilterAndStoreResult(ctx, state, pod, nodeInfo, s)
+		afterStatus := w.filterPluginExtender.AfterFilter(ctx, state, pod, nodeInfo, s)
+		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, resultAfterPrefix+w.originalFilterPlugin.Name(), afterStatus.Message())
+		return afterStatus
 	}
-	return s
-}
-
-func (w *wrappedPlugin) doBeforeFilterAndStoreResult(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
-	s := w.filterPluginExtender.BeforeFilter(ctx, state, pod, nodeInfo)
-	w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, resultBeforePrefix+w.originalFilterPlugin.Name(), s.Message())
-	return s
-}
-
-func (w *wrappedPlugin) doAfterFilterAndStoreResult(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo, status *framework.Status) *framework.Status {
-	s := w.filterPluginExtender.AfterFilter(ctx, state, pod, nodeInfo, status)
-	w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, resultAfterPrefix+w.originalFilterPlugin.Name(), s.Message())
 	return s
 }
