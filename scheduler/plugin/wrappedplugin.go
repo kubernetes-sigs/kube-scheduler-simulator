@@ -173,6 +173,7 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 		return s
 	}
 
+	// TODO: move to AfterNormalizeScore.
 	for _, s := range scores {
 		w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, s.Name, w.originalScorePlugin.Name(), s.Score)
 	}
@@ -208,6 +209,7 @@ func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, 
 	if !s.IsSuccess() {
 		klog.Errorf("failed to run score plugin: %v, %v", s.Code(), s.Message())
 	} else {
+		// TODO: move to AfterScore.
 		w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, w.originalScorePlugin.Name(), score)
 	}
 
@@ -239,6 +241,7 @@ func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState,
 
 	s := w.originalFilterPlugin.Filter(ctx, state, pod, nodeInfo)
 	if s.IsSuccess() {
+		// TODO: move to AfterFilter.
 		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), schedulingresultstore.PassedFilterMessage)
 	} else {
 		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), s.Message())
