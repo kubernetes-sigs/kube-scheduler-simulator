@@ -1,11 +1,10 @@
 import { V1Node, V1NodeList } from "@kubernetes/client-node";
 import { k8sInstance } from "@/api/v1/index";
 
-export const applyNode = async (req: V1Node, onError: (_: string) => void) => {
+export const applyNode = async (req: V1Node) => {
   try {
     if (!req.metadata?.name) {
-      onError("metadata.name is not provided");
-      return;
+      throw new Error(`metadata.name is not provided`);
     }
     req.kind = "Node";
     req.apiVersion = "v1";
@@ -16,36 +15,33 @@ export const applyNode = async (req: V1Node, onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to applyNode: " + e);
+    throw new Error(`failed to apply node: ${e}`);
   }
 };
 
-export const listNode = async (onError: (_: string) => void) => {
+export const listNode = async () => {
   try {
     const res = await k8sInstance.get<V1NodeList>(`/nodes`, {});
     return res.data;
   } catch (e: any) {
-    onError("failed to listNode: " + e);
+    throw new Error(`failed to list nodes: ${e}`);
   }
 };
 
-export const getNode = async (name: string, onError: (_: string) => void) => {
+export const getNode = async (name: string) => {
   try {
     const res = await k8sInstance.get<V1Node>(`/nodes/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError("failed to getNode: " + e);
+    throw new Error(`failed to get node: ${e}`);
   }
 };
 
-export const deleteNode = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const deleteNode = async (name: string) => {
   try {
     const res = await k8sInstance.delete(`/nodes/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError("failed to deleteNode: " + e);
+    throw new Error(`failed to delete node: ${e}`);
   }
 };

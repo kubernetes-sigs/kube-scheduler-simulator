@@ -2,8 +2,7 @@ import { instance } from "@/api/v1/index";
 import { SchedulerConfiguration } from "./types";
 
 export const applySchedulerConfiguration = async (
-  req: SchedulerConfiguration,
-  onError: (_msg: string) => void
+  req: SchedulerConfiguration
 ) => {
   try {
     const res = await instance.post<SchedulerConfiguration>(
@@ -12,7 +11,7 @@ export const applySchedulerConfiguration = async (
     );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    throw new Error(`failed to apply scheduler configration: ${e}`);
   }
 };
 

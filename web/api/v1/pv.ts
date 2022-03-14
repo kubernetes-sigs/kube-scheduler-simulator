@@ -4,14 +4,10 @@ import {
 } from "@kubernetes/client-node";
 import { k8sInstance } from "@/api/v1/index";
 
-export const applyPersistentVolume = async (
-  req: V1PersistentVolume,
-  onError: (_: string) => void
-) => {
+export const applyPersistentVolume = async (req: V1PersistentVolume) => {
   try {
     if (!req.metadata?.name) {
-      onError("metadata.name is not provided");
-      return;
+      throw new Error(`metadata.name is not provided`);
     }
     req.kind = "PersistentVolume";
     req.apiVersion = "v1";
@@ -22,11 +18,11 @@ export const applyPersistentVolume = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to applyPersistentVolume: " + e);
+    throw new Error(`failed to apply persistent volume: ${e}`);
   }
 };
 
-export const listPersistentVolume = async (onError: (_: string) => void) => {
+export const listPersistentVolume = async () => {
   try {
     const res = await k8sInstance.get<V1PersistentVolumeList>(
       `/persistentvolumes`,
@@ -34,14 +30,11 @@ export const listPersistentVolume = async (onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to listPersistentVolume: " + e);
+    throw new Error(`failed to list persistent volumes: ${e}`);
   }
 };
 
-export const getPersistentVolume = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const getPersistentVolume = async (name: string) => {
   try {
     const res = await k8sInstance.get<V1PersistentVolume>(
       `/persistentvolumes/${name}`,
@@ -49,18 +42,15 @@ export const getPersistentVolume = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to getPersistentVolume: " + e);
+    throw new Error(`failed to get persistent volume: ${e}`);
   }
 };
 
-export const deletePersistentVolume = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const deletePersistentVolume = async (name: string) => {
   try {
     const res = await k8sInstance.delete(`/persistentvolumes/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError("failed to deletePersistentVolume: " + e);
+    throw new Error(`failed to delete persistent volume: ${e}`);
   }
 };

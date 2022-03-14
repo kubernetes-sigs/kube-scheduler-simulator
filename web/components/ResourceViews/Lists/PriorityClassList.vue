@@ -50,7 +50,7 @@ export default defineComponent({
     };
 
     const getPriorityClassList = async () => {
-      await store.fetchlist(setServerErrorMessage);
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     const onClick = (priorityclass: V1PriorityClass) => {
       store.select(priorityclass, false);

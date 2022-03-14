@@ -5,13 +5,11 @@ import {
 import { k8sInstance, namespaceURL } from "@/api/v1/index";
 
 export const applyPersistentVolumeClaim = async (
-  req: V1PersistentVolumeClaim,
-  onError: (_: string) => void
+  req: V1PersistentVolumeClaim
 ) => {
   try {
     if (!req.metadata?.name) {
-      onError("metadata.name is not provided");
-      return;
+      throw new Error(`metadata.name is not provided`);
     }
     req.kind = "PersistentVolumeClaim";
     req.apiVersion = "v1";
@@ -23,13 +21,11 @@ export const applyPersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to applyPersistentVolumeClaim: " + e);
+    throw new Error(`failed to apply persistent volume claim: ${e}`);
   }
 };
 
-export const listPersistentVolumeClaim = async (
-  onError: (_: string) => void
-) => {
+export const listPersistentVolumeClaim = async () => {
   try {
     const res = await k8sInstance.get<V1PersistentVolumeClaimList>(
       namespaceURL + `/persistentvolumeclaims`,
@@ -37,14 +33,11 @@ export const listPersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to listPersistentVolumeClaim: " + e);
+    throw new Error(`failed to list persistent volume claims: ${e}`);
   }
 };
 
-export const getPersistentVolumeClaim = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const getPersistentVolumeClaim = async (name: string) => {
   try {
     const res = await k8sInstance.get<V1PersistentVolumeClaim>(
       namespaceURL + `/persistentvolumeclaims/${name}`,
@@ -52,14 +45,11 @@ export const getPersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to getPersistentVolumeClaim: " + e);
+    throw new Error(`failed to get persistent volume claim: ${e}`);
   }
 };
 
-export const deletePersistentVolumeClaim = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const deletePersistentVolumeClaim = async (name: string) => {
   try {
     const res = await k8sInstance.delete(
       namespaceURL + `/persistentvolumeclaims/${name}`,
@@ -67,6 +57,6 @@ export const deletePersistentVolumeClaim = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to deletePersistentVolumeClaim: " + e);
+    throw new Error(`failed to delete persistent volume claim: ${e}`);
   }
 };

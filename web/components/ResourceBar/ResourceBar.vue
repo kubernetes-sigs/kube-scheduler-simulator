@@ -81,9 +81,9 @@ type Resource =
 interface Store {
   readonly selected: object | null;
   resetSelected(): void;
-  apply(_: Resource, _onServerError: (_: string) => void): Promise<void>;
-  delete(_: string, _onServerError: (_: string) => void): Promise<void>;
-  fetchSelected(_onServerError: (_: string) => void): Promise<void>;
+  apply(_: Resource): Promise<void>;
+  delete(_: string): Promise<void>;
+  fetchSelected(): Promise<void>;
 }
 
 interface SelectedItem {
@@ -221,7 +221,7 @@ export default defineComponent({
 
     const fetchSelected = async () => {
       if (store) {
-        await store.fetchSelected(setServerErrorMessage);
+        await store.fetchSelected().catch((e) => setServerErrorMessage(e));
       }
     };
 
@@ -232,7 +232,7 @@ export default defineComponent({
     const applyOnClick = () => {
       if (store) {
         const y = yaml.load(formData.value);
-        store.apply(y, setServerErrorMessage);
+        store.apply(y).catch((e) => setServerErrorMessage(e));
       }
       drawer.value = false;
     };
@@ -241,11 +241,12 @@ export default defineComponent({
       if (selected.value?.resourceKind != "SchedulerConfiguration") {
         //@ts-ignore // Only SchedulerConfiguration don't have the metadata field.
         if (selected.value?.item.metadata?.name && store) {
-          store.delete(
-            //@ts-ignore
-            selected.value.item.metadata.name,
-            setServerErrorMessage
-          );
+          store
+            .delete(
+              //@ts-ignore
+              selected.value.item.metadata.name
+            )
+            .catch((e) => setServerErrorMessage(e));
         }
       }
       drawer.value = false;

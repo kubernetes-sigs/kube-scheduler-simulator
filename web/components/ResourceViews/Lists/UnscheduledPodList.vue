@@ -34,7 +34,7 @@ export default defineComponent({
     };
 
     const getPodList = async () => {
-      await store.fetchlist(setServerErrorMessage);
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     onMounted(getPodList);
 

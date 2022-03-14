@@ -1,14 +1,10 @@
 import { V1PriorityClass, V1PriorityClassList } from "@kubernetes/client-node";
 import { k8sSchedulingInstance } from "@/api/v1/index";
 
-export const applyPriorityClass = async (
-  req: V1PriorityClass,
-  onError: (_: string) => void
-) => {
+export const applyPriorityClass = async (req: V1PriorityClass) => {
   try {
     if (!req.metadata?.name) {
-      onError("metadata.name is not provided");
-      return;
+      throw new Error(`metadata.name is not provided`);
     }
     req.kind = "PriorityClass";
     req.apiVersion = "scheduling.k8s.io/v1";
@@ -19,11 +15,11 @@ export const applyPriorityClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to applyPriorityClass: " + e);
+    throw new Error(`failed to apply priority class: ${e}`);
   }
 };
 
-export const listPriorityClass = async (onError: (_: string) => void) => {
+export const listPriorityClass = async () => {
   try {
     const res = await k8sSchedulingInstance.get<V1PriorityClassList>(
       `/priorityclasses`,
@@ -31,14 +27,11 @@ export const listPriorityClass = async (onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to listPriorityClass: " + e);
+    throw new Error(`failed to list priority classes: ${e}`);
   }
 };
 
-export const getPriorityClass = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const getPriorityClass = async (name: string) => {
   try {
     const res = await k8sSchedulingInstance.get<V1PriorityClass>(
       `/priorityclasses/${name}`,
@@ -46,14 +39,11 @@ export const getPriorityClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to getPriorityClass: " + e);
+    throw new Error(`failed to get priority class: ${e}`);
   }
 };
 
-export const deletePriorityClass = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const deletePriorityClass = async (name: string) => {
   try {
     const res = await k8sSchedulingInstance.delete(
       `/priorityclasses/${name}`,
@@ -61,6 +51,6 @@ export const deletePriorityClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to deletePriorityClass: " + e);
+    throw new Error(`failed to delete priority class: ${e}`);
   }
 };

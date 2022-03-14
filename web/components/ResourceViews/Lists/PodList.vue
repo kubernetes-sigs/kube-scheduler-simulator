@@ -50,7 +50,7 @@ export default defineComponent({
     };
 
     const getPodList = async () => {
-      await store.fetchlist(setServerErrorMessage);
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     const onClick = (pod: V1Pod) => {
       store.select(pod, false);

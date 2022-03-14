@@ -60,38 +60,31 @@ export default function priorityclassStore() {
       state.selectedPriorityClass = null;
     },
 
-    async fetchlist(onError: (_: string) => void) {
-      const priorityclasses = await listPriorityClass(onError);
-      if (!priorityclasses) return;
+    async fetchlist() {
+      const priorityclasses = await listPriorityClass();
       state.priorityclasses = priorityclasses.items;
     },
 
-    async apply(
-      n: V1PriorityClass,
-
-      onError: (_: string) => void
-    ) {
-      await applyPriorityClass(n, onError);
-      await this.fetchlist(onError);
+    async apply(n: V1PriorityClass) {
+      await applyPriorityClass(n);
+      await this.fetchlist();
     },
 
-    async fetchSelected(onError: (_: string) => void) {
+    async fetchSelected() {
       if (
         state.selectedPriorityClass?.item.metadata?.name &&
         !this.selected?.isNew
       ) {
         const s = await getPriorityClass(
-          state.selectedPriorityClass.item.metadata.name,
-          onError
+          state.selectedPriorityClass.item.metadata.name
         );
-        if (!s) return;
         this.select(s, false);
       }
     },
 
-    async delete(name: string, onError: (_: string) => void) {
-      await deletePriorityClass(name, onError);
-      await this.fetchlist(onError);
+    async delete(name: string) {
+      await deletePriorityClass(name);
+      await this.fetchlist();
     },
   };
 }

@@ -51,7 +51,7 @@ export default defineComponent({
     };
 
     const getStorageClassList = async () => {
-      await store.fetchlist(setServerErrorMessage);
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     const onClick = (storageclass: V1StorageClass) => {
       store.select(storageclass, false);

@@ -1,14 +1,10 @@
 import { V1StorageClass, V1StorageClassList } from "@kubernetes/client-node";
 import { k8sStorageInstance } from "@/api/v1/index";
 
-export const applyStorageClass = async (
-  req: V1StorageClass,
-  onError: (_: string) => void
-) => {
+export const applyStorageClass = async (req: V1StorageClass) => {
   try {
     if (!req.metadata?.name) {
-      onError("metadata.name is not provided");
-      return;
+      throw new Error(`metadata.name is not provided`);
     }
     req.kind = "StorageClass";
     req.apiVersion = "storage.k8s.io/v1";
@@ -19,11 +15,11 @@ export const applyStorageClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to applyStorageClass: " + e);
+    throw new Error(`failed to apply storage class: ${e}`);
   }
 };
 
-export const listStorageClass = async (onError: (_: string) => void) => {
+export const listStorageClass = async () => {
   try {
     const res = await k8sStorageInstance.get<V1StorageClassList>(
       `/storageclasses`,
@@ -31,14 +27,11 @@ export const listStorageClass = async (onError: (_: string) => void) => {
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to listStorageClass: " + e);
+    throw new Error(`failed to list storage classes: ${e}`);
   }
 };
 
-export const getStorageClass = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const getStorageClass = async (name: string) => {
   try {
     const res = await k8sStorageInstance.get<V1StorageClass>(
       `/storageclasses/${name}`,
@@ -46,18 +39,15 @@ export const getStorageClass = async (
     );
     return res.data;
   } catch (e: any) {
-    onError("failed to getStorageClass: " + e);
+    throw new Error(`failed to get storage class: ${e}`);
   }
 };
 
-export const deleteStorageClass = async (
-  name: string,
-  onError: (_: string) => void
-) => {
+export const deleteStorageClass = async (name: string) => {
   try {
     const res = await k8sStorageInstance.delete(`/storageclasses/${name}`, {});
     return res.data;
   } catch (e: any) {
-    onError("failed to deleteStorageClass: " + e);
+    throw new Error(`failed to delete storage class: ${e}`);
   }
 };

@@ -59,7 +59,7 @@ export default defineComponent({
     };
 
     const getNodeList = async () => {
-      await nstore.fetchlist(setServerErrorMessage);
+      await nstore.fetchlist().catch((e) => setServerErrorMessage(e));
     };
 
     onMounted(getNodeList);

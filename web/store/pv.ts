@@ -54,38 +54,31 @@ export default function pvStore() {
       state.selectedPersistentVolume = null;
     },
 
-    async fetchlist(onError: (_: string) => void) {
-      const pvs = await listPersistentVolume(onError);
-      if (!pvs) return;
+    async fetchlist() {
+      const pvs = await listPersistentVolume();
       state.pvs = pvs.items;
     },
 
-    async fetchSelected(onError: (_: string) => void) {
+    async fetchSelected() {
       if (
         state.selectedPersistentVolume?.item.metadata?.name &&
         !this.selected?.isNew
       ) {
         const p = await getPersistentVolume(
-          state.selectedPersistentVolume.item.metadata.name,
-          onError
+          state.selectedPersistentVolume.item.metadata.name
         );
-        if (!p) return;
         this.select(p, false);
       }
     },
 
-    async apply(
-      n: V1PersistentVolume,
-
-      onError: (_: string) => void
-    ) {
-      await applyPersistentVolume(n, onError);
-      await this.fetchlist(onError);
+    async apply(n: V1PersistentVolume) {
+      await applyPersistentVolume(n);
+      await this.fetchlist();
     },
 
-    async delete(name: string, onError: (_: string) => void) {
-      await deletePersistentVolume(name, onError);
-      await this.fetchlist(onError);
+    async delete(name: string) {
+      await deletePersistentVolume(name);
+      await this.fetchlist();
     },
   };
 }

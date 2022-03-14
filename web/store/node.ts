@@ -49,32 +49,26 @@ export default function nodeStore() {
       state.selectedNode = null;
     },
 
-    async fetchlist(onError: (_: string) => void) {
-      const nodes = await listNode(onError);
-      if (!nodes) return;
+    async fetchlist() {
+      const nodes = await listNode();
       state.nodes = nodes.items;
     },
 
-    async fetchSelected(onError: (_: string) => void) {
+    async fetchSelected() {
       if (state.selectedNode?.item.metadata?.name && !this.selected?.isNew) {
-        const n = await getNode(state.selectedNode.item.metadata.name, onError);
-        if (!n) return;
+        const n = await getNode(state.selectedNode.item.metadata.name);
         this.select(n, false);
       }
     },
 
-    async apply(
-      n: V1Node,
-
-      onError: (_: string) => void
-    ) {
-      await applyNode(n, onError);
-      await this.fetchlist(onError);
+    async apply(n: V1Node) {
+      await applyNode(n);
+      await this.fetchlist();
     },
 
-    async delete(name: string, onError: (_: string) => void) {
-      await deleteNode(name, onError);
-      await this.fetchlist(onError);
+    async delete(name: string) {
+      await deleteNode(name);
+      await this.fetchlist();
     },
   };
 }

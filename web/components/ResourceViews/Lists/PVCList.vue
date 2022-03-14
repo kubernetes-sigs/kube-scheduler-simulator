@@ -56,7 +56,7 @@ export default defineComponent({
     };
 
     const getPVCList = async () => {
-      await store.fetchlist(setServerErrorMessage);
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     const onClick = (pvc: V1PersistentVolumeClaim) => {
       store.select(pvc, false);
