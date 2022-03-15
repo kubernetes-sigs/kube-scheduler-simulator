@@ -238,6 +238,18 @@ export default defineComponent({
     };
 
     const deleteOnClick = () => {
+      if (selected.value?.resourceKind === "Node") {
+        //@ts-ignore
+        podstore.pods[selected.value?.item.metadata?.name].forEach((p) => {
+          //@ts-ignore
+          if (p.spec?.nodeName === selected.value?.item.metadata?.name) {
+            podstore
+              //@ts-ignore
+              .delete(p.metadata?.name)
+              .catch((e) => setServerErrorMessage(e));
+          }
+        });
+      }
       if (selected.value?.resourceKind != "SchedulerConfiguration") {
         //@ts-ignore // Only SchedulerConfiguration don't have the metadata field.
         if (selected.value?.item.metadata?.name && store) {
