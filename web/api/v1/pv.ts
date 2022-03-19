@@ -11,8 +11,11 @@ export const applyPersistentVolume = async (req: V1PersistentVolume) => {
     }
     req.kind = "PersistentVolume";
     req.apiVersion = "v1";
+    if (req.metadata.managedFields) {
+      delete req.metadata.managedFields;
+    }
     const res = await k8sInstance.patch<V1PersistentVolume>(
-      `/persistentvolumes/${req.metadata.name}?fieldManager=simulator`,
+      `/persistentvolumes/${req.metadata.name}?fieldManager=simulator&force=true`,
       req,
       { headers: { "Content-Type": "application/apply-patch+yaml" } }
     );

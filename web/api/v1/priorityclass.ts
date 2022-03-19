@@ -8,8 +8,11 @@ export const applyPriorityClass = async (req: V1PriorityClass) => {
     }
     req.kind = "PriorityClass";
     req.apiVersion = "scheduling.k8s.io/v1";
+    if (req.metadata.managedFields) {
+      delete req.metadata.managedFields;
+    }
     const res = await k8sSchedulingInstance.patch<V1PriorityClass>(
-      `/priorityclasses/${req.metadata.name}?fieldManager=simulator`,
+      `/priorityclasses/${req.metadata.name}?fieldManager=simulator&force=true`,
       req,
       { headers: { "Content-Type": "application/apply-patch+yaml" } }
     );

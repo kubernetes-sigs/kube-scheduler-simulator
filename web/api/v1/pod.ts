@@ -8,8 +8,12 @@ export const applyPod = async (req: V1Pod) => {
     }
     req.kind = "Pod";
     req.apiVersion = "v1";
+    if (req.metadata.managedFields) {
+      delete req.metadata.managedFields;
+    }
     const res = await k8sInstance.patch<V1Pod>(
-      namespaceURL + `/pods/${req.metadata.name}?fieldManager=simulator`,
+      namespaceURL +
+        `/pods/${req.metadata.name}?fieldManager=simulator&force=true`,
       req,
       { headers: { "Content-Type": "application/apply-patch+yaml" } }
     );

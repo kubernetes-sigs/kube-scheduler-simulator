@@ -13,9 +13,12 @@ export const applyPersistentVolumeClaim = async (
     }
     req.kind = "PersistentVolumeClaim";
     req.apiVersion = "v1";
+    if (req.metadata.managedFields) {
+      delete req.metadata.managedFields;
+    }
     const res = await k8sInstance.patch<V1PersistentVolumeClaim>(
       namespaceURL +
-        `/persistentvolumeclaims/${req.metadata.name}?fieldManager=simulator`,
+        `/persistentvolumeclaims/${req.metadata.name}?fieldManager=simulator&force=true`,
       req,
       { headers: { "Content-Type": "application/apply-patch+yaml" } }
     );

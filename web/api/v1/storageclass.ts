@@ -8,8 +8,11 @@ export const applyStorageClass = async (req: V1StorageClass) => {
     }
     req.kind = "StorageClass";
     req.apiVersion = "storage.k8s.io/v1";
+    if (req.metadata.managedFields) {
+      delete req.metadata.managedFields;
+    }
     const res = await k8sStorageInstance.patch<V1StorageClass>(
-      `/storageclasses/${req.metadata.name}?fieldManager=simulator`,
+      `/storageclasses/${req.metadata.name}?fieldManager=simulator&force=true`,
       req,
       { headers: { "Content-Type": "application/apply-patch+yaml" } }
     );

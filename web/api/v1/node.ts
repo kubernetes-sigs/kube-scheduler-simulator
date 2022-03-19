@@ -8,8 +8,11 @@ export const applyNode = async (req: V1Node) => {
     }
     req.kind = "Node";
     req.apiVersion = "v1";
+    if (req.metadata.managedFields) {
+      delete req.metadata.managedFields;
+    }
     const res = await k8sInstance.patch<V1Node>(
-      `/nodes/${req.metadata.name}?fieldManager=simulator`,
+      `/nodes/${req.metadata.name}?fieldManager=simulator&force=true`,
       req,
       { headers: { "Content-Type": "application/apply-patch+yaml" } }
     );
