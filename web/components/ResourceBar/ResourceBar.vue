@@ -239,6 +239,7 @@ export default defineComponent({
 
     const deleteOnClick = () => {
       if (selected.value?.resourceKind === "Node") {
+        // when the Node is deleted, all Pods on the Node should be deleted as well.
         //@ts-ignore
         podstore.pods[selected.value?.item.metadata?.name].forEach((p) => {
           //@ts-ignore
