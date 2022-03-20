@@ -44,6 +44,12 @@ It can be used to learn about the Kubernetes scheduler or to examine the detaile
 
 ## Getting started
 
+### Permission
+
+The simulator user should have permission to create directory under `/var/run`. 
+
+This is because the K8S API Server needs to store certificate in this location.
+
 ### Run with Docker
 
 We have [docker-compose.yml](./docker-compose.yml) to use the simulator easily.
