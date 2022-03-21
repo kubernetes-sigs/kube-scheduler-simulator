@@ -214,10 +214,8 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 				p.EXPECT().Filter(ctx, nil, as.pod, as.nodeInfo).Return(success2)
 				fe.EXPECT().AfterFilter(ctx, nil, as.pod, as.nodeInfo, success2).Return(success3)
 				p.EXPECT().Name().Return("fakeFilterPlugin").AnyTimes()
-				s.EXPECT().AddFilterResult("default", "pod1", "node1", "BeforefakeFilterPlugin", success1.Message())
 				// Filter sotres resultstore.PassedFilterMessage if it is successful.
 				s.EXPECT().AddFilterResult("default", "pod1", "node1", "fakeFilterPlugin", resultstore.PassedFilterMessage)
-				s.EXPECT().AddFilterResult("default", "pod1", "node1", "AfterfakeFilterPlugin", success3.Message())
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -239,10 +237,8 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 				p.EXPECT().Filter(ctx, nil, as.pod, as.nodeInfo).Return(failure)
 				fe.EXPECT().AfterFilter(ctx, nil, as.pod, as.nodeInfo, failure).Return(success3)
 				p.EXPECT().Name().Return("fakeFilterPlugin").AnyTimes()
-				s.EXPECT().AddFilterResult("default", "pod1", "node1", "BeforefakeFilterPlugin", success1.Message())
 				// Filter stores own message if it is successful.
 				s.EXPECT().AddFilterResult("default", "pod1", "node1", "fakeFilterPlugin", failure.Message())
-				s.EXPECT().AddFilterResult("default", "pod1", "node1", "AfterfakeFilterPlugin", success3.Message())
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -282,9 +278,7 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 				p.EXPECT().Filter(ctx, nil, as.pod, as.nodeInfo).Return(success2)
 				fe.EXPECT().AfterFilter(ctx, nil, as.pod, as.nodeInfo, success2).Return(failure)
 				p.EXPECT().Name().Return("fakeFilterPlugin").AnyTimes()
-				s.EXPECT().AddFilterResult("default", "pod1", "node1", "BeforefakeFilterPlugin", success1.Message())
 				s.EXPECT().AddFilterResult("default", "pod1", "node1", "fakeFilterPlugin", resultstore.PassedFilterMessage)
-				s.EXPECT().AddFilterResult("default", "pod1", "node1", "AfterfakeFilterPlugin", failure.Message())
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -471,12 +465,8 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 				se.EXPECT().NormalizeScore(ctx, nil, as.pod, as.scores).Return(success2).Do(calOnNormalizeScore)
 				spe.EXPECT().AfterNormalizeScore(ctx, nil, as.pod, as.scores, success2).Return(success3).Do(calOnAfterNormalizeScore)
 				sp.EXPECT().Name().Return("fakeNormalizeScorePlugin").AnyTimes()
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "BeforefakeNormalizeScorePlugin", int64(1000))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "BeforefakeNormalizeScorePlugin", int64(1010))
 				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "fakeNormalizeScorePlugin", int64(2000))
 				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "fakeNormalizeScorePlugin", int64(2010))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "AfterfakeNormalizeScorePlugin", int64(3000))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "AfterfakeNormalizeScorePlugin", int64(3010))
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -524,10 +514,6 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 				se.EXPECT().NormalizeScore(ctx, nil, as.pod, as.scores).Return(failure).Do(calOnNormalizeScore)
 				spe.EXPECT().AfterNormalizeScore(ctx, nil, as.pod, as.scores, failure).Return(success3).Do(calOnAfterNormalizeScore)
 				sp.EXPECT().Name().Return("fakeNormalizeScorePlugin").AnyTimes()
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "BeforefakeNormalizeScorePlugin", int64(1000))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "BeforefakeNormalizeScorePlugin", int64(1010))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "AfterfakeNormalizeScorePlugin", int64(3000))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "AfterfakeNormalizeScorePlugin", int64(3010))
 				// NormalizeScore isnt't stores own results if return error.
 			},
 			args: args{
@@ -576,12 +562,8 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 				se.EXPECT().NormalizeScore(ctx, nil, as.pod, as.scores).Return(success2).Do(calOnNormalizeScore)
 				spe.EXPECT().AfterNormalizeScore(ctx, nil, as.pod, as.scores, success2).Return(failure).Do(calOnAfterNormalizeScore)
 				sp.EXPECT().Name().Return("fakeNormalizeScorePlugin").AnyTimes()
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "BeforefakeNormalizeScorePlugin", int64(1000))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "BeforefakeNormalizeScorePlugin", int64(1010))
 				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "fakeNormalizeScorePlugin", int64(2000))
 				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "fakeNormalizeScorePlugin", int64(2010))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "AfterfakeNormalizeScorePlugin", int64(3000))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "AfterfakeNormalizeScorePlugin", int64(3010))
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -620,8 +602,6 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 				spe.EXPECT().BeforeNormalizeScore(ctx, nil, as.pod, as.scores).Return(success1).Do(calOnNormalizeScore)
 				sp.EXPECT().ScoreExtensions().Return(se).Times(1)
 				sp.EXPECT().Name().Return("fakeNormalizeScorePlugin").AnyTimes()
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node1", "BeforefakeNormalizeScorePlugin", int64(1000))
-				s.EXPECT().AddNormalizedScoreResult("default", "pod1", "node2", "BeforefakeNormalizeScorePlugin", int64(1010))
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -769,9 +749,7 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 				p.EXPECT().Score(ctx, nil, as.pod, "node1").Return(int64(2222), success2)
 				se.EXPECT().AfterScore(ctx, nil, as.pod, "node1", int64(2222), success2).Return(int64(3333), success3)
 				p.EXPECT().Name().Return("fakeScorePlugin").AnyTimes()
-				s.EXPECT().AddScoreResult("default", "pod1", "node1", "BeforefakeScorePlugin", int64(1111))
 				s.EXPECT().AddScoreResult("default", "pod1", "node1", "fakeScorePlugin", int64(2222))
-				s.EXPECT().AddScoreResult("default", "pod1", "node1", "AfterfakeScorePlugin", int64(3333))
 			},
 			args: args{
 				pod:      &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -791,7 +769,6 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 				se.EXPECT().AfterScore(ctx, nil, as.pod, "node1", int64(2222), failure).Return(int64(3333), success3)
 				p.EXPECT().Name().Return("fakeScorePlugin").AnyTimes()
 				s.EXPECT().AddScoreResult("default", "pod1", "node1", "BeforefakeScorePlugin", int64(1111))
-				s.EXPECT().AddScoreResult("default", "pod1", "node1", "AfterfakeScorePlugin", int64(3333))
 			},
 			args: args{
 				pod:      &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -806,7 +783,6 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 				failure := framework.NewStatus(framework.Error, "BeforeScore returned")
 				se.EXPECT().BeforeScore(ctx, nil, as.pod, "node1").Return(int64(1111), failure)
 				p.EXPECT().Name().Return("fakeScorePlugin").AnyTimes()
-				s.EXPECT().AddScoreResult("default", "pod1", "node1", "BeforefakeScorePlugin", int64(1111))
 			},
 			args: args{
 				pod:      &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -825,9 +801,7 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 				p.EXPECT().Score(ctx, nil, as.pod, "node1").Return(int64(2222), success2)
 				se.EXPECT().AfterScore(ctx, nil, as.pod, "node1", int64(2222), success2).Return(int64(3333), failure)
 				p.EXPECT().Name().Return("fakeScorePlugin").AnyTimes()
-				s.EXPECT().AddScoreResult("default", "pod1", "node1", "BeforefakeScorePlugin", int64(1111))
 				s.EXPECT().AddScoreResult("default", "pod1", "node1", "fakeScorePlugin", int64(2222))
-				s.EXPECT().AddScoreResult("default", "pod1", "node1", "AfterfakeScorePlugin", int64(3333))
 			},
 			args: args{
 				pod:      &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},

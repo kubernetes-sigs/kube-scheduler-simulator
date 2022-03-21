@@ -87,9 +87,7 @@ type wrappedPlugin struct {
 }
 
 const (
-	pluginSuffix       = "Wrapped"
-	resultBeforePrefix = "Before"
-	resultAfterPrefix  = "After"
+	pluginSuffix = "Wrapped"
 )
 
 func pluginName(pluginName string) string {
@@ -142,7 +140,6 @@ func (w *wrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
 // NormalizeScore wraps original NormalizeScore plugin of Scheduler Framework.
 // Before and after the execution of original NormalizeScore plugin,
 // we will run arbitrary processing as functions from normalizeScorePluginExtender.
-//nolint:cyclop
 func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
 	if w.originalScorePlugin == nil || w.originalScorePlugin.ScoreExtensions() == nil {
 		// return nil not to affect scoring
@@ -150,11 +147,7 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 	}
 
 	if w.normalizeScorePluginExtender != nil {
-		s := w.normalizeScorePluginExtender.BeforeNormalizeScore(ctx, state, pod, scores)
-		for _, score := range scores {
-			w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, score.Name, resultBeforePrefix+w.originalScorePlugin.Name(), score.Score)
-		}
-		if !s.IsSuccess() {
+		if s := w.normalizeScorePluginExtender.BeforeNormalizeScore(ctx, state, pod, scores); !s.IsSuccess() {
 			return s
 		}
 	}
@@ -164,11 +157,7 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 		klog.Errorf("failed to run normalize score: %v, %v", s.Code(), s.Message())
 		// If it is not nil, we wiil return the results of AfterNormalizeScore.
 		if w.normalizeScorePluginExtender != nil {
-			afterStatus := w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, s)
-			for _, score := range scores {
-				w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, score.Name, resultAfterPrefix+w.originalScorePlugin.Name(), score.Score)
-			}
-			return afterStatus
+			return w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, s)
 		}
 		// Otherwise, we will return the original results.
 		return s
@@ -181,9 +170,6 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 	// If it is not nil, we wiil run AfterNormalizeScore.
 	if w.normalizeScorePluginExtender != nil {
 		_ = w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, s)
-		for _, score := range scores {
-			w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, score.Name, resultAfterPrefix+w.originalScorePlugin.Name(), score.Score)
-		}
 	}
 
 	return nil
@@ -200,7 +186,6 @@ func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, 
 
 	if w.scorePluginExtender != nil {
 		score, s := w.scorePluginExtender.BeforeScore(ctx, state, pod, nodeName)
-		w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, resultBeforePrefix+w.originalScorePlugin.Name(), score)
 		if !s.IsSuccess() {
 			return score, s
 		}
@@ -216,9 +201,7 @@ func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, 
 
 	// If it is not nil, we wiil return the results of AfterScore.
 	if w.scorePluginExtender != nil {
-		afterScore, afterStatus := w.scorePluginExtender.AfterScore(ctx, state, pod, nodeName, score, s)
-		w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, resultAfterPrefix+w.originalScorePlugin.Name(), afterScore)
-		return afterScore, afterStatus
+		return w.scorePluginExtender.AfterScore(ctx, state, pod, nodeName, score, s)
 	}
 	return score, s
 }
@@ -233,9 +216,7 @@ func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState,
 	}
 
 	if w.filterPluginExtender != nil {
-		s := w.filterPluginExtender.BeforeFilter(ctx, state, pod, nodeInfo)
-		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, resultBeforePrefix+w.originalFilterPlugin.Name(), s.Message())
-		if !s.IsSuccess() {
+		if s := w.filterPluginExtender.BeforeFilter(ctx, state, pod, nodeInfo); !s.IsSuccess() {
 			return s
 		}
 	}
@@ -250,9 +231,7 @@ func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState,
 
 	// If it is not nil, we wiil return the results of AfterFilter.
 	if w.filterPluginExtender != nil {
-		afterStatus := w.filterPluginExtender.AfterFilter(ctx, state, pod, nodeInfo, s)
-		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, resultAfterPrefix+w.originalFilterPlugin.Name(), afterStatus.Message())
-		return afterStatus
+		return w.filterPluginExtender.AfterFilter(ctx, state, pod, nodeInfo, s)
 	}
 	return s
 }
