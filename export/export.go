@@ -26,6 +26,11 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/util"
 )
 
+const (
+	// TODO: this will remove soon in this PR.
+	defaultNamespaceName = "default"
+)
+
 type Service struct {
 	client               clientset.Interface
 	podService           PodService
@@ -60,8 +65,8 @@ type ResourcesForImport struct {
 }
 
 type PodService interface {
-	List(ctx context.Context) (*corev1.PodList, error)
-	Apply(ctx context.Context, pod *v1.PodApplyConfiguration) (*corev1.Pod, error)
+	List(ctx context.Context, namespaace string) (*corev1.PodList, error)
+	Apply(ctx context.Context, pod *v1.PodApplyConfiguration, namespace string) (*corev1.Pod, error)
 }
 
 type NodeService interface {
@@ -249,7 +254,7 @@ func (s *Service) listPods(ctx context.Context, r *ResourcesForExport, eg *util.
 	}
 	eg.Grp.Go(func() error {
 		defer eg.Sem.Release(1)
-		pods, err := s.podService.List(ctx)
+		pods, err := s.podService.List(ctx, defaultNamespaceName)
 		if err != nil {
 			if !opts.ignoreErr {
 				return xerrors.Errorf("call list pods: %w", err)
@@ -516,7 +521,7 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 		eg.Grp.Go(func() error {
 			defer eg.Sem.Release(1)
 			pod.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.podService.Apply(ctx, &pod)
+			_, err := s.podService.Apply(ctx, &pod, defaultNamespaceName)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Pod: %w", err)

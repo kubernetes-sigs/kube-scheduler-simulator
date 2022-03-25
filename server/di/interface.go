@@ -17,10 +17,10 @@ import (
 
 // PodService represents service for manage Pods.
 type PodService interface {
-	Get(ctx context.Context, name string) (*corev1.Pod, error)
-	List(ctx context.Context) (*corev1.PodList, error)
-	Apply(ctx context.Context, pod *configv1.PodApplyConfiguration) (*corev1.Pod, error)
-	Delete(ctx context.Context, name string) error
+	Get(ctx context.Context, name string, namespace string) (*corev1.Pod, error)
+	List(ctx context.Context, namespace string) (*corev1.PodList, error)
+	Apply(ctx context.Context, pod *configv1.PodApplyConfiguration, namespace string) (*corev1.Pod, error)
+	Delete(ctx context.Context, name string, namespace string) error
 	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 

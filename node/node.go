@@ -21,8 +21,8 @@ type Service struct {
 
 // PodService represents service for manage Pods.
 type PodService interface {
-	List(ctx context.Context) (*corev1.PodList, error)
-	Delete(ctx context.Context, name string) error
+	List(ctx context.Context, namespace string) (*corev1.PodList, error)
+	Delete(ctx context.Context, name string, namespace string) error
 	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
@@ -69,7 +69,7 @@ func (s *Service) Apply(ctx context.Context, nac *v1.NodeApplyConfiguration) (*c
 
 // Delete deletes the node has given name.
 func (s *Service) Delete(ctx context.Context, name string) error {
-	pl, err := s.podService.List(ctx)
+	pl, err := s.podService.List(ctx, metav1.NamespaceAll)
 	if err != nil {
 		return xerrors.Errorf("list pods: %w", err)
 	}
@@ -81,7 +81,7 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 			continue
 		}
 
-		if err := s.podService.Delete(ctx, pod.Name); err != nil {
+		if err := s.podService.Delete(ctx, pod.Name, pod.Namespace); err != nil {
 			return xerrors.Errorf("delete pod: %w", err)
 		}
 	}

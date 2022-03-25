@@ -36,31 +36,31 @@ func (m *MockPodService) EXPECT() *MockPodServiceMockRecorder {
 }
 
 // Apply mocks base method
-func (m *MockPodService) Apply(arg0 context.Context, arg1 *v10.PodApplyConfiguration) (*v1.Pod, error) {
+func (m *MockPodService) Apply(arg0 context.Context, arg1 *v10.PodApplyConfiguration, arg2 string) (*v1.Pod, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
+	ret := m.ctrl.Call(m, "Apply", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Apply indicates an expected call of Apply
-func (mr *MockPodServiceMockRecorder) Apply(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockPodServiceMockRecorder) Apply(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockPodService)(nil).Apply), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockPodService)(nil).Apply), arg0, arg1, arg2)
 }
 
 // List mocks base method
-func (m *MockPodService) List(arg0 context.Context) (*v1.PodList, error) {
+func (m *MockPodService) List(arg0 context.Context, arg1 string) (*v1.PodList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", arg0)
+	ret := m.ctrl.Call(m, "List", arg0, arg1)
 	ret0, _ := ret[0].(*v1.PodList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List
-func (mr *MockPodServiceMockRecorder) List(arg0 interface{}) *gomock.Call {
+func (mr *MockPodServiceMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPodService)(nil).List), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPodService)(nil).List), arg0, arg1)
 }
