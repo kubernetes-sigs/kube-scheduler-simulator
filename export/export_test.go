@@ -25,6 +25,11 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/util"
 )
 
+const (
+	testDefaultNamespaceName1 = "default1"
+	testDefaultNamespaceName2 = "default2"
+)
+
 func TestService_Export(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -37,10 +42,10 @@ func TestService_Export(t *testing.T) {
 		{
 			name: "export all resources",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -64,10 +69,10 @@ func TestService_Export(t *testing.T) {
 		{
 			name: "export failure on List of PodService",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(nil, xerrors.Errorf("list pods"))
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("list pods"))
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -82,10 +87,10 @@ func TestService_Export(t *testing.T) {
 		{
 			name: "export failure on List of NodeService",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list nodes"))
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -100,10 +105,10 @@ func TestService_Export(t *testing.T) {
 		{
 			name: "export failure on List of PersistentVolumeService",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumes"))
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -118,10 +123,10 @@ func TestService_Export(t *testing.T) {
 		{
 			name: "export failure on List of PersistentVolumeClaims",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(nil, xerrors.Errorf("list PersistentVolumeClaims"))
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumeClaims"))
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -136,10 +141,10 @@ func TestService_Export(t *testing.T) {
 		{
 			name: "export failure on List of storageClasses",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list storageClasses"))
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -154,10 +159,10 @@ func TestService_Export(t *testing.T) {
 		{
 			name: "export failure on List of priorityClasses",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list priorityClasses"))
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -168,6 +173,115 @@ func TestService_Export(t *testing.T) {
 			},
 			wantReturn: nil,
 			wantErr:    true,
+		},
+		{
+			name: "export all pods with different namespaces",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: testDefaultNamespaceName1},
+						Spec:       corev1.PodSpec{NodeName: "node1"},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{Name: "pod2", Namespace: testDefaultNamespaceName2},
+						Spec:       corev1.PodSpec{NodeName: "node2"},
+					},
+				}}, nil)
+				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
+				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
+				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				// add test data.
+				return c
+			},
+			wantReturn: &ResourcesForExport{
+				Pods: []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: testDefaultNamespaceName1},
+						Spec:       corev1.PodSpec{NodeName: "node1"},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{Name: "pod2", Namespace: testDefaultNamespaceName2},
+						Spec:       corev1.PodSpec{NodeName: "node2"},
+					},
+				},
+				Nodes:           []corev1.Node{},
+				Pvs:             []corev1.PersistentVolume{},
+				Pvcs:            []corev1.PersistentVolumeClaim{},
+				StorageClasses:  []storagev1.StorageClass{},
+				PriorityClasses: []schedulingv1.PriorityClass{},
+				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+			},
+		},
+		{
+			name: "export all pvcs with different namespaces",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
+				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pvc1",
+							Namespace: testDefaultNamespaceName1,
+						},
+						Spec: corev1.PersistentVolumeClaimSpec{
+							VolumeName: "pv1",
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pvc2",
+							Namespace: testDefaultNamespaceName2,
+						},
+						Spec: corev1.PersistentVolumeClaimSpec{
+							VolumeName: "pv2",
+						},
+					},
+				}}, nil)
+				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
+				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				// add test data.
+				return c
+			},
+			wantReturn: &ResourcesForExport{
+				Pods:  []corev1.Pod{},
+				Nodes: []corev1.Node{},
+				Pvs:   []corev1.PersistentVolume{},
+				Pvcs: []corev1.PersistentVolumeClaim{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pvc1",
+							Namespace: testDefaultNamespaceName1,
+						},
+						Spec: corev1.PersistentVolumeClaimSpec{
+							VolumeName: "pv1",
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pvc2",
+							Namespace: testDefaultNamespaceName2,
+						},
+						Spec: corev1.PersistentVolumeClaimSpec{
+							VolumeName: "pv2",
+						},
+					},
+				},
+				StorageClasses:  []storagev1.StorageClass{},
+				PriorityClasses: []schedulingv1.PriorityClass{},
+				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -209,10 +323,10 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 		{
 			name: "export all resources",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -236,10 +350,10 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failure on List of PodService",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(nil, xerrors.Errorf("list pods"))
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("list pods"))
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -262,10 +376,10 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on List of NodeService",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list nodes"))
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -288,10 +402,10 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on List of PersistentVolumeService",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumes"))
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -314,10 +428,10 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on List of PersistentVolumeClaims",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(nil, xerrors.Errorf("list PersistentVolumeClaims"))
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("list PersistentVolumeClaims"))
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -340,10 +454,10 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on List of storageClasses",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list storageClasses"))
 				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -366,10 +480,10 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on List of priorityClasses",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
 				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
-				pvcs.EXPECT().List(gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
 				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
 				pcs.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list priorityClasses"))
 				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{})
@@ -429,7 +543,7 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import all success",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -438,8 +552,8 @@ func TestService_Import(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -483,15 +597,15 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import failure on Pod Apply",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(nil, xerrors.Errorf("apply pod"))
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply pod"))
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -535,15 +649,15 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import failure on Node Apply",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply node"))
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -587,15 +701,15 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import failure on PersistentVolume Apply",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply PersistentVolume"))
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -639,7 +753,7 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import failure on PersistentVolumeClaim Apply",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -648,8 +762,8 @@ func TestService_Import(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(nil, xerrors.Errorf("apply PersistentVolumeClaim"))
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply PersistentVolumeClaim"))
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
 					assert.Equal(t, "StorageClass1", *cfg.Name)
 				})
@@ -691,7 +805,7 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import failure on StorageClass Apply",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -700,8 +814,8 @@ func TestService_Import(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply StorageClass"))
@@ -743,7 +857,7 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import failure on PriorityClass Apply",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -752,8 +866,8 @@ func TestService_Import(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -795,7 +909,7 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import success when PersistentVolumeClaim was not found (Get() return err)",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -804,8 +918,8 @@ func TestService_Import(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), "PVC1", defaultNamespaceName).Return(nil, xerrors.Errorf("get persistentVolumeClaim"))
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), "PVC1", gomock.Any()).Return(nil, xerrors.Errorf("get persistentVolumeClaim"))
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -825,7 +939,7 @@ func TestService_Import(t *testing.T) {
 				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
-				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1"))))
+				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1").WithNamespace("default"))))
 				pvcs = append(pvcs, *v1.PersistentVolumeClaim("PVC1", "default"))
 				storageclasses = append(storageclasses, *confstoragev1.StorageClass("StorageClass1"))
 				pcs = append(pcs, *schedulingcfgv1.PriorityClass("PriorityClass1"))
@@ -849,7 +963,7 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "import success when PersistentVolumeClaim was found (Get() return err)",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -858,8 +972,8 @@ func TestService_Import(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -879,7 +993,7 @@ func TestService_Import(t *testing.T) {
 				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
-				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1"))))
+				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1").WithNamespace("default"))))
 				pvcs = append(pvcs, *v1.PersistentVolumeClaim("PVC1", "default"))
 				storageclasses = append(storageclasses, *confstoragev1.StorageClass("StorageClass1"))
 				pcs = append(pcs, *schedulingcfgv1.PriorityClass("PriorityClass1"))
@@ -903,19 +1017,19 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "PV be related with PVC and assign UID",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil)
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 					assert.Equal(t, "PVC1", *cfg.Spec.ClaimRef.Name)
 					assert.Equal(t, "testUID", string(*cfg.Spec.ClaimRef.UID))
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{
 					ObjectMeta: metav1.ObjectMeta{
 						UID: "testUID",
 					},
 				}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
 				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil)
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
@@ -929,7 +1043,7 @@ func TestService_Import(t *testing.T) {
 				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
 				pods = append(pods, *v1.Pod("Pod1", "default"))
 				nodes = append(nodes, *v1.Node("Node1"))
-				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1"))))
+				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Bound")).WithSpec(v1.PersistentVolumeSpec().WithClaimRef(v1.ObjectReference().WithName("PVC1").WithNamespace("default"))))
 				pvcs = append(pvcs, *v1.PersistentVolumeClaim("PVC1", "default"))
 				storageclasses = append(storageclasses, *confstoragev1.StorageClass("StorageClass1"))
 				pcs = append(pcs, *schedulingcfgv1.PriorityClass("PriorityClass1"))
@@ -953,14 +1067,14 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "success import pv and pvc from json string (UID be set to nil)",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil)
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
 					assert.Empty(t, cfg.ObjectMetaApplyConfiguration.UID)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "pvc1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
@@ -987,14 +1101,14 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "success import when pv.Status is not exist",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil)
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
 					assert.Empty(t, cfg.Status)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "pvc1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
@@ -1022,14 +1136,14 @@ func TestService_Import(t *testing.T) {
 		{
 			name: "success import when pv.Status.Phase is not exist",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil)
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
 					assert.Empty(t, cfg.Status.Phase)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "pvc1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
@@ -1047,6 +1161,122 @@ func TestService_Import(t *testing.T) {
 					panic(err)
 				}
 				return &r
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantErr: false,
+		},
+		{
+			name: "import all pods with different namespaces",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), testDefaultNamespaceName1).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+					assert.Equal(t, "Pod1", *cfg.Name)
+				})
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), testDefaultNamespaceName2).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+					assert.Equal(t, "Pod2", *cfg.Name)
+				})
+				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
+					assert.Equal(t, "Node1", *cfg.Name)
+				})
+				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
+					assert.Equal(t, "PV1", *cfg.Name)
+				})
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+					assert.Equal(t, "PVC1", *cfg.Name)
+				})
+				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
+					assert.Equal(t, "StorageClass1", *cfg.Name)
+				})
+				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil).Do(func(_ context.Context, cfg *schedulingcfgv1.PriorityClassApplyConfiguration) {
+					assert.Equal(t, "PriorityClass1", *cfg.Name)
+				})
+				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForImport {
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				pods = append(pods, *v1.Pod("Pod1", testDefaultNamespaceName1))
+				pods = append(pods, *v1.Pod("Pod2", testDefaultNamespaceName2))
+				nodes = append(nodes, *v1.Node("Node1"))
+				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
+				pvcs = append(pvcs, *v1.PersistentVolumeClaim("PVC1", "default"))
+				storageclasses = append(storageclasses, *confstoragev1.StorageClass("StorageClass1"))
+				pcs = append(pcs, *schedulingcfgv1.PriorityClass("PriorityClass1"))
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForImport{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  storageclasses,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantErr: false,
+		},
+		{
+			name: "import all pvcs with different namespaces",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+					assert.Equal(t, "Pod1", *cfg.Name)
+				})
+				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
+					assert.Equal(t, "Node1", *cfg.Name)
+				})
+				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
+					assert.Equal(t, "PV1", *cfg.Name)
+				})
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), testDefaultNamespaceName1).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+					assert.Equal(t, "PVC1", *cfg.Name)
+				})
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), testDefaultNamespaceName2).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+					assert.Equal(t, "PVC2", *cfg.Name)
+				})
+				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
+					assert.Equal(t, "StorageClass1", *cfg.Name)
+				})
+				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil).Do(func(_ context.Context, cfg *schedulingcfgv1.PriorityClassApplyConfiguration) {
+					assert.Equal(t, "PriorityClass1", *cfg.Name)
+				})
+				schedulers.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForImport {
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				pods = append(pods, *v1.Pod("Pod1", "default"))
+				nodes = append(nodes, *v1.Node("Node1"))
+				pvs = append(pvs, *v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"))
+				pvcs = append(pvcs, *v1.PersistentVolumeClaim("PVC1", testDefaultNamespaceName1))
+				pvcs = append(pvcs, *v1.PersistentVolumeClaim("PVC2", testDefaultNamespaceName2))
+				storageclasses = append(storageclasses, *confstoragev1.StorageClass("StorageClass1"))
+				pcs = append(pcs, *schedulingcfgv1.PriorityClass("PriorityClass1"))
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForImport{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  storageclasses,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+				}
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -1092,7 +1322,7 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 		{
 			name: "import all success",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -1101,8 +1331,8 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -1146,15 +1376,15 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failure on Apply of Pod",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(nil, xerrors.Errorf("apply pod"))
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply pod"))
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -1198,15 +1428,15 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on Apply of Node",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply node"))
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -1250,15 +1480,15 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on Apply of PersistentVolume",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
 					assert.Equal(t, "Node1", *cfg.Name)
 				})
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply PersistentVolume"))
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -1302,7 +1532,7 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on Apply of PersistentVolumeClaim",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -1311,8 +1541,8 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(nil, xerrors.Errorf("apply PersistentVolumeClaim"))
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply PersistentVolumeClaim"))
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
 					assert.Equal(t, "StorageClass1", *cfg.Name)
 				})
@@ -1354,7 +1584,7 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on Apply of StorageClass",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -1363,8 +1593,8 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply StorageClass"))
@@ -1406,7 +1636,7 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 		{
 			name: "no error if failed on Apply of PriorityClass",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, cfg *v1.PodApplyConfiguration, ns string) {
 					assert.Equal(t, "Pod1", *cfg.Name)
 				})
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -1415,8 +1645,8 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "PV1", *cfg.Name)
 				})
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeClaimApplyConfiguration, namespace string) {
 					assert.Equal(t, "PVC1", *cfg.Name)
 				})
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil).Do(func(_ context.Context, cfg *confstoragev1.StorageClassApplyConfiguration) {
@@ -1659,11 +1889,11 @@ func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 		{
 			name: "Import does not call RestartScheduler",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
-				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.Pod{}, nil)
+				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil)
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil)
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil)
-				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
-				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), defaultNamespaceName).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
+				pvcs.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaim{}, nil)
 				storageClasss.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&storagev1.StorageClass{}, nil)
 				pcs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&schedulingv1.PriorityClass{}, nil)
 				// If the Import function call this, it will return the error.
