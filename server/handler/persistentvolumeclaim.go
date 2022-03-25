@@ -31,7 +31,7 @@ func (h *PersistentVolumeClaimHandler) ApplyPersistentVolumeClaim(c echo.Context
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	newpvc, err := h.service.Apply(ctx, persistentVolumeClaim)
+	newpvc, err := h.service.Apply(ctx, persistentVolumeClaim, defaultNamespaceName)
 	if err != nil {
 		klog.Errorf("failed to apply persistentVolumeClaim: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -46,7 +46,7 @@ func (h *PersistentVolumeClaimHandler) GetPersistentVolumeClaim(c echo.Context) 
 
 	name := c.Param("name")
 
-	p, err := h.service.Get(ctx, name)
+	p, err := h.service.Get(ctx, name, defaultNamespaceName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return echo.NewHTTPError(http.StatusNotFound)
@@ -62,7 +62,7 @@ func (h *PersistentVolumeClaimHandler) GetPersistentVolumeClaim(c echo.Context) 
 func (h *PersistentVolumeClaimHandler) ListPersistentVolumeClaim(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	ps, err := h.service.List(ctx)
+	ps, err := h.service.List(ctx, defaultNamespaceName)
 	if err != nil {
 		klog.Errorf("failed to list persistentVolumeClaims: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -77,7 +77,7 @@ func (h *PersistentVolumeClaimHandler) DeletePersistentVolumeClaim(c echo.Contex
 
 	name := c.Param("name")
 
-	if err := h.service.Delete(ctx, name); err != nil {
+	if err := h.service.Delete(ctx, name, defaultNamespaceName); err != nil {
 		klog.Errorf("failed to delete persistentVolumeClaim: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}

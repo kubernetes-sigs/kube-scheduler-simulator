@@ -36,46 +36,46 @@ func (m *MockPersistentVolumeClaimService) EXPECT() *MockPersistentVolumeClaimSe
 }
 
 // Apply mocks base method
-func (m *MockPersistentVolumeClaimService) Apply(arg0 context.Context, arg1 *v10.PersistentVolumeClaimApplyConfiguration) (*v1.PersistentVolumeClaim, error) {
+func (m *MockPersistentVolumeClaimService) Apply(arg0 context.Context, arg1 *v10.PersistentVolumeClaimApplyConfiguration, arg2 string) (*v1.PersistentVolumeClaim, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
+	ret := m.ctrl.Call(m, "Apply", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.PersistentVolumeClaim)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Apply indicates an expected call of Apply
-func (mr *MockPersistentVolumeClaimServiceMockRecorder) Apply(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockPersistentVolumeClaimServiceMockRecorder) Apply(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockPersistentVolumeClaimService)(nil).Apply), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockPersistentVolumeClaimService)(nil).Apply), arg0, arg1, arg2)
 }
 
 // Get mocks base method
-func (m *MockPersistentVolumeClaimService) Get(arg0 context.Context, arg1 string) (*v1.PersistentVolumeClaim, error) {
+func (m *MockPersistentVolumeClaimService) Get(arg0 context.Context, arg1, arg2 string) (*v1.PersistentVolumeClaim, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", arg0, arg1)
+	ret := m.ctrl.Call(m, "Get", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.PersistentVolumeClaim)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get
-func (mr *MockPersistentVolumeClaimServiceMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockPersistentVolumeClaimServiceMockRecorder) Get(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPersistentVolumeClaimService)(nil).Get), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPersistentVolumeClaimService)(nil).Get), arg0, arg1, arg2)
 }
 
 // List mocks base method
-func (m *MockPersistentVolumeClaimService) List(arg0 context.Context) (*v1.PersistentVolumeClaimList, error) {
+func (m *MockPersistentVolumeClaimService) List(arg0 context.Context, arg1 string) (*v1.PersistentVolumeClaimList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", arg0)
+	ret := m.ctrl.Call(m, "List", arg0, arg1)
 	ret0, _ := ret[0].(*v1.PersistentVolumeClaimList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List
-func (mr *MockPersistentVolumeClaimServiceMockRecorder) List(arg0 interface{}) *gomock.Call {
+func (mr *MockPersistentVolumeClaimServiceMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPersistentVolumeClaimService)(nil).List), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPersistentVolumeClaimService)(nil).List), arg0, arg1)
 }

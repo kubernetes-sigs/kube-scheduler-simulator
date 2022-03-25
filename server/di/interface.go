@@ -44,10 +44,10 @@ type PersistentVolumeService interface {
 
 // PersistentVolumeClaimService represents service for manage Nodes.
 type PersistentVolumeClaimService interface {
-	Get(ctx context.Context, name string) (*corev1.PersistentVolumeClaim, error)
-	List(ctx context.Context) (*corev1.PersistentVolumeClaimList, error)
-	Apply(ctx context.Context, pvc *configv1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
-	Delete(ctx context.Context, name string) error
+	Get(ctx context.Context, name string, namespace string) (*corev1.PersistentVolumeClaim, error)
+	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
+	Apply(ctx context.Context, pvc *configv1.PersistentVolumeClaimApplyConfiguration, namespace string) (*corev1.PersistentVolumeClaim, error)
+	Delete(ctx context.Context, name string, namespace string) error
 	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 

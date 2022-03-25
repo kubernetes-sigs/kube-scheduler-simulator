@@ -80,9 +80,9 @@ type PersistentVolumeService interface {
 }
 
 type PersistentVolumeClaimService interface {
-	Get(ctx context.Context, name string) (*corev1.PersistentVolumeClaim, error)
-	List(ctx context.Context) (*corev1.PersistentVolumeClaimList, error)
-	Apply(ctx context.Context, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
+	Get(ctx context.Context, name string, namespace string) (*corev1.PersistentVolumeClaim, error)
+	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
+	Apply(ctx context.Context, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration, namespace string) (*corev1.PersistentVolumeClaim, error)
 }
 
 type StorageClassService interface {
@@ -314,7 +314,7 @@ func (s *Service) listPvcs(ctx context.Context, r *ResourcesForExport, eg *util.
 	}
 	eg.Grp.Go(func() error {
 		defer eg.Sem.Release(1)
-		pvcs, err := s.pvcService.List(ctx)
+		pvcs, err := s.pvcService.List(ctx, defaultNamespaceName)
 		if err != nil {
 			if !opts.ignoreErr {
 				return xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
@@ -443,7 +443,7 @@ func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForImport, eg *util
 		eg.Grp.Go(func() error {
 			defer eg.Sem.Release(1)
 			pvc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.pvcService.Apply(ctx, &pvc)
+			_, err := s.pvcService.Apply(ctx, &pvc, defaultNamespaceName)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
@@ -468,7 +468,7 @@ func (s *Service) applyPvs(ctx context.Context, r *ResourcesForImport, eg *util.
 			if pv.Status != nil && pv.Status.Phase != nil {
 				if *pv.Status.Phase == "Bound" {
 					// PersistentVolumeClaims's UID has been changed to a new value.
-					pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name)
+					pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name, defaultNamespaceName)
 					if err == nil {
 						pv.Spec.ClaimRef.UID = &pvc.UID
 					} else {
