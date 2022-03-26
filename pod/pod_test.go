@@ -201,6 +201,60 @@ func TestService_List(t *testing.T) {
 	}
 }
 
+func TestService_Delete(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                   string
+		prepareFakeClientSetFn func() *fake.Clientset
+		targetNamespace        string
+		targetPodName          string
+		wantReturn             *corev1.PodList
+		wantErr                bool
+	}{
+		{
+			name: "delete pod specified namespace",
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				c.CoreV1().Pods(testDefaultNamespaceName1).Create(context.Background(), &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "pod1",
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Pods(testDefaultNamespaceName1).Create(context.Background(), &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "pod2",
+					},
+				}, metav1.CreateOptions{})
+				return c
+			},
+			targetNamespace: testDefaultNamespaceName1,
+			targetPodName:   "pod1",
+			wantReturn: &corev1.PodList{
+				Items: []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{Name: "pod2", Namespace: testDefaultNamespaceName1},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			fakeclientset := tt.prepareFakeClientSetFn()
+			s := NewPodService(fakeclientset)
+			err := s.Delete(context.Background(), tt.targetPodName, tt.targetNamespace)
+			pods, _ := s.List(context.Background(), tt.targetNamespace)
+			diffResponse := cmp.Diff(pods, tt.wantReturn)
+			if diffResponse != "" || (err != nil) != tt.wantErr {
+				t.Fatalf("Apply() %v test, \nerror = %v, wantErr %v\n%s", tt.name, err, tt.wantErr, diffResponse)
+			}
+		})
+	}
+}
+
 func TestService_DeleteCollection(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

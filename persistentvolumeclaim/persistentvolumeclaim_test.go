@@ -66,10 +66,10 @@ func TestService_Get(t *testing.T) {
 			t.Parallel()
 			fakeclientset := tt.prepareFakeClientSetFn()
 			s := NewPersistentVolumeClaimService(fakeclientset)
-			pod, err := s.Get(context.Background(), tt.wantPVName, tt.targetNamespace)
+			pvc, err := s.Get(context.Background(), tt.wantPVName, tt.targetNamespace)
 
-			if (err != nil) != tt.wantErr || (pod.Name != tt.wantPVName) {
-				t.Fatalf("Get() error = %v, wantErr %v\npod name = %s, want %s", err, tt.wantErr, pod.Name, tt.wantPVName)
+			if (err != nil) != tt.wantErr || (pvc.Name != tt.wantPVName) {
+				t.Fatalf("Get() error = %v, wantErr %v\npvc name = %s, want %s", err, tt.wantErr, pvc.Name, tt.wantPVName)
 			}
 		})
 	}
@@ -238,10 +238,76 @@ func TestService_List(t *testing.T) {
 			t.Parallel()
 			fakeclientset := tt.prepareFakeClientSetFn()
 			s := NewPersistentVolumeClaimService(fakeclientset)
-			pods, err := s.List(context.Background(), tt.targetNamespace)
-			diffResponse := cmp.Diff(pods, tt.wantReturn)
+			pvcs, err := s.List(context.Background(), tt.targetNamespace)
+			diffResponse := cmp.Diff(pvcs, tt.wantReturn)
 			if diffResponse != "" || (err != nil) != tt.wantErr {
 				t.Fatalf("List() %v test, \nerror = %v, wantErr %v\n%s", tt.name, err, tt.wantErr, diffResponse)
+			}
+		})
+	}
+}
+
+func TestService_Delete(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                   string
+		prepareFakeClientSetFn func() *fake.Clientset
+		targetNamespace        string
+		targetPVCName          string
+		wantReturn             *corev1.PersistentVolumeClaimList
+		wantErr                bool
+	}{
+		{
+			name: "list pvcs spcified namespace",
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				c.CoreV1().PersistentVolumeClaims(testDefaultNamespaceName1).Create(context.Background(), &corev1.PersistentVolumeClaim{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "pvc1",
+					},
+					Spec: corev1.PersistentVolumeClaimSpec{
+						VolumeName: "pv1",
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().PersistentVolumeClaims(testDefaultNamespaceName1).Create(context.Background(), &corev1.PersistentVolumeClaim{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "pvc2",
+					},
+					Spec: corev1.PersistentVolumeClaimSpec{
+						VolumeName: "pv1",
+					},
+				}, metav1.CreateOptions{})
+				return c
+			},
+			targetNamespace: testDefaultNamespaceName1,
+			targetPVCName:   "pvc1",
+			wantReturn: &corev1.PersistentVolumeClaimList{
+				Items: []corev1.PersistentVolumeClaim{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pvc2",
+							Namespace: testDefaultNamespaceName1,
+						},
+						Spec: corev1.PersistentVolumeClaimSpec{
+							VolumeName: "pv1",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			fakeclientset := tt.prepareFakeClientSetFn()
+			s := NewPersistentVolumeClaimService(fakeclientset)
+			err := s.Delete(context.Background(), tt.targetPVCName, tt.targetNamespace)
+			pvcs, _ := s.List(context.Background(), tt.targetNamespace)
+			diffResponse := cmp.Diff(pvcs, tt.wantReturn)
+			if diffResponse != "" || (err != nil) != tt.wantErr {
+				t.Fatalf("Delete() %v test, \nerror = %v, wantErr %v\n%s", tt.name, err, tt.wantErr, diffResponse)
 			}
 		})
 	}
