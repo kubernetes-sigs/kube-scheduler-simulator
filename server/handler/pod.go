@@ -12,6 +12,9 @@ import (
 )
 
 // PodHandler is handler for manage pod.
+//
+// Deprecated: PodHandler exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 type PodHandler struct {
 	service di.PodService
 }
@@ -22,6 +25,9 @@ func NewPodHandler(s di.PodService) *PodHandler {
 }
 
 // ApplyPod handles the endpoint for applying pod.
+//
+// Deprecated: ApplyPod exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PodHandler) ApplyPod(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -41,6 +47,9 @@ func (h *PodHandler) ApplyPod(c echo.Context) error {
 }
 
 // GetPod handles the endpoint for getting pod.
+//
+// Deprecated: GetPod exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PodHandler) GetPod(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -59,6 +68,9 @@ func (h *PodHandler) GetPod(c echo.Context) error {
 }
 
 // ListPod handles the endpoint for listing pod.
+//
+// Deprecated: ListPod exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PodHandler) ListPod(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -72,6 +84,9 @@ func (h *PodHandler) ListPod(c echo.Context) error {
 }
 
 // DeletePod handles the endpoint for deleting pod.
+//
+// Deprecated: DeletePod exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PodHandler) DeletePod(c echo.Context) error {
 	ctx := c.Request().Context()
 

@@ -12,6 +12,9 @@ import (
 )
 
 // PersistentVolumeClaimHandler is handler for manage persistentVolumeClaim.
+//
+// Deprecated: PersistentVolumeClaimHandler exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 type PersistentVolumeClaimHandler struct {
 	service di.PersistentVolumeClaimService
 }
@@ -22,6 +25,9 @@ func NewPersistentVolumeClaimHandler(s di.PersistentVolumeClaimService) *Persist
 }
 
 // ApplyPersistentVolumeClaim handles the endpoint for applying persistentVolumeClaim.
+//
+// Deprecated: ApplyPersistentVolumeClaim exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PersistentVolumeClaimHandler) ApplyPersistentVolumeClaim(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -41,6 +47,9 @@ func (h *PersistentVolumeClaimHandler) ApplyPersistentVolumeClaim(c echo.Context
 }
 
 // GetPersistentVolumeClaim handles the endpoint for getting persistentVolumeClaim.
+//
+// Deprecated: GetPersistentVolumeClaim exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PersistentVolumeClaimHandler) GetPersistentVolumeClaim(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -59,6 +68,9 @@ func (h *PersistentVolumeClaimHandler) GetPersistentVolumeClaim(c echo.Context) 
 }
 
 // ListPersistentVolumeClaim handles the endpoint for listing persistentVolumeClaim.
+//
+// Deprecated: ListPersistentVolumeClaim exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PersistentVolumeClaimHandler) ListPersistentVolumeClaim(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -72,6 +84,9 @@ func (h *PersistentVolumeClaimHandler) ListPersistentVolumeClaim(c echo.Context)
 }
 
 // DeletePersistentVolumeClaim handles the endpoint for deleting persistentVolumeClaim.
+//
+// Deprecated: DeletePersistentVolumeClaim exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PersistentVolumeClaimHandler) DeletePersistentVolumeClaim(c echo.Context) error {
 	ctx := c.Request().Context()
 

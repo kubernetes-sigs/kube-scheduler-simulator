@@ -12,6 +12,9 @@ import (
 )
 
 // StorageClassHandler is handler for manage storageClass.
+//
+// Deprecated: StorageClassHandler exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 type StorageClassHandler struct {
 	service di.StorageClassService
 }
@@ -22,6 +25,9 @@ func NewStorageClassHandler(s di.StorageClassService) *StorageClassHandler {
 }
 
 // ApplyStorageClass handles the endpoint for applying storageClass.
+//
+// Deprecated: ApplyStorageClass exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *StorageClassHandler) ApplyStorageClass(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -41,6 +47,9 @@ func (h *StorageClassHandler) ApplyStorageClass(c echo.Context) error {
 }
 
 // GetStorageClass handles the endpoint for getting storageClass.
+//
+// Deprecated: GetStorageClass exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *StorageClassHandler) GetStorageClass(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -59,6 +68,9 @@ func (h *StorageClassHandler) GetStorageClass(c echo.Context) error {
 }
 
 // ListStorageClass handles the endpoint for listing storageClass.
+//
+// Deprecated: ListStorageClass exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *StorageClassHandler) ListStorageClass(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -72,6 +84,9 @@ func (h *StorageClassHandler) ListStorageClass(c echo.Context) error {
 }
 
 // DeleteStorageClass handles the endpoint for deleting storageClass.
+//
+// Deprecated: DeleteStorageClass exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *StorageClassHandler) DeleteStorageClass(c echo.Context) error {
 	ctx := c.Request().Context()
 

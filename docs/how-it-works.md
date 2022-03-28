@@ -25,11 +25,11 @@ Users can create resources below.
 - Storage Classes
 - Priority Classes
 
-When users request to create resources, the simulator server will create it with requesting kube-apiserver.
+When users request to create resources, the simulator's frontend will create it with requesting kube-apiserver.
 
 ## 2. the scheduler schedules a new pod.
 
-When a new pod is created through kube-apiserver by the simulator server, the scheduler will notice that the pod has been created and start scheduling.
+When a new pod is created through kube-apiserver, the scheduler will notice that the pod has been created and start scheduling.
 
 ## 3. the results of score/filter plugins are recorded.
 
