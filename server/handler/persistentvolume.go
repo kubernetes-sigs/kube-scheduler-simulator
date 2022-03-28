@@ -12,6 +12,9 @@ import (
 )
 
 // PersistentVolumeHandler is handler for manage persistentVolume.
+//
+// Deprecated: PersistentVolumeHandler exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 type PersistentVolumeHandler struct {
 	service di.PersistentVolumeService
 }
@@ -22,6 +25,9 @@ func NewPersistentVolumeHandler(s di.PersistentVolumeService) *PersistentVolumeH
 }
 
 // ApplyPersistentVolume handles the endpoint for applying persistentVolume.
+//
+// Deprecated: ApplyPersistentVolume exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PersistentVolumeHandler) ApplyPersistentVolume(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -41,6 +47,9 @@ func (h *PersistentVolumeHandler) ApplyPersistentVolume(c echo.Context) error {
 }
 
 // GetPersistentVolume handles the endpoint for getting persistentVolume.
+//
+// Deprecated: GetPersistentVolume exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PersistentVolumeHandler) GetPersistentVolume(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -59,6 +68,9 @@ func (h *PersistentVolumeHandler) GetPersistentVolume(c echo.Context) error {
 }
 
 // ListPersistentVolume handles the endpoint for listing persistentVolume.
+//
+// Deprecated: ListPersistentVolume exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PersistentVolumeHandler) ListPersistentVolume(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -72,6 +84,9 @@ func (h *PersistentVolumeHandler) ListPersistentVolume(c echo.Context) error {
 }
 
 // DeletePersistentVolume handles the endpoint for deleting persistentVolume.
+//
+// Deprecated: DeletePersistentVolume exists only for backward compatibility.
+// It is not maintained now and will be deleted soon.
 func (h *PersistentVolumeHandler) DeletePersistentVolume(c echo.Context) error {
 	ctx := c.Request().Context()
 
