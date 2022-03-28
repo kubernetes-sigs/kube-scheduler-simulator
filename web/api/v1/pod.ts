@@ -1,26 +1,57 @@
 import { V1Pod, V1PodList } from "@kubernetes/client-node";
-import { instance } from "@/api/v1/index";
+import { k8sInstance, namespaceURL } from "@/api/v1/index";
 
-export const applyPod = async (req: V1Pod, onError: (_: string) => void) => {
+export const applyPod = async (req: V1Pod) => {
   try {
-    const res = await instance.post<V1Pod>(`/pods`, req);
+    if (!req.metadata?.name) {
+      throw new Error(`metadata.name is not provided`);
+    }
+    req.kind = "Pod";
+    req.apiVersion = "v1";
+    if (req.metadata.managedFields) {
+      delete req.metadata.managedFields;
+    }
+    const res = await k8sInstance.patch<V1Pod>(
+      namespaceURL +
+        `/pods/${req.metadata.name}?fieldManager=simulator&force=true`,
+      req,
+      { headers: { "Content-Type": "application/apply-patch+yaml" } }
+    );
     return res.data;
   } catch (e: any) {
-    onError(e);
+    throw new Error(`failed to apply pod: ${e}`);
   }
 };
 
 export const listPod = async () => {
-  const res = await instance.get<V1PodList>(`/pods`, {});
-  return res.data;
+  try {
+    const res = await k8sInstance.get<V1PodList>(namespaceURL + `/pods`, {});
+    return res.data;
+  } catch (e: any) {
+    throw new Error(`failed to list pods: ${e}`);
+  }
 };
 
 export const getPod = async (name: string) => {
-  const res = await instance.get<V1Pod>(`/pods/${name}`, {});
-  return res.data;
+  try {
+    const res = await k8sInstance.get<V1Pod>(
+      namespaceURL + `/pods/${name}`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    throw new Error(`failed to get pod: ${e}`);
+  }
 };
 
 export const deletePod = async (name: string) => {
-  const res = await instance.delete(`/pods/${name}`, {});
-  return res.data;
+  try {
+    const res = await k8sInstance.delete(
+      namespaceURL + `/pods/${name}?gracePeriodSeconds=0`,
+      {}
+    );
+    return res.data;
+  } catch (e: any) {
+    throw new Error(`failed to delete pod: ${e}`);
+  }
 };

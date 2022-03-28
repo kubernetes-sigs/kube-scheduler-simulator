@@ -92,9 +92,7 @@ func getPort() (int, error) {
 func getKubeAPIServerURL() string {
 	p := os.Getenv("KUBE_API_PORT")
 	if p == "" {
-		// we still want the simulator to behave as before,
-		// use a local test port.
-		p = "0"
+		p = "3131"
 	}
 
 	h := os.Getenv("KUBE_API_HOST")

@@ -34,6 +34,7 @@ import PodList from "./PodList.vue";
 import { V1Node } from "@kubernetes/client-node";
 import PodStoreKey from "../../StoreKey/PodStoreKey";
 import {} from "../../lib/util";
+import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 
 export default defineComponent({
   components: { PodList },
@@ -48,8 +49,17 @@ export default defineComponent({
       throw new Error(`${NodeStoreKey} is not provided`);
     }
 
+    const snackbarstore = inject(SnackBarStoreKey);
+    if (!snackbarstore) {
+      throw new Error(`${SnackBarStoreKey} is not provided`);
+    }
+
+    const setServerErrorMessage = (error: string) => {
+      snackbarstore.setServerErrorMessage(error);
+    };
+
     const getNodeList = async () => {
-      await nstore.fetchlist();
+      await nstore.fetchlist().catch((e) => setServerErrorMessage(e));
     };
 
     onMounted(getNodeList);

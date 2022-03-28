@@ -81,7 +81,7 @@ type Resource =
 interface Store {
   readonly selected: object | null;
   resetSelected(): void;
-  apply(_: Resource, _onServerError: (_: string) => void): Promise<void>;
+  apply(_: Resource): Promise<void>;
   delete(_: string): Promise<void>;
   fetchSelected(): Promise<void>;
 }
@@ -221,7 +221,7 @@ export default defineComponent({
 
     const fetchSelected = async () => {
       if (store) {
-        await store.fetchSelected();
+        await store.fetchSelected().catch((e) => setServerErrorMessage(e));
       }
     };
 
@@ -232,17 +232,34 @@ export default defineComponent({
     const applyOnClick = () => {
       if (store) {
         const y = yaml.load(formData.value);
-        store.apply(y, setServerErrorMessage);
+        store.apply(y).catch((e) => setServerErrorMessage(e));
       }
       drawer.value = false;
     };
 
     const deleteOnClick = () => {
+      if (selected.value?.resourceKind === "Node") {
+        // when the Node is deleted, all Pods on the Node should be deleted as well.
+        //@ts-ignore
+        podstore.pods[selected.value?.item.metadata?.name].forEach((p) => {
+          //@ts-ignore
+          if (p.spec?.nodeName === selected.value?.item.metadata?.name) {
+            podstore
+              //@ts-ignore
+              .delete(p.metadata?.name)
+              .catch((e) => setServerErrorMessage(e));
+          }
+        });
+      }
       if (selected.value?.resourceKind != "SchedulerConfiguration") {
         //@ts-ignore // Only SchedulerConfiguration don't have the metadata field.
         if (selected.value?.item.metadata?.name && store) {
-          //@ts-ignore
-          store.delete(selected.value.item.metadata.name);
+          store
+            .delete(
+              //@ts-ignore
+              selected.value.item.metadata.name
+            )
+            .catch((e) => setServerErrorMessage(e));
         }
       }
       drawer.value = false;

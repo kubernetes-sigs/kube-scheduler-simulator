@@ -18,6 +18,7 @@ import DataTable from "./DataTable.vue";
 import NodeStoreKey from "../../StoreKey/NodeStoreKey";
 import { V1Node } from "@kubernetes/client-node";
 import PodStoreKey from "../../StoreKey/PodStoreKey";
+import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 import {} from "../../lib/util";
 
 export default defineComponent({
@@ -35,8 +36,17 @@ export default defineComponent({
       throw new Error(`${NodeStoreKey} is not provided`);
     }
 
+    const snackbarstore = inject(SnackBarStoreKey);
+    if (!snackbarstore) {
+      throw new Error(`${SnackBarStoreKey} is not provided`);
+    }
+
+    const setServerErrorMessage = (error: string) => {
+      snackbarstore.setServerErrorMessage(error);
+    };
+
     const getNodeList = async () => {
-      await nstore.fetchlist();
+      await nstore.fetchlist().catch((e) => setServerErrorMessage(e));
     };
 
     onMounted(getNodeList);

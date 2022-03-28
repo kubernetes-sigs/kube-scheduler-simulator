@@ -33,6 +33,7 @@ import {
 } from "@nuxtjs/composition-api";
 import {} from "../../lib/util";
 import StorageClassStoreKey from "../../StoreKey/StorageClassStoreKey";
+import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 export default defineComponent({
   setup() {
     const store = inject(StorageClassStoreKey);
@@ -40,8 +41,17 @@ export default defineComponent({
       throw new Error(`${StorageClassStoreKey} is not provided`);
     }
 
+    const snackbarstore = inject(SnackBarStoreKey);
+    if (!snackbarstore) {
+      throw new Error(`${SnackBarStoreKey} is not provided`);
+    }
+
+    const setServerErrorMessage = (error: string) => {
+      snackbarstore.setServerErrorMessage(error);
+    };
+
     const getStorageClassList = async () => {
-      await store.fetchlist();
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     const onClick = (storageclass: V1StorageClass) => {
       store.select(storageclass, false);

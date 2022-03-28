@@ -55,11 +55,12 @@ export default function pvcStore() {
     },
 
     async fetchlist() {
-      state.pvcs = (await listPersistentVolumeClaim()).items;
+      const pvcs = await listPersistentVolumeClaim();
+      state.pvcs = pvcs.items;
     },
 
-    async apply(n: V1PersistentVolumeClaim, onError: (_: string) => void) {
-      await applyPersistentVolumeClaim(n, onError);
+    async apply(n: V1PersistentVolumeClaim) {
+      await applyPersistentVolumeClaim(n);
       await this.fetchlist();
     },
 

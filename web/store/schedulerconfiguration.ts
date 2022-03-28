@@ -48,8 +48,8 @@ export default function schedulerconfigurationStore() {
       }
     },
 
-    async apply(cfg: SchedulerConfiguration, onError: (_: string) => void) {
-      await applySchedulerConfiguration(cfg, onError);
+    async apply(cfg: SchedulerConfiguration) {
+      await applySchedulerConfiguration(cfg);
     },
 
     async delete(_: string) {

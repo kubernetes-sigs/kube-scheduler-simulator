@@ -55,7 +55,8 @@ export default function pvStore() {
     },
 
     async fetchlist() {
-      state.pvs = (await listPersistentVolume()).items;
+      const pvs = await listPersistentVolume();
+      state.pvs = pvs.items;
     },
 
     async fetchSelected() {
@@ -70,12 +71,8 @@ export default function pvStore() {
       }
     },
 
-    async apply(
-      n: V1PersistentVolume,
-
-      onError: (_: string) => void
-    ) {
-      await applyPersistentVolume(n, onError);
+    async apply(n: V1PersistentVolume) {
+      await applyPersistentVolume(n);
       await this.fetchlist();
     },
 

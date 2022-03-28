@@ -61,15 +61,12 @@ export default function priorityclassStore() {
     },
 
     async fetchlist() {
-      state.priorityclasses = (await listPriorityClass()).items;
+      const priorityclasses = await listPriorityClass();
+      state.priorityclasses = priorityclasses.items;
     },
 
-    async apply(
-      n: V1PriorityClass,
-
-      onError: (_: string) => void
-    ) {
-      await applyPriorityClass(n, onError);
+    async apply(n: V1PriorityClass) {
+      await applyPriorityClass(n);
       await this.fetchlist();
     },
 

@@ -38,6 +38,7 @@ import {
 } from "@nuxtjs/composition-api";
 import {} from "../../lib/util";
 import PersistentVolumeClaimStoreKey from "../../StoreKey/PVCStoreKey";
+import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 export default defineComponent({
   setup() {
     const store = inject(PersistentVolumeClaimStoreKey);
@@ -45,8 +46,17 @@ export default defineComponent({
       throw new Error(`${PersistentVolumeClaimStoreKey} is not provided`);
     }
 
+    const snackbarstore = inject(SnackBarStoreKey);
+    if (!snackbarstore) {
+      throw new Error(`${SnackBarStoreKey} is not provided`);
+    }
+
+    const setServerErrorMessage = (error: string) => {
+      snackbarstore.setServerErrorMessage(error);
+    };
+
     const getPVCList = async () => {
-      await store.fetchlist();
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     const onClick = (pvc: V1PersistentVolumeClaim) => {
       store.select(pvc, false);
