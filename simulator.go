@@ -31,8 +31,8 @@ func startSimulator() error {
 		return xerrors.Errorf("get config: %w", err)
 	}
 
-	restclientCfg, shutdownFn, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL)
-	defer shutdownFn()
+	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL, cfg.FrontendURL)
+	defer apiShutdown()
 	if err != nil {
 		return xerrors.Errorf("start API server: %w", err)
 	}

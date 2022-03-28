@@ -17,6 +17,7 @@ import {
 } from "@nuxtjs/composition-api";
 import DataTable from "./DataTable.vue";
 import StorageClassStoreKey from "../../StoreKey/StorageClassStoreKey";
+import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 import {} from "../../lib/util";
 
 export default defineComponent({
@@ -29,8 +30,17 @@ export default defineComponent({
       throw new Error(`${StorageClassStoreKey} is not provided`);
     }
 
+    const snackbarstore = inject(SnackBarStoreKey);
+    if (!snackbarstore) {
+      throw new Error(`${SnackBarStoreKey} is not provided`);
+    }
+
+    const setServerErrorMessage = (error: string) => {
+      snackbarstore.setServerErrorMessage(error);
+    };
+
     const getStorageClassList = async () => {
-      await store.fetchlist();
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     const onClick = (storageclass: V1StorageClass) => {
       store.select(storageclass, false);

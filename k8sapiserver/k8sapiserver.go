@@ -32,8 +32,7 @@ AwEHoUQDQgAEH6cuzP8XuD5wal6wf9M6xDljTOPLX2i8uIp/C/ASqiIGUeeKQtX0
 -----END EC PRIVATE KEY-----`
 
 // StartAPIServer starts both the secure k8sAPIServer and proxy server to handle insecure serving, and it make panic when a error happen.
-//nolint:funlen
-func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config, func(), error) {
+func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.Config, func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		<-h.Initialized
@@ -54,7 +53,7 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 	klog.InfoS("starting proxy server", "URL", s.URL)
 	s.Start()
 
-	aggregatorServer, err := createK8SAPIChainedServer(etcdURL)
+	aggregatorServer, err := createK8SAPIChainedServer(etcdURL, frontendURL)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("start k8s api chained server: %w", err)
 	}
@@ -107,11 +106,14 @@ func StartAPIServer(kubeAPIServerURL string, etcdURL string) (*restclient.Config
 	return cfg, shutdownFunc, nil
 }
 
-func createK8SAPIServerOpts(etcdURL string) (*apiserverappopts.ServerRunOptions, func(), error) {
+func createK8SAPIServerOpts(etcdURL, frontendURL string) (*apiserverappopts.ServerRunOptions, func(), error) {
 	serverOpts := apiserverappopts.NewServerRunOptions()
 
 	// set up etcd
 	serverOpts.Etcd.StorageConfig.Transport.ServerList = []string{etcdURL}
+
+	// set up CORS
+	serverOpts.GenericServerRunOptions.CorsAllowedOriginList = []string{frontendURL}
 
 	// set up RBAC authorization and annoymous auth.
 	serverOpts.Authorization.Modes = []string{authzmodes.ModeRBAC}
@@ -144,8 +146,8 @@ func createK8SAPIServerOpts(etcdURL string) (*apiserverappopts.ServerRunOptions,
 	return serverOpts, cleanupFunc, nil
 }
 
-func createK8SAPIChainedServer(etcdURL string) (*apiserver.APIAggregator, error) {
-	serverOpts, cleanupFunc, err := createK8SAPIServerOpts(etcdURL)
+func createK8SAPIChainedServer(etcdURL, frontendURL string) (*apiserver.APIAggregator, error) {
+	serverOpts, cleanupFunc, err := createK8SAPIServerOpts(etcdURL, frontendURL)
 	defer cleanupFunc()
 	if err != nil {
 		return nil, err

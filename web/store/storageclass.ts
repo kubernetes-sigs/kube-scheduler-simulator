@@ -55,15 +55,12 @@ export default function storageclassStore() {
     },
 
     async fetchlist() {
-      state.storageclasses = (await listStorageClass()).items;
+      const storageclasses = await listStorageClass();
+      state.storageclasses = storageclasses.items;
     },
 
-    async apply(
-      n: V1StorageClass,
-
-      onError: (_: string) => void
-    ) {
-      await applyStorageClass(n, onError);
+    async apply(n: V1StorageClass) {
+      await applyStorageClass(n);
       await this.fetchlist();
     },
 

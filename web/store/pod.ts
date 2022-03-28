@@ -57,7 +57,8 @@ export default function podStore() {
     },
 
     async fetchlist() {
-      const pods = (await listPod()).items;
+      const listpods = await listPod();
+      const pods = listpods.items;
       const result: { [key: string]: Array<V1Pod> } = {};
       result["unscheduled"] = [];
       pods.forEach((p) => {
@@ -81,8 +82,8 @@ export default function podStore() {
       }
     },
 
-    async apply(p: V1Pod, onError: (_: string) => void) {
-      await applyPod(p, onError);
+    async apply(p: V1Pod) {
+      await applyPod(p);
       await this.fetchlist();
     },
 

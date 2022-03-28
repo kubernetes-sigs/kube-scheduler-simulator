@@ -50,7 +50,8 @@ export default function nodeStore() {
     },
 
     async fetchlist() {
-      state.nodes = (await listNode()).items;
+      const nodes = await listNode();
+      state.nodes = nodes.items;
     },
 
     async fetchSelected() {
@@ -60,12 +61,8 @@ export default function nodeStore() {
       }
     },
 
-    async apply(
-      n: V1Node,
-
-      onError: (_: string) => void
-    ) {
-      await applyNode(n, onError);
+    async apply(n: V1Node) {
+      await applyNode(n);
       await this.fetchlist();
     },
 

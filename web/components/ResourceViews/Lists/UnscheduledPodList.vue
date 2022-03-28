@@ -15,6 +15,7 @@ import {
 import {} from "../../lib/util";
 import PodStoreKey from "../../StoreKey/PodStoreKey";
 import PodList from "./PodList.vue";
+import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 export default defineComponent({
   components: { PodList },
   setup() {
@@ -23,8 +24,17 @@ export default defineComponent({
       throw new Error(`${PodStoreKey} is not provided`);
     }
 
+    const snackbarstore = inject(SnackBarStoreKey);
+    if (!snackbarstore) {
+      throw new Error(`${SnackBarStoreKey} is not provided`);
+    }
+
+    const setServerErrorMessage = (error: string) => {
+      snackbarstore.setServerErrorMessage(error);
+    };
+
     const getPodList = async () => {
-      await store.fetchlist();
+      await store.fetchlist().catch((e) => setServerErrorMessage(e));
     };
     onMounted(getPodList);
 
