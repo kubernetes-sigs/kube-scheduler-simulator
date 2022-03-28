@@ -32,10 +32,10 @@ func startSimulator() error {
 	}
 
 	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL, cfg.FrontendURL)
-	defer apiShutdown()
 	if err != nil {
 		return xerrors.Errorf("start API server: %w", err)
 	}
+	defer apiShutdown()
 
 	client := clientset.NewForConfigOrDie(restclientCfg)
 
