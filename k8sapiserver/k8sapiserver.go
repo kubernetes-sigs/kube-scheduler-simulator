@@ -58,6 +58,31 @@ func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.
 		return nil, nil, xerrors.Errorf("start k8s api chained server: %w", err)
 	}
 
+	closeFn := setUpHandlerAndRun(aggregatorServer, s, h)
+
+	err = createClusterRoleAndRoleBindings(aggregatorServer.GenericAPIServer.LoopbackClientConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	shutdownFunc := func() {
+		klog.Info("destroying API server")
+		closeFn()
+		s.Close()
+		klog.Info("destroyed API server")
+	}
+
+	cfg := &restclient.Config{
+		Host:          s.URL,
+		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
+		QPS:           5000.0,
+		Burst:         5000,
+	}
+
+	return cfg, shutdownFunc, nil
+}
+
+func setUpHandlerAndRun(aggregatorServer *apiserver.APIAggregator, s *httptest.Server, h *APIServerHolder) func() {
 	var m *controlplane.Instance
 	stopCh := make(chan struct{})
 	closeFn := func() {
@@ -83,27 +108,7 @@ func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.
 			errCh <- err
 		}
 	}(stopCh)
-
-	err = createClusterRoleAndRoleBindings(aggregatorServer.GenericAPIServer.LoopbackClientConfig)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	shutdownFunc := func() {
-		klog.Info("destroying API server")
-		closeFn()
-		s.Close()
-		klog.Info("destroyed API server")
-	}
-
-	cfg := &restclient.Config{
-		Host:          s.URL,
-		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
-		QPS:           5000.0,
-		Burst:         5000,
-	}
-
-	return cfg, shutdownFunc, nil
+	return closeFn
 }
 
 func createK8SAPIServerOpts(etcdURL, frontendURL string) (*apiserverappopts.ServerRunOptions, func(), error) {
