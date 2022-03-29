@@ -16,9 +16,9 @@ type PodHandler struct {
 	service di.PodService
 }
 
-// In PR #137, we require the specification of namespace on pod manipulation.
-// But this handler will be deprecate in the future.
-// So, this is a temporary solution.
+// Handlers support only the default namespace.
+// The previous web UI had supported only the default namespace,
+// and we deprecated all handlers to support namespaces in Web UI.
 const (
 	defaultNamespaceName = "default"
 )
