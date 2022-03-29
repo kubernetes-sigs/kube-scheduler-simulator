@@ -58,7 +58,10 @@ func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.
 		return nil, nil, xerrors.Errorf("start k8s api chained server: %w", err)
 	}
 
-	closeFn := setUpHandlerAndRun(aggregatorServer, s, h)
+	closeFn, err := setUpHandlerAndRun(aggregatorServer, s, h)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("run aggregator server: %w", err)
+	}
 
 	err = createClusterRoleAndRoleBindings(aggregatorServer.GenericAPIServer.LoopbackClientConfig)
 	if err != nil {
@@ -82,7 +85,7 @@ func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.
 	return cfg, shutdownFunc, nil
 }
 
-func setUpHandlerAndRun(aggregatorServer *apiserver.APIAggregator, s *httptest.Server, h *APIServerHolder) func() {
+func setUpHandlerAndRun(aggregatorServer *apiserver.APIAggregator, s *httptest.Server, h *APIServerHolder) (func(), error) {
 	var m *controlplane.Instance
 	stopCh := make(chan struct{})
 	closeFn := func() {
@@ -99,16 +102,15 @@ func setUpHandlerAndRun(aggregatorServer *apiserver.APIAggregator, s *httptest.S
 	}
 	h.SetAPIServer(m)
 
-	errCh := make(chan error)
-	go func(stopCh <-chan struct{}) {
-		prepared, err := aggregatorServer.PrepareRun()
-		if err != nil {
-			errCh <- err
-		} else if err := prepared.Run(stopCh); err != nil {
-			errCh <- err
-		}
-	}(stopCh)
-	return closeFn
+	prepared, err := aggregatorServer.PrepareRun()
+	if err != nil {
+		return nil, err
+	}
+
+	//nolint:errcheck
+	go prepared.Run(stopCh)
+
+	return closeFn, nil
 }
 
 func createK8SAPIServerOpts(etcdURL, frontendURL string) (*apiserverappopts.ServerRunOptions, func(), error) {
