@@ -41,7 +41,7 @@ func (s *Service) List(ctx context.Context, namespace string) (*corev1.Persisten
 }
 
 // Apply applies the persistentVolumeClaims.
-func (s *Service) Apply(ctx context.Context, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration, namespace string) (*corev1.PersistentVolumeClaim, error) {
+func (s *Service) Apply(ctx context.Context, namespace string, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error) {
 	persistentVolumeClaime.WithKind("PersistentVolumeClaim")
 	persistentVolumeClaime.WithAPIVersion("v1")
 

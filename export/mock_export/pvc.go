@@ -36,7 +36,7 @@ func (m *MockPersistentVolumeClaimService) EXPECT() *MockPersistentVolumeClaimSe
 }
 
 // Apply mocks base method
-func (m *MockPersistentVolumeClaimService) Apply(arg0 context.Context, arg1 *v10.PersistentVolumeClaimApplyConfiguration, arg2 string) (*v1.PersistentVolumeClaim, error) {
+func (m *MockPersistentVolumeClaimService) Apply(arg0 context.Context, arg1 string, arg2 *v10.PersistentVolumeClaimApplyConfiguration) (*v1.PersistentVolumeClaim, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.PersistentVolumeClaim)

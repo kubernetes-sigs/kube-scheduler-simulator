@@ -31,7 +31,7 @@ func (h *PersistentVolumeClaimHandler) ApplyPersistentVolumeClaim(c echo.Context
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	newpvc, err := h.service.Apply(ctx, persistentVolumeClaim, defaultNamespaceName)
+	newpvc, err := h.service.Apply(ctx, defaultNamespaceName, persistentVolumeClaim)
 	if err != nil {
 		klog.Errorf("failed to apply persistentVolumeClaim: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)

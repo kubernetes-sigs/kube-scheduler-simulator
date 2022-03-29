@@ -19,7 +19,7 @@ import (
 type PodService interface {
 	Get(ctx context.Context, name string, namespace string) (*corev1.Pod, error)
 	List(ctx context.Context, namespace string) (*corev1.PodList, error)
-	Apply(ctx context.Context, pod *configv1.PodApplyConfiguration, namespace string) (*corev1.Pod, error)
+	Apply(ctx context.Context, namespace string, pod *configv1.PodApplyConfiguration) (*corev1.Pod, error)
 	Delete(ctx context.Context, name string, namespace string) error
 	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
@@ -46,7 +46,7 @@ type PersistentVolumeService interface {
 type PersistentVolumeClaimService interface {
 	Get(ctx context.Context, name string, namespace string) (*corev1.PersistentVolumeClaim, error)
 	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
-	Apply(ctx context.Context, pvc *configv1.PersistentVolumeClaimApplyConfiguration, namespace string) (*corev1.PersistentVolumeClaim, error)
+	Apply(ctx context.Context, namespace string, pvc *configv1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
 	Delete(ctx context.Context, name string, namespace string) error
 	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }

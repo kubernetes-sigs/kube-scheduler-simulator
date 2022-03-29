@@ -38,7 +38,7 @@ func (h *PodHandler) ApplyPod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	newpod, err := h.service.Apply(ctx, pod, defaultNamespaceName)
+	newpod, err := h.service.Apply(ctx, defaultNamespaceName, pod)
 	if err != nil {
 		klog.Errorf("failed to apply pod: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -53,7 +53,7 @@ func (h *PodHandler) GetPod(c echo.Context) error {
 
 	name := c.Param("name")
 
-	p, err := h.service.Get(ctx, name, defaultNamespaceName)
+	p, err := h.service.Get(ctx, defaultNamespaceName, name)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return echo.NewHTTPError(http.StatusNotFound)

@@ -36,7 +36,7 @@ func (m *MockPodService) EXPECT() *MockPodServiceMockRecorder {
 }
 
 // Apply mocks base method
-func (m *MockPodService) Apply(arg0 context.Context, arg1 *v10.PodApplyConfiguration, arg2 string) (*v1.Pod, error) {
+func (m *MockPodService) Apply(arg0 context.Context, arg1 string, arg2 *v10.PodApplyConfiguration) (*v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.Pod)

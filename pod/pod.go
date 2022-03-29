@@ -42,7 +42,7 @@ func (s *Service) List(ctx context.Context, namespace string) (*corev1.PodList, 
 }
 
 // Apply applies the pod.
-func (s *Service) Apply(ctx context.Context, pod *v1.PodApplyConfiguration, namespace string) (*corev1.Pod, error) {
+func (s *Service) Apply(ctx context.Context, namespace string, pod *v1.PodApplyConfiguration) (*corev1.Pod, error) {
 	pod.WithKind("Pod")
 	pod.WithAPIVersion("v1")
 

@@ -62,7 +62,7 @@ type ResourcesForImport struct {
 
 type PodService interface {
 	List(ctx context.Context, namespace string) (*corev1.PodList, error)
-	Apply(ctx context.Context, pod *v1.PodApplyConfiguration, namespace string) (*corev1.Pod, error)
+	Apply(ctx context.Context, namespace string, pod *v1.PodApplyConfiguration) (*corev1.Pod, error)
 }
 
 type NodeService interface {
@@ -78,7 +78,7 @@ type PersistentVolumeService interface {
 type PersistentVolumeClaimService interface {
 	Get(ctx context.Context, name string, namespace string) (*corev1.PersistentVolumeClaim, error)
 	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
-	Apply(ctx context.Context, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration, namespace string) (*corev1.PersistentVolumeClaim, error)
+	Apply(ctx context.Context, namespace string, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
 }
 
 type StorageClassService interface {
@@ -439,7 +439,7 @@ func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForImport, eg *util
 		eg.Grp.Go(func() error {
 			defer eg.Sem.Release(1)
 			pvc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.pvcService.Apply(ctx, &pvc, *pvc.Namespace)
+			_, err := s.pvcService.Apply(ctx, *pvc.Namespace, &pvc)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
@@ -517,7 +517,7 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 		eg.Grp.Go(func() error {
 			defer eg.Sem.Release(1)
 			pod.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.podService.Apply(ctx, &pod, *pod.Namespace)
+			_, err := s.podService.Apply(ctx, *pod.Namespace, &pod)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Pod: %w", err)
