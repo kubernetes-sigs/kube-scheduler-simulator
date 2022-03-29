@@ -61,7 +61,7 @@ type ResourcesForImport struct {
 }
 
 type PodService interface {
-	List(ctx context.Context, namespaace string) (*corev1.PodList, error)
+	List(ctx context.Context, namespace string) (*corev1.PodList, error)
 	Apply(ctx context.Context, pod *v1.PodApplyConfiguration, namespace string) (*corev1.Pod, error)
 }
 
