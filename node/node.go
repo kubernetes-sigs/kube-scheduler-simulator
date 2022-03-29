@@ -23,7 +23,7 @@ type Service struct {
 type PodService interface {
 	List(ctx context.Context, namespace string) (*corev1.PodList, error)
 	Delete(ctx context.Context, name string, namespace string) error
-	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
+	DeleteCollection(ctx context.Context, namespace string, lopts metav1.ListOptions) error
 }
 
 // NewNodeService initializes Service.
@@ -100,7 +100,6 @@ func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions
 	if err != nil {
 		return xerrors.Errorf("list nodes: %w", err)
 	}
-
 	eg, ctx := errgroup.WithContext(ctx)
 	for _, n := range ns.Items {
 		n := n
@@ -109,7 +108,8 @@ func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions
 			lopts := metav1.ListOptions{
 				FieldSelector: "spec.nodeName=" + n.Name,
 			}
-			if err := s.podService.DeleteCollection(ctx, lopts); err != nil {
+			// This method deletes all pods on all namespaces scheduled to the specified node.
+			if err := s.podService.DeleteCollection(ctx, metav1.NamespaceAll, lopts); err != nil {
 				return xerrors.Errorf("failed to delete pods on node %s: %w\n", n.Name, err)
 			}
 

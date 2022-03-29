@@ -260,6 +260,7 @@ func TestService_DeleteCollection(t *testing.T) {
 	tests := []struct {
 		name                   string
 		prepareFakeClientSetFn func() *fake.Clientset
+		targetNamespace        string
 		lopt                   metav1.ListOptions
 		wantErr                bool
 	}{
@@ -298,8 +299,9 @@ func TestService_DeleteCollection(t *testing.T) {
 
 				return c
 			},
-			lopt:    metav1.ListOptions{},
-			wantErr: false,
+			targetNamespace: metav1.NamespaceAll,
+			lopt:            metav1.ListOptions{},
+			wantErr:         false,
 		},
 		{
 			name: "delete all pods on node",
@@ -323,6 +325,7 @@ func TestService_DeleteCollection(t *testing.T) {
 
 				return c
 			},
+			targetNamespace: metav1.NamespaceAll,
 			lopt: metav1.ListOptions{
 				FieldSelector: "spec.nodeName!=",
 			},
@@ -335,7 +338,7 @@ func TestService_DeleteCollection(t *testing.T) {
 			t.Parallel()
 			fakeclientset := tt.prepareFakeClientSetFn()
 			s := NewPodService(fakeclientset)
-			if err := s.DeleteCollection(context.Background(), tt.lopt); (err != nil) != tt.wantErr {
+			if err := s.DeleteCollection(context.Background(), tt.targetNamespace, tt.lopt); (err != nil) != tt.wantErr {
 				t.Fatalf("DeleteCollection() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

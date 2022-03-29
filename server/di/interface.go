@@ -21,7 +21,7 @@ type PodService interface {
 	List(ctx context.Context, namespace string) (*corev1.PodList, error)
 	Apply(ctx context.Context, namespace string, pod *configv1.PodApplyConfiguration) (*corev1.Pod, error)
 	Delete(ctx context.Context, name string, namespace string) error
-	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
+	DeleteCollection(ctx context.Context, namespace string, lopts metav1.ListOptions) error
 }
 
 // NodeService represents service for manage Nodes.
@@ -48,7 +48,7 @@ type PersistentVolumeClaimService interface {
 	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
 	Apply(ctx context.Context, namespace string, pvc *configv1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
 	Delete(ctx context.Context, name string, namespace string) error
-	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
+	DeleteCollection(ctx context.Context, namespace string, lopts metav1.ListOptions) error
 }
 
 // StorageClassService represents service for manage Pods.

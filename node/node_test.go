@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultNamespaceName = "default"
+	testDefaultNamespaceName1 = "default1"
 )
 
 func TestService_Delete(t *testing.T) {
@@ -35,7 +35,7 @@ func TestService_Delete(t *testing.T) {
 						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "pod1",
-								Namespace: defaultNamespaceName,
+								Namespace: testDefaultNamespaceName1,
 							},
 							Spec: corev1.PodSpec{
 								NodeName: "node1",
@@ -44,7 +44,7 @@ func TestService_Delete(t *testing.T) {
 						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "pod2",
-								Namespace: defaultNamespaceName,
+								Namespace: testDefaultNamespaceName1,
 							},
 							Spec: corev1.PodSpec{
 								NodeName: "node1",
@@ -53,7 +53,7 @@ func TestService_Delete(t *testing.T) {
 						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "this-pod-will-not-be-deleted",
-								Namespace: defaultNamespaceName,
+								Namespace: testDefaultNamespaceName1,
 							},
 							Spec: corev1.PodSpec{
 								NodeName: "other-node",
@@ -61,8 +61,8 @@ func TestService_Delete(t *testing.T) {
 						},
 					},
 				}, nil)
-				m.EXPECT().Delete(gomock.Any(), "pod1", defaultNamespaceName).Return(nil)
-				m.EXPECT().Delete(gomock.Any(), "pod2", defaultNamespaceName).Return(nil)
+				m.EXPECT().Delete(gomock.Any(), "pod1", testDefaultNamespaceName1).Return(nil)
+				m.EXPECT().Delete(gomock.Any(), "pod2", testDefaultNamespaceName1).Return(nil)
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -85,7 +85,7 @@ func TestService_Delete(t *testing.T) {
 						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "pod1",
-								Namespace: defaultNamespaceName,
+								Namespace: testDefaultNamespaceName1,
 							},
 							Spec: corev1.PodSpec{
 								NodeName: "node1",
@@ -94,7 +94,7 @@ func TestService_Delete(t *testing.T) {
 						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "pod2",
-								Namespace: defaultNamespaceName,
+								Namespace: testDefaultNamespaceName1,
 							},
 							Spec: corev1.PodSpec{
 								NodeName: "node1",
@@ -103,7 +103,7 @@ func TestService_Delete(t *testing.T) {
 						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "this-pod-will-not-be-deleted",
-								Namespace: defaultNamespaceName,
+								Namespace: testDefaultNamespaceName1,
 							},
 							Spec: corev1.PodSpec{
 								NodeName: "other-node",
@@ -111,8 +111,8 @@ func TestService_Delete(t *testing.T) {
 						},
 					},
 				}, nil)
-				m.EXPECT().Delete(gomock.Any(), "pod1", defaultNamespaceName).Return(nil)
-				m.EXPECT().Delete(gomock.Any(), "pod2", defaultNamespaceName).Return(errors.New("error"))
+				m.EXPECT().Delete(gomock.Any(), "pod1", testDefaultNamespaceName1).Return(nil)
+				m.EXPECT().Delete(gomock.Any(), "pod2", testDefaultNamespaceName1).Return(errors.New("error"))
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
@@ -169,10 +169,10 @@ func TestService_DeleteCollection(t *testing.T) {
 		{
 			name: "delete all nodes and pods scheduled on them",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
-				m.EXPECT().DeleteCollection(gomock.Any(), metav1.ListOptions{
+				m.EXPECT().DeleteCollection(gomock.Any(), gomock.Any(), metav1.ListOptions{
 					FieldSelector: "spec.nodeName=node1",
 				}).Return(nil)
-				m.EXPECT().DeleteCollection(gomock.Any(), metav1.ListOptions{
+				m.EXPECT().DeleteCollection(gomock.Any(), gomock.Any(), metav1.ListOptions{
 					FieldSelector: "spec.nodeName=node2",
 				}).Return(nil)
 			},
@@ -198,7 +198,7 @@ func TestService_DeleteCollection(t *testing.T) {
 		{
 			name: "delete nodes with no pods",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
-				m.EXPECT().DeleteCollection(gomock.Any(), metav1.ListOptions{
+				m.EXPECT().DeleteCollection(gomock.Any(), gomock.Any(), metav1.ListOptions{
 					FieldSelector: "spec.nodeName=node1",
 				}).Return(nil)
 			},
@@ -219,7 +219,7 @@ func TestService_DeleteCollection(t *testing.T) {
 		{
 			name: "fail if deleteing all pods returns error",
 			preparePodServiceMockFn: func(m *mock_node.MockPodService) {
-				m.EXPECT().DeleteCollection(gomock.Any(), metav1.ListOptions{
+				m.EXPECT().DeleteCollection(gomock.Any(), gomock.Any(), metav1.ListOptions{
 					FieldSelector: "spec.nodeName=node1",
 				}).Return(errors.New("error"))
 			},
