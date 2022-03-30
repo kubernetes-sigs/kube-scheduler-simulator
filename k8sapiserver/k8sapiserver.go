@@ -107,8 +107,11 @@ func setUpHandlerAndRun(aggregatorServer *apiserver.APIAggregator, s *httptest.S
 		return nil, err
 	}
 
-	//nolint:errcheck
-	go prepared.Run(stopCh)
+	go func() {
+		if err := prepared.Run(stopCh); err != nil {
+			klog.Errorf("run aggregator server: %v", err)
+		}
+	}()
 
 	return closeFn, nil
 }
