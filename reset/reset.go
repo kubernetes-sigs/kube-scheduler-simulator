@@ -13,7 +13,7 @@ type DeleteService interface {
 	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
 }
 
-type DeleteWithNamespaceService interface {
+type DeleteServicesForNamespacedResources interface {
 	DeleteCollection(ctx context.Context, namespace string, lopts metav1.ListOptions) error
 }
 
@@ -29,29 +29,29 @@ type Service struct {
 	deleteServices map[string]DeleteService
 	// deleteNamespacedServices has the all services for each namespaced resource.
 	// key: service name.
-	deleteWithNamespaceService map[string]DeleteWithNamespaceService
-	schedService               SchedulerService
+	deleteServicesForNamespacedResources map[string]DeleteServicesForNamespacedResources
+	schedService                         SchedulerService
 }
 
 // NewResetService initializes Service.
 func NewResetService(
 	client clientset.Interface,
 	deleteServices map[string]DeleteService,
-	deleteWithNamespaceService map[string]DeleteWithNamespaceService,
+	deleteServicesForNamespacedResources map[string]DeleteServicesForNamespacedResources,
 	schedService SchedulerService,
 ) *Service {
 	return &Service{
-		client:                     client,
-		deleteServices:             deleteServices,
-		deleteWithNamespaceService: deleteWithNamespaceService,
-		schedService:               schedService,
+		client:                               client,
+		deleteServices:                       deleteServices,
+		deleteServicesForNamespacedResources: deleteServicesForNamespacedResources,
+		schedService:                         schedService,
 	}
 }
 
 // Reset cleans up all resources and scheduler configuration.
 func (s *Service) Reset(ctx context.Context) error {
 	eg, ctx := errgroup.WithContext(ctx)
-	for k, ds := range s.deleteWithNamespaceService {
+	for k, ds := range s.deleteServicesForNamespacedResources {
 		ds := ds
 		k := k
 		eg.Go(func() error {

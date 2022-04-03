@@ -55,7 +55,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 		"storage class":     c.storageClassService,
 		"priority class":    c.priorityClassService,
 	}
-	deleteWithNamespaceService := map[string]reset.DeleteWithNamespaceService{
+	deleteWithNamespaceService := map[string]reset.DeleteServicesForNamespacedResources{
 		"pod":                     c.podService,
 		"persistent volume claim": c.pvcService,
 	}
