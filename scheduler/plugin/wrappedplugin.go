@@ -221,12 +221,14 @@ func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState,
 	}
 
 	s := w.originalFilterPlugin.Filter(ctx, state, pod, nodeInfo)
+	var msg string
 	if s.IsSuccess() {
-		// TODO: move to AfterFilter.
-		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), schedulingresultstore.PassedFilterMessage)
+		msg = schedulingresultstore.PassedFilterMessage
 	} else {
-		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), s.Message())
+		msg = s.Message()
 	}
+	// TODO: move to AfterFilter.
+	w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), msg)
 
 	// If the filterPluginExtender is not nil, we will return the results of AfterFilter.
 	if w.filterPluginExtender != nil {
