@@ -445,7 +445,7 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 		wantstatus                *framework.Status
 	}{
 		{
-			name: "return nil when NormalizeScore is successful",
+			name: "return AfterNormalizeScore's results when NormalizeScore is successful",
 			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, se *mock_plugin.MockScoreExtensions, sp *mock_plugin.MockScorePlugin, spe *mock_plugin.MockNormalizeScorePluginExtender, as args) {
 				calOnNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) {
 					for i := range scores {
@@ -491,7 +491,7 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 					Score: 3010,
 				},
 			},
-			wantstatus: nil,
+			wantstatus: framework.NewStatus(framework.Success, "AfterNormalizeScore returned"),
 		},
 		{
 			name: "return AfterNormalizeScore's results when NormalizeScore is fails",
@@ -542,7 +542,7 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 			wantstatus: framework.NewStatus(framework.Success, "AfterNormalizeScore returned"),
 		},
 		{
-			name: "return nil, when NormalizeScore is successful and AfterNormalizeScore is fails",
+			name: "return AfterNormalizeScore's results, when NormalizeScore is successful and AfterNormalizeScore is fails",
 			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, se *mock_plugin.MockScoreExtensions, sp *mock_plugin.MockScorePlugin, spe *mock_plugin.MockNormalizeScorePluginExtender, as args) {
 				calOnNormalizeScore := func(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) {
 					for i := range scores {
@@ -588,7 +588,7 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 					Score: 3010,
 				},
 			},
-			wantstatus: nil,
+			wantstatus: framework.NewStatus(framework.Error, "AfterNormalizeScore returned"),
 		},
 		{
 			name: "return BeforeNormalizeScore when BeforeNormalizeScore is fails",
