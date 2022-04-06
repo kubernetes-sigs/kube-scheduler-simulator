@@ -228,7 +228,7 @@ func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState,
 		w.store.AddFilterResult(pod.Namespace, pod.Name, nodeInfo.Node().Name, w.originalFilterPlugin.Name(), s.Message())
 	}
 
-	// If it is not nil, we wiil return the results of AfterFilter.
+	// If the filterPluginExtender is not nil, we will return the results of AfterFilter.
 	if w.filterPluginExtender != nil {
 		return w.filterPluginExtender.AfterFilter(ctx, state, pod, nodeInfo, s)
 	}
