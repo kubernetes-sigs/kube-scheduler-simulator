@@ -198,7 +198,7 @@ func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, 
 		w.store.AddScoreResult(pod.Namespace, pod.Name, nodeName, w.originalScorePlugin.Name(), score)
 	}
 
-	// If it is not nil, we wiil return the results of AfterScore.
+	// If the scorePluginExtender is not nil, we will return the results of AfterScore.
 	if w.scorePluginExtender != nil {
 		return w.scorePluginExtender.AfterScore(ctx, state, pod, nodeName, score, s)
 	}
