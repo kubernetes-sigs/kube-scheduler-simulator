@@ -55,11 +55,11 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 		"storage class":     c.storageClassService,
 		"priority class":    c.priorityClassService,
 	}
-	deleteWithNamespaceService := map[string]reset.DeleteServicesForNamespacedResources{
+	deleteForNamespacedResources := map[string]reset.DeleteServicesForNamespacedResources{
 		"pod":                     c.podService,
 		"persistent volume claim": c.pvcService,
 	}
-	c.resetService = reset.NewResetService(client, deleteServices, deleteWithNamespaceService, c.schedulerService)
+	c.resetService = reset.NewResetService(client, deleteServices, deleteForNamespacedResources, c.schedulerService)
 	exportService := export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
 	c.exportService = exportService
 	if externalImportEnabled {
