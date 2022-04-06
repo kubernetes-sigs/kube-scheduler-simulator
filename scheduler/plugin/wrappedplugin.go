@@ -154,7 +154,7 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 	s := w.originalScorePlugin.ScoreExtensions().NormalizeScore(ctx, state, pod, scores)
 	if !s.IsSuccess() {
 		klog.Errorf("failed to run normalize score: %v, %v", s.Code(), s.Message())
-		// If it is not nil, we wiil return the results of AfterNormalizeScore.
+		// If the normalizeScorePluginExtender is not nil, we will return the results of AfterNormalizeScore.
 		if w.normalizeScorePluginExtender != nil {
 			return w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, s)
 		}
@@ -166,7 +166,7 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 	for _, s := range scores {
 		w.store.AddNormalizedScoreResult(pod.Namespace, pod.Name, s.Name, w.originalScorePlugin.Name(), s.Score)
 	}
-	// If it is not nil, we wiil run AfterNormalizeScore.
+	// If the normalizeScorePluginExtender is not nil, we will run AfterNormalizeScore.
 	if w.normalizeScorePluginExtender != nil {
 		_ = w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, s)
 	}
