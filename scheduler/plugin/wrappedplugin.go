@@ -23,8 +23,7 @@ type FilterPluginExtender interface {
 	// If BeforeFilter returns non-success status, the simulator plugin doesn't run the Filter method of the original plugin and return that status.
 	BeforeFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status
 	// AfterFilter is a function that is run after the Filter method of the original plugin.
-	// AfterFilter must be run regardless of the result from a Filter method of the original plugin,
-	// and a Filter method of the simulator plugin returns the status returned from AfterFilter.
+	// A Filter of the simulator plugin finally returns the status returned from AfterFilter.
 	AfterFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo, filterResult *framework.Status) *framework.Status
 }
 
