@@ -42,8 +42,7 @@ type NormalizeScorePluginExtender interface {
 	// If BeforeNormalizeScore returns non-success status, the simulator plugin doesn't run the NormalizeScore method of the original plugin and return that status.
 	BeforeNormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status
 	// AfterNormalizeScore is a function that runs after the NormalizeScore method of the original plugin.
-	// If original plugin returns non-success status, a NormalizeScore of the simulator plugin finally returns the status returned from AfterNormalizeScore or original score.
-	// Otherwise, return nil.
+	// A NormalizeScore of the simulator plugins finally returns the status returned from `AfterNormalizeScore`.
 	AfterNormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList, normalizeScoreResult *framework.Status) *framework.Status
 }
 
