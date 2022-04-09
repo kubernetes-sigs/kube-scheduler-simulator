@@ -138,9 +138,6 @@ func createK8SAPIServerOpts(etcdURL, frontendURL string) (*apiserverappopts.Serv
 	if err != nil {
 		return nil, nil, xerrors.Errorf("create temp file failed: %v", err)
 	}
-	cleanupFunc := func() {
-		os.RemoveAll(saSigningKeyFile.Name())
-	}
 
 	if err = ioutil.WriteFile(saSigningKeyFile.Name(), []byte(ecdsaPrivateKey), 0o600); err != nil {
 		return nil, nil, xerrors.Errorf("write file %s failed: %v", saSigningKeyFile.Name(), err)
@@ -152,6 +149,18 @@ func createK8SAPIServerOpts(etcdURL, frontendURL string) (*apiserverappopts.Serv
 	// disable admission plugins to avoid node taints, service account, cert approval etc.
 	serverOpts.Admission.GenericAdmission.DisablePlugins = apiserveropts.AllOrderedPlugins
 	serverOpts.Admission.GenericAdmission.EnablePlugins = []string{}
+
+	// add cert directory to avoid permission error
+	certDir, err := os.MkdirTemp("", "apiserver-certs")
+	if err != nil {
+		return nil, nil, xerrors.Errorf("create temp certificate dir: %w", err)
+	}
+	serverOpts.SecureServing.ServerCert.CertDirectory = certDir
+
+	cleanupFunc := func() {
+		os.RemoveAll(saSigningKeyFile.Name())
+		os.RemoveAll(certDir)
+	}
 
 	return serverOpts, cleanupFunc, nil
 }

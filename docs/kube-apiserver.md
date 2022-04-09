@@ -2,10 +2,6 @@
 
 This page describes how the simulator's kube-apiserver is configured.
 
-## Pre-requisite
-
-- Simulator user should have permission to create directory under `/var/run`.
-
 ## How it works
 
 ### Environment Variable
@@ -22,5 +18,5 @@ However, we will have to modify a few things to allow our kube-apiserver to be a
 1. Etcd URL - access our Etcd instance.
 2. Authorization mode - uses RBAC authorization.
 3. Authentication method - to allow anonymous authentication. 
-4. Secure Serving - creation of a fake key for *secure serving* - hence the need for permission to create directory under `var/run`.
+4. Secure Serving - creation of a temporary fake key for *secure serving* and saving the key in a temporary directory.
 5. Admission - disabling admission plugins allow us to create nodes without not ready taints, and not having to create default service accounts.
