@@ -29,7 +29,7 @@ vendor: mod-download
 
 .PHONY: build
 build:  
-	go build -v -o ./bin/simulator ./simulator.go
+	go build -o ./bin/simulator ./simulator.go
 
 .PHONY: start
 start: build
