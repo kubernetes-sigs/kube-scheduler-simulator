@@ -7,7 +7,7 @@ This page describes how the simulator's kube-apiserver is configured.
 ### Environment Variable
 The kube-apiserver is configured to expose on the port `KUBE_API_PORT` and on the network interface `KUBE_API_HOST`.
 
-If the two variables are not specified, a random port will be chosen under the localhost `127.0.0.1` .
+If the two variables are not specified, port `3131` will be used with the localhost `127.0.0.1` address.
 
 ### Server Creation
 
