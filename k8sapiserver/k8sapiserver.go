@@ -50,8 +50,8 @@ func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.
 			Handler: handler,
 		},
 	}
-	klog.InfoS("starting proxy server", "URL", s.URL)
 	s.Start()
+	klog.InfoS("starting proxy server", "URL", s.URL)
 
 	aggregatorServer, err := createK8SAPIChainedServer(etcdURL, frontendURL)
 	if err != nil {
