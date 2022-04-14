@@ -53,7 +53,7 @@ func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.
 	s.Start()
 	klog.InfoS("starting proxy server", "URL", s.URL)
 
-	aggregatorServer, err := createK8SAPIChainedServer(etcdURL, frontendURL)
+	aggregatorServer, cleanUpFunc, err := createK8SAPIChainedServer(etcdURL, frontendURL)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("start k8s api chained server: %w", err)
 	}
@@ -70,6 +70,7 @@ func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.
 
 	shutdownFunc := func() {
 		klog.Info("destroying API server")
+		cleanUpFunc()
 		closeFn()
 		s.Close()
 		klog.Info("destroyed API server")
@@ -169,24 +170,23 @@ func createK8SAPIServerOpts(etcdURL, frontendURL string) (*apiserverappopts.Serv
 	return serverOpts, cleanupFunc, nil
 }
 
-func createK8SAPIChainedServer(etcdURL, frontendURL string) (*apiserver.APIAggregator, error) {
+func createK8SAPIChainedServer(etcdURL, frontendURL string) (*apiserver.APIAggregator, func(), error) {
 	serverOpts, cleanupFunc, err := createK8SAPIServerOpts(etcdURL, frontendURL)
-	defer cleanupFunc()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	completedOpts, err := apiserverapp.Complete(serverOpts)
 	if err != nil {
-		return nil, xerrors.Errorf("complete k8s api server options: %w", err)
+		return nil, nil, xerrors.Errorf("complete k8s api server options: %w", err)
 	}
 
 	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return aggregatorServer, nil
+	return aggregatorServer, cleanupFunc, nil
 }
 
 func createClusterRoleAndRoleBindings(loopbackCfg *restclient.Config) error {
