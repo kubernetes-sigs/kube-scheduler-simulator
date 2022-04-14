@@ -148,7 +148,11 @@ func createK8SAPIServerOpts(etcdURL, frontendURL string) (*apiserverappopts.Serv
 
 	// disable admission plugins to avoid node taints, service account, cert approval etc.
 	serverOpts.Admission.GenericAdmission.DisablePlugins = apiserveropts.AllOrderedPlugins
-	serverOpts.Admission.GenericAdmission.EnablePlugins = []string{}
+	serverOpts.Admission.GenericAdmission.EnablePlugins = []string{
+		// This plugin is needed to use PriorityClass.
+		// https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#priority
+		"Priority",
+	}
 
 	// add cert directory to avoid permission error
 	certDir, err := os.MkdirTemp("", "apiserver-certs")
