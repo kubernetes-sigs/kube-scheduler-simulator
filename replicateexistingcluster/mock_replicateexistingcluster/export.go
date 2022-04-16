@@ -6,35 +6,36 @@ package mock_replicateexistingcluster
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	export "github.com/kubernetes-sigs/kube-scheduler-simulator/export"
-	reflect "reflect"
 )
 
-// MockExportService is a mock of ExportService interface
+// MockExportService is a mock of ExportService interface.
 type MockExportService struct {
 	ctrl     *gomock.Controller
 	recorder *MockExportServiceMockRecorder
 }
 
-// MockExportServiceMockRecorder is the mock recorder for MockExportService
+// MockExportServiceMockRecorder is the mock recorder for MockExportService.
 type MockExportServiceMockRecorder struct {
 	mock *MockExportService
 }
 
-// NewMockExportService creates a new mock instance
+// NewMockExportService creates a new mock instance.
 func NewMockExportService(ctrl *gomock.Controller) *MockExportService {
 	mock := &MockExportService{ctrl: ctrl}
 	mock.recorder = &MockExportServiceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockExportService) EXPECT() *MockExportServiceMockRecorder {
 	return m.recorder
 }
 
-// Export mocks base method
+// Export mocks base method.
 func (m *MockExportService) Export(arg0 context.Context, arg1 ...export.Option) (*export.ResourcesForExport, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
@@ -47,14 +48,14 @@ func (m *MockExportService) Export(arg0 context.Context, arg1 ...export.Option) 
 	return ret0, ret1
 }
 
-// Export indicates an expected call of Export
+// Export indicates an expected call of Export.
 func (mr *MockExportServiceMockRecorder) Export(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Export", reflect.TypeOf((*MockExportService)(nil).Export), varargs...)
 }
 
-// IgnoreErr mocks base method
+// IgnoreErr mocks base method.
 func (m *MockExportService) IgnoreErr() export.Option {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IgnoreErr")
@@ -62,13 +63,13 @@ func (m *MockExportService) IgnoreErr() export.Option {
 	return ret0
 }
 
-// IgnoreErr indicates an expected call of IgnoreErr
+// IgnoreErr indicates an expected call of IgnoreErr.
 func (mr *MockExportServiceMockRecorder) IgnoreErr() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IgnoreErr", reflect.TypeOf((*MockExportService)(nil).IgnoreErr))
 }
 
-// IgnoreSchedulerConfiguration mocks base method
+// IgnoreSchedulerConfiguration mocks base method.
 func (m *MockExportService) IgnoreSchedulerConfiguration() export.Option {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IgnoreSchedulerConfiguration")
@@ -76,13 +77,13 @@ func (m *MockExportService) IgnoreSchedulerConfiguration() export.Option {
 	return ret0
 }
 
-// IgnoreSchedulerConfiguration indicates an expected call of IgnoreSchedulerConfiguration
+// IgnoreSchedulerConfiguration indicates an expected call of IgnoreSchedulerConfiguration.
 func (mr *MockExportServiceMockRecorder) IgnoreSchedulerConfiguration() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IgnoreSchedulerConfiguration", reflect.TypeOf((*MockExportService)(nil).IgnoreSchedulerConfiguration))
 }
 
-// Import mocks base method
+// Import mocks base method.
 func (m *MockExportService) Import(arg0 context.Context, arg1 *export.ResourcesForImport, arg2 ...export.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -94,7 +95,7 @@ func (m *MockExportService) Import(arg0 context.Context, arg1 *export.ResourcesF
 	return ret0
 }
 
-// Import indicates an expected call of Import
+// Import indicates an expected call of Import.
 func (mr *MockExportServiceMockRecorder) Import(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)

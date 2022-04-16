@@ -6,7 +6,7 @@ package di
 import (
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	v1beta3config "k8s.io/kube-scheduler/config/v1beta3"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/node"
@@ -37,7 +37,7 @@ type Container struct {
 // NewDIContainer initializes Container.
 // It initializes all service and puts to Container.
 // If externalImportEnabled is false, the simulator will not use externalClient and will not create ReplicateExistingClusterService.
-func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration, externalImportEnabled bool, externalClient clientset.Interface, externalRestClientCfg *restclient.Config) *Container {
+func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta3config.KubeSchedulerConfiguration, externalImportEnabled bool, externalClient clientset.Interface, externalRestClientCfg *restclient.Config) *Container {
 	c := &Container{}
 
 	// initializes each service
@@ -127,7 +127,7 @@ func createExportServiceForReplicateExistingClusterService(externalClient client
 
 	// ReplicateExistingClusterService will not use the SchedulerService of the existing cluster.
 	// Therefore, this is ok to pass an empty struct.
-	schedulerService := scheduler.NewSchedulerService(externalClient, externalRestClientCfg, &v1beta2config.KubeSchedulerConfiguration{})
+	schedulerService := scheduler.NewSchedulerService(externalClient, externalRestClientCfg, &v1beta3config.KubeSchedulerConfiguration{})
 	podService := pod.NewPodService(externalClient)
 	nodeService := node.NewNodeService(externalClient, podService)
 	priorityClassService := priorityclass.NewPriorityClassService(externalClient)

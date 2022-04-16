@@ -24,7 +24,7 @@ func TestService_ImportFromExistingCluster(t *testing.T) {
 				dummyOption := new(export.Option)
 				clusterExport.EXPECT().Export(gomock.Any()).Return(&export.ResourcesForExport{}, nil)
 				simulatorExport.EXPECT().Import(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(2)
+				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(1)
 				simulatorExport.EXPECT().IgnoreSchedulerConfiguration().Return(*dummyOption).Times(1)
 			},
 			wantErr: false,
@@ -35,7 +35,7 @@ func TestService_ImportFromExistingCluster(t *testing.T) {
 				dummyOption := new(export.Option)
 				clusterExport.EXPECT().Export(gomock.Any()).Return(&export.ResourcesForExport{}, nil)
 				simulatorExport.EXPECT().Import(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(xerrors.Errorf("failed to Import"))
-				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(2)
+				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(1)
 				simulatorExport.EXPECT().IgnoreSchedulerConfiguration().Return(*dummyOption).Times(1)
 			},
 			wantErr: true,
@@ -46,7 +46,6 @@ func TestService_ImportFromExistingCluster(t *testing.T) {
 				dummyOption := new(export.Option)
 				clusterExport.EXPECT().Export(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("failed to Import"))
 				simulatorExport.EXPECT().Import(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(0)
-				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(1)
 				simulatorExport.EXPECT().IgnoreSchedulerConfiguration().Return(*dummyOption).Times(0)
 			},
 			wantErr: true,

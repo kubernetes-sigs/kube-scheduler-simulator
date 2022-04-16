@@ -6,36 +6,37 @@ package mock_export
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/core/v1"
 	v10 "k8s.io/client-go/applyconfigurations/core/v1"
-	reflect "reflect"
 )
 
-// MockPodService is a mock of PodService interface
+// MockPodService is a mock of PodService interface.
 type MockPodService struct {
 	ctrl     *gomock.Controller
 	recorder *MockPodServiceMockRecorder
 }
 
-// MockPodServiceMockRecorder is the mock recorder for MockPodService
+// MockPodServiceMockRecorder is the mock recorder for MockPodService.
 type MockPodServiceMockRecorder struct {
 	mock *MockPodService
 }
 
-// NewMockPodService creates a new mock instance
+// NewMockPodService creates a new mock instance.
 func NewMockPodService(ctrl *gomock.Controller) *MockPodService {
 	mock := &MockPodService{ctrl: ctrl}
 	mock.recorder = &MockPodServiceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockPodService) EXPECT() *MockPodServiceMockRecorder {
 	return m.recorder
 }
 
-// Apply mocks base method
+// Apply mocks base method.
 func (m *MockPodService) Apply(arg0 context.Context, arg1 *v10.PodApplyConfiguration) (*v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
@@ -44,13 +45,13 @@ func (m *MockPodService) Apply(arg0 context.Context, arg1 *v10.PodApplyConfigura
 	return ret0, ret1
 }
 
-// Apply indicates an expected call of Apply
+// Apply indicates an expected call of Apply.
 func (mr *MockPodServiceMockRecorder) Apply(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockPodService)(nil).Apply), arg0, arg1)
 }
 
-// List mocks base method
+// List mocks base method.
 func (m *MockPodService) List(arg0 context.Context) (*v1.PodList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0)
@@ -59,7 +60,7 @@ func (m *MockPodService) List(arg0 context.Context) (*v1.PodList, error) {
 	return ret0, ret1
 }
 
-// List indicates an expected call of List
+// List indicates an expected call of List.
 func (mr *MockPodServiceMockRecorder) List(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPodService)(nil).List), arg0)

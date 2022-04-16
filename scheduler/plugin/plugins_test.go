@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/kube-scheduler/config/v1beta2"
+	v1beta3config "k8s.io/kube-scheduler/config/v1beta3"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 
 	mock_plugin "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/plugin/mock"
@@ -23,20 +23,18 @@ import (
 
 func TestConvertWrapped(t *testing.T) {
 	t.Parallel()
-	var weight1 int32 = 1
-	var weight2 int32 = 2
 
 	tests := []struct {
 		name    string
-		arg     *v1beta2.Plugins
-		want    *v1beta2.Plugins
+		arg     *v1beta3config.Plugins
+		want    *v1beta3config.Plugins
 		wantErr bool
 	}{
 		{
 			name: "success",
-			arg: &v1beta2.Plugins{
-				Filter: v1beta2.PluginSet{
-					Disabled: []v1beta2.Plugin{
+			arg: &v1beta3config.Plugins{
+				Filter: v1beta3config.PluginSet{
+					Disabled: []v1beta3config.Plugin{
 						{Name: "EBSLimits"},
 						{Name: "NodeUnschedulable"},
 						{Name: "NodeName"},
@@ -52,8 +50,8 @@ func TestConvertWrapped(t *testing.T) {
 						{Name: "VolumeRestrictions"},
 					},
 				},
-				Score: v1beta2.PluginSet{
-					Disabled: []v1beta2.Plugin{
+				Score: v1beta3config.PluginSet{
+					Disabled: []v1beta3config.Plugin{
 						{Name: "NodeResourcesFit"},
 						{Name: "NodeResourcesBalancedAllocation"},
 						{Name: "ImageLocality"},
@@ -62,24 +60,18 @@ func TestConvertWrapped(t *testing.T) {
 					},
 				},
 			},
-			want: &v1beta2.Plugins{
-				Filter: v1beta2.PluginSet{
-					Enabled: []v1beta2.Plugin{
-						{Name: "PodTopologySpreadWrapped"},
-						{Name: "InterPodAffinityWrapped"},
-					},
-					Disabled: []v1beta2.Plugin{
+			want: &v1beta3config.Plugins{
+				Filter: v1beta3config.PluginSet{
+					Enabled: nil,
+					Disabled: []v1beta3config.Plugin{
 						{
 							Name: "*",
 						},
 					},
 				},
-				Score: v1beta2.PluginSet{
-					Enabled: []v1beta2.Plugin{
-						{Name: "PodTopologySpreadWrapped", Weight: &weight2},
-						{Name: "TaintTolerationWrapped", Weight: &weight1},
-					},
-					Disabled: []v1beta2.Plugin{
+				Score: v1beta3config.PluginSet{
+					Enabled: nil,
+					Disabled: []v1beta3config.Plugin{
 						{
 							Name: "*",
 						},
@@ -90,14 +82,14 @@ func TestConvertWrapped(t *testing.T) {
 		},
 		{
 			name: "success when user disable all plugins with '*'",
-			arg: &v1beta2.Plugins{
-				Filter: v1beta2.PluginSet{
-					Disabled: []v1beta2.Plugin{
+			arg: &v1beta3config.Plugins{
+				Filter: v1beta3config.PluginSet{
+					Disabled: []v1beta3config.Plugin{
 						{Name: "*"},
 					},
 				},
-				Score: v1beta2.PluginSet{
-					Disabled: []v1beta2.Plugin{
+				Score: v1beta3config.PluginSet{
+					Disabled: []v1beta3config.Plugin{
 						{Name: "NodeResourcesFit"},
 						{Name: "NodeResourcesBalancedAllocation"},
 						{Name: "ImageLocality"},
@@ -106,20 +98,17 @@ func TestConvertWrapped(t *testing.T) {
 					},
 				},
 			},
-			want: &v1beta2.Plugins{
-				Filter: v1beta2.PluginSet{
-					Disabled: []v1beta2.Plugin{
+			want: &v1beta3config.Plugins{
+				Filter: v1beta3config.PluginSet{
+					Disabled: []v1beta3config.Plugin{
 						{
 							Name: "*",
 						},
 					},
 				},
-				Score: v1beta2.PluginSet{
-					Enabled: []v1beta2.Plugin{
-						{Name: "PodTopologySpreadWrapped", Weight: &weight2},
-						{Name: "TaintTolerationWrapped", Weight: &weight1},
-					},
-					Disabled: []v1beta2.Plugin{
+				Score: v1beta3config.PluginSet{
+					Enabled: nil,
+					Disabled: []v1beta3config.Plugin{
 						{
 							Name: "*",
 						},
@@ -153,8 +142,8 @@ func Test_NewPluginConfig(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		pc      []v1beta2.PluginConfig
-		want    []v1beta2.PluginConfig
+		pc      []v1beta3config.PluginConfig
+		want    []v1beta3config.PluginConfig
 		wantErr bool
 	}{
 		{
@@ -165,14 +154,14 @@ func Test_NewPluginConfig(t *testing.T) {
 		},
 		{
 			name: "success with plugin config of not filter/score",
-			pc: []v1beta2.PluginConfig{
+			pc: []v1beta3config.PluginConfig{
 				{
 					Name: "DefaultPreemption",
 					Args: runtime.RawExtension{
-						Object: &v1beta2.DefaultPreemptionArgs{
+						Object: &v1beta3config.DefaultPreemptionArgs{
 							TypeMeta: metav1.TypeMeta{
 								Kind:       "DefaultPreemptionArgs",
-								APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+								APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 							},
 							MinCandidateNodesPercentage: &minCandidateNodesPercentage,
 							MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
@@ -180,20 +169,20 @@ func Test_NewPluginConfig(t *testing.T) {
 					},
 				},
 			},
-			want: func() []v1beta2.PluginConfig {
+			want: func() []v1beta3config.PluginConfig {
 				pc := defaultPluginConfig()
 				for i := range pc {
 					if pc[i].Name != "DefaultPreemption" {
 						continue
 					}
 
-					pc[i] = v1beta2.PluginConfig{
+					pc[i] = v1beta3config.PluginConfig{
 						Name: "DefaultPreemption",
 						Args: runtime.RawExtension{
-							Object: &v1beta2.DefaultPreemptionArgs{
+							Object: &v1beta3config.DefaultPreemptionArgs{
 								TypeMeta: metav1.TypeMeta{
 									Kind:       "DefaultPreemptionArgs",
-									APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 								},
 								MinCandidateNodesPercentage: &minCandidateNodesPercentage,
 								MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
@@ -208,31 +197,31 @@ func Test_NewPluginConfig(t *testing.T) {
 		},
 		{
 			name: "success with plugin config on Args.Object",
-			pc: []v1beta2.PluginConfig{
+			pc: []v1beta3config.PluginConfig{
 				{
 					Name: "InterPodAffinity",
 					Args: runtime.RawExtension{
-						Object: &v1beta2.InterPodAffinityArgs{
+						Object: &v1beta3config.InterPodAffinityArgs{
 							TypeMeta: metav1.TypeMeta{
 								Kind:       "InterPodAffinityArgs",
-								APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+								APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 							},
 							HardPodAffinityWeight: &hardPodAffinityWeight,
 						},
 					},
 				},
 			},
-			want: func() []v1beta2.PluginConfig {
+			want: func() []v1beta3config.PluginConfig {
 				pc := defaultPluginConfig()
 				for i := range pc {
 					if pc[i].Name == "InterPodAffinity" {
-						pc[i] = v1beta2.PluginConfig{
+						pc[i] = v1beta3config.PluginConfig{
 							Name: "InterPodAffinity",
 							Args: runtime.RawExtension{
-								Object: &v1beta2.InterPodAffinityArgs{
+								Object: &v1beta3config.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
 										Kind:       "InterPodAffinityArgs",
-										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 									},
 									HardPodAffinityWeight: &hardPodAffinityWeight,
 								},
@@ -240,13 +229,13 @@ func Test_NewPluginConfig(t *testing.T) {
 						}
 					}
 					if pc[i].Name == "InterPodAffinityWrapped" {
-						pc[i] = v1beta2.PluginConfig{
+						pc[i] = v1beta3config.PluginConfig{
 							Name: "InterPodAffinityWrapped",
 							Args: runtime.RawExtension{
-								Object: &v1beta2.InterPodAffinityArgs{
+								Object: &v1beta3config.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
 										Kind:       "InterPodAffinityArgs",
-										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 									},
 									HardPodAffinityWeight: &hardPodAffinityWeight,
 								},
@@ -262,23 +251,23 @@ func Test_NewPluginConfig(t *testing.T) {
 		{
 			name: "Success: if data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object," +
 				"PluginConfig.Args.Raw would be ignored",
-			pc: []v1beta2.PluginConfig{
+			pc: []v1beta3config.PluginConfig{
 				{
 					Name: "InterPodAffinity",
 					Args: runtime.RawExtension{
-						Object: &v1beta2.InterPodAffinityArgs{
+						Object: &v1beta3config.InterPodAffinityArgs{
 							TypeMeta: metav1.TypeMeta{
 								Kind:       "InterPodAffinityArgs",
-								APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+								APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 							},
 							HardPodAffinityWeight: &hardPodAffinityWeight,
 						},
 						Raw: func() []byte {
 							anotherHardPodAffinityWeight := hardPodAffinityWeight + 1
-							cfg := v1beta2.InterPodAffinityArgs{
+							cfg := v1beta3config.InterPodAffinityArgs{
 								TypeMeta: metav1.TypeMeta{
 									Kind:       "InterPodAffinityArgs",
-									APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 								},
 								HardPodAffinityWeight: &anotherHardPodAffinityWeight,
 							}
@@ -288,17 +277,17 @@ func Test_NewPluginConfig(t *testing.T) {
 					},
 				},
 			},
-			want: func() []v1beta2.PluginConfig {
+			want: func() []v1beta3config.PluginConfig {
 				pc := defaultPluginConfig()
 				for i := range pc {
 					if pc[i].Name == "InterPodAffinity" {
-						pc[i] = v1beta2.PluginConfig{
+						pc[i] = v1beta3config.PluginConfig{
 							Name: "InterPodAffinity",
 							Args: runtime.RawExtension{
-								Object: &v1beta2.InterPodAffinityArgs{
+								Object: &v1beta3config.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
 										Kind:       "InterPodAffinityArgs",
-										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 									},
 									HardPodAffinityWeight: &hardPodAffinityWeight,
 								},
@@ -306,13 +295,13 @@ func Test_NewPluginConfig(t *testing.T) {
 						}
 					}
 					if pc[i].Name == "InterPodAffinityWrapped" {
-						pc[i] = v1beta2.PluginConfig{
+						pc[i] = v1beta3config.PluginConfig{
 							Name: "InterPodAffinityWrapped",
 							Args: runtime.RawExtension{
-								Object: &v1beta2.InterPodAffinityArgs{
+								Object: &v1beta3config.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
 										Kind:       "InterPodAffinityArgs",
-										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 									},
 									HardPodAffinityWeight: &hardPodAffinityWeight,
 								},
@@ -327,15 +316,15 @@ func Test_NewPluginConfig(t *testing.T) {
 		},
 		{
 			name: "success with plugin config on Args.Raw ",
-			pc: []v1beta2.PluginConfig{
+			pc: []v1beta3config.PluginConfig{
 				{
 					Name: "InterPodAffinity",
 					Args: runtime.RawExtension{
 						Raw: func() []byte {
-							cfg := v1beta2.InterPodAffinityArgs{
+							cfg := v1beta3config.InterPodAffinityArgs{
 								TypeMeta: metav1.TypeMeta{
 									Kind:       "InterPodAffinityArgs",
-									APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 								},
 								HardPodAffinityWeight: &hardPodAffinityWeight,
 							}
@@ -345,17 +334,17 @@ func Test_NewPluginConfig(t *testing.T) {
 					},
 				},
 			},
-			want: func() []v1beta2.PluginConfig {
+			want: func() []v1beta3config.PluginConfig {
 				pc := defaultPluginConfig()
 				for i := range pc {
 					if pc[i].Name == "InterPodAffinity" {
-						pc[i] = v1beta2.PluginConfig{
+						pc[i] = v1beta3config.PluginConfig{
 							Name: "InterPodAffinity",
 							Args: runtime.RawExtension{
-								Object: &v1beta2.InterPodAffinityArgs{
+								Object: &v1beta3config.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
 										Kind:       "InterPodAffinityArgs",
-										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 									},
 									HardPodAffinityWeight: &hardPodAffinityWeight,
 								},
@@ -363,13 +352,13 @@ func Test_NewPluginConfig(t *testing.T) {
 						}
 					}
 					if pc[i].Name == "InterPodAffinityWrapped" {
-						pc[i] = v1beta2.PluginConfig{
+						pc[i] = v1beta3config.PluginConfig{
 							Name: "InterPodAffinityWrapped",
 							Args: runtime.RawExtension{
-								Object: &v1beta2.InterPodAffinityArgs{
+								Object: &v1beta3config.InterPodAffinityArgs{
 									TypeMeta: metav1.TypeMeta{
 										Kind:       "InterPodAffinityArgs",
-										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta3config",
 									},
 									HardPodAffinityWeight: &hardPodAffinityWeight,
 								},
@@ -403,39 +392,14 @@ func Test_NewPluginConfig(t *testing.T) {
 
 func Test_defaultFilterScorePlugins(t *testing.T) {
 	t.Parallel()
-	var weight1 int32 = 1
-	var weight2 int32 = 2
 	tests := []struct {
 		name    string
-		want    []v1beta2.Plugin
+		want    []v1beta3config.Plugin
 		wantErr bool
 	}{
 		{
-			name: "success",
-			want: []v1beta2.Plugin{
-				{Name: "NodeResourcesBalancedAllocation", Weight: &weight1},
-				{Name: "ImageLocality", Weight: &weight1},
-				{Name: "InterPodAffinity", Weight: &weight1},
-				{Name: "NodeResourcesFit", Weight: &weight1},
-				{Name: "NodeAffinity", Weight: &weight1},
-				{Name: "PodTopologySpread", Weight: &weight2},
-				{Name: "TaintToleration", Weight: &weight1},
-				{Name: "NodeUnschedulable"},
-				{Name: "NodeName"},
-				{Name: "TaintToleration"},
-				{Name: "NodeAffinity"},
-				{Name: "NodePorts"},
-				{Name: "NodeResourcesFit"},
-				{Name: "VolumeRestrictions"},
-				{Name: "EBSLimits"},
-				{Name: "GCEPDLimits"},
-				{Name: "NodeVolumeLimits"},
-				{Name: "AzureDiskLimits"},
-				{Name: "VolumeBinding"},
-				{Name: "VolumeZone"},
-				{Name: "PodTopologySpread"},
-				{Name: "InterPodAffinity"},
-			},
+			name:    "success",
+			want:    nil,
 			wantErr: false,
 		},
 	}
@@ -840,20 +804,20 @@ func Test_wrappedPlugin_ScoreExtensions(t *testing.T) {
 	}
 }
 
-func defaultPluginConfig() []v1beta2.PluginConfig {
+func defaultPluginConfig() []v1beta3config.PluginConfig {
 	var minCandidateNodesPercentage int32 = 10
 	var minCandidateNodesAbsolute int32 = 100
 	var hardPodAffinityWeight int32 = 1
 	var bindTimeoutSeconds int64 = 600
 
-	return []v1beta2.PluginConfig{
+	return []v1beta3config.PluginConfig{
 		{
 			Name: "DefaultPreemption",
 			Args: runtime.RawExtension{
-				Object: &v1beta2.DefaultPreemptionArgs{
+				Object: &v1beta3config.DefaultPreemptionArgs{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "DefaultPreemptionArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+						APIVersion: "kubescheduler.config.k8s.io/v1beta3",
 					},
 					MinCandidateNodesPercentage: &minCandidateNodesPercentage,
 					MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
@@ -863,10 +827,10 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 		{
 			Name: "InterPodAffinity",
 			Args: runtime.RawExtension{
-				Object: &v1beta2.InterPodAffinityArgs{
+				Object: &v1beta3config.InterPodAffinityArgs{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "InterPodAffinityArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+						APIVersion: "kubescheduler.config.k8s.io/v1beta3",
 					},
 					HardPodAffinityWeight: &hardPodAffinityWeight,
 				},
@@ -875,10 +839,10 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 		{
 			Name: "NodeAffinity",
 			Args: runtime.RawExtension{
-				Object: &v1beta2.NodeAffinityArgs{
+				Object: &v1beta3config.NodeAffinityArgs{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "NodeAffinityArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+						APIVersion: "kubescheduler.config.k8s.io/v1beta3",
 					},
 				},
 			},
@@ -886,12 +850,12 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 		{
 			Name: "NodeResourcesBalancedAllocation",
 			Args: runtime.RawExtension{
-				Object: &v1beta2.NodeResourcesBalancedAllocationArgs{
+				Object: &v1beta3config.NodeResourcesBalancedAllocationArgs{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "NodeResourcesBalancedAllocationArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+						APIVersion: "kubescheduler.config.k8s.io/v1beta3",
 					},
-					Resources: []v1beta2.ResourceSpec{
+					Resources: []v1beta3config.ResourceSpec{
 						{
 							Name:   "cpu",
 							Weight: 1,
@@ -907,14 +871,14 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 		{
 			Name: "NodeResourcesFit",
 			Args: runtime.RawExtension{
-				Object: &v1beta2.NodeResourcesFitArgs{
+				Object: &v1beta3config.NodeResourcesFitArgs{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "NodeResourcesFitArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+						APIVersion: "kubescheduler.config.k8s.io/v1beta3",
 					},
-					ScoringStrategy: &v1beta2.ScoringStrategy{
+					ScoringStrategy: &v1beta3config.ScoringStrategy{
 						Type: "LeastAllocated",
-						Resources: []v1beta2.ResourceSpec{
+						Resources: []v1beta3config.ResourceSpec{
 							{
 								Name:   "cpu",
 								Weight: 1,
@@ -931,10 +895,10 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 		{
 			Name: "PodTopologySpread",
 			Args: runtime.RawExtension{
-				Object: &v1beta2.PodTopologySpreadArgs{
+				Object: &v1beta3config.PodTopologySpreadArgs{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "PodTopologySpreadArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+						APIVersion: "kubescheduler.config.k8s.io/v1beta3",
 					},
 					DefaultingType: "System",
 				},
@@ -943,102 +907,10 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 		{
 			Name: "VolumeBinding",
 			Args: runtime.RawExtension{
-				Object: &v1beta2.VolumeBindingArgs{
+				Object: &v1beta3config.VolumeBindingArgs{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "VolumeBindingArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
-					},
-					BindTimeoutSeconds: &bindTimeoutSeconds,
-				},
-			},
-		},
-		{
-			Name: "NodeResourcesBalancedAllocationWrapped",
-			Args: runtime.RawExtension{
-				Object: &v1beta2.NodeResourcesBalancedAllocationArgs{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "NodeResourcesBalancedAllocationArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
-					},
-					Resources: []v1beta2.ResourceSpec{
-						{
-							Name:   "cpu",
-							Weight: 1,
-						},
-						{
-							Name:   "memory",
-							Weight: 1,
-						},
-					},
-				},
-			},
-		},
-		{
-			Name: "InterPodAffinityWrapped",
-			Args: runtime.RawExtension{
-				Object: &v1beta2.InterPodAffinityArgs{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "InterPodAffinityArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
-					},
-					HardPodAffinityWeight: &hardPodAffinityWeight,
-				},
-			},
-		},
-		{
-			Name: "NodeResourcesFitWrapped",
-			Args: runtime.RawExtension{
-				Object: &v1beta2.NodeResourcesFitArgs{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "NodeResourcesFitArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
-					},
-					ScoringStrategy: &v1beta2.ScoringStrategy{
-						Type: "LeastAllocated",
-						Resources: []v1beta2.ResourceSpec{
-							{
-								Name:   "cpu",
-								Weight: 1,
-							},
-							{
-								Name:   "memory",
-								Weight: 1,
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			Name: "NodeAffinityWrapped",
-			Args: runtime.RawExtension{
-				Object: &v1beta2.NodeAffinityArgs{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "NodeAffinityArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
-					},
-				},
-			},
-		},
-		{
-			Name: "PodTopologySpreadWrapped",
-			Args: runtime.RawExtension{
-				Object: &v1beta2.PodTopologySpreadArgs{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "PodTopologySpreadArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
-					},
-					DefaultingType: "System",
-				},
-			},
-		},
-		{
-			Name: "VolumeBindingWrapped",
-			Args: runtime.RawExtension{
-				Object: &v1beta2.VolumeBindingArgs{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "VolumeBindingArgs",
-						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+						APIVersion: "kubescheduler.config.k8s.io/v1beta3",
 					},
 					BindTimeoutSeconds: &bindTimeoutSeconds,
 				},
