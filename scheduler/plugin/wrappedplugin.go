@@ -92,8 +92,8 @@ func pluginName(pluginName string) string {
 	return pluginName + pluginSuffix
 }
 
-// newWrappedPlugin makes wrappedPlugin from score or/and filter plugin.
-func newWrappedPlugin(s Store, p framework.Plugin, weight int32, opts ...Option) framework.Plugin {
+// NewWrappedPlugin makes wrappedPlugin from score or/and filter plugin.
+func NewWrappedPlugin(s Store, p framework.Plugin, weight int32, opts ...Option) framework.Plugin {
 	options := options{}
 	for _, o := range opts {
 		o.apply(&options)
