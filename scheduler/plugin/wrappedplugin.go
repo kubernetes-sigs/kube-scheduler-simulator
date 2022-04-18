@@ -48,9 +48,9 @@ type NormalizeScorePluginExtender interface {
 // Extenders is a option for some pluginExtenders.
 // It will contain some arbitrary processing function defined by a user.
 type Extenders struct {
-	filterPluginExtender         FilterPluginExtender
-	scorePluginExtender          ScorePluginExtender
-	normalizeScorePluginExtender NormalizeScorePluginExtender
+	FilterPluginExtender         FilterPluginExtender
+	ScorePluginExtender          ScorePluginExtender
+	NormalizeScorePluginExtender NormalizeScorePluginExtender
 }
 
 type options struct {
