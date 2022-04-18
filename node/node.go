@@ -69,21 +69,13 @@ func (s *Service) Apply(ctx context.Context, nac *v1.NodeApplyConfiguration) (*c
 
 // Delete deletes the node has given name.
 func (s *Service) Delete(ctx context.Context, name string) error {
-	pl, err := s.podService.List(ctx)
-	if err != nil {
-		return xerrors.Errorf("list pods: %w", err)
+	// delete pods on node
+	lopts := metav1.ListOptions{
+		FieldSelector: "spec.nodeName=" + name,
 	}
 
-	// delete pods on node
-	for i := range pl.Items {
-		pod := pl.Items[i]
-		if name != pod.Spec.NodeName {
-			continue
-		}
-
-		if err := s.podService.Delete(ctx, pod.Name); err != nil {
-			return xerrors.Errorf("delete pod: %w", err)
-		}
+	if err := s.podService.DeleteCollection(ctx, lopts); err != nil {
+		return xerrors.Errorf("delete pod: %w", err)
 	}
 
 	// delete node
