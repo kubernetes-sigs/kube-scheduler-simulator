@@ -54,10 +54,14 @@ type Extenders struct {
 }
 
 type options struct {
-	extenderOption Extenders
+	extenderOption   Extenders
+	pluginNameOption string
 }
 
-type extendersOption Extenders
+type (
+	extendersOption  Extenders
+	pluginNameOption string
+)
 
 type Option interface {
 	apply(*options)
@@ -67,8 +71,16 @@ func (e extendersOption) apply(opts *options) {
 	opts.extenderOption = Extenders(e)
 }
 
+func (p pluginNameOption) apply(opts *options) {
+	opts.pluginNameOption = string(p)
+}
+
 func WithExtendersOption(opt *Extenders) Option {
 	return extendersOption(*opt)
+}
+
+func WithPluginNameOption(opt *string) Option {
+	return pluginNameOption(*opt)
 }
 
 // wrappedPlugin behaves as if it is original plugin, but it records result of plugin.
@@ -98,9 +110,15 @@ func NewWrappedPlugin(s Store, p framework.Plugin, weight int32, opts ...Option)
 	for _, o := range opts {
 		o.apply(&options)
 	}
+	var pName string
+	if options.pluginNameOption != "" {
+		pName = options.pluginNameOption
+	} else {
+		pName = pluginName(p.Name())
+	}
 
 	plg := &wrappedPlugin{
-		name:   pluginName(p.Name()),
+		name:   pName,
 		weight: weight,
 		store:  s,
 	}
