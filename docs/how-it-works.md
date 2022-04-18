@@ -5,7 +5,7 @@ This page describes how this kube-scheduler-simulator works.
 ## 0. starts the simulator.
 
 The simulator server works with k8s components below.
-- kube-apiserver (+ etcd)
+- [kube-apiserver (+ etcd)](kube-apiserver.md)
 - scheduler
 - pv controller
 
