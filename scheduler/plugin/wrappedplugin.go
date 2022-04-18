@@ -56,11 +56,13 @@ type Extenders struct {
 type options struct {
 	extenderOption   Extenders
 	pluginNameOption string
+	weightOption     int32
 }
 
 type (
 	extendersOption  Extenders
 	pluginNameOption string
+	weightOption     int32
 )
 
 type Option interface {
@@ -75,12 +77,20 @@ func (p pluginNameOption) apply(opts *options) {
 	opts.pluginNameOption = string(p)
 }
 
+func (w weightOption) apply(opts *options) {
+	opts.weightOption = int32(w)
+}
+
 func WithExtendersOption(opt *Extenders) Option {
 	return extendersOption(*opt)
 }
 
 func WithPluginNameOption(opt *string) Option {
 	return pluginNameOption(*opt)
+}
+
+func WithWeightOption(opt *int32) Option {
+	return weightOption(*opt)
 }
 
 // wrappedPlugin behaves as if it is original plugin, but it records result of plugin.
@@ -105,7 +115,7 @@ func pluginName(pluginName string) string {
 }
 
 // NewWrappedPlugin makes wrappedPlugin from score or/and filter plugin.
-func NewWrappedPlugin(s Store, p framework.Plugin, weight int32, opts ...Option) framework.Plugin {
+func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plugin {
 	options := options{}
 	for _, o := range opts {
 		o.apply(&options)
@@ -119,7 +129,7 @@ func NewWrappedPlugin(s Store, p framework.Plugin, weight int32, opts ...Option)
 
 	plg := &wrappedPlugin{
 		name:   pName,
-		weight: weight,
+		weight: options.weightOption,
 		store:  s,
 	}
 	if options.extenderOption.FilterPluginExtender != nil {

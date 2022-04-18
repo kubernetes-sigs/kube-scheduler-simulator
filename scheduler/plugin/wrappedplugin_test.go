@@ -82,7 +82,7 @@ func Test_NewWrappedPlugin(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := NewWrappedPlugin(tt.args.s, tt.args.p, tt.args.weight)
+			got := NewWrappedPlugin(tt.args.s, tt.args.p, WithWeightOption(&tt.args.weight))
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -304,7 +304,7 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, p, fe, tt.args)
-			pl, ok := NewWrappedPlugin(s, p, 0, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(e)).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
@@ -644,7 +644,7 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, se, sp, spe, tt.args)
-			pl, ok := NewWrappedPlugin(s, sp, 0, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, sp, WithExtendersOption(e)).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
@@ -824,7 +824,7 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, p, se, tt.args)
-			pl, ok := NewWrappedPlugin(s, p, 0, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(e)).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}

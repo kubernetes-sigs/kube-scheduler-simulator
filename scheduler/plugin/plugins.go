@@ -56,7 +56,7 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 				weight = *pl.Weight
 			}
 
-			return NewWrappedPlugin(store, p, weight), nil
+			return NewWrappedPlugin(store, p, WithWeightOption(&weight)), nil
 		}
 		ret[pluginName(pl.Name)] = factory
 	}
