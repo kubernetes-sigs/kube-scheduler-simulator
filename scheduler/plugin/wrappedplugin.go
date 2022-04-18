@@ -136,8 +136,8 @@ func (w *wrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
 }
 
 // NormalizeScore wraps original NormalizeScore plugin of Scheduler Framework.
-// Before and after the execution of original NormalizeScore plugin,
-// we will run arbitrary processing as functions from normalizeScorePluginExtender.
+// You can run your function before and/or after the execution of original NormalizeScore plugin
+// by configure with WithExtendersOption.
 func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
 	if w.originalScorePlugin == nil || w.originalScorePlugin.ScoreExtensions() == nil {
 		// return nil not to affect scoring
@@ -168,8 +168,8 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 }
 
 // Score wraps original Score plugin of Scheduler Framework.
-// Before and after the execution of original Score plugin,
-// we will run arbitrary processing as functions from scorePluginExtender.
+// You can run your function before and/or after the execution of original Score plugin
+// by configure with WithExtendersOption.
 func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	if w.originalScorePlugin == nil {
 		// return zero-score and nil not to affect scoring
@@ -198,8 +198,8 @@ func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, 
 }
 
 // Filter wraps original Filter plugin of Scheduler Framework.
-// Before and after the execution of original Filter plugin,
-// we will run arbitrary processing as functions from filterPluginExtender.
+// You can run your function before and/or after the execution of original Filter plugin
+// by configure with WithExtendersOption.
 func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
 	if w.originalFilterPlugin == nil {
 		// return nil not to affect filtering
