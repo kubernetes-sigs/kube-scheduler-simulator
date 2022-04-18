@@ -35,9 +35,6 @@ AwEHoUQDQgAEH6cuzP8XuD5wal6wf9M6xDljTOPLX2i8uIp/C/ASqiIGUeeKQtX0
 func StartAPIServer(kubeAPIServerURL, etcdURL, frontendURL string) (*restclient.Config, func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if req.UserAgent() == "" {
-			req.Header.Set("User-Agent", restclient.DefaultKubernetesUserAgent())
-		}
 		<-h.Initialized
 		h.M.GenericAPIServer.Handler.ServeHTTP(w, req)
 	})
