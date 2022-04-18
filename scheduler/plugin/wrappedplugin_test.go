@@ -35,6 +35,74 @@ func Test_NewWrappedPlugin(t *testing.T) {
 		{
 			name: "success with filter plugin",
 			args: args{
+				s: store,
+				p: fakeFilterPlugin{},
+			},
+			want: &wrappedPlugin{
+				name:                 "fakeFilterPluginWrapped",
+				originalFilterPlugin: fakeFilterPlugin{},
+				originalScorePlugin:  nil,
+				weight:               0,
+				store:                store,
+			},
+		},
+		{
+			name: "success with score plugin",
+			args: args{
+				s: store,
+				p: fakeScorePlugin{},
+			},
+			want: &wrappedPlugin{
+				name:                 "fakeScorePluginWrapped",
+				originalFilterPlugin: nil,
+				originalScorePlugin:  fakeScorePlugin{},
+				weight:               0,
+				store:                store,
+			},
+		},
+		{
+			name: "success with score/filter plugin",
+			args: args{
+				s: store,
+				p: fakeFilterScorePlugin{},
+			},
+			want: &wrappedPlugin{
+				name:                 "fakeFilterScorePluginWrapped",
+				originalFilterPlugin: fakeFilterScorePlugin{},
+				originalScorePlugin:  fakeFilterScorePlugin{},
+				weight:               0,
+				store:                store,
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := NewWrappedPlugin(tt.args.s, tt.args.p)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_NewWrappedPlugin_WithWeightOption(t *testing.T) {
+	t.Parallel()
+	fakeclientset := fake.NewSimpleClientset()
+	store := resultstore.New(informers.NewSharedInformerFactory(fakeclientset, 0), nil, nil)
+
+	type args struct {
+		s      *resultstore.Store
+		p      framework.Plugin
+		weight int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want framework.Plugin
+	}{
+		{
+			name: "success & weight is set to 0",
+			args: args{
 				s:      store,
 				p:      fakeFilterPlugin{},
 				weight: 0,
@@ -48,31 +116,16 @@ func Test_NewWrappedPlugin(t *testing.T) {
 			},
 		},
 		{
-			name: "success with score plugin",
+			name: "success & weight is set to 1",
 			args: args{
 				s:      store,
-				p:      fakeScorePlugin{},
+				p:      fakeFilterPlugin{},
 				weight: 1,
 			},
 			want: &wrappedPlugin{
-				name:                 "fakeScorePluginWrapped",
-				originalFilterPlugin: nil,
-				originalScorePlugin:  fakeScorePlugin{},
-				weight:               1,
-				store:                store,
-			},
-		},
-		{
-			name: "success with score/filter plugin",
-			args: args{
-				s:      store,
-				p:      fakeFilterScorePlugin{},
-				weight: 1,
-			},
-			want: &wrappedPlugin{
-				name:                 "fakeFilterScorePluginWrapped",
-				originalFilterPlugin: fakeFilterScorePlugin{},
-				originalScorePlugin:  fakeFilterScorePlugin{},
+				name:                 "fakeFilterPluginWrapped",
+				originalFilterPlugin: fakeFilterPlugin{},
+				originalScorePlugin:  nil,
 				weight:               1,
 				store:                store,
 			},
@@ -87,7 +140,6 @@ func Test_NewWrappedPlugin(t *testing.T) {
 		})
 	}
 }
-
 func Test_pluginName(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
