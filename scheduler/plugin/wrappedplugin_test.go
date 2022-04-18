@@ -23,9 +23,8 @@ func Test_NewWrappedPlugin(t *testing.T) {
 	store := resultstore.New(informers.NewSharedInformerFactory(fakeclientset, 0), nil, nil)
 
 	type args struct {
-		s      *resultstore.Store
-		p      framework.Plugin
-		weight int32
+		s *resultstore.Store
+		p framework.Plugin
 	}
 	tests := []struct {
 		name string
@@ -33,7 +32,7 @@ func Test_NewWrappedPlugin(t *testing.T) {
 		want framework.Plugin
 	}{
 		{
-			name: "success with filter plugin",
+			name: "success with filter plugin & default weight is set to 0",
 			args: args{
 				s: store,
 				p: fakeFilterPlugin{},
@@ -47,7 +46,7 @@ func Test_NewWrappedPlugin(t *testing.T) {
 			},
 		},
 		{
-			name: "success with score plugin",
+			name: "success with score plugin & default weight is set to 0",
 			args: args{
 				s: store,
 				p: fakeScorePlugin{},
@@ -61,7 +60,7 @@ func Test_NewWrappedPlugin(t *testing.T) {
 			},
 		},
 		{
-			name: "success with score/filter plugin",
+			name: "success with score/filter plugin & default weight is set to 0",
 			args: args{
 				s: store,
 				p: fakeFilterScorePlugin{},
@@ -140,6 +139,48 @@ func Test_NewWrappedPlugin_WithWeightOption(t *testing.T) {
 		})
 	}
 }
+
+func Test_NewWrappedPlugin_WithPluginNameOption(t *testing.T) {
+	t.Parallel()
+	fakeclientset := fake.NewSimpleClientset()
+	store := resultstore.New(informers.NewSharedInformerFactory(fakeclientset, 0), nil, nil)
+
+	type args struct {
+		s    *resultstore.Store
+		p    framework.Plugin
+		name string
+	}
+	tests := []struct {
+		name string
+		args args
+		want framework.Plugin
+	}{
+		{
+			name: "plugin name is named by user ",
+			args: args{
+				s:    store,
+				p:    fakeFilterPlugin{},
+				name: "userNamedPlugin",
+			},
+			want: &wrappedPlugin{
+				name:                 "userNamedPlugin",
+				originalFilterPlugin: fakeFilterPlugin{},
+				originalScorePlugin:  nil,
+				weight:               0,
+				store:                store,
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := NewWrappedPlugin(tt.args.s, tt.args.p, WithPluginNameOption(&tt.args.name))
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func Test_pluginName(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
