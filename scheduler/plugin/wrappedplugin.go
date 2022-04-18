@@ -104,14 +104,14 @@ func NewWrappedPlugin(s Store, p framework.Plugin, weight int32, opts ...Option)
 		weight: weight,
 		store:  s,
 	}
-	if options.extenderOption.filterPluginExtender != nil {
-		plg.filterPluginExtender = options.extenderOption.filterPluginExtender
+	if options.extenderOption.FilterPluginExtender != nil {
+		plg.filterPluginExtender = options.extenderOption.FilterPluginExtender
 	}
-	if options.extenderOption.scorePluginExtender != nil {
-		plg.scorePluginExtender = options.extenderOption.scorePluginExtender
+	if options.extenderOption.ScorePluginExtender != nil {
+		plg.scorePluginExtender = options.extenderOption.ScorePluginExtender
 	}
-	if options.extenderOption.normalizeScorePluginExtender != nil {
-		plg.normalizeScorePluginExtender = options.extenderOption.normalizeScorePluginExtender
+	if options.extenderOption.NormalizeScorePluginExtender != nil {
+		plg.normalizeScorePluginExtender = options.extenderOption.NormalizeScorePluginExtender
 	}
 
 	fp, ok := p.(framework.FilterPlugin)

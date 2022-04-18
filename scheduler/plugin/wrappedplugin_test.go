@@ -17,7 +17,7 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/plugin/resultstore"
 )
 
-func Test_newWrappedPlugin(t *testing.T) {
+func Test_NewWrappedPlugin(t *testing.T) {
 	t.Parallel()
 	fakeclientset := fake.NewSimpleClientset()
 	store := resultstore.New(informers.NewSharedInformerFactory(fakeclientset, 0), nil, nil)
@@ -82,7 +82,7 @@ func Test_newWrappedPlugin(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := newWrappedPlugin(tt.args.s, tt.args.p, tt.args.weight)
+			got := NewWrappedPlugin(tt.args.s, tt.args.p, tt.args.weight)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -300,11 +300,11 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 			p := mock_plugin.NewMockFilterPlugin(ctrl)
 			fe := mock_plugin.NewMockFilterPluginExtender(ctrl)
 			e := &Extenders{
-				filterPluginExtender: fe,
+				FilterPluginExtender: fe,
 			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, p, fe, tt.args)
-			pl, ok := newWrappedPlugin(s, p, 0, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, p, 0, WithExtendersOption(e)).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
@@ -640,11 +640,11 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 
 			spe := mock_plugin.NewMockNormalizeScorePluginExtender(ctrl)
 			e := &Extenders{
-				normalizeScorePluginExtender: spe,
+				NormalizeScorePluginExtender: spe,
 			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, se, sp, spe, tt.args)
-			pl, ok := newWrappedPlugin(s, sp, 0, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, sp, 0, WithExtendersOption(e)).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
@@ -820,11 +820,11 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 			p := mock_plugin.NewMockScorePlugin(ctrl)
 			se := mock_plugin.NewMockScorePluginExtender(ctrl)
 			e := &Extenders{
-				scorePluginExtender: se,
+				ScorePluginExtender: se,
 			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, p, se, tt.args)
-			pl, ok := newWrappedPlugin(s, p, 0, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, p, 0, WithExtendersOption(e)).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
