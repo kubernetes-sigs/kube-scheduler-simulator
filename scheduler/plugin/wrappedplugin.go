@@ -160,7 +160,6 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 		}
 	}
 
-	// If the normalizeScorePluginExtender is not nil, we will run AfterNormalizeScore.
 	if w.normalizeScorePluginExtender != nil {
 		return w.normalizeScorePluginExtender.AfterNormalizeScore(ctx, state, pod, scores, s)
 	}
