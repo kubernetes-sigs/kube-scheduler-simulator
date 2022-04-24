@@ -20,7 +20,10 @@ export default {
   css: [],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: [],
+  plugins: [
+    // apiPlugin is a custom plugin that is used to settings for the axios baseURL using the value of publicRuntimeConfig.
+    { src: "~/plugins/apiPlugin.ts" },
+  ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -56,12 +59,15 @@ export default {
       },
     },
   },
+  // publicRuntimeConfig should hold all env variables that are public as these will be exposed on the frontend.
+  publicRuntimeConfig: {
+    baseURL: process.env.BASE_URL || "http://localhost:1212",
+    kubeApiServerURL:
+      process.env.KUBE_API_SERVER_URL || "http://localhost:3131",
+  },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   env: {
-    BASE_URL: process.env.BASE_URL || "http://localhost:1212",
-    KUBE_API_SERVER_URL:
-      process.env.KUBE_API_SERVER_URL || "http://localhost:3131",
     POD_TEMPLATE: fs.readFileSync(
       "./components/lib/templates/pod.yaml",
       "utf8"
