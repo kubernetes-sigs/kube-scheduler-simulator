@@ -4,6 +4,7 @@ import {
   getSchedulerConfiguration,
 } from "~/api/v1/schedulerconfiguration";
 import { SchedulerConfiguration } from "~/api/v1/types";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 type stateType = {
   selectedConfig: selectedConfig | null;
@@ -17,7 +18,9 @@ type selectedConfig = {
   isDeletable: boolean;
 };
 
-export default function schedulerconfigurationStore() {
+export default function schedulerconfigurationStore(
+  instance: NuxtAxiosInstance
+) {
   const state: stateType = reactive({
     selectedConfig: null,
     schedulerconfigurations: [],
@@ -37,7 +40,7 @@ export default function schedulerconfigurationStore() {
     },
 
     async fetchSelected() {
-      const c = await getSchedulerConfiguration();
+      const c = await getSchedulerConfiguration(instance);
       if (c) {
         state.selectedConfig = {
           isNew: true,
@@ -49,7 +52,7 @@ export default function schedulerconfigurationStore() {
     },
 
     async apply(cfg: SchedulerConfiguration) {
-      await applySchedulerConfiguration(cfg);
+      await applySchedulerConfiguration(instance, cfg);
     },
 
     async delete(_: string) {

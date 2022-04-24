@@ -29,14 +29,20 @@
 </template>
 
 <script lang="ts">
-import { exportScheduler } from "~/api/v1/export";
+import { exportScheduler } from "../../api/v1/export";
 import { saveAs } from "file-saver";
-import { defineComponent, inject, reactive } from "@nuxtjs/composition-api";
+import {
+  defineComponent,
+  inject,
+  reactive,
+  useContext,
+} from "@nuxtjs/composition-api";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 import yaml from "js-yaml";
 
 export default defineComponent({
   setup() {
+    const { app } = useContext();
     const data = reactive({
       dialog: false,
     });
@@ -50,7 +56,7 @@ export default defineComponent({
 
     async function ExportScheduler() {
       try {
-        const c = await exportScheduler();
+        const c = await exportScheduler(app.$instance);
         if (c) {
           const blob = new Blob([yaml.dump(c)], {
             type: "application/yaml",

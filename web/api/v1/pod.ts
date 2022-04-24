@@ -1,7 +1,8 @@
 import { V1Pod, V1PodList } from "@kubernetes/client-node";
-import { k8sInstance, namespaceURL } from "@/api/v1/index";
+import { namespaceURL } from "@/api/v1/index";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
-export const applyPod = async (req: V1Pod) => {
+export const applyPod = async (k8sInstance: NuxtAxiosInstance, req: V1Pod) => {
   try {
     if (!req.metadata?.name) {
       throw new Error(`metadata.name is not provided`);
@@ -23,7 +24,7 @@ export const applyPod = async (req: V1Pod) => {
   }
 };
 
-export const listPod = async () => {
+export const listPod = async (k8sInstance: NuxtAxiosInstance) => {
   try {
     const res = await k8sInstance.get<V1PodList>(namespaceURL + `/pods`, {});
     return res.data;
@@ -32,7 +33,7 @@ export const listPod = async () => {
   }
 };
 
-export const getPod = async (name: string) => {
+export const getPod = async (k8sInstance: NuxtAxiosInstance, name: string) => {
   try {
     const res = await k8sInstance.get<V1Pod>(
       namespaceURL + `/pods/${name}`,
@@ -44,7 +45,10 @@ export const getPod = async (name: string) => {
   }
 };
 
-export const deletePod = async (name: string) => {
+export const deletePod = async (
+  k8sInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sInstance.delete(
       namespaceURL + `/pods/${name}?gracePeriodSeconds=0`,

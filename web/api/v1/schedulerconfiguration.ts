@@ -1,7 +1,8 @@
-import { instance } from "@/api/v1/index";
 import { SchedulerConfiguration } from "./types";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 export const applySchedulerConfiguration = async (
+  instance: NuxtAxiosInstance,
   req: SchedulerConfiguration
 ) => {
   try {
@@ -15,7 +16,9 @@ export const applySchedulerConfiguration = async (
   }
 };
 
-export const getSchedulerConfiguration = async () => {
+export const getSchedulerConfiguration = async (
+  instance: NuxtAxiosInstance
+) => {
   const res = await instance.get<SchedulerConfiguration>(
     `/schedulerconfiguration`
   );

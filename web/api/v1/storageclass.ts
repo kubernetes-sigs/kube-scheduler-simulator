@@ -1,7 +1,10 @@
 import { V1StorageClass, V1StorageClassList } from "@kubernetes/client-node";
-import { k8sStorageInstance } from "@/api/v1/index";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
-export const applyStorageClass = async (req: V1StorageClass) => {
+export const applyStorageClass = async (
+  k8sStorageInstance: NuxtAxiosInstance,
+  req: V1StorageClass
+) => {
   try {
     if (!req.metadata?.name) {
       throw new Error(`metadata.name is not provided`);
@@ -22,7 +25,9 @@ export const applyStorageClass = async (req: V1StorageClass) => {
   }
 };
 
-export const listStorageClass = async () => {
+export const listStorageClass = async (
+  k8sStorageInstance: NuxtAxiosInstance
+) => {
   try {
     const res = await k8sStorageInstance.get<V1StorageClassList>(
       `/storageclasses`,
@@ -34,7 +39,10 @@ export const listStorageClass = async () => {
   }
 };
 
-export const getStorageClass = async (name: string) => {
+export const getStorageClass = async (
+  k8sStorageInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sStorageInstance.get<V1StorageClass>(
       `/storageclasses/${name}`,
@@ -46,7 +54,10 @@ export const getStorageClass = async (name: string) => {
   }
 };
 
-export const deleteStorageClass = async (name: string) => {
+export const deleteStorageClass = async (
+  k8sStorageInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sStorageInstance.delete(`/storageclasses/${name}`, {});
     return res.data;

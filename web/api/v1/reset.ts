@@ -1,6 +1,6 @@
-import { instance } from "@/api/v1/index";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
-export const reset = async () => {
+export const reset = async (instance: NuxtAxiosInstance) => {
   const res = await instance.put(`/reset`, {});
   return res.data;
 };

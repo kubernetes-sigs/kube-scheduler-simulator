@@ -6,6 +6,7 @@ import {
   listPersistentVolume,
 } from "~/api/v1/pv";
 import { V1PersistentVolume } from "@kubernetes/client-node";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 type stateType = {
   selectedPersistentVolume: selectedPersistentVolume | null;
@@ -20,7 +21,7 @@ type selectedPersistentVolume = {
   isDeletable: boolean;
 };
 
-export default function pvStore() {
+export default function pvStore(k8sInstance: NuxtAxiosInstance) {
   const state: stateType = reactive({
     selectedPersistentVolume: null,
     pvs: [],
@@ -55,7 +56,7 @@ export default function pvStore() {
     },
 
     async fetchlist() {
-      const pvs = await listPersistentVolume();
+      const pvs = await listPersistentVolume(k8sInstance);
       state.pvs = pvs.items;
     },
 
@@ -65,6 +66,7 @@ export default function pvStore() {
         !this.selected?.isNew
       ) {
         const p = await getPersistentVolume(
+          k8sInstance,
           state.selectedPersistentVolume.item.metadata.name
         );
         this.select(p, false);
@@ -72,12 +74,12 @@ export default function pvStore() {
     },
 
     async apply(n: V1PersistentVolume) {
-      await applyPersistentVolume(n);
+      await applyPersistentVolume(k8sInstance, n);
       await this.fetchlist();
     },
 
     async delete(name: string) {
-      await deletePersistentVolume(name);
+      await deletePersistentVolume(k8sInstance, name);
       await this.fetchlist();
     },
   };

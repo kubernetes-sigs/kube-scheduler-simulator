@@ -6,6 +6,7 @@ import {
   listPersistentVolumeClaim,
 } from "~/api/v1/pvc";
 import { V1PersistentVolumeClaim } from "@kubernetes/client-node";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 type stateType = {
   selectedPersistentVolumeClaim: selectedPersistentVolumeClaim | null;
@@ -20,7 +21,7 @@ type selectedPersistentVolumeClaim = {
   isDeletable: boolean;
 };
 
-export default function pvcStore() {
+export default function pvcStore(k8sInstance: NuxtAxiosInstance) {
   const state: stateType = reactive({
     selectedPersistentVolumeClaim: null,
     pvcs: [],
@@ -55,12 +56,12 @@ export default function pvcStore() {
     },
 
     async fetchlist() {
-      const pvcs = await listPersistentVolumeClaim();
+      const pvcs = await listPersistentVolumeClaim(k8sInstance);
       state.pvcs = pvcs.items;
     },
 
     async apply(n: V1PersistentVolumeClaim) {
-      await applyPersistentVolumeClaim(n);
+      await applyPersistentVolumeClaim(k8sInstance, n);
       await this.fetchlist();
     },
 
@@ -70,6 +71,7 @@ export default function pvcStore() {
         !this.selected?.isNew
       ) {
         const p = await getPersistentVolumeClaim(
+          k8sInstance,
           state.selectedPersistentVolumeClaim.item.metadata.name
         );
         this.select(p, false);
@@ -77,7 +79,7 @@ export default function pvcStore() {
     },
 
     async delete(name: string) {
-      await deletePersistentVolumeClaim(name);
+      await deletePersistentVolumeClaim(k8sInstance, name);
       await this.fetchlist();
     },
   };

@@ -1,9 +1,10 @@
 import { reset } from "~/api/v1/reset";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
-export default function resetStore() {
+export default function resetStore(instance: NuxtAxiosInstance) {
   return {
     async reset() {
-      const data = await reset();
+      const data = await reset(instance);
       return data;
     },
   };

@@ -2,9 +2,12 @@ import {
   V1PersistentVolume,
   V1PersistentVolumeList,
 } from "@kubernetes/client-node";
-import { k8sInstance } from "@/api/v1/index";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
-export const applyPersistentVolume = async (req: V1PersistentVolume) => {
+export const applyPersistentVolume = async (
+  k8sInstance: NuxtAxiosInstance,
+  req: V1PersistentVolume
+) => {
   try {
     if (!req.metadata?.name) {
       throw new Error(`metadata.name is not provided`);
@@ -25,7 +28,7 @@ export const applyPersistentVolume = async (req: V1PersistentVolume) => {
   }
 };
 
-export const listPersistentVolume = async () => {
+export const listPersistentVolume = async (k8sInstance: NuxtAxiosInstance) => {
   try {
     const res = await k8sInstance.get<V1PersistentVolumeList>(
       `/persistentvolumes`,
@@ -37,7 +40,10 @@ export const listPersistentVolume = async () => {
   }
 };
 
-export const getPersistentVolume = async (name: string) => {
+export const getPersistentVolume = async (
+  k8sInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sInstance.get<V1PersistentVolume>(
       `/persistentvolumes/${name}`,
@@ -49,7 +55,10 @@ export const getPersistentVolume = async (name: string) => {
   }
 };
 
-export const deletePersistentVolume = async (name: string) => {
+export const deletePersistentVolume = async (
+  k8sInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sInstance.delete(`/persistentvolumes/${name}`, {});
     return res.data;

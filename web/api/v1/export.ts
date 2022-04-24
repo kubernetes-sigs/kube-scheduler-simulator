@@ -1,4 +1,3 @@
-import { instance } from "@/api/v1/index";
 import { V1Pod } from "@kubernetes/client-node";
 import { V1Node } from "@kubernetes/client-node";
 import { V1PersistentVolume } from "@kubernetes/client-node";
@@ -6,13 +5,17 @@ import { V1PersistentVolumeClaim } from "@kubernetes/client-node";
 import { V1StorageClass } from "@kubernetes/client-node";
 import { V1PriorityClass } from "@kubernetes/client-node";
 import { SchedulerConfiguration } from "./types";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
-export const exportScheduler = async () => {
+export const exportScheduler = async (instance: NuxtAxiosInstance) => {
   const res = await instance.get<ResourcesForImport>(`/export`, {});
   return res.data;
 };
 
-export const importScheduler = async (data: ResourcesForImport) => {
+export const importScheduler = async (
+  instance: NuxtAxiosInstance,
+  data: ResourcesForImport
+) => {
   try {
     const res = await instance.post<ResourcesForImport>(`/import`, data);
     return res.data;
