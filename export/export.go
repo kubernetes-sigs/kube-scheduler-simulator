@@ -16,6 +16,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
@@ -60,8 +61,8 @@ type ResourcesForImport struct {
 }
 
 type PodService interface {
-	List(ctx context.Context) (*corev1.PodList, error)
-	Apply(ctx context.Context, pod *v1.PodApplyConfiguration) (*corev1.Pod, error)
+	List(ctx context.Context, namespace string) (*corev1.PodList, error)
+	Apply(ctx context.Context, namespace string, pod *v1.PodApplyConfiguration) (*corev1.Pod, error)
 }
 
 type NodeService interface {
@@ -75,9 +76,9 @@ type PersistentVolumeService interface {
 }
 
 type PersistentVolumeClaimService interface {
-	Get(ctx context.Context, name string) (*corev1.PersistentVolumeClaim, error)
-	List(ctx context.Context) (*corev1.PersistentVolumeClaimList, error)
-	Apply(ctx context.Context, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
+	Get(ctx context.Context, name string, namespace string) (*corev1.PersistentVolumeClaim, error)
+	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
+	Apply(ctx context.Context, namespace string, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
 }
 
 type StorageClassService interface {
@@ -249,7 +250,7 @@ func (s *Service) listPods(ctx context.Context, r *ResourcesForExport, eg *util.
 	}
 	eg.Grp.Go(func() error {
 		defer eg.Sem.Release(1)
-		pods, err := s.podService.List(ctx)
+		pods, err := s.podService.List(ctx, metav1.NamespaceAll)
 		if err != nil {
 			if !opts.ignoreErr {
 				return xerrors.Errorf("call list pods: %w", err)
@@ -309,7 +310,7 @@ func (s *Service) listPvcs(ctx context.Context, r *ResourcesForExport, eg *util.
 	}
 	eg.Grp.Go(func() error {
 		defer eg.Sem.Release(1)
-		pvcs, err := s.pvcService.List(ctx)
+		pvcs, err := s.pvcService.List(ctx, metav1.NamespaceAll)
 		if err != nil {
 			if !opts.ignoreErr {
 				return xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
@@ -438,7 +439,7 @@ func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForImport, eg *util
 		eg.Grp.Go(func() error {
 			defer eg.Sem.Release(1)
 			pvc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.pvcService.Apply(ctx, &pvc)
+			_, err := s.pvcService.Apply(ctx, *pvc.Namespace, &pvc)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
@@ -463,7 +464,7 @@ func (s *Service) applyPvs(ctx context.Context, r *ResourcesForImport, eg *util.
 			if pv.Status != nil && pv.Status.Phase != nil {
 				if *pv.Status.Phase == "Bound" {
 					// PersistentVolumeClaims's UID has been changed to a new value.
-					pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name)
+					pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name, *pv.Spec.ClaimRef.Namespace)
 					if err == nil {
 						pv.Spec.ClaimRef.UID = &pvc.UID
 					} else {
@@ -516,7 +517,7 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 		eg.Grp.Go(func() error {
 			defer eg.Sem.Release(1)
 			pod.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.podService.Apply(ctx, &pod)
+			_, err := s.podService.Apply(ctx, *pod.Namespace, &pod)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Pod: %w", err)

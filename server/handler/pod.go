@@ -19,6 +19,13 @@ type PodHandler struct {
 	service di.PodService
 }
 
+// Handlers support only the default namespace.
+// The previous web UI had supported only the default namespace,
+// and we deprecated all handlers to support namespaces in Web UI.
+const (
+	defaultNamespaceName = "default"
+)
+
 // NewPodHandler initializes PodHandler.
 func NewPodHandler(s di.PodService) *PodHandler {
 	return &PodHandler{service: s}
@@ -37,7 +44,7 @@ func (h *PodHandler) ApplyPod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	newpod, err := h.service.Apply(ctx, pod)
+	newpod, err := h.service.Apply(ctx, defaultNamespaceName, pod)
 	if err != nil {
 		klog.Errorf("failed to apply pod: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -55,7 +62,7 @@ func (h *PodHandler) GetPod(c echo.Context) error {
 
 	name := c.Param("name")
 
-	p, err := h.service.Get(ctx, name)
+	p, err := h.service.Get(ctx, defaultNamespaceName, name)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return echo.NewHTTPError(http.StatusNotFound)
@@ -74,7 +81,7 @@ func (h *PodHandler) GetPod(c echo.Context) error {
 func (h *PodHandler) ListPod(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	ps, err := h.service.List(ctx)
+	ps, err := h.service.List(ctx, defaultNamespaceName)
 	if err != nil {
 		klog.Errorf("failed to list pods: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -92,7 +99,7 @@ func (h *PodHandler) DeletePod(c echo.Context) error {
 
 	name := c.Param("name")
 
-	if err := h.service.Delete(ctx, name); err != nil {
+	if err := h.service.Delete(ctx, name, defaultNamespaceName); err != nil {
 		klog.Errorf("failed to delete pod: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
