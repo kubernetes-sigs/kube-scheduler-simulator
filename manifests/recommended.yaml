@@ -1,0 +1,267 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-scheduler-simulator
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-etcd-data
+  name: kube-scheduler-simulator-etcd-data
+  namespace: kube-scheduler-simulator
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-etcd
+  name: kube-scheduler-simulator-etcd
+  namespace: kube-scheduler-simulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: kube-scheduler-simulator-etcd
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-scheduler-simulator-etcd
+    spec:
+      containers:
+        - args:
+            - /bin/sh
+            - "-c"
+            - "etcd --advertise-client-urls http://kube-scheduler-simulator-etcd:2379 --data-dir /var/lib/etcd --listen-client-urls http://0.0.0.0:2379 --initial-cluster-state new --initial-cluster-token tkn"
+          image: quay.io/coreos/etcd:v3.4.0
+          name: kube-scheduler-simulator-etcd
+          ports:
+            - containerPort: 2379
+          volumeMounts:
+            - mountPath: /var/lib/etcd
+              name: kube-scheduler-simulator-etcd-data
+      restartPolicy: Always
+      volumes:
+        - name: kube-scheduler-simulator-etcd-data
+          persistentVolumeClaim:
+            claimName: kube-scheduler-simulator-etcd-data
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-etcd
+  name: kube-scheduler-simulator-etcd
+  namespace: kube-scheduler-simulator
+spec:
+  ports:
+    - name: kube-scheduler-simulator-etcd
+      port: 2379
+      targetPort: 2379
+  selector:
+    k8s-app: kube-scheduler-simulator-etcd
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-server
+  name: kube-scheduler-simulator-server
+  namespace: kube-scheduler-simulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: kube-scheduler-simulator-server
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-scheduler-simulator-server
+    spec:
+      containers:
+        - env:
+          - name: FRONTEND_URL
+            value: http://localhost:3000
+          - name: KUBE_SCHEDULER_SIMULATOR_ETCD_URL
+            value: http://kube-scheduler-simulator-etcd:2379
+          - name: PORT
+            value: "1212"
+          - name: KUBE_API_HOST
+            value: "0.0.0.0"
+          - name: KUBE_API_PORT
+            value: "3131"
+          #WIP: Fix this registry URL after the first release.
+          image: 196ikuchil/kube-scheduler-simulator-server:0.1
+          name: kube-scheduler-simulator-server
+          ports:
+            - name: simulator
+              containerPort: 1212
+            - name: apiserver
+              containerPort: 3131
+          tty: true
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-server
+  name: kube-scheduler-simulator-server
+  namespace: kube-scheduler-simulator
+spec:
+  ports:
+    - name: simulator
+      port: 1212
+      targetPort: 1212
+    - name: apiserver
+      port: 3131
+      targetPort: 3131
+  selector:
+    k8s-app: kube-scheduler-simulator-server
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-frontend
+  name: kube-scheduler-simulator-frontend
+  namespace: kube-scheduler-simulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: kube-scheduler-simulator-frontend
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-scheduler-simulator-frontend
+    spec:
+      containers:
+        - env:
+          - name: HOST
+            value: 0.0.0.0
+            # BASE_URL points to the nginx proxy address
+          - name: BASE_URL
+            value: http://localhost:3000/server
+            # KUBE_API_SERVER_URL points to the nginx proxy address
+          - name: KUBE_API_SERVER_URL
+            value: http://localhost:3000/apiserver
+          #WIP: Fix this registry URL after the first release.
+          image: 196ikuchil/kube-scheduler-simulator-frontend:0.1
+          name: kube-scheduler-simulator-frontend
+          ports:
+            - containerPort: 3000
+          tty: true
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-frontend
+  name: kube-scheduler-simulator-frontend
+  namespace: kube-scheduler-simulator
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    k8s-app: kube-scheduler-simulator-frontend
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-scheduler-simulator-nginx-conf
+  namespace: kube-scheduler-simulator
+data:
+  nginx.conf: |-
+    server {
+        listen 80;
+        root /var/www/html;
+        access_log /var/log/nginx/app.access_log main;
+        error_log /var/log/nginx/app.error_log;
+
+        location /server/  {
+            proxy_pass  http://kube-scheduler-simulator-server:1212/;
+        }
+        location /apiserver/  {
+            proxy_pass  http://kube-scheduler-simulator-server:3131/;
+        }
+        location /  {
+            proxy_pass  http://kube-scheduler-simulator-frontend:3000/;
+        }
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-scheduler-simulator-nginx
+  labels:
+    k8s-app: kube-scheduler-simulator-nginx
+  namespace: kube-scheduler-simulator
+spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-scheduler-simulator-nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-scheduler-simulator-nginx
+    spec:
+      containers:
+        - name: kube-scheduler-simulator-nginx
+          image: nginx:1.16.1
+          ports:
+          - containerPort: 80
+          volumeMounts:
+            - name: kube-scheduler-simulator-nginx-conf
+              mountPath: /etc/nginx/conf.d/
+      volumes:
+        - name: kube-scheduler-simulator-nginx-conf
+          configMap:
+            name: kube-scheduler-simulator-nginx-conf
+            items:
+              - key: nginx.conf
+                path: nginx.conf
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-nginx
+  name: kube-scheduler-simulator-nginx
+  namespace: kube-scheduler-simulator
+spec:
+  ports:
+    - port: 3000
+      targetPort: 80
+  selector:
+    k8s-app: kube-scheduler-simulator-nginx
