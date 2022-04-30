@@ -225,7 +225,7 @@ func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, 
 
 // Filter wraps original Filter plugin of Scheduler Framework.
 // You can run your function before and/or after the execution of original Filter plugin
-// by configure with WithExtendersOption.
+// by configuring with WithExtendersOption.
 func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
 	if w.originalFilterPlugin == nil {
 		// return nil not to affect filtering
