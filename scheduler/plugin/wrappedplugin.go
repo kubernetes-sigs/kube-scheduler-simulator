@@ -94,8 +94,10 @@ func WithWeightOption(opt *int32) Option {
 }
 
 // wrappedPlugin behaves as if it is original plugin, but it records result of plugin.
-// All wrappedPlugin's name is originalPlugin name + pluginSuffix.
 type wrappedPlugin struct {
+	// name is plugin's name returned by Name() method.
+	// This name is default to original plugin name + pluginSuffix.
+	// You can change this name by WithPluginNameOption.
 	name                         string
 	originalFilterPlugin         framework.FilterPlugin
 	originalScorePlugin          framework.ScorePlugin
