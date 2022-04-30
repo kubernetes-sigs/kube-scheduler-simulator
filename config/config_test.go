@@ -117,3 +117,45 @@ profiles:
 		})
 	}
 }
+
+func Test_parseStringListEnv(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		arg  string
+		want []string
+	}{
+		{
+			name: "happy path: can parse the list which has multiple elements",
+			arg:  "hoge,fuga,foo",
+			want: []string{
+				"hoge",
+				"fuga",
+				"foo",
+			},
+		},
+		{
+			name: "happy path: can parse the list which has the space between elements",
+			arg:  "hoge,         fuga, foo    ",
+			want: []string{
+				"hoge",
+				"fuga",
+				"foo",
+			},
+		},
+		{
+			name: "happy path: do nothing with non-list string",
+			arg:  "hoge",
+			want: []string{
+				"hoge",
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equalf(t, tt.want, parseStringListEnv(tt.arg), "parseStringListEnv(%v)", tt.arg)
+		})
+	}
+}

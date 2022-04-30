@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"strings"
 
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/rest"
@@ -19,10 +20,10 @@ var ErrEmptyEnv = errors.New("env is needed, but empty")
 
 // Config is configuration for simulator.
 type Config struct {
-	Port             int
-	KubeAPIServerURL string
-	EtcdURL          string
-	FrontendURL      string
+	Port                  int
+	KubeAPIServerURL      string
+	EtcdURL               string
+	CorsAllowedOriginList []string
 	// ExternalImportEnabled indicates whether the simulator will import resources from an existing cluster or not.
 	ExternalImportEnabled bool
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
@@ -43,7 +44,7 @@ func NewConfig() (*Config, error) {
 		return nil, xerrors.Errorf("get etcd URL: %w", err)
 	}
 
-	frontendurl, err := getFrontendURL()
+	corsAllowedOriginList, err := getCorsAllowedOriginList()
 	if err != nil {
 		return nil, xerrors.Errorf("get frontend URL: %w", err)
 	}
@@ -68,7 +69,7 @@ func NewConfig() (*Config, error) {
 		Port:                  port,
 		KubeAPIServerURL:      apiurl,
 		EtcdURL:               etcdurl,
-		FrontendURL:           frontendurl,
+		CorsAllowedOriginList: corsAllowedOriginList,
 		InitialSchedulerCfg:   initialschedulerCfg,
 		ExternalImportEnabled: externalimportenabled,
 		ExternalKubeClientCfg: externalKubeClientCfg,
@@ -111,13 +112,28 @@ func getEtcdURL() (string, error) {
 	return e, nil
 }
 
-func getFrontendURL() (string, error) {
-	e := os.Getenv("FRONTEND_URL")
+// getCorsAllowedOriginList fetches CorsAllowedOriginList from the env named CORS_ALLOWED_ORIGIN_LIST.
+// This allowed list is applied to kube-apiserver and the simulator server.
+//
+// e.g. CORS_ALLOWED_ORIGIN_LIST="http://localhost:3000, http://localhost:3001, http://localhost:3002"
+//       → return []string{"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"}
+func getCorsAllowedOriginList() ([]string, error) {
+	e := os.Getenv("CORS_ALLOWED_ORIGIN_LIST")
 	if e == "" {
-		return "", xerrors.Errorf("get FRONTEND_URL from env: %w", ErrEmptyEnv)
+		return nil, xerrors.Errorf("get CORS_ALLOWED_ORIGIN_LIST from env: %w", ErrEmptyEnv)
 	}
 
-	return e, nil
+	return parseStringListEnv(e), nil
+}
+
+func parseStringListEnv(e string) []string {
+	list := strings.Split(e, ",")
+	for i := range list {
+		// remove space
+		list[i] = strings.TrimSpace(list[i])
+	}
+
+	return list
 }
 
 // getSchedulerCfg reads KUBE_SCHEDULER_CONFIG_PATH which means initial kube-scheduler configuration

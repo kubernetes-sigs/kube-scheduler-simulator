@@ -34,5 +34,5 @@ check_if_etcd_exists
 start_etcd
 trap cleanup_etcd EXIT
 
-PORT=1212 FRONTEND_URL=http://localhost:3000 ./bin/simulator
+PORT=1212 CORS_ALLOWED_ORIGIN_LIST=http://localhost:3000 ./bin/simulator
 

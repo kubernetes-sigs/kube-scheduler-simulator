@@ -28,7 +28,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{cfg.FrontendURL},
+		AllowOrigins:     cfg.CorsAllowedOriginList,
 		AllowCredentials: true,
 	}))
 
