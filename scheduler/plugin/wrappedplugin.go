@@ -165,7 +165,7 @@ func (w *wrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
 
 // NormalizeScore wraps original NormalizeScore plugin of Scheduler Framework.
 // You can run your function before and/or after the execution of original NormalizeScore plugin
-// by configure with WithExtendersOption.
+// by configuring with WithExtendersOption.
 func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
 	if w.originalScorePlugin == nil || w.originalScorePlugin.ScoreExtensions() == nil {
 		// return nil not to affect scoring
