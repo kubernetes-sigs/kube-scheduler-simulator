@@ -197,7 +197,7 @@ func (w *wrappedPlugin) NormalizeScore(ctx context.Context, state *framework.Cyc
 
 // Score wraps original Score plugin of Scheduler Framework.
 // You can run your function before and/or after the execution of original Score plugin
-// by configure with WithExtendersOption.
+// by configuring with WithExtendersOption.
 func (w *wrappedPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	if w.originalScorePlugin == nil {
 		// return zero-score and nil not to affect scoring
