@@ -22,7 +22,6 @@ type SimulatorServer struct {
 }
 
 // NewSimulatorServer initialize SimulatorServer.
-//nolint:funlen // It is okay if the definition of this function is long.
 func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer {
 	e := echo.New()
 
