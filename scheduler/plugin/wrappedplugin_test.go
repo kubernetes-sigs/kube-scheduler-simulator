@@ -156,7 +156,7 @@ func Test_NewWrappedPlugin_WithPluginNameOption(t *testing.T) {
 		want framework.Plugin
 	}{
 		{
-			name: "plugin name is named by user ",
+			name: "plugin name is named by user",
 			args: args{
 				s:    store,
 				p:    fakeFilterPlugin{},
