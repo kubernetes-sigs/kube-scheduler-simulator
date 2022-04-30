@@ -120,12 +120,10 @@ func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plu
 	for _, o := range opts {
 		o.apply(&options)
 	}
-	var pName string
+	pName := pluginName(p.Name())
 	if options.pluginNameOption != "" {
 		pName = options.pluginNameOption
-	} else {
-		pName = pluginName(p.Name())
-	}
+	} 
 
 	plg := &wrappedPlugin{
 		name:   pName,
