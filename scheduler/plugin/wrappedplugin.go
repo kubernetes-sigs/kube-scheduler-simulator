@@ -81,14 +81,18 @@ func (w weightOption) apply(opts *options) {
 	opts.weightOption = int32(w)
 }
 
+// WithExtendersOption provides an easy way to extend the behavior of the plugin.
+// These containing functions in Extenders should be run before and after the original plugin of Scheduler Framework.
 func WithExtendersOption(opt *Extenders) Option {
 	return extendersOption(*opt)
 }
 
+// WithPluginNameOption contains configuration options for the name field of a wrappedPlugin.
 func WithPluginNameOption(opt *string) Option {
 	return pluginNameOption(*opt)
 }
 
+// WithWeightOption contains configuration options for the weight field of a wrappedPlugin.
 func WithWeightOption(opt *int32) Option {
 	return weightOption(*opt)
 }
@@ -125,7 +129,7 @@ func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plu
 	pName := pluginName(p.Name())
 	if options.pluginNameOption != "" {
 		pName = options.pluginNameOption
-	} 
+	}
 
 	plg := &wrappedPlugin{
 		name:   pName,
