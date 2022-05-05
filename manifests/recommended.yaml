@@ -6,6 +6,50 @@ metadata:
 ---
 
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-server
+  name: kube-scheduler-simulator-server
+  namespace: kube-scheduler-simulator
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    k8s-app: kube-scheduler-simulator-server
+  name: kube-scheduler-simulator-server
+rules:
+  - apiGroups: [""]
+    resources: ["pods","nodes","persistentvolumes","persistentvolumeclaims"]
+    verbs: ["get", "list"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list"]
+  - apiGroups: ["scheduling.k8s.io"]
+    resources: ["priorityclasses"]
+    verbs: ["get", "list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-scheduler-simulator-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-scheduler-simulator-server
+subjects:
+  - kind: ServiceAccount
+    name: kube-scheduler-simulator-server
+    namespace: kube-scheduler-simulator
+
+---
+
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
@@ -94,6 +138,7 @@ spec:
       labels:
         k8s-app: kube-scheduler-simulator-server
     spec:
+      serviceAccountName: kube-scheduler-simulator-server
       containers:
         - env:
           - name: FRONTEND_URL
@@ -107,7 +152,7 @@ spec:
           - name: KUBE_API_PORT
             value: "3131"
           - name: EXTERNAL_IMPORT_ENABLED
-            value: ""
+            value: "1"
           #WIP: Fix this registry URL after the first release.
           image: 196ikuchil/kube-scheduler-simulator-server:0.1
           name: kube-scheduler-simulator-server
