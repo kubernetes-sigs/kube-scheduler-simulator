@@ -106,6 +106,8 @@ spec:
             value: "0.0.0.0"
           - name: KUBE_API_PORT
             value: "3131"
+          - name: EXTERNAL_IMPORT_ENABLED
+            value: ""
           #WIP: Fix this registry URL after the first release.
           image: 196ikuchil/kube-scheduler-simulator-server:0.1
           name: kube-scheduler-simulator-server
