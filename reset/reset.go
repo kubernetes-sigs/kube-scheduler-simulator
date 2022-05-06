@@ -51,16 +51,22 @@ func NewResetService(
 // Reset cleans up all resources and scheduler configuration.
 func (s *Service) Reset(ctx context.Context) error {
 	eg, ctx := errgroup.WithContext(ctx)
+	nsList, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return xerrors.Errorf("list namespaces: %w", err)
+	}
 	for k, ds := range s.deleteServicesForNamespacedResources {
 		ds := ds
 		k := k
-		eg.Go(func() error {
-			// this method deletes all resources on all namespaces.
-			if err := ds.DeleteCollection(ctx, metav1.NamespaceAll, metav1.ListOptions{}); err != nil {
-				return xerrors.Errorf("delete collecton of %s service: %w", k, err)
-			}
-			return nil
-		})
+		for _, ns := range nsList.Items {
+			ns := ns
+			eg.Go(func() error {
+				if err := ds.DeleteCollection(ctx, ns.GetName(), metav1.ListOptions{}); err != nil {
+					return xerrors.Errorf("delete collecton of %s service: %w", k, err)
+				}
+				return nil
+			})
+		}
 	}
 	for k, ds := range s.deleteServices {
 		ds := ds
