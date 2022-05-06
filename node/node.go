@@ -102,6 +102,9 @@ func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions
 	}
 	eg, ctx := errgroup.WithContext(ctx)
 	nsList, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return xerrors.Errorf("list namespaces: %w", err)
+	}
 	for _, n := range ns.Items {
 		n := n
 		eg.Go(func() error {

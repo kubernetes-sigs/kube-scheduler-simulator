@@ -61,6 +61,7 @@ func (s *Service) Reset(ctx context.Context) error {
 		for _, ns := range nsList.Items {
 			ns := ns
 			eg.Go(func() error {
+				// this method deletes all resources on specified namespace.
 				if err := ds.DeleteCollection(ctx, ns.GetName(), metav1.ListOptions{}); err != nil {
 					return xerrors.Errorf("delete collecton of %s service: %w", k, err)
 				}
