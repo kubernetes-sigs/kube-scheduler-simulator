@@ -178,6 +178,11 @@ func TestService_DeleteCollection(t *testing.T) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "default",
+					},
+				}, metav1.CreateOptions{})
 				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node1",
@@ -204,6 +209,11 @@ func TestService_DeleteCollection(t *testing.T) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "default",
+					},
+				}, metav1.CreateOptions{})
 				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node1",
@@ -225,6 +235,19 @@ func TestService_DeleteCollection(t *testing.T) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "default",
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Pods("default").Create(context.Background(), &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "pod1",
+					},
+					Spec: corev1.PodSpec{
+						NodeName: "node1",
+					},
+				}, metav1.CreateOptions{})
 				c.CoreV1().Nodes().Create(context.Background(), &corev1.Node{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node1",
