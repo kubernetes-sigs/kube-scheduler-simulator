@@ -101,9 +101,10 @@ export default defineComponent({
           priorityclassstore.fetchlist(),
         ])
         setInfoMessage("Successfully reset all resources");
-        data.dialog = false;
       } catch (e) {
         setServerErrorMessage(e);
+      } finally {
+        data.dialog = false;
       }
     };
 
