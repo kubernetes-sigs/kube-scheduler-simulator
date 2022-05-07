@@ -90,21 +90,21 @@ export default defineComponent({
     };
 
     const reset = async () => {
-      await resetstore.reset().catch((error) => {
-        setServerErrorMessage(error);
-      });
-      await Promise.all([
-        nodestore.fetchlist(),
-        podstore.fetchlist(),
-        pvstore.fetchlist(),
-        pvcstore.fetchlist(),
-        storageclassstore.fetchlist(),
-        priorityclassstore.fetchlist(),
-      ]).catch((error) => {
-        setServerErrorMessage(error);
-      });
-      setInfoMessage("Successfully reset all resources");
-      data.dialog = false;
+      try {
+        await resetstore.reset();
+        await Promise.all([
+          nodestore.fetchlist(),
+          podstore.fetchlist(),
+          pvstore.fetchlist(),
+          pvcstore.fetchlist(),
+          storageclassstore.fetchlist(),
+          priorityclassstore.fetchlist(),
+        ])
+        setInfoMessage("Successfully reset all resources");
+        data.dialog = false;
+      } catch (e) {
+        setServerErrorMessage(e);
+      }
     };
 
     const data = reactive({
