@@ -99,7 +99,7 @@ export default defineComponent({
           pvcstore.fetchlist(),
           storageclassstore.fetchlist(),
           priorityclassstore.fetchlist(),
-        ])
+        ]);
         setInfoMessage("Successfully reset all resources");
       } catch (e) {
         setServerErrorMessage(e);
