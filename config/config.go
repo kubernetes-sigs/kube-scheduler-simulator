@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -123,7 +124,23 @@ func getCorsAllowedOriginList() ([]string, error) {
 		return nil, xerrors.Errorf("get CORS_ALLOWED_ORIGIN_LIST from env: %w", ErrEmptyEnv)
 	}
 
-	return parseStringListEnv(e), nil
+	urls := parseStringListEnv(e)
+	if err := validateURLs(urls); err != nil {
+		return nil, xerrors.Errorf("validate origins in CORS_ALLOWED_ORIGIN_LIST: %w", err)
+	}
+
+	return urls, nil
+}
+
+// validateURLs checks if all URLs in slice is valid or not.
+func validateURLs(urls []string) error {
+	for _, u := range urls {
+		_, err := url.ParseRequestURI(u)
+		if err != nil {
+			return xerrors.Errorf("parse request uri: %w", err)
+		}
+	}
+	return nil
 }
 
 func parseStringListEnv(e string) []string {

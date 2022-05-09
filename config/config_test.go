@@ -159,3 +159,39 @@ func Test_parseStringListEnv(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateURLs(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		urls    []string
+		wantErr bool
+	}{
+		{
+			name: "all urls are valid",
+			urls: []string{
+				"https://hoge.com/hoge",
+				"http://hoge2.com/hoge",
+			},
+			wantErr: false,
+		},
+		{
+			name: "one url is invalid",
+			urls: []string{
+				"https://hoge.com/hoge",
+				"invalid",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := validateURLs(tt.urls)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("unexpected error result is returned. got: %v, wantErr: %v", err, tt.wantErr)
+			}
+		})
+	}
+}
