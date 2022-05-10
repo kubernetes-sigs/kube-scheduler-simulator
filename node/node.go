@@ -112,9 +112,8 @@ func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions
 			lopts := metav1.ListOptions{
 				FieldSelector: "spec.nodeName=" + n.Name,
 			}
+			// This method deletes all pods on specified namespace scheduled to the specified node.
 			for _, ns := range nsList.Items {
-				ns := ns
-				// This method deletes all pods on specified namespace scheduled to the specified node.
 				if err := s.podService.DeleteCollection(ctx, ns.GetName(), lopts); err != nil {
 					return xerrors.Errorf("failed to delete pods on node %s: %w\n", n.Name, err)
 				}
