@@ -45,8 +45,9 @@ type NormalizeScorePluginExtender interface {
 	AfterNormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList, normalizeScoreResult *framework.Status) *framework.Status
 }
 
-// Extenders is a option for some pluginExtenders.
-// It will contain some arbitrary processing function defined by a user.
+// Extenders contains XXXXPluginExtenders.
+// Each extender will intercept a calling to target method call of scheduler plugins,
+// and you can check/modify requests and/or results.
 type Extenders struct {
 	FilterPluginExtender         FilterPluginExtender
 	ScorePluginExtender          ScorePluginExtender
