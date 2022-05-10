@@ -18,6 +18,7 @@ type Store interface {
 	AddScoreResult(namespace, podName, nodeName, pluginName string, score int64)
 }
 
+// FilterPluginExtender is the extender for Filter plugin.
 type FilterPluginExtender interface {
 	// BeforeFilter is a function that runs before the Filter method of the original plugin.
 	// If BeforeFilter returns non-success status, the simulator plugin doesn't run the Filter method of the original plugin and return that status.
