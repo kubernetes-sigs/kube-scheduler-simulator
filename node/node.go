@@ -101,6 +101,10 @@ func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions
 		return xerrors.Errorf("list nodes: %w", err)
 	}
 	eg, ctx := errgroup.WithContext(ctx)
+	nsList, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return xerrors.Errorf("list namespaces: %w", err)
+	}
 	for _, n := range ns.Items {
 		n := n
 		eg.Go(func() error {
@@ -108,9 +112,11 @@ func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions
 			lopts := metav1.ListOptions{
 				FieldSelector: "spec.nodeName=" + n.Name,
 			}
-			// This method deletes all pods on all namespaces scheduled to the specified node.
-			if err := s.podService.DeleteCollection(ctx, metav1.NamespaceAll, lopts); err != nil {
-				return xerrors.Errorf("failed to delete pods on node %s: %w\n", n.Name, err)
+			// This method deletes all pods on specified namespace scheduled to the specified node.
+			for _, ns := range nsList.Items {
+				if err := s.podService.DeleteCollection(ctx, ns.GetName(), lopts); err != nil {
+					return xerrors.Errorf("failed to delete pods on node %s: %w\n", n.Name, err)
+				}
 			}
 
 			// delete specific node
