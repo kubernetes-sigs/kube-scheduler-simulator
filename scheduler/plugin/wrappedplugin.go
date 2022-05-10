@@ -28,6 +28,7 @@ type FilterPluginExtender interface {
 	AfterFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo, filterResult *framework.Status) *framework.Status
 }
 
+// ScorePluginExtender is the extender for Score plugin.
 type ScorePluginExtender interface {
 	// BeforeScore is a function that runs before the Score method of the original plugin.
 	// If BeforeScore returns non-success status, the simulator plugin doesn't run the Score method of the original plugin and return that score & status.
@@ -37,6 +38,7 @@ type ScorePluginExtender interface {
 	AfterScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string, score int64, scoreResult *framework.Status) (int64, *framework.Status)
 }
 
+// NormalizeScorePluginExtender is the extender for NormalizeScore plugin.
 type NormalizeScorePluginExtender interface {
 	// BeforeNormalizeScore is a function that runs before the NormalizeScore method of the original plugin.
 	// If BeforeNormalizeScore returns non-success status, the simulator plugin doesn't run the NormalizeScore method of the original plugin and return that status.
