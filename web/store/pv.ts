@@ -1,11 +1,6 @@
-import { reactive } from "@nuxtjs/composition-api";
-import {
-  applyPersistentVolume,
-  deletePersistentVolume,
-  getPersistentVolume,
-  listPersistentVolume,
-} from "~/api/v1/pv";
+import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1PersistentVolume } from "@kubernetes/client-node";
+import { PVAPIKey } from "~/api/APIProviderKeys";
 
 type stateType = {
   selectedPersistentVolume: selectedPersistentVolume | null;
@@ -25,6 +20,11 @@ export default function pvStore() {
     selectedPersistentVolume: null,
     pvs: [],
   });
+
+  const pvAPI = inject(PVAPIKey);
+  if (!pvAPI) {
+    throw new Error(`${pvAPI} is not provided`);
+  }
 
   return {
     get pvs() {
@@ -55,7 +55,7 @@ export default function pvStore() {
     },
 
     async fetchlist() {
-      const pvs = await listPersistentVolume();
+      const pvs = await pvAPI.listPersistentVolume();
       state.pvs = pvs.items;
     },
 
@@ -64,7 +64,7 @@ export default function pvStore() {
         state.selectedPersistentVolume?.item.metadata?.name &&
         !this.selected?.isNew
       ) {
-        const p = await getPersistentVolume(
+        const p = await pvAPI.getPersistentVolume(
           state.selectedPersistentVolume.item.metadata.name
         );
         this.select(p, false);
@@ -72,12 +72,12 @@ export default function pvStore() {
     },
 
     async apply(n: V1PersistentVolume) {
-      await applyPersistentVolume(n);
+      await pvAPI.applyPersistentVolume(n);
       await this.fetchlist();
     },
 
     async delete(name: string) {
-      await deletePersistentVolume(name);
+      await pvAPI.deletePersistentVolume(name);
       await this.fetchlist();
     },
   };

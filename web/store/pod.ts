@@ -1,6 +1,6 @@
-import { reactive } from "@nuxtjs/composition-api";
-import { applyPod, deletePod, getPod, listPod } from "~/api/v1/pod";
+import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1Pod } from "@kubernetes/client-node";
+import { PodAPIKey } from "~/api/APIProviderKeys";
 
 type stateType = {
   selectedPod: SelectedPod | null;
@@ -23,6 +23,11 @@ export default function podStore() {
     selectedPod: null,
     pods: { unscheduled: [] },
   });
+
+  const podAPI = inject(PodAPIKey);
+  if (!podAPI) {
+    throw new Error(`${podAPI} is not provided`);
+  }
 
   return {
     get pods() {
@@ -57,7 +62,7 @@ export default function podStore() {
     },
 
     async fetchlist() {
-      const listpods = await listPod();
+      const listpods = await podAPI.listPod();
       const pods = listpods.items;
       const result: { [key: string]: Array<V1Pod> } = {};
       result["unscheduled"] = [];
@@ -77,18 +82,18 @@ export default function podStore() {
 
     async fetchSelected() {
       if (this.selected?.item.metadata?.name && !this.selected?.isNew) {
-        const p = await getPod(this.selected.item.metadata.name);
+        const p = await podAPI.getPod(this.selected.item.metadata.name);
         this.select(p, false);
       }
     },
 
     async apply(p: V1Pod) {
-      await applyPod(p);
+      await podAPI.applyPod(p);
       await this.fetchlist();
     },
 
     async delete(name: string) {
-      await deletePod(name);
+      await podAPI.deletePod(name);
       await this.fetchlist();
     },
   };

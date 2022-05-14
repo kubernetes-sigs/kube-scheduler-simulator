@@ -1,6 +1,6 @@
-import { reactive } from "@nuxtjs/composition-api";
-import { applyNode, deleteNode, listNode, getNode } from "~/api/v1/node";
+import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1Node } from "@kubernetes/client-node";
+import { NodeAPIKey } from "~/api/APIProviderKeys";
 
 type stateType = {
   selectedNode: selectedNode | null;
@@ -20,7 +20,10 @@ export default function nodeStore() {
     selectedNode: null,
     nodes: [],
   });
-
+  const nodeAPI = inject(NodeAPIKey);
+  if (!nodeAPI) {
+    throw new Error(`${nodeAPI} is not provided`);
+  }
   return {
     get nodes() {
       return state.nodes;
@@ -50,24 +53,24 @@ export default function nodeStore() {
     },
 
     async fetchlist() {
-      const nodes = await listNode();
+      const nodes = await nodeAPI.listNode();
       state.nodes = nodes.items;
     },
 
     async fetchSelected() {
       if (state.selectedNode?.item.metadata?.name && !this.selected?.isNew) {
-        const n = await getNode(state.selectedNode.item.metadata.name);
+        const n = await nodeAPI.getNode(state.selectedNode.item.metadata.name);
         this.select(n, false);
       }
     },
 
     async apply(n: V1Node) {
-      await applyNode(n);
+      await nodeAPI.applyNode(n);
       await this.fetchlist();
     },
 
     async delete(name: string) {
-      await deleteNode(name);
+      await nodeAPI.deleteNode(name);
       await this.fetchlist();
     },
   };

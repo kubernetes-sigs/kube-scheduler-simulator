@@ -50,7 +50,7 @@ import {
   reactive,
   watch,
 } from "@nuxtjs/composition-api";
-import { importScheduler, ResourcesForImport } from "~/api/v1/export";
+import { ResourcesForImport } from "~/api/v1/export";
 import yaml from "js-yaml";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 import PriorityClassStoreKey from "../StoreKey/PriorityClassStoreKey";
@@ -59,6 +59,7 @@ import PersistentVolumeClaimStoreKey from "../StoreKey/PVCStoreKey";
 import PersistentVolumeStoreKey from "../StoreKey/PVStoreKey";
 import NodeStoreKey from "../StoreKey/NodeStoreKey";
 import PodStoreKey from "../StoreKey/PodStoreKey";
+import { ExportAPIKey } from "~/api/APIProviderKeys";
 
 interface SelectedItem {
   dialog: boolean;
@@ -96,6 +97,10 @@ export default defineComponent({
     if (!pstore) {
       throw new Error(`${PodStoreKey} is not provided`);
     }
+    const exportAPI = inject(ExportAPIKey);
+    if (!exportAPI) {
+      throw new Error(`${exportAPI} is not provided`);
+    }
 
     const snackbarstore = inject(SnackBarStoreKey);
     if (!snackbarstore) {
@@ -114,7 +119,8 @@ export default defineComponent({
     });
 
     const ImportScheduler = async () => {
-      importScheduler(data.filedata as ResourcesForImport)
+      exportAPI
+        .importScheduler(data.filedata as ResourcesForImport)
         .then(() => {
           priorityclassstore.fetchlist();
           storageclassstore.fetchlist();

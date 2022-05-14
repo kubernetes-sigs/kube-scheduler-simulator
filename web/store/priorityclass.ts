@@ -1,11 +1,6 @@
-import { reactive } from "@nuxtjs/composition-api";
-import {
-  applyPriorityClass,
-  deletePriorityClass,
-  getPriorityClass,
-  listPriorityClass,
-} from "~/api/v1/priorityclass";
+import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1PriorityClass } from "@kubernetes/client-node";
+import { PriorityClassAPIKey } from "~/api/APIProviderKeys";
 
 type stateType = {
   selectedPriorityClass: selectedPriorityClass | null;
@@ -25,6 +20,11 @@ export default function priorityclassStore() {
     selectedPriorityClass: null,
     priorityclasses: [],
   });
+
+  const priorityClassAPI = inject(PriorityClassAPIKey);
+  if (!priorityClassAPI) {
+    throw new Error(`${priorityClassAPI} is not provided`);
+  }
 
   // `CheckIsDeletable` returns whether the given PriorityClass can be deleted or not.
   // The PriorityClasses that have the name prefixed with `system-` are reserved by the system so can't be deleted.
@@ -61,12 +61,12 @@ export default function priorityclassStore() {
     },
 
     async fetchlist() {
-      const priorityclasses = await listPriorityClass();
+      const priorityclasses = await priorityClassAPI.listPriorityClass();
       state.priorityclasses = priorityclasses.items;
     },
 
     async apply(n: V1PriorityClass) {
-      await applyPriorityClass(n);
+      await priorityClassAPI.applyPriorityClass(n);
       await this.fetchlist();
     },
 
@@ -75,7 +75,7 @@ export default function priorityclassStore() {
         state.selectedPriorityClass?.item.metadata?.name &&
         !this.selected?.isNew
       ) {
-        const s = await getPriorityClass(
+        const s = await priorityClassAPI.getPriorityClass(
           state.selectedPriorityClass.item.metadata.name
         );
         this.select(s, false);
@@ -83,7 +83,7 @@ export default function priorityclassStore() {
     },
 
     async delete(name: string) {
-      await deletePriorityClass(name);
+      await priorityClassAPI.deletePriorityClass(name);
       await this.fetchlist();
     },
   };
