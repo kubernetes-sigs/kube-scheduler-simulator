@@ -52,7 +52,10 @@ export default {
   css: [],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: [],
+  plugins: [
+    // ApiRuntimeConfigPlugin is a custom plugin that is used to create and inject axios instance for API using the value of publicRuntimeConfig.
+    { src: "~/plugins/ApiRuntimeConfigPlugin.ts" },
+  ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
