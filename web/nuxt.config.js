@@ -1,5 +1,37 @@
 import fs from "fs";
 
+const getTemplateEnv = (hostEnv) => {
+  return hostEnv !== "production"
+    ? {
+        // Build Configuration: https://go.nuxtjs.dev/config-build
+        POD_TEMPLATE: fs.readFileSync(
+          "./components/lib/templates/pod.yaml",
+          "utf8"
+        ),
+        NODE_TEMPLATE: fs.readFileSync(
+          "./components/lib/templates/node.yaml",
+          "utf8"
+        ),
+        PV_TEMPLATE: fs.readFileSync(
+          "./components/lib/templates/pv.yaml",
+          "utf8"
+        ),
+        PVC_TEMPLATE: fs.readFileSync(
+          "./components/lib/templates/pvc.yaml",
+          "utf8"
+        ),
+        SC_TEMPLATE: fs.readFileSync(
+          "./components/lib/templates/storageclass.yaml",
+          "utf8"
+        ),
+        PC_TEMPLATE: fs.readFileSync(
+          "./components/lib/templates/priorityclass.yaml",
+          "utf8"
+        ),
+      }
+    : true;
+};
+
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -56,35 +88,15 @@ export default {
       },
     },
   },
-
-  // Build Configuration: https://go.nuxtjs.dev/config-build
-  env: {
-    BASE_URL: process.env.BASE_URL || "http://localhost:1212",
-    KUBE_API_SERVER_URL:
+  // publicRuntimeConfig should hold all env variables that are public as these will be exposed on the frontend.
+  publicRuntimeConfig: {
+    baseURL: process.env.BASE_URL || "http://localhost:1212",
+    kubeApiServerURL:
       process.env.KUBE_API_SERVER_URL || "http://localhost:3131",
-    POD_TEMPLATE: fs.readFileSync(
-      "./components/lib/templates/pod.yaml",
-      "utf8"
-    ),
-    NODE_TEMPLATE: fs.readFileSync(
-      "./components/lib/templates/node.yaml",
-      "utf8"
-    ),
-    PV_TEMPLATE: fs.readFileSync("./components/lib/templates/pv.yaml", "utf8"),
-    PVC_TEMPLATE: fs.readFileSync(
-      "./components/lib/templates/pvc.yaml",
-      "utf8"
-    ),
-    SC_TEMPLATE: fs.readFileSync(
-      "./components/lib/templates/storageclass.yaml",
-      "utf8"
-    ),
-    PC_TEMPLATE: fs.readFileSync(
-      "./components/lib/templates/priorityclass.yaml",
-      "utf8"
-    ),
-    // ALPHA_TABLE_VIEWS is a optional parameter for the datatable view. This is an alpha feature.
+    // alphaTableViews is a optional parameter for the datatable view. This is an alpha feature.
     // If this value is set to "1", the datatable view will be enabled.
-    ALPHA_TABLE_VIEWS: process.env.ALPHA_TABLE_VIEWS || "0",
+    alphaTableViews: process.env.ALPHA_TABLE_VIEWS || "0",
   },
+
+  env: getTemplateEnv(process.env.HOST_ENV),
 };
