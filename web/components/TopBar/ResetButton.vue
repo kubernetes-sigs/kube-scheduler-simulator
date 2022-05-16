@@ -13,7 +13,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="green darken-1" text @click="Reset"> Reset </v-btn>
+        <v-btn color="green darken-1" text @click="resetFn"> Reset </v-btn>
         <v-btn color="green darken-1" text @click="data.dialog = false">
           Cancel
         </v-btn>
@@ -84,7 +84,7 @@ export default defineComponent({
       snackbarstore.setServerInfoMessage(message);
     };
 
-    const Reset = async () => {
+    const resetFn = async () => {
       try {
         await reset();
         await Promise.all([
@@ -108,7 +108,7 @@ export default defineComponent({
     });
 
     return {
-      Reset,
+      resetFn,
       data,
     };
   },
