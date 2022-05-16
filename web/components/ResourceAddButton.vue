@@ -102,7 +102,7 @@ export default defineComponent({
         case "Pod":
           store = podstore;
           // if store.count = 0, name suffix is 1.
-          targetTemplate = podTemplate((store.count + 1).toString());
+          targetTemplate = podTemplate();
           break;
         case "Node":
           store = nodestore;

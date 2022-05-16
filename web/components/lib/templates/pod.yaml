@@ -1,5 +1,5 @@
 metadata:
-  name: pod
+  generateName: pod-
   namespace: default
   labels: {}
 spec:
