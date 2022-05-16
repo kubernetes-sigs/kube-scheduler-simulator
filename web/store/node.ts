@@ -1,6 +1,7 @@
 import { reactive } from "@nuxtjs/composition-api";
 import { applyNode, deleteNode, listNode, getNode } from "~/api/v1/node";
 import { V1Node } from "@kubernetes/client-node";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 type stateType = {
   selectedNode: selectedNode | null;
@@ -15,7 +16,7 @@ type selectedNode = {
   isDeletable: boolean;
 };
 
-export default function nodeStore() {
+export default function nodeStore(k8sInstance: NuxtAxiosInstance) {
   const state: stateType = reactive({
     selectedNode: null,
     nodes: [],
@@ -50,24 +51,27 @@ export default function nodeStore() {
     },
 
     async fetchlist() {
-      const nodes = await listNode();
+      const nodes = await listNode(k8sInstance);
       state.nodes = nodes.items;
     },
 
     async fetchSelected() {
       if (state.selectedNode?.item.metadata?.name && !this.selected?.isNew) {
-        const n = await getNode(state.selectedNode.item.metadata.name);
+        const n = await getNode(
+          k8sInstance,
+          state.selectedNode.item.metadata.name
+        );
         this.select(n, false);
       }
     },
 
     async apply(n: V1Node) {
-      await applyNode(n);
+      await applyNode(k8sInstance, n);
       await this.fetchlist();
     },
 
     async delete(name: string) {
-      await deleteNode(name);
+      await deleteNode(k8sInstance, name);
       await this.fetchlist();
     },
   };

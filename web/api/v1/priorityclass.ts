@@ -1,7 +1,10 @@
 import { V1PriorityClass, V1PriorityClassList } from "@kubernetes/client-node";
-import { k8sSchedulingInstance } from "@/api/v1/index";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
-export const applyPriorityClass = async (req: V1PriorityClass) => {
+export const applyPriorityClass = async (
+  k8sSchedulingInstance: NuxtAxiosInstance,
+  req: V1PriorityClass
+) => {
   try {
     if (!req.metadata?.name) {
       throw new Error(`metadata.name is not provided`);
@@ -22,7 +25,9 @@ export const applyPriorityClass = async (req: V1PriorityClass) => {
   }
 };
 
-export const listPriorityClass = async () => {
+export const listPriorityClass = async (
+  k8sSchedulingInstance: NuxtAxiosInstance
+) => {
   try {
     const res = await k8sSchedulingInstance.get<V1PriorityClassList>(
       `/priorityclasses`,
@@ -34,7 +39,10 @@ export const listPriorityClass = async () => {
   }
 };
 
-export const getPriorityClass = async (name: string) => {
+export const getPriorityClass = async (
+  k8sSchedulingInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sSchedulingInstance.get<V1PriorityClass>(
       `/priorityclasses/${name}`,
@@ -46,7 +54,10 @@ export const getPriorityClass = async (name: string) => {
   }
 };
 
-export const deletePriorityClass = async (name: string) => {
+export const deletePriorityClass = async (
+  k8sSchedulingInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sSchedulingInstance.delete(
       `/priorityclasses/${name}`,

@@ -1,7 +1,10 @@
 import { V1Node, V1NodeList } from "@kubernetes/client-node";
-import { k8sInstance } from "@/api/v1/index";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
-export const applyNode = async (req: V1Node) => {
+export const applyNode = async (
+  k8sInstance: NuxtAxiosInstance,
+  req: V1Node
+) => {
   try {
     if (!req.metadata?.name) {
       throw new Error(`metadata.name is not provided`);
@@ -22,7 +25,7 @@ export const applyNode = async (req: V1Node) => {
   }
 };
 
-export const listNode = async () => {
+export const listNode = async (k8sInstance: NuxtAxiosInstance) => {
   try {
     const res = await k8sInstance.get<V1NodeList>(`/nodes`, {});
     return res.data;
@@ -31,7 +34,7 @@ export const listNode = async () => {
   }
 };
 
-export const getNode = async (name: string) => {
+export const getNode = async (k8sInstance: NuxtAxiosInstance, name: string) => {
   try {
     const res = await k8sInstance.get<V1Node>(`/nodes/${name}`, {});
     return res.data;
@@ -40,7 +43,10 @@ export const getNode = async (name: string) => {
   }
 };
 
-export const deleteNode = async (name: string) => {
+export const deleteNode = async (
+  k8sInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sInstance.delete(`/nodes/${name}`, {});
     return res.data;

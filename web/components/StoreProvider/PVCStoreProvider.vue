@@ -5,13 +5,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, provide } from "@nuxtjs/composition-api";
+import { defineComponent, provide, useContext } from "@nuxtjs/composition-api";
 import PersistentVolumeClaimStore from "../../store/pvc";
 import PersistentVolumeClaimStoreKey from "../StoreKey/PVCStoreKey";
 
 export default defineComponent({
   setup() {
-    provide(PersistentVolumeClaimStoreKey, PersistentVolumeClaimStore());
+    const { app } = useContext();
+    provide(
+      PersistentVolumeClaimStoreKey,
+      PersistentVolumeClaimStore(app.$k8sInstance)
+    );
     return {};
   },
 });

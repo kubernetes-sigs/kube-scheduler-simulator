@@ -49,8 +49,9 @@ import {
   inject,
   reactive,
   watch,
+  useContext,
 } from "@nuxtjs/composition-api";
-import { importScheduler, ResourcesForImport } from "~/api/v1/export";
+import { importScheduler, ResourcesForImport } from "../../api/v1/export";
 import yaml from "js-yaml";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 import PriorityClassStoreKey from "../StoreKey/PriorityClassStoreKey";
@@ -68,6 +69,7 @@ interface SelectedItem {
 
 export default defineComponent({
   setup() {
+    const { app } = useContext();
     const data = reactive({
       dialog: false,
       isImportButtonDisabled: true,
@@ -114,7 +116,7 @@ export default defineComponent({
     });
 
     const ImportScheduler = async () => {
-      importScheduler(data.filedata as ResourcesForImport)
+      importScheduler(app.$instance, data.filedata as ResourcesForImport)
         .then(() => {
           priorityclassstore.fetchlist();
           storageclassstore.fetchlist();

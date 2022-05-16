@@ -6,6 +6,7 @@ import {
   listPriorityClass,
 } from "~/api/v1/priorityclass";
 import { V1PriorityClass } from "@kubernetes/client-node";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 type stateType = {
   selectedPriorityClass: selectedPriorityClass | null;
@@ -20,7 +21,9 @@ type selectedPriorityClass = {
   isDeletable: boolean;
 };
 
-export default function priorityclassStore() {
+export default function priorityclassStore(
+  k8sSchedulingInstance: NuxtAxiosInstance
+) {
   const state: stateType = reactive({
     selectedPriorityClass: null,
     priorityclasses: [],
@@ -61,12 +64,12 @@ export default function priorityclassStore() {
     },
 
     async fetchlist() {
-      const priorityclasses = await listPriorityClass();
+      const priorityclasses = await listPriorityClass(k8sSchedulingInstance);
       state.priorityclasses = priorityclasses.items;
     },
 
     async apply(n: V1PriorityClass) {
-      await applyPriorityClass(n);
+      await applyPriorityClass(k8sSchedulingInstance, n);
       await this.fetchlist();
     },
 
@@ -76,6 +79,7 @@ export default function priorityclassStore() {
         !this.selected?.isNew
       ) {
         const s = await getPriorityClass(
+          k8sSchedulingInstance,
           state.selectedPriorityClass.item.metadata.name
         );
         this.select(s, false);
@@ -83,7 +87,7 @@ export default function priorityclassStore() {
     },
 
     async delete(name: string) {
-      await deletePriorityClass(name);
+      await deletePriorityClass(k8sSchedulingInstance, name);
       await this.fetchlist();
     },
   };

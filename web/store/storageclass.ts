@@ -6,6 +6,7 @@ import {
   listStorageClass,
 } from "~/api/v1/storageclass";
 import { V1StorageClass } from "@kubernetes/client-node";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 type stateType = {
   selectedStorageClass: selectedStorageClass | null;
@@ -20,7 +21,9 @@ type selectedStorageClass = {
   isDeletable: boolean;
 };
 
-export default function storageclassStore() {
+export default function storageclassStore(
+  k8sStorageInstance: NuxtAxiosInstance
+) {
   const state: stateType = reactive({
     selectedStorageClass: null,
     storageclasses: [],
@@ -55,12 +58,12 @@ export default function storageclassStore() {
     },
 
     async fetchlist() {
-      const storageclasses = await listStorageClass();
+      const storageclasses = await listStorageClass(k8sStorageInstance);
       state.storageclasses = storageclasses.items;
     },
 
     async apply(n: V1StorageClass) {
-      await applyStorageClass(n);
+      await applyStorageClass(k8sStorageInstance, n);
       await this.fetchlist();
     },
 
@@ -70,6 +73,7 @@ export default function storageclassStore() {
         !this.selected?.isNew
       ) {
         const s = await getStorageClass(
+          k8sStorageInstance,
           state.selectedStorageClass.item.metadata.name
         );
         this.select(s, false);
@@ -77,7 +81,7 @@ export default function storageclassStore() {
     },
 
     async delete(name: string) {
-      await deleteStorageClass(name);
+      await deleteStorageClass(k8sStorageInstance, name);
       await this.fetchlist();
     },
   };

@@ -5,13 +5,17 @@
 </template>
 
 <script lang="ts">
-import { provide, defineComponent } from "@nuxtjs/composition-api";
+import { provide, defineComponent, useContext } from "@nuxtjs/composition-api";
 import schedulerconfigurationStore from "../../store/schedulerconfiguration";
 import SchedulerConfigurationStoreKey from "../StoreKey/SchedulerConfigurationStoreKey";
 
 export default defineComponent({
   setup() {
-    provide(SchedulerConfigurationStoreKey, schedulerconfigurationStore());
+    const { app } = useContext();
+    provide(
+      SchedulerConfigurationStoreKey,
+      schedulerconfigurationStore(app.$instance)
+    );
     return {};
   },
 });

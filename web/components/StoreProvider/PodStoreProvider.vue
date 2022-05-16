@@ -5,13 +5,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, provide } from "@nuxtjs/composition-api";
+import { defineComponent, provide, useContext } from "@nuxtjs/composition-api";
 import podStore from "../../store/pod";
 import PodStoreKey from "../StoreKey/PodStoreKey";
 
 export default defineComponent({
   setup() {
-    provide(PodStoreKey, podStore());
+    const { app } = useContext();
+    provide(PodStoreKey, podStore(app.$k8sInstance));
     return {};
   },
 });

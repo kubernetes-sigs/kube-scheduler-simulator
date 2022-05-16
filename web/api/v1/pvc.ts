@@ -2,9 +2,11 @@ import {
   V1PersistentVolumeClaim,
   V1PersistentVolumeClaimList,
 } from "@kubernetes/client-node";
-import { k8sInstance, namespaceURL } from "@/api/v1/index";
+import { namespaceURL } from "@/api/v1/index";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 export const applyPersistentVolumeClaim = async (
+  k8sInstance: NuxtAxiosInstance,
   req: V1PersistentVolumeClaim
 ) => {
   try {
@@ -28,7 +30,9 @@ export const applyPersistentVolumeClaim = async (
   }
 };
 
-export const listPersistentVolumeClaim = async () => {
+export const listPersistentVolumeClaim = async (
+  k8sInstance: NuxtAxiosInstance
+) => {
   try {
     const res = await k8sInstance.get<V1PersistentVolumeClaimList>(
       namespaceURL + `/persistentvolumeclaims`,
@@ -40,7 +44,10 @@ export const listPersistentVolumeClaim = async () => {
   }
 };
 
-export const getPersistentVolumeClaim = async (name: string) => {
+export const getPersistentVolumeClaim = async (
+  k8sInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sInstance.get<V1PersistentVolumeClaim>(
       namespaceURL + `/persistentvolumeclaims/${name}`,
@@ -52,7 +59,10 @@ export const getPersistentVolumeClaim = async (name: string) => {
   }
 };
 
-export const deletePersistentVolumeClaim = async (name: string) => {
+export const deletePersistentVolumeClaim = async (
+  k8sInstance: NuxtAxiosInstance,
+  name: string
+) => {
   try {
     const res = await k8sInstance.delete(
       namespaceURL + `/persistentvolumeclaims/${name}`,
