@@ -1,5 +1,5 @@
 metadata:
-  name: pv
+  generateName: pv-
   labels: {}
 spec:
   capacity:

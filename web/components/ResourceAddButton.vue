@@ -101,33 +101,27 @@ export default defineComponent({
       switch (rn) {
         case "Pod":
           store = podstore;
-          // if store.count = 0, name suffix is 1.
           targetTemplate = podTemplate();
           break;
         case "Node":
           store = nodestore;
-          // if store.count = 0, name suffix is 1.
-          targetTemplate = nodeTemplate((store.count + 1).toString());
+          targetTemplate = nodeTemplate();
           break;
         case "PersistentVolume":
           store = pvstore;
-          // if store.count = 0, name suffix is 1.
-          targetTemplate = pvTemplate((store.count + 1).toString());
+          targetTemplate = pvTemplate();
           break;
         case "PersistentVolumeClaim":
           store = pvcstore;
-          // if store.count = 0, name suffix is 1.
-          targetTemplate = pvcTemplate((store.count + 1).toString());
+          targetTemplate = pvcTemplate();
           break;
         case "StorageClass":
           store = storageclassstore;
-          // if store.count = 0, name suffix is 1.
-          targetTemplate = storageclassTemplate((store.count + 1).toString());
+          targetTemplate = storageclassTemplate();
           break;
         case "PriorityClass":
           store = priorityclassstore;
-          // if store.count = 2, name suffix is 1.
-          targetTemplate = priorityclassTemplate((store.count - 1).toString());
+          targetTemplate = priorityclassTemplate();
           break;
       }
 

@@ -1,5 +1,5 @@
 metadata:
-  name: pvc
+  generateName: pvc-
 spec:
   accessModes:
     - ReadWriteOnce

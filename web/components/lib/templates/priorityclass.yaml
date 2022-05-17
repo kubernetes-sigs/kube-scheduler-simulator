@@ -1,5 +1,5 @@
 metadata:
-  name: priority-class
+  generateName: priority-class-
 value: 1000
 globalDefault: true
 description: "This is a template priority class for all pods"
