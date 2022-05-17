@@ -11,7 +11,6 @@ import yaml from "js-yaml";
 export const podTemplate = (): V1Pod => {
   if (process.env.POD_TEMPLATE) {
     const temp = yaml.load(process.env.POD_TEMPLATE);
-    temp.metadata.generateName = temp.metadata.generateName;
     return temp;
   }
   return {};
