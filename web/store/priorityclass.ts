@@ -66,7 +66,15 @@ export default function priorityclassStore() {
     },
 
     async apply(n: V1PriorityClass) {
-      await priorityClassAPI.applyPriorityClass(n);
+      if (n.metadata?.name) {
+        await priorityClassAPI.applyPriorityClass(n);
+      } else if (!n.metadata?.name && n.metadata?.generateName) {
+        await priorityClassAPI.createPriorityClass(n);
+      } else {
+        throw new Error(`
+        failed to apply priorityclass: priorityclass has no metadata.name or metadata.generateName
+        `);
+      }
       await this.fetchlist();
     },
 

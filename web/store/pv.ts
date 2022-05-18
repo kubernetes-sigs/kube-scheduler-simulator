@@ -72,7 +72,15 @@ export default function pvStore() {
     },
 
     async apply(n: V1PersistentVolume) {
-      await pvAPI.applyPersistentVolume(n);
+      if (n.metadata?.name) {
+        await pvAPI.applyPersistentVolume(n);
+      } else if (!n.metadata?.name && n.metadata?.generateName) {
+        await pvAPI.createPersistentVolume(n);
+      } else {
+        throw new Error(`
+        failed to apply persistentvolume: persistentvolume has no metadata.name or metadata.generateName
+        `);
+      }
       await this.fetchlist();
     },
 

@@ -60,7 +60,15 @@ export default function storageclassStore() {
     },
 
     async apply(n: V1StorageClass) {
-      await storageClassAPI.applyStorageClass(n);
+      if (n.metadata?.name) {
+        await storageClassAPI.applyStorageClass(n);
+      } else if (!n.metadata?.name && n.metadata?.generateName) {
+        await storageClassAPI.createStorageClass(n);
+      } else {
+        throw new Error(`
+        failed to apply storageclass: storageclass has no metadata.name or metadata.generateName
+        `);
+      }
       await this.fetchlist();
     },
 

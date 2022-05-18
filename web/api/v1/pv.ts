@@ -6,6 +6,26 @@ import { AxiosInstance } from "axios";
 
 export default function pvAPI(k8sInstance: AxiosInstance) {
   return {
+    createPersistentVolume: async (req: V1PersistentVolume) => {
+      try {
+        if (!req.metadata?.generateName) {
+          throw new Error(`metadata.genrateName is not provided`);
+        }
+        req.kind = "PersistentVolume";
+        req.apiVersion = "v1";
+        if (req.metadata.managedFields) {
+          delete req.metadata.managedFields;
+        }
+        const res = await k8sInstance.post<V1PersistentVolume>(
+          `/persistentvolumes?fieldManager=simulator&force=true`,
+          req,
+          { headers: { "Content-Type": "application/yaml" } }
+        );
+        return res.data;
+      } catch (e: any) {
+        throw new Error(`failed to create persistent volume: ${e}`);
+      }
+    },
     applyPersistentVolume: async (req: V1PersistentVolume) => {
       try {
         if (!req.metadata?.name) {

@@ -3,6 +3,26 @@ import { AxiosInstance } from "axios";
 
 export default function storageClassAPI(k8sStorageInstance: AxiosInstance) {
   return {
+    createStorageClass: async (req: V1StorageClass) => {
+      try {
+        if (!req.metadata?.generateName) {
+          throw new Error(`metadata.generateName is not provided`);
+        }
+        req.kind = "StorageClass";
+        req.apiVersion = "storage.k8s.io/v1";
+        if (req.metadata.managedFields) {
+          delete req.metadata.managedFields;
+        }
+        const res = await k8sStorageInstance.post<V1StorageClass>(
+          `/storageclasses?fieldManager=simulator&force=true`,
+          req,
+          { headers: { "Content-Type": "application/yaml" } }
+        );
+        return res.data;
+      } catch (e: any) {
+        throw new Error(`failed to create storage class: ${e}`);
+      }
+    },
     applyStorageClass: async (req: V1StorageClass) => {
       try {
         if (!req.metadata?.name) {

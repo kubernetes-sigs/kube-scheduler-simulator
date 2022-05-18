@@ -7,6 +7,29 @@ import { AxiosInstance } from "axios";
 
 export default function pvcAPI(k8sInstance: AxiosInstance) {
   return {
+    createPersistentVolumeClaim: async (
+      req: V1PersistentVolumeClaim
+    ) => {
+      try {
+        if (!req.metadata?.generateName) {
+          throw new Error(`metadata.generateName is not provided`);
+        }
+        req.kind = "PersistentVolumeClaim";
+        req.apiVersion = "v1";
+        if (req.metadata.managedFields) {
+          delete req.metadata.managedFields;
+        }
+        const res = await k8sInstance.post<V1PersistentVolumeClaim>(
+          namespaceURL +
+            `/persistentvolumeclaims?fieldManager=simulator&force=true`,
+          req,
+          { headers: { "Content-Type": "application/yaml" } }
+        );
+        return res.data;
+      } catch (e: any) {
+        throw new Error(`failed to create persistent volume claim: ${e}`);
+      }
+    },
     applyPersistentVolumeClaim: async (req: V1PersistentVolumeClaim) => {
       try {
         if (!req.metadata?.name) {

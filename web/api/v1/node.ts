@@ -3,6 +3,26 @@ import { AxiosInstance } from "axios";
 
 export default function nodeAPI(k8sInstance: AxiosInstance) {
   return {
+    createNode: async (req: V1Node) => {
+      try {
+        if (!req.metadata?.generateName) {
+          throw new Error(`metadata.generateName is not provided`);
+        }
+        req.kind = "Node";
+        req.apiVersion = "v1";
+        if (req.metadata.managedFields) {
+          delete req.metadata.managedFields;
+        }
+        const res = await k8sInstance.post<V1Node>(
+          `/nodes?fieldManager=simulator&force=true`,
+          req,
+          { headers: { "Content-Type": "application/yaml" } }
+        );
+        return res.data;
+      } catch (e: any) {
+        throw new Error(`failed to create node: ${e}`);
+      }
+    },
     applyNode: async (req: V1Node) => {
       try {
         if (!req.metadata?.name) {

@@ -60,7 +60,15 @@ export default function pvcStore() {
     },
 
     async apply(n: V1PersistentVolumeClaim) {
-      await pvcAPI.applyPersistentVolumeClaim(n);
+      if (n.metadata?.name) {
+        await pvcAPI.applyPersistentVolumeClaim(n);
+      } else if (!n.metadata?.name && n.metadata?.generateName) {
+        await pvcAPI.createPersistentVolumeClaim(n);
+      } else {
+        throw new Error(`
+        failed to apply persistentvolumeclaim: persistentvolumeclaim has no metadata.name or metadata.generateName
+        `);
+      }
       await this.fetchlist();
     },
 

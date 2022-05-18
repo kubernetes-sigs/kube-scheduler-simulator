@@ -3,6 +3,26 @@ import { AxiosInstance } from "axios";
 
 export default function priorityClassAPI(k8sSchedulingInstance: AxiosInstance) {
   return {
+    createPriorityClass: async (req: V1PriorityClass) => {
+      try {
+        if (!req.metadata?.generateName) {
+          throw new Error(`metadata.generateName is not provided`);
+        }
+        req.kind = "PriorityClass";
+        req.apiVersion = "scheduling.k8s.io/v1";
+        if (req.metadata.managedFields) {
+          delete req.metadata.managedFields;
+        }
+        const res = await k8sSchedulingInstance.post<V1PriorityClass>(
+          `/priorityclasses?fieldManager=simulator&force=true`,
+          req,
+          { headers: { "Content-Type": "application/yaml" } }
+        );
+        return res.data;
+      } catch (e: any) {
+        throw new Error(`failed to create priority class: ${e}`);
+      }
+    },
     applyPriorityClass: async (req: V1PriorityClass) => {
       try {
         if (!req.metadata?.name) {

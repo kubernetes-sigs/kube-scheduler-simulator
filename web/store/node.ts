@@ -65,7 +65,15 @@ export default function nodeStore() {
     },
 
     async apply(n: V1Node) {
-      await nodeAPI.applyNode(n);
+      if (n.metadata?.name) {
+        await nodeAPI.applyNode(n);
+      } else if (!n.metadata?.name && n.metadata?.generateName) {
+        await nodeAPI.createNode(n);
+      } else {
+        throw new Error(`
+        failed to apply node: node has no metadata.name or metadata.generateName
+        `);
+      }
       await this.fetchlist();
     },
 
