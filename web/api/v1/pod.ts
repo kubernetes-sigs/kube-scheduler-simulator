@@ -4,6 +4,26 @@ import { AxiosInstance } from "axios";
 
 export default function podAPI(k8sInstance: AxiosInstance) {
   return {
+    createPod: async (req: V1Pod) => {
+      try {
+        if (!req.metadata?.generateName) {
+          throw new Error(`metadata.generateName is not provided`);
+        }
+        req.kind = "Pod";
+        req.apiVersion = "v1";
+        if (req.metadata.managedFields) {
+          delete req.metadata.managedFields;
+        }
+        const res = await k8sInstance.post<V1Pod>(
+          namespaceURL + `/pods?fieldManager=simulator&force=true`,
+          req,
+          { headers: { "Content-Type": "application/yaml" } }
+        );
+        return res.data;
+      } catch (e: any) {
+        throw new Error(`failed to create pod: ${e}`);
+      }
+    },
     applyPod: async (req: V1Pod) => {
       try {
         if (!req.metadata?.name) {

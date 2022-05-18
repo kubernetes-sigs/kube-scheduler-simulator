@@ -88,7 +88,15 @@ export default function podStore() {
     },
 
     async apply(p: V1Pod) {
-      await podAPI.applyPod(p);
+      if (p.metadata?.name) {
+        await podAPI.applyPod(p);
+      } else if (!p.metadata?.name && p.metadata?.generateName) {
+        await podAPI.createPod(p);
+      } else {
+        throw new Error(`
+        failed to apply pod: pod has no metadata.name or metadata.generateName
+        `);
+      }
       await this.fetchlist();
     },
 
