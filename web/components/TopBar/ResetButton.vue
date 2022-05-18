@@ -24,7 +24,7 @@
 
 <script lang="ts">
 import { inject, defineComponent, reactive } from "@nuxtjs/composition-api";
-import { reset } from "~/api/v1/reset";
+import { ResetAPIKey } from "~/api/APIProviderKeys";
 import PodStoreKey from "../StoreKey/PodStoreKey";
 import NodeStoreKey from "../StoreKey/NodeStoreKey";
 import PersistentVolumeStoreKey from "../StoreKey/PVStoreKey";
@@ -36,6 +36,10 @@ import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 
 export default defineComponent({
   setup() {
+    const resetAPI = inject(ResetAPIKey);
+    if (!resetAPI) {
+      throw new Error(`${resetAPI} is not provided`);
+    }
     const podstore = inject(PodStoreKey);
     if (!podstore) {
       throw new Error(`${PodStoreKey} is not provided`);
@@ -86,7 +90,7 @@ export default defineComponent({
 
     const resetFn = async () => {
       try {
-        await reset();
+        await resetAPI.reset();
         await Promise.all([
           nodestore.fetchlist(),
           podstore.fetchlist(),
@@ -96,8 +100,8 @@ export default defineComponent({
           priorityclassstore.fetchlist(),
         ]);
         setInfoMessage("Successfully reset all resources");
-      } catch (e) {
-        setServerErrorMessage(e);
+      } catch (e: any) {
+        setServerErrorMessage(e.message);
       } finally {
         data.dialog = false;
       }
