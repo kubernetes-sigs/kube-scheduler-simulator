@@ -13,7 +13,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="green darken-1" text @click="reset"> Reset </v-btn>
+        <v-btn color="green darken-1" text @click="resetFn"> Reset </v-btn>
         <v-btn color="green darken-1" text @click="data.dialog = false">
           Cancel
         </v-btn>
@@ -24,7 +24,7 @@
 
 <script lang="ts">
 import { inject, defineComponent, reactive } from "@nuxtjs/composition-api";
-import ResetStoreKey from "../StoreKey/ResetStoreKey";
+import { reset } from "~/api/v1/reset";
 import PodStoreKey from "../StoreKey/PodStoreKey";
 import NodeStoreKey from "../StoreKey/NodeStoreKey";
 import PersistentVolumeStoreKey from "../StoreKey/PVStoreKey";
@@ -36,11 +36,6 @@ import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 
 export default defineComponent({
   setup() {
-    const resetstore = inject(ResetStoreKey);
-    if (!resetstore) {
-      throw new Error(`${ResetStoreKey} is not provided`);
-    }
-
     const podstore = inject(PodStoreKey);
     if (!podstore) {
       throw new Error(`${PodStoreKey} is not provided`);
@@ -89,9 +84,9 @@ export default defineComponent({
       snackbarstore.setServerInfoMessage(message);
     };
 
-    const reset = async () => {
+    const resetFn = async () => {
       try {
-        await resetstore.reset();
+        await reset();
         await Promise.all([
           nodestore.fetchlist(),
           podstore.fetchlist(),
@@ -113,7 +108,7 @@ export default defineComponent({
     });
 
     return {
-      reset,
+      resetFn,
       data,
     };
   },
