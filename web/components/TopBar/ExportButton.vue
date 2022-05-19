@@ -29,17 +29,23 @@
 </template>
 
 <script lang="ts">
-import { exportScheduler } from "~/api/v1/export";
 import { saveAs } from "file-saver";
 import { defineComponent, inject, reactive } from "@nuxtjs/composition-api";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 import yaml from "js-yaml";
+import { ExportAPIKey } from "~/api/APIProviderKeys";
 
 export default defineComponent({
   setup() {
     const data = reactive({
       dialog: false,
     });
+
+    const exportAPI = inject(ExportAPIKey);
+    if (!exportAPI) {
+      throw new Error(`${exportAPI} is not provided`);
+    }
+
     const snackbarstore = inject(SnackBarStoreKey);
     if (!snackbarstore) {
       throw new Error(`${SnackBarStoreKey} is not provided`);
@@ -48,9 +54,9 @@ export default defineComponent({
       snackbarstore.setServerErrorMessage(error);
     };
 
-    async function ExportScheduler() {
+    const ExportScheduler = async () => {
       try {
-        const c = await exportScheduler();
+        const c = await exportAPI.exportScheduler();
         if (c) {
           const blob = new Blob([yaml.dump(c)], {
             type: "application/yaml",
@@ -58,10 +64,10 @@ export default defineComponent({
           saveAs(blob, "export.yml");
           data.dialog = false;
         }
-      } catch (e) {
+      } catch (e: any) {
         setServerErrorMessage(e);
       }
-    }
+    };
     return {
       data,
       ExportScheduler,

@@ -1,11 +1,6 @@
-import { reactive } from "@nuxtjs/composition-api";
-import {
-  applyPersistentVolumeClaim,
-  deletePersistentVolumeClaim,
-  getPersistentVolumeClaim,
-  listPersistentVolumeClaim,
-} from "~/api/v1/pvc";
+import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1PersistentVolumeClaim } from "@kubernetes/client-node";
+import { PVCAPIKey } from "~/api/APIProviderKeys";
 
 type stateType = {
   selectedPersistentVolumeClaim: selectedPersistentVolumeClaim | null;
@@ -25,6 +20,11 @@ export default function pvcStore() {
     selectedPersistentVolumeClaim: null,
     pvcs: [],
   });
+
+  const pvcAPI = inject(PVCAPIKey);
+  if (!pvcAPI) {
+    throw new Error(`${pvcAPI} is not provided`);
+  }
 
   return {
     get pvcs() {
@@ -55,12 +55,12 @@ export default function pvcStore() {
     },
 
     async fetchlist() {
-      const pvcs = await listPersistentVolumeClaim();
+      const pvcs = await pvcAPI.listPersistentVolumeClaim();
       state.pvcs = pvcs.items;
     },
 
     async apply(n: V1PersistentVolumeClaim) {
-      await applyPersistentVolumeClaim(n);
+      await pvcAPI.applyPersistentVolumeClaim(n);
       await this.fetchlist();
     },
 
@@ -69,7 +69,7 @@ export default function pvcStore() {
         state.selectedPersistentVolumeClaim?.item.metadata?.name &&
         !this.selected?.isNew
       ) {
-        const p = await getPersistentVolumeClaim(
+        const p = await pvcAPI.getPersistentVolumeClaim(
           state.selectedPersistentVolumeClaim.item.metadata.name
         );
         this.select(p, false);
@@ -77,7 +77,7 @@ export default function pvcStore() {
     },
 
     async delete(name: string) {
-      await deletePersistentVolumeClaim(name);
+      await pvcAPI.deletePersistentVolumeClaim(name);
       await this.fetchlist();
     },
   };

@@ -1,9 +1,6 @@
-import { reactive } from "@nuxtjs/composition-api";
-import {
-  applySchedulerConfiguration,
-  getSchedulerConfiguration,
-} from "~/api/v1/schedulerconfiguration";
+import { reactive, inject } from "@nuxtjs/composition-api";
 import { SchedulerConfiguration } from "~/api/v1/types";
+import { SchedulerconfigurationAPIKey } from "~/api/APIProviderKeys";
 
 type stateType = {
   selectedConfig: selectedConfig | null;
@@ -23,6 +20,11 @@ export default function schedulerconfigurationStore() {
     schedulerconfigurations: [],
   });
 
+  const schedconfAPI = inject(SchedulerconfigurationAPIKey);
+  if (!schedconfAPI) {
+    throw new Error(`${schedconfAPI} is not provided`);
+  }
+
   return {
     get selected() {
       return state.selectedConfig;
@@ -37,7 +39,7 @@ export default function schedulerconfigurationStore() {
     },
 
     async fetchSelected() {
-      const c = await getSchedulerConfiguration();
+      const c = await schedconfAPI.getSchedulerConfiguration();
       if (c) {
         state.selectedConfig = {
           isNew: true,
@@ -49,7 +51,7 @@ export default function schedulerconfigurationStore() {
     },
 
     async apply(cfg: SchedulerConfiguration) {
-      await applySchedulerConfiguration(cfg);
+      await schedconfAPI.applySchedulerConfiguration(cfg);
     },
 
     async delete(_: string) {

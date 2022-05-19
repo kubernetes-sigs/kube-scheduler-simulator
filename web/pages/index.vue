@@ -1,29 +1,32 @@
 <template>
-  <PodStoreProvider>
-    <NodeStoreProvider>
-      <PVStoreProvider>
-        <PVCStoreProvider>
-          <SchedulerConfigurationStoreProvider>
-            <StorageClassStoreProvider>
-              <PriorityClassStoreProvider>
-                <SnackbarStoreProvider>
-                  <ResourceBar />
-                  <TopBar />
-                  <ResourceAddButton />
-                  <ResourceViewPanel />
-                  <Snackbar />
-                </SnackbarStoreProvider>
-              </PriorityClassStoreProvider>
-            </StorageClassStoreProvider>
-          </SchedulerConfigurationStoreProvider>
-        </PVCStoreProvider>
-      </PVStoreProvider>
-    </NodeStoreProvider>
-  </PodStoreProvider>
+  <APIProvider>
+    <PodStoreProvider>
+      <NodeStoreProvider>
+        <PVStoreProvider>
+          <PVCStoreProvider>
+            <SchedulerConfigurationStoreProvider>
+              <StorageClassStoreProvider>
+                <PriorityClassStoreProvider>
+                  <SnackbarStoreProvider>
+                    <ResourceBar />
+                    <TopBar />
+                    <ResourceAddButton />
+                    <ResourceViewPanel />
+                    <Snackbar />
+                  </SnackbarStoreProvider>
+                </PriorityClassStoreProvider>
+              </StorageClassStoreProvider>
+            </SchedulerConfigurationStoreProvider>
+          </PVCStoreProvider>
+        </PVStoreProvider>
+      </NodeStoreProvider>
+    </PodStoreProvider>
+  </APIProvider>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "@nuxtjs/composition-api";
+import APIProvider from "~/api/APIProvider.vue";
 import TopBar from "~/components/TopBar/TopBar.vue";
 import NodeStoreProvider from "~/components/StoreProvider/NodeStoreProvider.vue";
 import PVStoreProvider from "~/components/StoreProvider/PVStoreProvider.vue";
@@ -40,6 +43,7 @@ import Snackbar from "~/components/Snackbar.vue";
 
 export default defineComponent({
   components: {
+    APIProvider,
     Snackbar,
     SnackbarStoreProvider,
     NodeStoreProvider,

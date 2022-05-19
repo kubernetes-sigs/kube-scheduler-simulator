@@ -1,11 +1,6 @@
-import { reactive } from "@nuxtjs/composition-api";
-import {
-  applyStorageClass,
-  deleteStorageClass,
-  getStorageClass,
-  listStorageClass,
-} from "~/api/v1/storageclass";
+import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1StorageClass } from "@kubernetes/client-node";
+import { StorageClassAPIKey } from "~/api/APIProviderKeys";
 
 type stateType = {
   selectedStorageClass: selectedStorageClass | null;
@@ -25,6 +20,11 @@ export default function storageclassStore() {
     selectedStorageClass: null,
     storageclasses: [],
   });
+
+  const storageClassAPI = inject(StorageClassAPIKey);
+  if (!storageClassAPI) {
+    throw new Error(`${storageClassAPI} is not provided`);
+  }
 
   return {
     get storageclasses() {
@@ -55,12 +55,12 @@ export default function storageclassStore() {
     },
 
     async fetchlist() {
-      const storageclasses = await listStorageClass();
+      const storageclasses = await storageClassAPI.listStorageClass();
       state.storageclasses = storageclasses.items;
     },
 
     async apply(n: V1StorageClass) {
-      await applyStorageClass(n);
+      await storageClassAPI.applyStorageClass(n);
       await this.fetchlist();
     },
 
@@ -69,7 +69,7 @@ export default function storageclassStore() {
         state.selectedStorageClass?.item.metadata?.name &&
         !this.selected?.isNew
       ) {
-        const s = await getStorageClass(
+        const s = await storageClassAPI.getStorageClass(
           state.selectedStorageClass.item.metadata.name
         );
         this.select(s, false);
@@ -77,7 +77,7 @@ export default function storageclassStore() {
     },
 
     async delete(name: string) {
-      await deleteStorageClass(name);
+      await storageClassAPI.deleteStorageClass(name);
       await this.fetchlist();
     },
   };
