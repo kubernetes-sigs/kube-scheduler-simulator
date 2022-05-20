@@ -95,7 +95,7 @@ export default {
   publicRuntimeConfig: {
     baseURL: process.env.BASE_URL || "http://localhost:1212",
     kubeApiServerURL:
-      process.env.KUBE_API_SERVER_URL || "http://localhost:3131",
+      process.env.KUBE_API_SERVER_URL || "https://localhost:3131",
     // alphaTableViews is a optional parameter for the datatable view. This is an alpha feature.
     // If this value is set to "1", the datatable view will be enabled.
     alphaTableViews: process.env.ALPHA_TABLE_VIEWS || "0",
