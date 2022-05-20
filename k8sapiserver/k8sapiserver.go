@@ -46,12 +46,13 @@ func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []st
 	}
 
 	s := &httptest.Server{
-		Listener: l,
+		Listener:    l,
+		EnableHTTP2: true,
 		Config: &http.Server{
 			Handler: handler,
 		},
 	}
-	s.Start()
+	s.StartTLS()
 	klog.InfoS("starting proxy server", "URL", s.URL)
 
 	aggregatorServer, cleanUpFunc, err := createK8SAPIChainedServer(etcdURL, corsAllowedOriginList)
