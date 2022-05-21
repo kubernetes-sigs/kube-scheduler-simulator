@@ -12,7 +12,7 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
+	schedConfig "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/config"
 )
 
 func Test_convertConfigurationForSimulator(t *testing.T) {
@@ -302,7 +302,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 	var weight1 int32 = 1
 	var weight2 int32 = 2
-	versioned, _ := defaultconfig.DefaultSchedulerConfig()
+	versioned, _ := schedConfig.DefaultSchedulerConfig()
 	cfg := versioned.DeepCopy()
 	cfg.Profiles[0].Plugins.Filter.Enabled = []v1beta2config.Plugin{
 		{Name: "NodeUnschedulableWrapped"},

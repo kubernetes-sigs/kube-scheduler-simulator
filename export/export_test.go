@@ -21,7 +21,7 @@ import (
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export/mock_export"
-	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
+	schedulerCfg "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/config"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/util"
 )
 

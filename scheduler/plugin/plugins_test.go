@@ -98,6 +98,7 @@ func TestConvertForSimulator(t *testing.T) {
 			},
 			want: &v1beta2.Plugins{
 				Filter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
 					Disabled: []v1beta2.Plugin{
 						{
 							Name: "*",
@@ -108,6 +109,58 @@ func TestConvertForSimulator(t *testing.T) {
 					Enabled: []v1beta2.Plugin{
 						{Name: "PodTopologySpreadWrapped", Weight: &weight2},
 						{Name: "TaintTolerationWrapped", Weight: &weight1},
+					},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "success with non in-tree plugins",
+			arg: &v1beta2.Plugins{
+				Filter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{
+						{Name: "CustomPlugin1"},
+					},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Score: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{
+						{Name: "CustomPlugin1"},
+					},
+					Disabled: []v1beta2.Plugin{
+						{Name: "NodeResourcesFit"},
+						{Name: "NodeResourcesBalancedAllocation"},
+						{Name: "ImageLocality"},
+						{Name: "InterPodAffinity"},
+						{Name: "NodeAffinity"},
+					},
+				},
+			},
+			want: &v1beta2.Plugins{
+				Filter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{
+						{Name: "CustomPlugin1Wrapped"},
+					},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Score: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{
+						{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+						{Name: "TaintTolerationWrapped", Weight: &weight1},
+						{Name: "CustomPlugin1Wrapped"},
 					},
 					Disabled: []v1beta2.Plugin{
 						{
@@ -433,9 +486,9 @@ func Test_defaultFilterScorePlugins(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := defaultFilterScorePlugins()
+			got, err := registeredFilterScorePlugins()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("defaultFilterScorePlugins() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("registeredFilterScorePlugins() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			assert.Equal(t, tt.want, got)

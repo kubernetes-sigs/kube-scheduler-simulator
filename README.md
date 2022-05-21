@@ -35,6 +35,8 @@ Note: changes to any fields other than `.profiles` are disabled on simulator, si
 
 ![configure scheduler](./docs/images/schedulerconfiguration.png)
 
+If you want to use your custom plugins as out-of-tree plugins in the simulator, please follow [this doc](./docs/how-to-use-custom-plugins/README.md).
+
 ## Background
 
 In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually requires privileged access to the control plane.
