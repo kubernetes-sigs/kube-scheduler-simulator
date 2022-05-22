@@ -23,7 +23,8 @@ ENV NUXT_TELEMETRY_DISABLED 1
 # ./components/lib/templates/*.yaml
 ENV HOST_ENV production
 ENV BASE_URL http://localhost:1212
-ENV KUBE_API_SERVER_URL http://localhost:3131
+# kubeApiServerURL must be `127.0.0.1` in development env since we will use self-signed certificate of net/http/internal/testcert.
+ENV KUBE_API_SERVER_URL https://127.0.0.1:3131
 
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nuxtjs -u 1001

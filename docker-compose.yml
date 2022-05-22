@@ -23,7 +23,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - BASE_URL=http://localhost:1212
-      - KUBE_API_SERVER_URL=https://localhost:3131
+      - KUBE_API_SERVER_URL=https://127.0.0.1:3131
     ports:
     - "3000:3000"
     tty: true

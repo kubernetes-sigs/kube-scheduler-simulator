@@ -94,8 +94,10 @@ export default {
   // publicRuntimeConfig should hold all env variables that are public as these will be exposed on the frontend.
   publicRuntimeConfig: {
     baseURL: process.env.BASE_URL || "http://localhost:1212",
+    // kubeApiServerURL's domain must be `127.0.0.1` if we will not prepare TLS certificate files,
+    // since it will use the self-signed certificate of net/http/internal/testcert.
     kubeApiServerURL:
-      process.env.KUBE_API_SERVER_URL || "https://localhost:3131",
+      process.env.KUBE_API_SERVER_URL || "https://127.0.0.1:3131",
     // alphaTableViews is a optional parameter for the datatable view. This is an alpha feature.
     // If this value is set to "1", the datatable view will be enabled.
     alphaTableViews: process.env.ALPHA_TABLE_VIEWS || "0",
