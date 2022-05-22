@@ -23,6 +23,8 @@ var ErrEmptyEnv = errors.New("env is needed, but empty")
 type Config struct {
 	Port                  int
 	KubeAPIServerURL      string
+	KubeAPIServerCertPath string
+	KubeAPIServerKeyPath  string
 	EtcdURL               string
 	CorsAllowedOriginList []string
 	// ExternalImportEnabled indicates whether the simulator will import resources from an existing cluster or not.
@@ -51,6 +53,8 @@ func NewConfig() (*Config, error) {
 	}
 
 	apiurl := getKubeAPIServerURL()
+	apicertpath := getKybeAPIServerCertPath()
+	apikeypath := getKubeAPIServerKeyPath()
 
 	externalimportenabled := getExternalImportEnabled()
 	externalKubeClientCfg := &rest.Config{}
@@ -69,6 +73,8 @@ func NewConfig() (*Config, error) {
 	return &Config{
 		Port:                  port,
 		KubeAPIServerURL:      apiurl,
+		KubeAPIServerCertPath: apicertpath,
+		KubeAPIServerKeyPath:	 apikeypath,
 		EtcdURL:               etcdurl,
 		CorsAllowedOriginList: corsAllowedOriginList,
 		InitialSchedulerCfg:   initialschedulerCfg,
@@ -102,6 +108,18 @@ func getKubeAPIServerURL() string {
 		h = "127.0.0.1"
 	}
 	return h + ":" + p
+}
+
+// getKybeAPIServerCertPath returns file path of API server's certificate.
+// If it is empty, this function returns "".
+func getKybeAPIServerCertPath() string {
+	return os.Getenv("KUBE_API_CERT_PATH")
+}
+
+// getKubeAPIServerKeyPath returns file path of API server's private key.
+// If it is empty, this function returns "".
+func getKubeAPIServerKeyPath() string {
+	return os.Getenv("KUBE_API_KEY_PATH")
 }
 
 func getEtcdURL() (string, error) {

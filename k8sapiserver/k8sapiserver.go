@@ -2,6 +2,7 @@ package k8sapiserver
 
 import (
 	"context"
+	"crypto/tls"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -32,7 +33,7 @@ AwEHoUQDQgAEH6cuzP8XuD5wal6wf9M6xDljTOPLX2i8uIp/C/ASqiIGUeeKQtX0
 -----END EC PRIVATE KEY-----`
 
 // StartAPIServer starts both the secure k8sAPIServer and proxy server to handle insecure serving, and it make panic when a error happen.
-func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []string) (*restclient.Config, func(), error) {
+func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []string, kubeAPIServerCertPath string, kubeAPIServerKeyPath string) (*restclient.Config, func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		req.Header.Set("User-Agent", restclient.DefaultKubernetesUserAgent())
@@ -52,6 +53,17 @@ func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []st
 			Handler: handler,
 		},
 	}
+
+	// Set the certificate if both files are specified.
+	// If not, we will use self-signed certificate of net/http/internal/testcert.
+	if kubeAPIServerCertPath != "" && kubeAPIServerKeyPath != "" {
+		cert, err := tls.LoadX509KeyPair(kubeAPIServerCertPath, kubeAPIServerKeyPath)
+		if err != nil {
+			return nil, nil, xerrors.Errorf("Load X509KeyPair from specified cert and key files: %w", err)
+		}
+		s.TLS = &tls.Config{Certificates: []tls.Certificate{cert}}
+	}
+
 	s.StartTLS()
 	klog.InfoS("starting proxy server", "URL", s.URL)
 
