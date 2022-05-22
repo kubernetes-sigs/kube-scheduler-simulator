@@ -74,7 +74,7 @@ func NewConfig() (*Config, error) {
 		Port:                  port,
 		KubeAPIServerURL:      apiurl,
 		KubeAPIServerCertPath: apicertpath,
-		KubeAPIServerKeyPath:	 apikeypath,
+		KubeAPIServerKeyPath:  apikeypath,
 		EtcdURL:               etcdurl,
 		CorsAllowedOriginList: corsAllowedOriginList,
 		InitialSchedulerCfg:   initialschedulerCfg,
