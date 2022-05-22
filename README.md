@@ -44,6 +44,14 @@ It can be used to learn about the Kubernetes scheduler or to examine the detaile
 
 ## Getting started
 
+### Prepare
+You should import apiserver's certificate on your browser,
+since the simulator frontend uses `HTTP/2` connections for some communications.
+
+See [README.md](./web/README.md#importing-certificate) for more information on importing certificate.
+And if you would like to use your own certificate, see also [this section](./docs/kube-apiserver.md#environment-variable)
+
+
 ### Run with Docker
 
 We have [docker-compose.yml](./docker-compose.yml) to use the simulator easily.
