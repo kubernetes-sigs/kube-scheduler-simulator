@@ -7,9 +7,7 @@ import { AxiosInstance } from "axios";
 
 export default function pvcAPI(k8sInstance: AxiosInstance) {
   return {
-    createPersistentVolumeClaim: async (
-      req: V1PersistentVolumeClaim
-    ) => {
+    createPersistentVolumeClaim: async (req: V1PersistentVolumeClaim) => {
       try {
         if (!req.metadata?.generateName) {
           throw new Error(`metadata.generateName is not provided`);
