@@ -3,6 +3,8 @@ import { AxiosInstance } from "axios";
 
 export default function nodeAPI(k8sInstance: AxiosInstance) {
   return {
+    // createNode accepts only Node that has .metadata.GeneratedName.
+    // If you want to create a Node that has .metadata.Name, use applyNode instead.
     createNode: async (req: V1Node) => {
       try {
         if (!req.metadata?.generateName) {

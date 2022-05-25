@@ -7,6 +7,8 @@ import { AxiosInstance } from "axios";
 
 export default function pvcAPI(k8sInstance: AxiosInstance) {
   return {
+    // createPersistentVolumeClaim accepts only PersistentVolumeClaim that has .metadata.GeneratedName.
+    // If you want to create a PersistentVolumeClaim that has .metadata.Name, use applyPersistentVolumeClaim instead.
     createPersistentVolumeClaim: async (req: V1PersistentVolumeClaim) => {
       try {
         if (!req.metadata?.generateName) {

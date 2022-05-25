@@ -4,6 +4,8 @@ import { AxiosInstance } from "axios";
 
 export default function podAPI(k8sInstance: AxiosInstance) {
   return {
+    // createPod accepts only Pod that has .metadata.GeneratedName.
+    // If you want to create a Pod that has .metadata.Name, use applyPod instead.
     createPod: async (req: V1Pod) => {
       try {
         if (!req.metadata?.generateName) {

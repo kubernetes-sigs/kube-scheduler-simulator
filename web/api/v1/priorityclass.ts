@@ -3,6 +3,8 @@ import { AxiosInstance } from "axios";
 
 export default function priorityClassAPI(k8sSchedulingInstance: AxiosInstance) {
   return {
+    // createPriorityClass accepts only PriorityClass that has .metadata.GeneratedName.
+    // If you want to create a PriorityClass that has .metadata.Name, use applyPriorityClass instead.
     createPriorityClass: async (req: V1PriorityClass) => {
       try {
         if (!req.metadata?.generateName) {

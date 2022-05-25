@@ -3,6 +3,8 @@ import { AxiosInstance } from "axios";
 
 export default function storageClassAPI(k8sStorageInstance: AxiosInstance) {
   return {
+    // createStorageClass accepts only StorageClass that has .metadata.GeneratedName.
+    // If you want to create a StorageClass that has .metadata.Name, use applyStorageClass instead.
     createStorageClass: async (req: V1StorageClass) => {
       try {
         if (!req.metadata?.generateName) {

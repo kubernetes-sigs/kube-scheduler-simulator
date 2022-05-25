@@ -6,6 +6,8 @@ import { AxiosInstance } from "axios";
 
 export default function pvAPI(k8sInstance: AxiosInstance) {
   return {
+    // createPersistentVolume accepts only PersistentVolume that has .metadata.GeneratedName.
+    // If you want to create a PersistentVolume that has .metadata.Name, use applyPersistentVolume instead.
     createPersistentVolume: async (req: V1PersistentVolume) => {
       try {
         if (!req.metadata?.generateName) {
