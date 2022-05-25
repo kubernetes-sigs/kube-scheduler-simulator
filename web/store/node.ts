@@ -68,10 +68,11 @@ export default function nodeStore() {
       if (n.metadata?.name) {
         await nodeAPI.applyNode(n);
       } else if (!n.metadata?.name && n.metadata?.generateName) {
+        // This Node can be expected to be a newly created Node. So, use `createNode` instead.
         await nodeAPI.createNode(n);
       } else {
         throw new Error(`
-        failed to apply node: node has no metadata.name or metadata.generateName
+        failed to apply node: node should have metadata.name or metadata.generateName
         `);
       }
       await this.fetchlist();

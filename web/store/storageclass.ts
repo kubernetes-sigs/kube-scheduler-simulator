@@ -63,10 +63,11 @@ export default function storageclassStore() {
       if (n.metadata?.name) {
         await storageClassAPI.applyStorageClass(n);
       } else if (!n.metadata?.name && n.metadata?.generateName) {
+        // This StorageClass can be expected to be a newly created StorageClass. So, use `createStorageClass` instead.
         await storageClassAPI.createStorageClass(n);
       } else {
         throw new Error(`
-        failed to apply storageclass: storageclass has no metadata.name or metadata.generateName
+        failed to apply storageclass: storageclass should have metadata.name or metadata.generateName
         `);
       }
       await this.fetchlist();

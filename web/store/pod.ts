@@ -91,10 +91,11 @@ export default function podStore() {
       if (p.metadata?.name) {
         await podAPI.applyPod(p);
       } else if (!p.metadata?.name && p.metadata?.generateName) {
+        // This Pod can be expected to be a newly created Pod. So, use `createPod` instead.
         await podAPI.createPod(p);
       } else {
         throw new Error(`
-        failed to apply pod: pod has no metadata.name or metadata.generateName
+        failed to apply pod: pod should have metadata.name or metadata.generateName
         `);
       }
       await this.fetchlist();
