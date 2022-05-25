@@ -67,7 +67,7 @@ export default function nodeStore() {
     async apply(n: V1Node) {
       if (n.metadata?.name) {
         await nodeAPI.applyNode(n);
-      } else if (!n.metadata?.name && n.metadata?.generateName) {
+      } else if (n.metadata?.generateName) {
         // This Node can be expected to be a newly created Node. So, use `createNode` instead.
         await nodeAPI.createNode(n);
       } else {

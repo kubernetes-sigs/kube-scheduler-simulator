@@ -74,7 +74,7 @@ export default function pvStore() {
     async apply(n: V1PersistentVolume) {
       if (n.metadata?.name) {
         await pvAPI.applyPersistentVolume(n);
-      } else if (!n.metadata?.name && n.metadata?.generateName) {
+      } else if (n.metadata?.generateName) {
         // This PersistentVolume can be expected to be a newly created PersistentVolume. So, use `createPersistentVolume` instead.
         await pvAPI.createPersistentVolume(n);
       } else {

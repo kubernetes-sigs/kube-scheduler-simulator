@@ -62,7 +62,7 @@ export default function pvcStore() {
     async apply(n: V1PersistentVolumeClaim) {
       if (n.metadata?.name) {
         await pvcAPI.applyPersistentVolumeClaim(n);
-      } else if (!n.metadata?.name && n.metadata?.generateName) {
+      } else if (n.metadata?.generateName) {
         // This PersistentVolumeClaim can be expected to be a newly created PersistentVolumeClaim. So, use `createPersistentVolumeClaim` instead.
         await pvcAPI.createPersistentVolumeClaim(n);
       } else {

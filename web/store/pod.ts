@@ -90,7 +90,7 @@ export default function podStore() {
     async apply(p: V1Pod) {
       if (p.metadata?.name) {
         await podAPI.applyPod(p);
-      } else if (!p.metadata?.name && p.metadata?.generateName) {
+      } else if (p.metadata?.generateName) {
         // This Pod can be expected to be a newly created Pod. So, use `createPod` instead.
         await podAPI.createPod(p);
       } else {
