@@ -72,9 +72,9 @@ export default function priorityclassStore() {
         // This PriorityClass can be expected to be a newly created PriorityClass. So, use `createPriorityClass` instead.
         await priorityClassAPI.createPriorityClass(n);
       } else {
-        throw new Error(`
-        failed to apply priorityclass: priorityclass should have metadata.name or metadata.generateName
-        `);
+        throw new Error(
+          "failed to apply priorityclass: priorityclass should have metadata.name or metadata.generateName"
+        );
       }
       await this.fetchlist();
     },

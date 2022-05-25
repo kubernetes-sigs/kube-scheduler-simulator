@@ -66,9 +66,9 @@ export default function pvcStore() {
         // This PersistentVolumeClaim can be expected to be a newly created PersistentVolumeClaim. So, use `createPersistentVolumeClaim` instead.
         await pvcAPI.createPersistentVolumeClaim(n);
       } else {
-        throw new Error(`
-        failed to apply persistentvolumeclaim: persistentvolumeclaim should have metadata.name or metadata.generateName
-        `);
+        throw new Error(
+          "failed to apply persistentvolumeclaim: persistentvolumeclaim should have metadata.name or metadata.generateName"
+        );
       }
       await this.fetchlist();
     },

@@ -8,7 +8,7 @@ export default function priorityClassAPI(k8sSchedulingInstance: AxiosInstance) {
     createPriorityClass: async (req: V1PriorityClass) => {
       try {
         if (!req.metadata?.generateName) {
-          throw new Error(`metadata.generateName is not provided`);
+          throw new Error("metadata.generateName is not provided");
         }
         req.kind = "PriorityClass";
         req.apiVersion = "scheduling.k8s.io/v1";
@@ -16,7 +16,7 @@ export default function priorityClassAPI(k8sSchedulingInstance: AxiosInstance) {
           delete req.metadata.managedFields;
         }
         const res = await k8sSchedulingInstance.post<V1PriorityClass>(
-          `/priorityclasses?fieldManager=simulator&force=true`,
+          "/priorityclasses?fieldManager=simulator&force=true",
           req,
           { headers: { "Content-Type": "application/yaml" } }
         );
@@ -28,7 +28,7 @@ export default function priorityClassAPI(k8sSchedulingInstance: AxiosInstance) {
     applyPriorityClass: async (req: V1PriorityClass) => {
       try {
         if (!req.metadata?.name) {
-          throw new Error(`metadata.name is not provided`);
+          throw new Error("metadata.name is not provided");
         }
         req.kind = "PriorityClass";
         req.apiVersion = "scheduling.k8s.io/v1";
@@ -49,7 +49,7 @@ export default function priorityClassAPI(k8sSchedulingInstance: AxiosInstance) {
     listPriorityClass: async () => {
       try {
         const res = await k8sSchedulingInstance.get<V1PriorityClassList>(
-          `/priorityclasses`,
+          "/priorityclasses",
           {}
         );
         return res.data;

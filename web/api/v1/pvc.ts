@@ -12,7 +12,7 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
     createPersistentVolumeClaim: async (req: V1PersistentVolumeClaim) => {
       try {
         if (!req.metadata?.generateName) {
-          throw new Error(`metadata.generateName is not provided`);
+          throw new Error("metadata.generateName is not provided");
         }
         req.kind = "PersistentVolumeClaim";
         req.apiVersion = "v1";
@@ -21,7 +21,7 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
         }
         const res = await k8sInstance.post<V1PersistentVolumeClaim>(
           namespaceURL +
-            `/persistentvolumeclaims?fieldManager=simulator&force=true`,
+            "/persistentvolumeclaims?fieldManager=simulator&force=true",
           req,
           { headers: { "Content-Type": "application/yaml" } }
         );
@@ -33,7 +33,7 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
     applyPersistentVolumeClaim: async (req: V1PersistentVolumeClaim) => {
       try {
         if (!req.metadata?.name) {
-          throw new Error(`metadata.name is not provided`);
+          throw new Error("metadata.name is not provided");
         }
         req.kind = "PersistentVolumeClaim";
         req.apiVersion = "v1";
@@ -55,7 +55,7 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
     listPersistentVolumeClaim: async () => {
       try {
         const res = await k8sInstance.get<V1PersistentVolumeClaimList>(
-          namespaceURL + `/persistentvolumeclaims`,
+          namespaceURL + "/persistentvolumeclaims",
           {}
         );
         return res.data;

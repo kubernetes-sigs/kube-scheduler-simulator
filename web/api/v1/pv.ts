@@ -11,7 +11,7 @@ export default function pvAPI(k8sInstance: AxiosInstance) {
     createPersistentVolume: async (req: V1PersistentVolume) => {
       try {
         if (!req.metadata?.generateName) {
-          throw new Error(`metadata.genrateName is not provided`);
+          throw new Error("metadata.genrateName is not provided");
         }
         req.kind = "PersistentVolume";
         req.apiVersion = "v1";
@@ -19,7 +19,7 @@ export default function pvAPI(k8sInstance: AxiosInstance) {
           delete req.metadata.managedFields;
         }
         const res = await k8sInstance.post<V1PersistentVolume>(
-          `/persistentvolumes?fieldManager=simulator&force=true`,
+          "/persistentvolumes?fieldManager=simulator&force=true",
           req,
           { headers: { "Content-Type": "application/yaml" } }
         );
@@ -31,7 +31,7 @@ export default function pvAPI(k8sInstance: AxiosInstance) {
     applyPersistentVolume: async (req: V1PersistentVolume) => {
       try {
         if (!req.metadata?.name) {
-          throw new Error(`metadata.name is not provided`);
+          throw new Error("metadata.name is not provided");
         }
         req.kind = "PersistentVolume";
         req.apiVersion = "v1";
@@ -52,7 +52,7 @@ export default function pvAPI(k8sInstance: AxiosInstance) {
     listPersistentVolume: async () => {
       try {
         const res = await k8sInstance.get<V1PersistentVolumeList>(
-          `/persistentvolumes`,
+          "/persistentvolumes",
           {}
         );
         return res.data;

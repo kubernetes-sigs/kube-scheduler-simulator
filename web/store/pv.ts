@@ -78,9 +78,9 @@ export default function pvStore() {
         // This PersistentVolume can be expected to be a newly created PersistentVolume. So, use `createPersistentVolume` instead.
         await pvAPI.createPersistentVolume(n);
       } else {
-        throw new Error(`
-        failed to apply persistentvolume: persistentvolume should have metadata.name or metadata.generateName
-        `);
+        throw new Error(
+          "failed to apply persistentvolume: persistentvolume should have metadata.name or metadata.generateName"
+        );
       }
       await this.fetchlist();
     },

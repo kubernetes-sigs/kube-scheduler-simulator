@@ -8,7 +8,7 @@ export default function storageClassAPI(k8sStorageInstance: AxiosInstance) {
     createStorageClass: async (req: V1StorageClass) => {
       try {
         if (!req.metadata?.generateName) {
-          throw new Error(`metadata.generateName is not provided`);
+          throw new Error("metadata.generateName is not provided");
         }
         req.kind = "StorageClass";
         req.apiVersion = "storage.k8s.io/v1";
@@ -16,7 +16,7 @@ export default function storageClassAPI(k8sStorageInstance: AxiosInstance) {
           delete req.metadata.managedFields;
         }
         const res = await k8sStorageInstance.post<V1StorageClass>(
-          `/storageclasses?fieldManager=simulator&force=true`,
+          "/storageclasses?fieldManager=simulator&force=true",
           req,
           { headers: { "Content-Type": "application/yaml" } }
         );
@@ -28,7 +28,7 @@ export default function storageClassAPI(k8sStorageInstance: AxiosInstance) {
     applyStorageClass: async (req: V1StorageClass) => {
       try {
         if (!req.metadata?.name) {
-          throw new Error(`metadata.name is not provided`);
+          throw new Error("metadata.name is not provided");
         }
         req.kind = "StorageClass";
         req.apiVersion = "storage.k8s.io/v1";
@@ -49,7 +49,7 @@ export default function storageClassAPI(k8sStorageInstance: AxiosInstance) {
     listStorageClass: async () => {
       try {
         const res = await k8sStorageInstance.get<V1StorageClassList>(
-          `/storageclasses`,
+          "/storageclasses",
           {}
         );
         return res.data;

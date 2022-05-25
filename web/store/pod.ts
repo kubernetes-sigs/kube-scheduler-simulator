@@ -94,9 +94,9 @@ export default function podStore() {
         // This Pod can be expected to be a newly created Pod. So, use `createPod` instead.
         await podAPI.createPod(p);
       } else {
-        throw new Error(`
-        failed to apply pod: pod should have metadata.name or metadata.generateName
-        `);
+        throw new Error(
+          "failed to apply pod: pod should have metadata.name or metadata.generateName"
+        );
       }
       await this.fetchlist();
     },

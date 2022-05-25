@@ -8,7 +8,7 @@ export default function nodeAPI(k8sInstance: AxiosInstance) {
     createNode: async (req: V1Node) => {
       try {
         if (!req.metadata?.generateName) {
-          throw new Error(`metadata.generateName is not provided`);
+          throw new Error("metadata.generateName is not provided");
         }
         req.kind = "Node";
         req.apiVersion = "v1";
@@ -16,7 +16,7 @@ export default function nodeAPI(k8sInstance: AxiosInstance) {
           delete req.metadata.managedFields;
         }
         const res = await k8sInstance.post<V1Node>(
-          `/nodes?fieldManager=simulator&force=true`,
+          "/nodes?fieldManager=simulator&force=true",
           req,
           { headers: { "Content-Type": "application/yaml" } }
         );
@@ -28,7 +28,7 @@ export default function nodeAPI(k8sInstance: AxiosInstance) {
     applyNode: async (req: V1Node) => {
       try {
         if (!req.metadata?.name) {
-          throw new Error(`metadata.name is not provided`);
+          throw new Error("metadata.name is not provided");
         }
         req.kind = "Node";
         req.apiVersion = "v1";
@@ -48,7 +48,7 @@ export default function nodeAPI(k8sInstance: AxiosInstance) {
 
     listNode: async () => {
       try {
-        const res = await k8sInstance.get<V1NodeList>(`/nodes`, {});
+        const res = await k8sInstance.get<V1NodeList>("/nodes", {});
         return res.data;
       } catch (e: any) {
         throw new Error(`failed to list nodes: ${e}`);
