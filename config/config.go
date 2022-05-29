@@ -13,7 +13,7 @@ import (
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/config"
 )
 
 // ErrEmptyEnv represents the required environment variable don't exist.
@@ -160,7 +160,7 @@ func parseStringListEnv(e string) []string {
 func getSchedulerCfg() (*v1beta2config.KubeSchedulerConfiguration, error) {
 	e := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
 	if e == "" {
-		dsc, err := defaultconfig.DefaultSchedulerConfig()
+		dsc, err := config.DefaultSchedulerConfig()
 		if err != nil {
 			return nil, xerrors.Errorf("create default scheduler config: %w", err)
 		}

@@ -16,7 +16,7 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/v1beta2"
 	"k8s.io/kubernetes/pkg/scheduler/profile"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/defaultconfig"
+	simulatorschedconfig "github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/config"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler/plugin"
 )
 
@@ -156,7 +156,7 @@ func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConf
 		versioned.Profiles[i].PluginConfig = pluginConfigForSimulatorPlugins
 	}
 
-	defaultCfg, err := defaultconfig.DefaultSchedulerConfig()
+	defaultCfg, err := simulatorschedconfig.DefaultSchedulerConfig()
 	if err != nil {
 		return nil, xerrors.Errorf("get default scheduler config: %w", err)
 	}
