@@ -6,10 +6,32 @@ import { AxiosInstance } from "axios";
 
 export default function pvAPI(k8sInstance: AxiosInstance) {
   return {
+    // createPersistentVolume accepts only PersistentVolume that has .metadata.GeneratedName.
+    // If you want to create a PersistentVolume that has .metadata.Name, use applyPersistentVolume instead.
+    createPersistentVolume: async (req: V1PersistentVolume) => {
+      try {
+        if (!req.metadata?.generateName) {
+          throw new Error("metadata.genrateName is not provided");
+        }
+        req.kind = "PersistentVolume";
+        req.apiVersion = "v1";
+        if (req.metadata.managedFields) {
+          delete req.metadata.managedFields;
+        }
+        const res = await k8sInstance.post<V1PersistentVolume>(
+          "/persistentvolumes?fieldManager=simulator&force=true",
+          req,
+          { headers: { "Content-Type": "application/yaml" } }
+        );
+        return res.data;
+      } catch (e: any) {
+        throw new Error(`failed to create persistent volume: ${e}`);
+      }
+    },
     applyPersistentVolume: async (req: V1PersistentVolume) => {
       try {
         if (!req.metadata?.name) {
-          throw new Error(`metadata.name is not provided`);
+          throw new Error("metadata.name is not provided");
         }
         req.kind = "PersistentVolume";
         req.apiVersion = "v1";
@@ -30,7 +52,7 @@ export default function pvAPI(k8sInstance: AxiosInstance) {
     listPersistentVolume: async () => {
       try {
         const res = await k8sInstance.get<V1PersistentVolumeList>(
-          `/persistentvolumes`,
+          "/persistentvolumes",
           {}
         );
         return res.data;
