@@ -110,6 +110,8 @@ It starts etcd and simulator-server locally.
 
 To run the frontend, please see [README.md](web/README.md) on ./web dir.
 
+Read more about differnet environment variables being used in simulator server [here.](./docs/env-variables.md)
+
 ## Contributing
 
 see [CONTRIBUTING.md](CONTRIBUTING.md)
