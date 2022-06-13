@@ -75,7 +75,7 @@ type SimulatorSpec struct {
   // - can be configured by the same environment variables. 
   // - (will add other requirements if any)
   Image                        string
-	// Describes the pod that will be created.
+  // Describes the pod that will be created.
   // This Pod should create the simulator.
   //
   // The system will add the container named "simulator" that: 
@@ -93,19 +93,19 @@ type SimulatorSpec struct {
 }
 
 type SimulatorStatus struct {
-	Phase SimulatorPhase
+  Phase SimulatorPhase
 
-	// A human readable message indicating details about why the simulator is in this phase.
+  // A human readable message indicating details about why the simulator is in this phase.
   // optional
-	Message *string 
+  Message *string 
 }
 
 type SimulatorPhase string
 const (
   // SimulatorCreating means the simulator is being creating. 
-	SimulatorCreating SimulatorPhase = "Creating"
-	// SimulatorAvailable means the simulator is available.
-	SimulatorAvailable SimulatorPhase = "Available"
+  SimulatorCreating SimulatorPhase = "Creating"
+  // SimulatorAvailable means the simulator is available.
+  SimulatorAvailable SimulatorPhase = "Available"
 )
 ```
 
