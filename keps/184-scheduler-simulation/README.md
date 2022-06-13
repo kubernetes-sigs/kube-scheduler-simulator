@@ -53,10 +53,10 @@ type SchedulerSimulation struct {
   Spec SchedulerSimulationSpec
   Status SchedulerSimulationStatus
 }
-
+  
 type SchedulerSimulationSpec struct {
-	// Describes the simulator that will be created.
-	// Cannot be updated.
+  // Describes the simulator that will be created.
+  // Cannot be updated.
   SimulatorSpec SimulatorSpec
   // ScenarioTemplateFilePath represents the path for file that has the Scenario resource's definition.
   // The Scenario defined in the file will be run in the simulator.
@@ -64,14 +64,14 @@ type SchedulerSimulationSpec struct {
   // It should be the path for the mounted path in most cases,
   // otherwise, the scenario won't created successfully.
   //
-	// Cannot be updated.
+  // Cannot be updated.
   ScenarioTemplateFilePath string 
   // ScenarioResultFilePath represents the file path that the result of scenario will be stored.
   // 
   // It should be the path for the mounted path in most cases,
   // otherwise, the simulation result won't stored to the persistent file.
   //
-	// Cannot be updated.
+  // Cannot be updated.
   ScenarioResultFilePath string
   // Volume to mount into the filesystem.
   //
@@ -79,51 +79,51 @@ type SchedulerSimulationSpec struct {
   // That container will see the scenario defined in ScenarioTemplateFilePath, create the scenario in the simulator, and store the result into ScenarioReusltFilePath.
   // The volume specified in Volume and VolumeMount is mounted in that container.
   //
-	// Cannot be updated.
-	VolumeMount corev1.VolumeMount 
+  // Cannot be updated.
+  VolumeMount corev1.VolumeMount 
   // Volume that can be mounted by VolumeMount field.
   //
   // The container named "scenario-runner" will be created in the simulator Pod.
   // That container will see the scenario defined in ScenarioTemplateFilePath, create the scenario in the simulator, and store the result into ScenarioReusltFilePath.
   // The volume specified in Volume and VolumeMount is mounted in that container.
   //
-	// More info: https://kubernetes.io/docs/concepts/storage/volumes
-	// Cannot be updated.
-	Volume corev1.Volume 
+  // More info: https://kubernetes.io/docs/concepts/storage/volumes
+  // Cannot be updated.
+  Volume corev1.Volume 
   // ScenarioRunnerImage is the image for the container named "scenario-runner" that will be created in the simulator Pod.
   // That container will see the scenario defined in ScenarioTemplateFilePath, create the scenario in the simulator, and store the result into ScenarioReusltFilePath.
   //
   // Default value is [TODO: provide the image of "scenario-runner" and write the image name here]
-	// Cannot be updated.
+  // Cannot be updated.
   ScenarioRunnerImage corev1.Image
 }
 
 type SchedulerSimulationStatus struct {
-	Phase SchedulerSimulationPhase
+  Phase SchedulerSimulationPhase
 
-	// Represents time when the simulation controller started processing a job. 
-	// It is represented in RFC3339 form and is in UTC.
-	// +optional
-	StartTime *metav1.Time 
+  // Represents time when the simulation controller started processing a job. 
+  // It is represented in RFC3339 form and is in UTC.
+  // +optional
+  StartTime *metav1.Time 
 
-	// Represents time when the simulation was completed. It is not guaranteed to
-	// be set in happens-before order across separate operations.
-	// It is represented in RFC3339 form and is in UTC.
-	// The completion time is only set when the job finishes successfully.
-	// +optional
-	CompletionTime *metav1.Time 
+  // Represents time when the simulation was completed. It is not guaranteed to
+  // be set in happens-before order across separate operations.
+  // It is represented in RFC3339 form and is in UTC.
+  // The completion time is only set when the job finishes successfully.
+  // +optional
+  CompletionTime *metav1.Time 
 
-	// A human readable message indicating details about why the simulation is in this phase.
+  // A human readable message indicating details about why the simulation is in this phase.
   // optional
-	Message *string 
+  Message *string 
 }
 
 type SchedulerSimulationPhase string
 const (
-	// SchedulerSimulationFailed means the job has failed its execution.
-	SchedulerSimulationFailed SchedulerSimulationPhase = "Failed"
-	// SchedulerSimulationCompleted means the simulation has completed its execution.
-	SchedulerSimulationCompleted SchedulerSimulationPhase = "Completed"
+  // SchedulerSimulationFailed means the job has failed its execution.
+  SchedulerSimulationFailed SchedulerSimulationPhase = "Failed"
+  // SchedulerSimulationCompleted means the simulation has completed its execution.
+  SchedulerSimulationCompleted SchedulerSimulationPhase = "Completed"
 )
 ```
 
