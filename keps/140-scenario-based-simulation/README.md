@@ -60,7 +60,7 @@ type ScenarioSpec struct {
   // Also you can add new events during the scenario is running.
   //
   // +patchMergeKey=ID
-	// +patchStrategy=merge
+  // +patchStrategy=merge
   Events   []ScenarioEvent
 }
 
@@ -132,9 +132,9 @@ type FakeTime int32
 
 type ScenarioStatus struct {
   Phase ScenarioPhase
-	// A human readable message indicating details about why the scenario is in this phase.
+  // A human readable message indicating details about why the scenario is in this phase.
   // optional
-	Message *string 
+  Message *string 
   // Time indicates the current time.
   Time FakeTime
   // ScenarioResult has the result of the simulation.
