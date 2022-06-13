@@ -95,7 +95,7 @@ type SchedulerSimulationSpec struct {
   //
   // Default value is [TODO: provide the image of "scenario-runner" and write the image name here]
 	// Cannot be updated.
-  ScenarioRunnerImage *corev1.Image
+  ScenarioRunnerImage corev1.Image
 }
 
 type SchedulerSimulationStatus struct {
@@ -133,6 +133,21 @@ The container named "scenario-runner" will be created in the simulator Pod(= the
 That container will fetch the `Scenario` defined in ScenarioTemplateFilePath, create the `Scenario` in the simulator, and store the result into ScenarioResultFilePath.
 
 The volume specified in Volume and VolumeMount fields is mounted in that container.
+
+So, the simulator Pod created for SchedulerSimulation with scenario-runner container will be like:
+
+```yaml
+  containers:
+  # other containers definition....
+
+  - name: scenario-runner
+    image: # spec.ScenarioRunnerImage image here. 
+    env:
+    - name: SIMULATOR_KUBE_APISERVER_PORT # need to pass kube-apiserver port via env or command argument so that scenario-runner can access kube-apiserver in the simulator.
+      value: 9999 # read from spec.SimulatorSpec.KubeAPIServerPort here.
+    volumeMounts: # read from spec.VolumeMounts.
+  volume: # read from spec.Volume.
+```
 
 #### SchedulerSimulation execution flow
 
