@@ -1,4 +1,4 @@
-# KEP-167: scheduler simulator operator
+# KEP-159: scheduler simulator operator
 
 ## Summary
 
