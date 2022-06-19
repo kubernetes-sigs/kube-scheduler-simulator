@@ -25,38 +25,18 @@
 
 <script lang="ts">
 import { V1StorageClass } from "@kubernetes/client-node";
-import {
-  computed,
-  inject,
-  onMounted,
-  defineComponent,
-} from "@nuxtjs/composition-api";
+import { computed, inject, defineComponent } from "@nuxtjs/composition-api";
 import {} from "../../lib/util";
 import StorageClassStoreKey from "../../StoreKey/StorageClassStoreKey";
-import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 export default defineComponent({
   setup() {
     const store = inject(StorageClassStoreKey);
     if (!store) {
       throw new Error(`${StorageClassStoreKey} is not provided`);
     }
-
-    const snackbarstore = inject(SnackBarStoreKey);
-    if (!snackbarstore) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
-    }
-
-    const setServerErrorMessage = (error: string) => {
-      snackbarstore.setServerErrorMessage(error);
-    };
-
-    const getStorageClassList = async () => {
-      await store.fetchlist().catch((e) => setServerErrorMessage(e));
-    };
     const onClick = (storageclass: V1StorageClass) => {
       store.select(storageclass, false);
     };
-    onMounted(getStorageClassList);
     const storageclasses = computed(() => store.storageclasses);
     return {
       storageclasses,

@@ -1,10 +1,18 @@
 import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1PersistentVolume } from "@kubernetes/client-node";
 import { PVAPIKey } from "~/api/APIProviderKeys";
+import {
+  createResourceState,
+  addResourceToState,
+  modifyResourceInState,
+  deleteResourceInState,
+} from "./helpers/storeHelper";
+import { WatchEventType } from "@/types/resources";
 
 type stateType = {
   selectedPersistentVolume: selectedPersistentVolume | null;
   pvs: V1PersistentVolume[];
+  lastResourceVersion: string;
 };
 
 type selectedPersistentVolume = {
@@ -19,6 +27,7 @@ export default function pvStore() {
   const state: stateType = reactive({
     selectedPersistentVolume: null,
     pvs: [],
+    lastResourceVersion: "",
   });
 
   const pvAPI = inject(PVAPIKey);
@@ -54,11 +63,6 @@ export default function pvStore() {
       state.selectedPersistentVolume = null;
     },
 
-    async fetchlist() {
-      const pvs = await pvAPI.listPersistentVolume();
-      state.pvs = pvs.items;
-    },
-
     async fetchSelected() {
       if (
         state.selectedPersistentVolume?.item.metadata?.name &&
@@ -82,12 +86,46 @@ export default function pvStore() {
           "failed to apply persistentvolume: persistentvolume should have metadata.name or metadata.generateName"
         );
       }
-      await this.fetchlist();
     },
 
     async delete(name: string) {
       await pvAPI.deletePersistentVolume(name);
-      await this.fetchlist();
+    },
+
+    // initList calls list API, and stores current resource data and lastResourceVersion.
+    async initList() {
+      const listpvs = await pvAPI.listPersistentVolume();
+      state.pvs = createResourceState<V1PersistentVolume>(listpvs.items);
+      state.lastResourceVersion = listpvs.metadata?.resourceVersion!;
+    },
+
+    // watchEventHandler handles each notified event.
+    async watchEventHandler(eventType: WatchEventType, pv: V1PersistentVolume) {
+      switch (eventType) {
+        case WatchEventType.ADDED: {
+          state.pvs = addResourceToState(state.pvs, pv);
+          break;
+        }
+        case WatchEventType.MODIFIED: {
+          state.pvs = modifyResourceInState(state.pvs, pv);
+          break;
+        }
+        case WatchEventType.DELETED: {
+          state.pvs = deleteResourceInState(state.pvs, pv);
+          break;
+        }
+        default:
+          break;
+      }
+    },
+
+    get lastResourceVersion() {
+      return state.lastResourceVersion;
+    },
+
+    async setLastResourceVersion(pv: V1PersistentVolume) {
+      state.lastResourceVersion =
+        pv.metadata!.resourceVersion || state.lastResourceVersion;
     },
   };
 }

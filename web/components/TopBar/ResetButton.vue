@@ -25,13 +25,6 @@
 <script lang="ts">
 import { inject, defineComponent, reactive } from "@nuxtjs/composition-api";
 import { ResetAPIKey } from "~/api/APIProviderKeys";
-import PodStoreKey from "../StoreKey/PodStoreKey";
-import NodeStoreKey from "../StoreKey/NodeStoreKey";
-import PersistentVolumeStoreKey from "../StoreKey/PVStoreKey";
-import PersistentVolumeClaimStoreKey from "../StoreKey/PVCStoreKey";
-import StorageClassStoreKey from "../StoreKey/StorageClassStoreKey";
-import PriorityClassStoreKey from "../StoreKey/PriorityClassStoreKey";
-import SchedulerConfigurationStoreKey from "../StoreKey/SchedulerConfigurationStoreKey";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 
 export default defineComponent({
@@ -39,40 +32,6 @@ export default defineComponent({
     const resetAPI = inject(ResetAPIKey);
     if (!resetAPI) {
       throw new Error(`${resetAPI} is not provided`);
-    }
-    const podstore = inject(PodStoreKey);
-    if (!podstore) {
-      throw new Error(`${PodStoreKey} is not provided`);
-    }
-
-    const nodestore = inject(NodeStoreKey);
-    if (!nodestore) {
-      throw new Error(`${NodeStoreKey} is not provided`);
-    }
-
-    const pvstore = inject(PersistentVolumeStoreKey);
-    if (!pvstore) {
-      throw new Error(`${pvstore} is not provided`);
-    }
-
-    const pvcstore = inject(PersistentVolumeClaimStoreKey);
-    if (!pvcstore) {
-      throw new Error(`${pvcstore} is not provided`);
-    }
-
-    const storageclassstore = inject(StorageClassStoreKey);
-    if (!storageclassstore) {
-      throw new Error(`${StorageClassStoreKey} is not provided`);
-    }
-
-    const priorityclassstore = inject(PriorityClassStoreKey);
-    if (!priorityclassstore) {
-      throw new Error(`${PriorityClassStoreKey} is not provided`);
-    }
-
-    const schedulerconfigurationstore = inject(SchedulerConfigurationStoreKey);
-    if (!schedulerconfigurationstore) {
-      throw new Error(`${SchedulerConfigurationStoreKey} is not provided`);
     }
 
     const snackbarstore = inject(SnackBarStoreKey);
@@ -91,14 +50,6 @@ export default defineComponent({
     const resetFn = async () => {
       try {
         await resetAPI.reset();
-        await Promise.all([
-          nodestore.fetchlist(),
-          podstore.fetchlist(),
-          pvstore.fetchlist(),
-          pvcstore.fetchlist(),
-          storageclassstore.fetchlist(),
-          priorityclassstore.fetchlist(),
-        ]);
         setInfoMessage("Successfully reset all resources");
       } catch (e: any) {
         setServerErrorMessage(e.message);
