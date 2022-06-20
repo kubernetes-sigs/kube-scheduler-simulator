@@ -73,6 +73,8 @@ If you want to use your custom plugins as out-of-tree plugins in the simulator, 
 
 ## Getting started
 
+Read more about environment variables being used in simulator server
+[here.](./docs/env-variables.md)
 ### Run simulator with Docker
 
 We have [docker-compose.yml](docker-compose.yml) to run the simulator easily.
@@ -109,8 +111,6 @@ It starts etcd and simulator-server locally.
 #### Run simulator frontend
 
 To run the frontend, please see [README.md](web/README.md) on ./web dir.
-
-Read more about differnet environment variables being used in simulator server [here.](./docs/env-variables.md)
 
 ## Contributing
 
