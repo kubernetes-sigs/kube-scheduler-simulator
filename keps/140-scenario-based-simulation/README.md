@@ -6,14 +6,14 @@ A new scenario-based simulation feature is introduced to kube-scheduler-simulato
 
 ## Motivation
 
-Nowadays, the scheduler is extendable with the multiple way:
+Nowadays, the scheduler is extendable in the multiple ways:
 - configure with [KubeSchedulerConfiguration](https://kubernetes.io/docs/reference/scheduling/config/)
 - add Plugins of [Scheduling Framework](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/)
 - add [Extenders](https://github.com/kubernetes/enhancements/tree/5320deb4834c05ad9fb491dcd361f952727ece3e/keps/sig-scheduling/1819-scheduler-extender)
 - etc...
 
 But, unfortunately, not all expansions yield good results.
-Those who customize the scheduler need to make sure their scheduler are working as expected, and doesn't have an unacceptably negative impact on the scheduling result or scheduling performance. And, usually, evaluating the scheduler is not so easy because there are many factors for the evaluation of the scheduler's ability.
+Those who customize the scheduler need to make sure their scheduler is working as expected, and doesn't have an unacceptably negative impact on the scheduling result or scheduling performance. And, usually, evaluating the scheduler is not so easy because there are many factors for the evaluation of the scheduler's ability.
 
 The scenario-based simulation feature will be useful for those who customize the scheduler to evaluate their scheduler.
 
@@ -29,7 +29,7 @@ See the result of scenario-based simulation from Web UI. (may be implemented in 
 
 ### Implementation design details
 
-#### the current simulator and proposal
+#### The current simulator and proposal
 
 The simulator was initially designed with a strong emphasis on Web UI. 
 Then, thanks to so much contributions from everyone, we've expanded the simulator to be able to be used from other clients like kubectl, client-go, etc.
@@ -67,8 +67,8 @@ type ScenarioSpec struct {
 type ScenarioEvent struct {
   // ID for this event. Normally, the system sets this field for you.
   ID string
-  // Time indicates the time at which the event occurs.
-  Time FakeTime
+  // Step indicates the step at which the event occurs.
+  Step ScenarioStep
   // Operation describes which operation this event wants to do.
   // Only "Create", "Patch", "Delete", "Done" are valid operations in ScenarioEvent.
   Operation OperationType
@@ -107,6 +107,8 @@ const (
 type CreateOperation struct {
   // Object is the Object to be create.
   Object runtime.Object
+
+  Options metav1.CreateOptions
 }
 
 type PatchOperation struct {
@@ -114,31 +116,35 @@ type PatchOperation struct {
   ObjectMeta metav1.ObjectMeta
 ​​  // Patch is the patch for target.
   Patch string
+
+  Options metav1.PatchOptions
 }
 
 type DeleteOperation struct {
   TypeMeta   metav1.TypeMeta
   ObjectMeta metav1.ObjectMeta
+
+  Options metav1.DeleteOptions
 }
 
 type DoneOperation struct {
   Done bool   
 }
 
-// FakeTime is the time simply represented by numbers and used in the simulation.
-// In FakeTime, time is moved to next time when it can no longer schedule any more Pods in that time.
-// See [TODO: document here] for more information about FakeTime.
-type FakeTime int32
+// ScenarioStep is the step simply represented by numbers and used in the simulation.
+// In ScenarioStep, step is moved to next step when it can no longer schedule any more Pods in that step.
+// See [TODO: document here] for more information about ScenarioStep.
+type ScenarioStep int32
 
 type ScenarioStatus struct {
   Phase ScenarioPhase
   // A human readable message indicating details about why the scenario is in this phase.
   // optional
   Message *string 
-  // Time indicates the current time.
-  Time FakeTime
+  // Step indicates the current step.
+  Step ScenarioStep
   // ScenarioResult has the result of the simulation.
-  // Just before Time advances, this result is updated based on all occurrences at that time.
+  // Just before Step advances, this result is updated based on all occurrences at that step.
   ScenarioResult ScenarioResult
 }
 
@@ -153,11 +159,11 @@ const (
   // ScenarioPaused phase indicates all ScenarioSpec.Events 
   // has been finished but has not been marked as done by ScenarioDone ScenarioEvent.
   ScenarioPaused     ScenarioPhase = "Paused"
-  // ScenarioCompleted phase describes Scenario is fully compelted
+  // ScenarioSucceeded phase describes Scenario is fully completed
   // by ScenarioDone ScenarioEvent. User 
-  // can’t add any ScenarioEvent Once 
-  // Sceanrio reached at the phase.
-  ScenarioCompleted  ScenarioPhase = "Completed"
+  // can’t add any ScenarioEvent once 
+  // Scenario reached at the phase.
+  ScenarioSucceeded  ScenarioPhase = "Succeeded"
   // ScenarioFailed phase indicates something wrong happened during running scenario.
   // For example:
   // - the controller cannot create resource for some reason.
@@ -166,18 +172,18 @@ const (
   ScenarioUnknown    ScenarioPhase = "Unknown"
 ) 
 
-type ScenarioResults struct {
+type ScenarioResult struct {
   // SimulatorVersion represents the version of the simulator that runs this scenario.
   SimulatorVersion string
-  // Timeline is a map of events keyed with FakeTime.
+  // Timeline is a map of events keyed with ScenarioStep.
   // This may have many of the same events as .spec.events, but has additional PodScheduled and Delete events for Pods 
   // to represent a Pod is scheduled or preempted by the scheduler.
-  Timeline         map[FakeTime][]ScenarioTimelineEvent
+  Timeline         map[ScenarioStep][]ScenarioTimelineEvent
 }
 
 type ScenarioTimelineEvent struct {
-  // Time indicates the time at which the event occurs.
-  Time      FakeTime
+  // Step indicates the step at which the event occurs.
+  Step      ScenarioStep
   // Operation describes which operation this event wants to do.
   // Only "Create", "Patch", "Delete", "Done", "PodScheduled", "PodUnscheduled", "PodPreempted" are valid operations in ScenarioTimelineEvent.
   Operation OperationType
@@ -208,26 +214,25 @@ type ScenarioTimelineEvent struct {
 }
 
 type CreateOperationResult struct {
-  // Object is the Object to be create.
-  Object runtime.Object
+  // Operation is the operation that was done.
+  Operation CreateOperation
 }
 
 type PatchOperationResult struct {
-  TypeMeta   metav1.TypeMeta
-  ObjectMeta metav1.ObjectMeta
-​​  // Patch is the patch for target.
-  Patch string
+  // Operation is the operation that was done.
+  Operation PatchOperation
   // Result is the resource after patch.
-  Object runtime.Object
+  Result runtime.Object
 }
 
 type DeleteOperationResult struct {
-  TypeMeta   metav1.TypeMeta
-  ObjectMeta metav1.ObjectMeta
+  // Operation is the operation that was done.
+  Operation DeleteOperation
 }
 
 type DoneOperationResult struct {
-  Done bool   
+  // Operation is the operation that was done.
+  Operation DoneOperation
 }
 
 // PodResult has the results related to the specific Pod.
@@ -240,20 +245,20 @@ type PodResult struct {
   // This field may be nil if this Pod has not been preempted.
   PreemptedBy         *string
   // CreatedAt indicates when the Pod was created.
-  CreatedAt           FakeTime
+  CreatedAt           ScenarioStep
   // BoundAt indicates when the Pod was scheduled.
   // This field may be nil if this Pod has not been scheduled.
-  BoundAt             *FakeTime
+  BoundAt             *ScenarioStep
   // PreemptedAt indicates when the Pod was preempted.
   // This field may be nil if this Pod has not been preempted.
-  PreemptedAt         *FakeTime
+  PreemptedAt         *ScenarioStep
   // ScheduleResult has the results of all scheduling for the Pod.
   ScheduleResult      []ScenarioPodScheduleResult
 }
 
 type ScenarioPodScheduleResult struct {
-  // Time indicates the time scheduling at which the scheduling is performed.
-  Time                *FakeTime
+  // Step indicates the step scheduling at which the scheduling is performed.
+  Step                *ScenarioStep
   // AllCandidateNodes indicates all candidate Nodes before Filter.
   AllCandidateNodes   []string
   // AllFilteredNodes indicates all candidate Nodes after Filter.
@@ -284,47 +289,47 @@ type ScenarioPluginsScoreResult struct {
 }
 ```
 
-#### The concept "FakeTime"
+#### The concept "ScenarioStep"
 
-FakeTime is the concept to represent time in simulation, not a difficult one. 
-- In FakeTime, time is simply represented by numbers. like 1, 2, 3…
-- In FakeTime, time is moved to next time **when it can no longer schedule any more Pods**.
+ScenarioStep is: 
+- simply represented by numbers. like 1, 2, 3…
+- moved to next step **when it can no longer schedule any more Pods**.
 
-The following shows what happens at a single time in FakeTime:
+The following shows what happens at a single step in ScenarioStep:
 
-1. run all operations defined for that time
-2. scheduler starts scheduling
+1. run all operations defined for that step.
+2. scheduler starts scheduling.
 3. scheduler stops scheduling when it can no longer schedule any more Pods.
 4. update status.scenarioResults.
-5. move to next time.
+5. move to next step.
 
 ##### Why scheduler needs to restarts/stops scheduling loop?
 
 To ensure that the results of the simulation do not vary significantly from run to run. 
 
-When users define multiple operations for the same time, users expect them to run concurrently, but in practice it is difficult to run them at the same time. This is because the scheduler is constantly attempting to schedule. 
+If we don't have "ScenarioStep" concept and when users want to define multiple operations for the same time, users expect them to run concurrently and them to be run at the same time. But, in practice it is difficult to run them at the same time, because the scheduler is constantly attempting to schedule. 
 For example, suppose a user has defined a scenario to create 1000 Nodes at the same time. Since it is strictly impossible to create 1000 Nodes at the same time, pending Pods will be scheduled to the Nodes created first. And depending on what order the Nodes were created, the results of the simulation may change.
 To prevent this, the scheduler needs to be stopped scheduling until 1000 Nodes are created.
 
-##### How to stop scheduling
+##### How to stop scheduling loop
 
 We can prevent a scheduling queue from releasing next Pods by replacing `Scheduler.NextPod` function.
 https://github.com/kubernetes/kubernetes/blob/867b5cc31b376c9f5d04cf9278112368b0337104/pkg/scheduler/scheduler.go#L75
 
-##### adding events to running Scenario 
+##### Adding events to running Scenario 
 
 It is allowed to add events while the Scenario is running.
 
-Note that it does not make sense to add past FakeTime events.
+Note that it does not make sense to add past ScenarioStep events.
 The scenario will continue to run until all events in .spec.Events are completed, and when all events are completed, the scenario will be "Paused" phase in the case .spec.Events doesn't have "Done" operation.
 
 So, it is strongly recommended adding events to running Scenario only after Scenario have reached "Paused" phase. 
-(since FakeTime has stopped moving forward in "Paused" phase as described above.)
-Otherwise you may add the past FakeTime events and they are ignored by running Scenario.
+(since ScenarioStep has stopped moving forward in "Paused" phase as described above.)
+Otherwise you may add the past ScenarioStep events and they are ignored by running Scenario.
 
-##### configure when to update scenarioResults
+##### Configure when to update ScenarioResults
 
-As described in the above, the controller only update status.scenarioResults in Scenario resource when proceeding to the next FakeTime.
+As described in the above, the controller only update status.scenarioResults in Scenario resource when proceeding to the next ScenarioStep.
 
 This is because kube-apiserver will be so busy if the controller update status.scenarioResults everytime it updated,
 especially when the size of Scenario is so big.
@@ -339,13 +344,13 @@ For example,
 - when using Scenario for accurate benchmark testing, users may want to reduce the request to update Scenario for kube-apiserver as much as possible
 
 We can add a new configuration environment variable `UPDATE_SCENARIO_RESULTS_STRATEGY` and define some strategy like:
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=AtMovingNextTime`: default value. update status.scenarioResults in Scenario resource when proceeding to the next FakeTime.
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnPause`: update status.scenarioResults in Scenario resource when the Scenario's phase is `Paused` or `Failed`.
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnDone`: update status.scenarioResults in Scenario resource when the Scenario's phase is `Done` or `Failed`.
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=AtMovingNextStep`: default value. update status.scenarioResults in Scenario resource when proceeding to the next ScenarioStep.
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnPause`: update status.scenarioResults in Scenario resource when the Scenario's phase becomes `Paused`, `Succeeded` or `Failed`.
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnDone`: update status.scenarioResults in Scenario resource when the Scenario's phase becomes `Succeeded` or `Failed`.
 
 #### The result calculation packages
 
-ScenarioResults only has the simple data that represent what was happen during the scenario.
+ScenarioResult only has the simple data that represent what was happen during the scenario.
 
 So, we will provide useful functions and data structures to analize the result. 
 
@@ -353,13 +358,15 @@ For example:
 - the function to aggregate changes in allocation rate of the entire cluster.
 - the function to aggregate changes in resource utilization for each Node.
 - the function to aggregate data by Pod.
+- the generic iterator function that users can aggregate custom values.
 - (Do you have any other idea? Tell us!)
 
-By putting only the minimum simple information in ScenarioResults and providing functions to change it into a user-friendly structs, many data structures can be supported in the future without any changes to API.
+By putting only the minimum simple information in ScenarioResult and providing functions to change it into a user-friendly structs, many data structures can be supported in the future without any changes to API.
 
 #### Prohibitions and Restrictions
 
-When Scenario is created, the scenario is started by the controller. The scenario is run one by one, and multiple scenarios are never run at the same time.
+When Scenario is created, the scenario is started by the controller. The scenario is run one by one, and multiple scenarios are never run at the same time. 
+This means the controller will run the next Scenario after the current running Scenario becomes "Failed" or "Succeeded".
 
 In addition, the following actions are prohibited during scenario execution The scenario result will be unstable or invalid if any of these actions are performed.
 - change the scheduler configuration via simulator API.
