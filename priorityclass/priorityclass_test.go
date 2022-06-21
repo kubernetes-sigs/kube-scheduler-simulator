@@ -26,7 +26,13 @@ func deleteCollectionReaction(tracker k8sTesting.ObjectTracker) k8sTesting.React
 
 		case k8sTesting.DeleteCollectionActionImpl:
 			obj, err := tracker.List(gvr, gvk, ns)
-			list := obj.(*schedulingv1.PriorityClassList)
+			if err != nil {
+				return false, nil, err
+			}
+			list, ok := obj.(*schedulingv1.PriorityClassList)
+			if !ok {
+				return false, nil, fmt.Errorf("object cannot be transformed to PriorityClassList")
+			}
 			for _, class := range list.Items {
 				nameField := fields.Set{"metadata.name": class.Name}
 				if action.GetListRestrictions().Fields.Matches(nameField) {
