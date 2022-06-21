@@ -18,4 +18,4 @@ milestone:
 
 see-also:
   - "/keps/140-scenario-based-simulation"
-  - "/keps/167-scheduler-simulator-operator"
+  - "/keps/159-scheduler-simulator-operator"

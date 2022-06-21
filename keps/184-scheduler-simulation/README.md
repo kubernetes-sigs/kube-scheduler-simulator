@@ -73,21 +73,14 @@ type SchedulerSimulationSpec struct {
   //
   // Cannot be updated.
   ScenarioResultFilePath string
-  // Volume to mount into the filesystem.
+  // Volume to be mounted.
   //
   // The container named "scenario-runner" will be created in the simulator Pod.
   // That container will see the scenario defined in ScenarioTemplateFilePath, create the scenario in the simulator, and store the result into ScenarioReusltFilePath.
-  // The volume specified in Volume and VolumeMount is mounted in that container.
+  // The volume specified here is mounted as mountPath `/mnt` in that container.
   //
-  // Cannot be updated.
-  VolumeMount corev1.VolumeMount 
-  // Volume that can be mounted by VolumeMount field.
+  // More info about volume: https://kubernetes.io/docs/concepts/storage/volumes
   //
-  // The container named "scenario-runner" will be created in the simulator Pod.
-  // That container will see the scenario defined in ScenarioTemplateFilePath, create the scenario in the simulator, and store the result into ScenarioReusltFilePath.
-  // The volume specified in Volume and VolumeMount is mounted in that container.
-  //
-  // More info: https://kubernetes.io/docs/concepts/storage/volumes
   // Cannot be updated.
   Volume corev1.Volume 
   // ScenarioRunnerImage is the image for the container named "scenario-runner" that will be created in the simulator Pod.
