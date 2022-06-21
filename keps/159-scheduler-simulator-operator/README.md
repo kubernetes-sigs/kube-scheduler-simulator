@@ -1,8 +1,8 @@
-# KEP-159: scheduler simulator operator
+# KEP-159: Scheduler Simulator Operator
 
 ## Summary
 
-A new custom resource to represent a simulator itself and a custom controller to manage it are introduced.
+A new custom resource to represent a simulator itself and a custom controller to manage it will be introduced.
 
 ## Motivation
 
@@ -13,7 +13,7 @@ They can gets the information for the simulator easily by accessint the `Simulat
 
 ### Goals
 
-- Users can define simulators with Simulator CRD.
+- Users can define simulators via Simulator resources.
 - The controller will manage(create, edit, delete) simulators.
 
 ### Non-Goals
@@ -28,7 +28,7 @@ Create new `Simulator` from Web UI. (may be implemented in the future, but out o
 
 The current simulator is built in a single binary: the binary contains kube-apiserver, kube-scheduler and the simulator backend (which provides the web UI specific feature.)
 
-And, the simulator can be configured via environment variables
+And, the simulator can be configured via environment variables.
 
 #### Simulator CRD
 
@@ -46,9 +46,12 @@ type Simulator struct {
 }
 
 // SimulatorSpec has the spec for the simulator.
-// All fields can be updated (but a Pod may be re-created.)
+// All fields can be updated, but a Pod will be restarted.
+//
+// Note that all data stored in "etcd" container will be removed if you don't specify Volume in "etcd" container.
+// Or, you can use an external etcd with EtcdURL.
 type SimulatorSpec struct {
-  // KubeAPIServerPort indicates kube-apiserver’s URL which the simulator has internally.
+  // KubeAPIServerPort indicates the kube-apiserver’s port which the simulator has internally.
   // (The each simulator has own kube-apiserver internally.)
   // This field's value will be added to a "simulator" container's env as "KUBE_API_PORT".
   KubeAPIServerPort            int 
@@ -98,10 +101,15 @@ type SimulatorStatus struct {
   // A human readable message indicating details about why the simulator is in this phase.
   // optional
   Message *string 
+
+  // KubeAPIServerURL is the url to access the kube-apiserver in the simulator.
+  KubeAPIServerURL string
 }
 
 type SimulatorPhase string
 const (
+  // SimulatorPending means the simulator is waiting for the controller to start to creating the Pod for this Simulator resource.
+  SimulatorPending SimulatorPhase = "Pending"
   // SimulatorCreating means the simulator is being creating. 
   SimulatorCreating SimulatorPhase = "Creating"
   // SimulatorAvailable means the simulator is available.
