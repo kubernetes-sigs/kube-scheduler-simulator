@@ -363,6 +363,12 @@ For example:
 
 By putting only the minimum simple information in ScenarioResult and providing functions to change it into a user-friendly structs, many data structures can be supported in the future without any changes to API.
 
+#### The case kube-apiserver have Scenarios when the controller start to run
+
+When the controller is started and finds the Scenario which phase is "Running", the controller just changes the status "Failed" with updating the `.status.message` like "the controller restarted while the Scenario was running".
+
+In the future, it would be nice if we could implement the endpoint in simulator that tells the Scenario controller that the simulator is going to be shuted down. 
+
 #### Prohibitions and Restrictions
 
 When Scenario is created, the scenario is started by the controller. The scenario is run one by one, and multiple scenarios are never run at the same time. 
