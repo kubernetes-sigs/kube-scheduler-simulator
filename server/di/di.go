@@ -18,6 +18,7 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/reset"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/scheduler"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/storageclass"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher"
 )
 
 // Container saves and provides dependencies.
@@ -32,6 +33,7 @@ type Container struct {
 	priorityClassService            PriorityClassService
 	resetService                    ResetService
 	replicateExistingClusterService ReplicateExistingClusterService
+	watcherService                  WatcherService
 }
 
 // NewDIContainer initializes Container.
@@ -66,6 +68,8 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, externalRestClientCfg)
 		c.replicateExistingClusterService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
 	}
+	c.watcherService = watcher.NewWatcherService(client)
+
 	return c
 }
 
@@ -118,6 +122,11 @@ func (c *Container) ResetService() ResetService {
 // Note: this service will return nil when `externalImportEnabled` is false.
 func (c *Container) ReplicateExistingClusterService() ReplicateExistingClusterService {
 	return c.replicateExistingClusterService
+}
+
+// WatcherService returns WatcherService.
+func (c *Container) WatcherService() WatcherService {
+	return c.watcherService
 }
 
 // createExportServiceForReplicateExistingClusterService creates each services

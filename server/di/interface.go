@@ -13,6 +13,7 @@ import (
 	"k8s.io/kube-scheduler/config/v1beta2"
 
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/export"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher"
 )
 
 // PodService represents service for manage Pods.
@@ -91,4 +92,9 @@ type ResetService interface {
 // ReplicateExistingClusterService represents a service to import resources from the existing cluster.
 type ReplicateExistingClusterService interface {
 	ImportFromExistingCluster(ctx context.Context) error
+}
+
+// WatcherService represents service for watch k8s resources.
+type WatcherService interface {
+	WatchResources(ctx context.Context, stream watcher.ResponseStream, lrVersions *watcher.LastResourceVersions) error
 }
