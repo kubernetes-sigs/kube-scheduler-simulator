@@ -58,6 +58,7 @@ type LastResourceVersions struct {
 	Pcs   string `json:"priorityClasses"`
 }
 
+// ResponseStream is an interface that allows Server Push to a Service.
 type ResponseStream interface {
 	io.Writer
 	http.Flusher
@@ -120,6 +121,8 @@ func (s *Service) WatchResources(ctx context.Context, stream ResponseStream, lrV
 	return xerrors.Errorf("terminated to watch: %w", ctx.Err())
 }
 
+// WatchAndHandleEvent prepares an handler for the wacher and runs the handler
+// until the stopCh is closed.
 func (s *Service) WatchAndHandleEvent(proxy ResourceEventProxy, watcher watch.Interface, stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 	whandler := proxy.WatchHandlerFunc(watcher)
@@ -133,6 +136,7 @@ func (s *Service) WatchAndHandleEvent(proxy ResourceEventProxy, watcher watch.In
 	wg.Wait()
 }
 
+// createWatcher creates and returns RetryWatcher.
 func createWatcher(p *resourceEventProxy) (watch.Interface, error) {
 	watcher := cache.NewListWatchFromClient(p.c, string(p.r), corev1.NamespaceAll, fields.Everything())
 	rWatcher, err := watchtools.NewRetryWatcher(p.lastResourceVersion, watcher)
@@ -142,16 +146,30 @@ func createWatcher(p *resourceEventProxy) (watch.Interface, error) {
 	return rWatcher, nil
 }
 
+// ResourceEventProxy is an interface that allows handle events and errors.
 type ResourceEventProxy interface {
 	WatchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error
 	WatchErrorHandler(err error)
 }
 
+// resourceEventProxy implements event handler for the specified resource
+// and knows where to send the event.
 type resourceEventProxy struct {
-	writer              StreamWriter
-	c                   cache.Getter
-	r                   resourceKind
-	o                   runtime.Object
+	// writer knows where to send the event.
+	writer StreamWriter
+	// The RESTClient to watch the specified.
+	c cache.Getter
+	// The kind of resource to watch.
+	r resourceKind
+	// The Object of resource to watch.
+	o runtime.Object
+	// The last value of ResourceVersion. This is used to RetryWatcher.
+	// First, this value is specified by a user.
+	// After that this is updated when received an event everytime.
+	//
+	// The RetryWatcher will be reconnect to the apiserver if it is disconnected.
+	// lastResourceVersion can be used to ensure that only events
+	// that have not yet been received are received when reconnecting.
 	lastResourceVersion string
 }
 
@@ -165,6 +183,8 @@ func newresourceEventProxy(sw StreamWriter, c cache.Getter, r resourceKind, o ru
 	}
 }
 
+// WatchHandlerFunc watches the specified resource's event and calls the method to send the event
+// and updates lastResourceVersion.
 func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error {
 	return func(stopCh <-chan struct{}) error {
 		for {
@@ -200,6 +220,8 @@ func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stop
 		}
 	}
 }
+
+// WatchErrorHandler hanldes some errors.
 func (p *resourceEventProxy) WatchErrorHandler(err error) {
 	switch {
 	case isExpiredError(err):
