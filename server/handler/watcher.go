@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"k8s.io/klog/v2"
@@ -35,23 +34,9 @@ func (h *WatcherHandler) WatchResources(c echo.Context) error {
 	c.Response().WriteHeader(http.StatusOK)
 	// Start to watch and do server push
 	err := h.service.WatchResources(ctx, c.Response(), versions)
-
 	if err != nil {
 		klog.Errorf("closed to watch resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	return nil
-}
-
-// convertParamsValueToInt convert GET query's string value to int value.
-// If param is empty or conversion fails, return 0.
-func convertParamsValueToInt(param string) int {
-	if param == "" {
-		return 0
-	}
-	i, err := strconv.Atoi(param)
-	if err != nil {
-		return 0
-	}
-	return i
 }

@@ -185,6 +185,7 @@ func newresourceEventProxy(sw StreamWriter, c cache.Getter, r resourceKind, o ru
 
 // WatchHandlerFunc watches the specified resource's event and calls the method to send the event
 // and updates lastResourceVersion.
+//nolint: cyclop // For readalibity.
 func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error {
 	return func(stopCh <-chan struct{}) error {
 		for {
@@ -201,21 +202,23 @@ func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stop
 				if !ok {
 					return xerrors.Errorf("failed to type cast to metav1.Object: %T", event.Object)
 				}
+				var eventType watch.EventType
 				switch event.Type {
 				case watch.Added:
-					p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Added, Obj: obj})
-					break
+					eventType = watch.Added
 				case watch.Modified:
-					p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Modified, Obj: obj})
-					break
+					eventType = watch.Modified
 				case watch.Deleted:
-					p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Deleted, Obj: obj})
-					break
+					eventType = watch.Deleted
 				default:
-					break
+					// we may receive watch.Bookmark and watch.Error events.
+					continue
+				}
+				err := p.writer.Write(&WatchEvent{Kind: p.r, EventType: eventType, Obj: obj})
+				if err != nil {
+					return xerrors.Errorf("call Write: %w", err)
 				}
 				p.lastResourceVersion = obj.GetResourceVersion()
-			default:
 			}
 		}
 	}
@@ -229,9 +232,9 @@ func (p *resourceEventProxy) WatchErrorHandler(err error) {
 		// has a semantic that it returns data at least as fresh as provided RV.
 		// So first try to LIST with setting RV to resource version of last observed object.
 		klog.Infof("watch of %v closed with: %w", p.r, err)
-	case err == io.EOF:
+	case xerrors.Is(io.EOF, err):
 		// watch closed normally
-	case err == io.ErrUnexpectedEOF:
+	case xerrors.Is(io.ErrUnexpectedEOF, err):
 		klog.Infof("watch for %v closed with unexpected EOF: %w", p.r, err)
 	default:
 		utilruntime.HandleError(fmt.Errorf("failed to watch %v: %w", p.r, err))

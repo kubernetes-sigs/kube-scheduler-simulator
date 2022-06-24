@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher/mock_watcher"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
+
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher/mock_watcher"
 )
 
 var (

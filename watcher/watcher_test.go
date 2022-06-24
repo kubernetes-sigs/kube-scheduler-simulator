@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher/mock_watcher"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
@@ -17,6 +15,9 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes/fake"
 	restfake "k8s.io/client-go/rest/fake"
+
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/watcher/mock_watcher"
 )
 
 var (
@@ -49,8 +50,7 @@ var (
 	}
 )
 
-type fakePod struct {
-}
+type fakePod struct{}
 
 func (obj *fakePod) GetObjectKind() schema.ObjectKind { return schema.EmptyObjectKind }
 func (obj *fakePod) DeepCopyObject() runtime.Object   { panic("DeepCopyObject not supported by fakePod") }
