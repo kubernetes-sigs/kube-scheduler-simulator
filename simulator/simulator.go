@@ -11,8 +11,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/controller"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/k8sapiserver"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/pvcontroller"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 )
@@ -39,11 +39,11 @@ func startSimulator() error {
 
 	client := clientset.NewForConfigOrDie(restclientCfg)
 
-	pvshutdown, err := pvcontroller.StartPersistentVolumeController(client)
+	ctrlerShutdown, err := controller.NewController(client)
 	if err != nil {
-		return xerrors.Errorf("start pv controller: %w", err)
+		return xerrors.Errorf("start controllers: %w", err)
 	}
-	defer pvshutdown()
+	defer ctrlerShutdown()
 
 	existingClusterClient := &clientset.Clientset{}
 	if cfg.ExternalImportEnabled {
