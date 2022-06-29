@@ -58,11 +58,11 @@ type SimulatorSpec struct {
   // SimulatorServerPort indicates the port for the simulator’s endpoint.
   // This field's value will be added to a "simulator" container's env as "PORT".
   SimulatorServerPort          int 
-  // KubeSchedulerConfiguration indicates the configuration for the scheduler. 
-  // Simulators have the scheduler internally and you can configure it with this configuration.
+  // KubeSchedulerConfigurationPath indicates the path to configuration for the scheduler. 
+  // The Simulator has the scheduler internally and you can configure it with this configuration.
   // This field's value will be added to a "simulator" container's env as "KUBE_SCHEDULER_CONFIG_PATH".
   // optional
-  KubeSchedulerConfiguration   string
+  KubeSchedulerConfigurationPath   string
   // EtcdURL indicates the URL of etcd used in kube-apiserver.
   // If this field is empty, the Pod created by this Simulator resource will have the etcd container.
   // This field's value will be added to a "simulator" container's env as "KUBE_SCHEDULER_SIMULATOR_ETCD_URL".
