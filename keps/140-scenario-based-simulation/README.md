@@ -300,7 +300,7 @@ The following shows what happens at a single step in ScenarioStep:
 1. run all operations defined for that step.
 2. scheduler starts scheduling.
 3. scheduler stops scheduling when it can no longer schedule any more Pods.
-4. update status.scenarioResults.
+4. update status.scenarioResult.
 5. move to next step.
 
 ##### Why scheduler needs to restarts/stops scheduling loop?
@@ -327,11 +327,11 @@ So, it is strongly recommended adding events to running Scenario only after Scen
 (since ScenarioStep has stopped moving forward in "Paused" phase as described above.)
 Otherwise you may add the past ScenarioStep events and they are ignored by running Scenario.
 
-##### Configure when to update ScenarioResults
+##### Configure when to update ScenarioResult
 
-As described in the above, the controller only update status.scenarioResults in Scenario resource when proceeding to the next ScenarioStep.
+As described in the above, the controller only update status.scenarioResult in Scenario resource when proceeding to the next ScenarioStep.
 
-This is because kube-apiserver will be so busy if the controller update status.scenarioResults everytime it updated,
+This is because kube-apiserver will be so busy if the controller update status.scenarioResult everytime it updated,
 especially when the size of Scenario is so big.
 
 > etcd is designed to handle small key value pairs typical for metadata. Larger requests will work, but may increase the latency of other requests. By default, the maximum size of any request is 1.5 MiB. This limit is configurable through --max-request-bytes flag for etcd server.
@@ -344,9 +344,9 @@ For example,
 - when using Scenario for accurate benchmark testing, users may want to reduce the request to update Scenario for kube-apiserver as much as possible
 
 We can add a new configuration environment variable `UPDATE_SCENARIO_RESULTS_STRATEGY` and define some strategy like:
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=AtMovingNextStep`: default value. update status.scenarioResults in Scenario resource when proceeding to the next ScenarioStep.
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnPause`: update status.scenarioResults in Scenario resource when the Scenario's phase becomes `Paused`, `Succeeded` or `Failed`.
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnDone`: update status.scenarioResults in Scenario resource when the Scenario's phase becomes `Succeeded` or `Failed`.
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=AtMovingNextStep`: default value. update status.scenarioResult in Scenario resource when proceeding to the next ScenarioStep.
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnPause`: update status.scenarioResult in Scenario resource when the Scenario's phase becomes `Paused`, `Succeeded` or `Failed`.
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnDone`: update status.scenarioResult in Scenario resource when the Scenario's phase becomes `Succeeded` or `Failed`.
 
 #### The result calculation packages
 
