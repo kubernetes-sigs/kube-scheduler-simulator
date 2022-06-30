@@ -1,0 +1,17 @@
+title: Scenario-based simulation
+kep-number: 140
+authors:
+  - "@sanposhiho"
+  - "@everpeace"
+owning-sig: sig-scheduling
+status: provisional
+creation-date: 2022-06-06
+reviewers:
+  - "@196Ikuchil"
+approvers:
+  - "@196Ikuchil"
+
+stage: alpha
+
+milestone:
+  alpha: "v0.1"
