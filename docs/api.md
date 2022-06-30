@@ -99,3 +99,38 @@ You can find sample requests/responses [here](./api-samples/v1/import.md)
 | ----- | -------- |
 | 200   | |
 | 500 | something went wrong (see logs of the simulator server) |
+
+## Watch the simulator's resources
+
+Monitor simulator resources and get updates automatically.
+
+### HTTP Request
+
+`GET /api/v1/watchresources`
+
+#### Parameter
+You must specify the `lastResourceVersion` of each resource, which can be retrieved using the `list` function of each resource.
+If you won't specify it, the simulator failed to watch the resource.
+
+|parameter|requirement|description|
+| ----- | --- | -------- |
+|podsLastResourceVersion|MUST|integer|
+|nodesLastResourceVersion|MUST|integer|
+|pvsLastResourceVersion|MUST|integer|
+|pvcsLastResourceVersion|MUST|integer|
+|scsLastResourceVersion|MUST|integer|
+|pcsLastResourceVersion|MUST|integer|
+
+e.g.)
+```
+/api/v1/watchresources?podsLastResourceVersion=213&nodesLastResourceVersion=213&pvsLastResourceVersion=213&pvcsLastResourceVersion=213&scsLastResourceVersion=213&pcsLastResourceVersion=213
+```
+
+### Response
+
+[WatchEvent](watcher/watcher.go#43)
+
+| code  | description |
+| ----- | -------- |
+| 200   | The response is server push. You should catch the WatchEvent and then handle the data each by each.|
+
