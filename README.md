@@ -118,7 +118,12 @@ The simulator can import existing clusters.
 This allows for batch inclusion of resources from external clusters.
 It is enabled by an `EXTERNAL_IMPORT_ENABLED` environment variables is `1`.
 
-You can import resources on your cluster to the simulator by using the following environment variables `KUBE_SCHEDULER_CONFIG_PATH` and `KUBECONFIG`.
+Currently, the simulator tries to import ALL resources related to scheduling from your cluster,
+so, please be careful (or avoid) using it in clusters with large amounts of resources.
+
+You can import resources on your cluster to the simulator by using the environment variable `KUBECONFIG`.
+(And if you would like to use your cluster's scheduler configuration, you may want to use `KUBE_SCHEDULER_CONFIG_PATH`.)
+
 For more information about those variables, please see [docs/env-variables.md](docs/env-variables.md).
 
 ## Contributing
