@@ -3,53 +3,40 @@ tools:
 	cd ./tools; \
 	cat tools.go | grep "_" | awk -F'"' '{print $$2}' | xargs -tI % go install %
 
-.PHONY: generate
-generate:
-	go generate ./...
-
 .PHONY: lint
+# run golangci-lint on all modules
 lint:
-	golangci-lint run --timeout 30m ./...
+	cd simulator/ && make lint
 
 .PHONY: format
+# format codes on all modules
 format:
-	golangci-lint run --fix ./...
+	cd simulator/ && make format
 
 .PHONY: test
-test: 
-	go test ./...
+# run test on all modules
+test:
+	cd simulator/ && make test
 
 .PHONY: mod-download
-mod-download: ## Downloads the Go module
-	go mod download -x
-
-.PHONY: vendor
-vendor: mod-download
-	go mod vendor
+mod-download:
+	cd simulator/ && go mod download -x
 
 .PHONY: build
-build:  
-	go build -o ./bin/simulator ./simulator.go
-
-.PHONY: start
-start: build
-	./hack/start_simulator.sh
-
-# re-generate openapi file for running api-server
-.PHONY: openapi
-openapi: vendor
-	./hack/openapi.sh
+# build all modules
+build:
+	cd simulator/ && make build
 
 .PHONY: docker_build
 docker_build: docker_build_server docker_build_front
 
 .PHONY: docker_build_server
 docker_build_server: 
-	docker build -t simulator-server .
+	docker build -t simulator-server ./simulator/
 
 .PHONY: docker_build_front
 docker_build_front: 
-	docker build -t simulator-frontend ./web/
+	docker build -t simulator-frontend ./simulator-web/
 
 .PHONY: docker_up
 docker_up:
