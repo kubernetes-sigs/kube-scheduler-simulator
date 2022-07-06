@@ -6,7 +6,7 @@ This doc describes how to use your custom plugins in the simulator.
 
 Please add your custom plugin's registry in `OutOfTreeRegistries` function in config package here:
 
-[kube-scheduler-simulator/scheduler/config/plugin.go](../../config/plugin.go)
+[kube-scheduler-simulator/simulator/scheduler/config/plugin.go](./simulator/scheduler/config/plugin.go)
 
 
 ## 2. Add your custom plugin in OutOfTreeFilterPlugins or OutOfTreeScorePlugins function.
@@ -15,7 +15,7 @@ Please add your custom plugin's registry in `OutOfTreeRegistries` function in co
 
 Please add your custom plugin in `OutOfTreeFilterPlugins` function or `OutOfTreeScorePlugins` function in config package here:
 
-[kube-scheduler-simulator/scheduler/config/plugin.go](../../config/plugin.go)
+[kube-scheduler-simulator/simulator/scheduler/config/plugin.go](./simulator/scheduler/config/plugin.go)
 
 ## 3. Configure the scheduler to enable your custom plugin 
 

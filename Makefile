@@ -36,7 +36,7 @@ docker_build_server:
 
 .PHONY: docker_build_front
 docker_build_front: 
-	docker build -t simulator-frontend ./simulator-web/
+	docker build -t simulator-frontend ./web/
 
 .PHONY: docker_up
 docker_up:
