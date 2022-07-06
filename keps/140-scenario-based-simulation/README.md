@@ -137,7 +137,10 @@ type DoneOperation struct {
 type ScenarioStep int32
 
 type ScenarioStatus struct {
+  // The phase is a simple, high-level summary of where the Scenario is in its lifecycle.
   Phase ScenarioPhase
+  // Current state of scheduler.
+  SchedulerStatus SchedulerStatus
   // A human readable message indicating details about why the scenario is in this phase.
   // optional
   Message *string 
@@ -147,6 +150,25 @@ type ScenarioStatus struct {
   // Just before Step advances, this result is updated based on all occurrences at that step.
   ScenarioResult ScenarioResult
 }
+
+
+type SchedulerStatus string
+const (
+  // SchedulerWillRun indicates the scheduler is expected to start to schedule.
+  // In other words, the scheduler is currently stopped, 
+  // and will start to schedule Pods when the state is SchedulerWillRun.
+  SchedulerWillRun  SchedulerStatus = "WillRun"
+  // SchedulerRunning indicates the scheduler is scheduling Pods.
+  SchedulerRunning  SchedulerStatus = "Running"
+  // SchedulerWillStop indicates the scheduler is expected to stop scheduling.
+  // In other words, the scheduler is currently scheduling Pods,
+  // and will stop scheduling when the state is SchedulerWillStop.
+  SchedulerWillStop SchedulerStatus = "WillStop"
+  // SchedulerStoped indicates the scheduler stops scheduling Pods.
+  SchedulerStoped   SchedulerStatus = "Stoped"
+  // SchedulerUnknown indicates the scheduler's status is unknown. 
+  SchedulerUnknown  ScenarioPhase   = "Unknown"
+)
 
 ​​type ScenarioPhase string
 
@@ -298,10 +320,13 @@ ScenarioStep is:
 The following shows what happens at a single step in ScenarioStep:
 
 1. run all operations defined for that step.
-2. scheduler starts scheduling.
-3. scheduler stops scheduling when it can no longer schedule any more Pods.
-4. update status.scenarioResult.
-5. move to next step.
+2. the scenario controller changes status.SchedulerStatus to SchedulerWillRun.
+3. the scheduler starts scheduling and changes status.SchedulerStatus to SchedulerRunning.
+4. the scenario controller changes status.SchedulerStatus to SchedulerWillStop, 
+when it can no longer schedule any more Pods.
+5. the scheduler stop scheduling and changes status.SchedulerStatus to SchedulerStoped.
+6. update status.scenarioResult.
+7. move to next step.
 
 ##### Why scheduler needs to restarts/stops scheduling loop?
 
@@ -313,8 +338,12 @@ To prevent this, the scheduler needs to be stopped scheduling until 1000 Nodes a
 
 ##### How to stop scheduling loop
 
-We can prevent a scheduling queue from releasing next Pods by replacing `Scheduler.NextPod` function.
+We can prevent a scheduling queue from poping next Pods by replacing `Scheduler.NextPod` function.
 https://github.com/kubernetes/kubernetes/blob/867b5cc31b376c9f5d04cf9278112368b0337104/pkg/scheduler/scheduler.go#L75
+
+We can provide the function to override `Scheduler.NextPod` so that users can use scenario outside of simulator.
+The override function besically behave like normal `NextPod`, 
+but checks the running Scenario's status.SchedulerStatus and decide to stop/restart scheduling.
 
 ##### Adding events to running Scenario 
 
