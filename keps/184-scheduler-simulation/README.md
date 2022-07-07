@@ -155,7 +155,7 @@ So, the simulator Pod created for SchedulerSimulation with scenario-runner conta
 
 ---
 
-![diagram](./images/execution_flow.png)
+![diagram](images/execution_flow.png)
 
 #### Why input the scenario and output the result are via file
 

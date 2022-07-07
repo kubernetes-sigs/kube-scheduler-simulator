@@ -13,7 +13,7 @@ If the two variables are not specified, port `3131` will be used with the localh
 
 We create a kube-apiserver instance by utilising the code path in `Kubernetes/cmd/kube-apiserver`, meaning we do not have to maintain any apiserver code.
 
-However, we will have to modify a few things to allow our kube-apiserver to be accessible and usable without too much hassles. We have modified the following options in [file](../k8sapiserver/k8sapiserver.go):
+However, we will have to modify a few things to allow our kube-apiserver to be accessible and usable without too much hassles. We have modified the following options in [file](../simulator/k8sapiserver/k8sapiserver.go):
 
 1. Etcd URL - access our Etcd instance.
 2. Authorization mode - uses RBAC authorization.

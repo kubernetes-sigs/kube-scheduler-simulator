@@ -2,7 +2,7 @@ import {
   V1PersistentVolumeClaim,
   V1PersistentVolumeClaimList,
 } from "@kubernetes/client-node";
-import { namespaceURL } from "@/api/v1/index";
+import { namespaceURL } from "~/api/v1/index";
 import { AxiosInstance } from "axios";
 
 export default function pvcAPI(k8sInstance: AxiosInstance) {
