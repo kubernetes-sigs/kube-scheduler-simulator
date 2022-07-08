@@ -10,7 +10,7 @@ WORKDIR /go/src/simulator
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY .. .
+COPY . .
 RUN go build -v -o ./bin/simulator simulator.go
 
 FROM alpine:3.14.0
