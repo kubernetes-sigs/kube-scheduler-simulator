@@ -1,0 +1,6 @@
+domain: kube-scheduler-simulator.x-k8s.io
+layout:
+- go.kubebuilder.io/v3
+projectName: scenario
+repo: github.com/kubernetes-sigs/kube-scheduler-simulator
+version: "3"
