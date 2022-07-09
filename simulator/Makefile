@@ -1,6 +1,10 @@
 .PHONY: generate
 generate: vendor
 	go generate ./... && \
+
+# re-generate openapi file for running api-server
+.PHONY: openapi
+openapi: vendor
 	./hack/openapi.sh
 
 .PHONY: lint
