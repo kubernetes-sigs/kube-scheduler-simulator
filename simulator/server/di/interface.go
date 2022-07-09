@@ -12,7 +12,7 @@ import (
 	storageconfigv1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/kube-scheduler/config/v1beta2"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/export"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 )
 
 // PodService represents service for manage Pods.

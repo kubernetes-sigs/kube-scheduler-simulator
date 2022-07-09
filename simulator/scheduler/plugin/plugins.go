@@ -13,8 +13,8 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 	schedulerRuntime "k8s.io/kubernetes/pkg/scheduler/framework/runtime"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/config"
-	schedulingresultstore "github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
+	schedulingresultstore "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
 )
 
 //nolint: cyclop

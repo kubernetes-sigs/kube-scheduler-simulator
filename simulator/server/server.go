@@ -11,9 +11,9 @@ import (
 	"github.com/labstack/gommon/log"
 	"golang.org/x/xerrors"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/config"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/server/di"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/server/handler"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/handler"
 )
 
 // SimulatorServer is server for simulator.

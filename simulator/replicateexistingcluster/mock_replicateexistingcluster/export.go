@@ -7,7 +7,7 @@ package mock_replicateexistingcluster
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	export "github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/export"
+	export "sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 	reflect "reflect"
 )
 

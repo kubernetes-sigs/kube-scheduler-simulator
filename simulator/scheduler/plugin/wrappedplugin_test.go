@@ -13,8 +13,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 
-	mock_plugin "github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/plugin/mock"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
+	mock_plugin "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/mock"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
 )
 
 func Test_NewWrappedPlugin(t *testing.T) {

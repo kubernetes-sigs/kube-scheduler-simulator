@@ -10,11 +10,11 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/config"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/k8sapiserver"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/pvcontroller"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/server"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/server/di"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/k8sapiserver"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/pvcontroller"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 )
 
 // entry point.

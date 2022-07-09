@@ -7,7 +7,7 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 
-	schedulingresultstore "github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
+	schedulingresultstore "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
 )
 
 //go:generate mockgen -destination=./mock/$GOFILE -package=plugin . Store,FilterPluginExtender,ScorePluginExtender,NormalizeScorePluginExtender

@@ -7,7 +7,7 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/kube-scheduler/config/v1beta2"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/server/di"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 )
 
 // SchedulerConfigHandler is handler for manage scheduler config.
