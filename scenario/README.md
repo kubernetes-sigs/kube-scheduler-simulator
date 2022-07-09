@@ -12,7 +12,7 @@ The simulator won't create any actual resources, so you can run the simulation f
 You can see more details about simulator in [../simulator](../simulator).
 
 The Scenario and the controller can be run in your cluster, but **we do not recommend to do it in your real cluster**.
-(probably no problem in a fake cluster like minikube or kind)
+(probably no problem on running with a fake cluster like minikube or kind)
 
 By using it on your cluster, you can check your scheduler's behavior by directly using scheduler in your cluster.
 
