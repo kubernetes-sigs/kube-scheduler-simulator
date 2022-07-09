@@ -11,11 +11,11 @@ On the simulator, you can create/edit/delete these resources to simulate a clust
 - Storage Classes
 - Priority Classes
 
-![list resources](./docs/images/resources.png)
+![list resources](docs/images/resources.png)
 
 You can create resources with yaml file as usual.
 
-![create node](./docs/images/create-node.png)
+![create node](docs/images/create-node.png)
 
 And, after pods are scheduled, you can see the results of
 
@@ -23,7 +23,7 @@ And, after pods are scheduled, you can see the results of
 - Each Score plugins
 - Final score (normalized and applied Plugin Weight)
 
-![result](./docs/images/result.jpg)
+![result](docs/images/result.jpg)
 
 You can configure the scheduler on the simulator through KubeSchedulerConfiguration.
 
@@ -33,9 +33,9 @@ You can pass a KubeSchedulerConfiguration file via the environment variable `KUB
 
 Note: changes to any fields other than `.profiles` are disabled on simulator, since they do not affect the results of the scheduling.
 
-![configure scheduler](./docs/images/schedulerconfiguration.png)
+![configure scheduler](docs/images/schedulerconfiguration.png)
 
-If you want to use your custom plugins as out-of-tree plugins in the simulator, please follow [this doc](./docs/how-to-use-custom-plugins/README.md).
+If you want to use your custom plugins as out-of-tree plugins in the simulator, please follow [this doc](docs/how-to-use-custom-plugins/README.md).
 
 ## Background
 
@@ -46,22 +46,23 @@ It can be used to learn about the Kubernetes scheduler or to examine the detaile
 
 ## Getting started
 
-### Run with Docker
+### Run simulator with Docker
 
-We have [docker-compose.yml](./docker-compose.yml) to use the simulator easily.
+We have [docker-compose.yml](docker-compose.yml) to run the simulator easily.
 
-You can use it with the below command.
+You can use the following command.
 
 ```bash
+# build the images for web frontend and simulator server, then start the containers.
 make docker_build_and_up
 ```
 
 Then, you can access the simulator with http://localhost:3000
 
-Note: Insufficient memory allocation sometimes causes problems in building the image.
+Note: Insufficient memory allocation may cause problems in building the image.
 Please allocate enough memory in that case.
 
-### Run Locally
+### Run simulator locally
 
 You have to run frontend, server and etcd.
 
@@ -72,6 +73,7 @@ To run this simulator's server, you have to install Go and etcd.
 You can install etcd with [kubernetes/kubernetes/hack/install-etcd.sh](https://github.com/kubernetes/kubernetes/blob/master/hack/install-etcd.sh).
 
 ```bash
+cd simulator
 make start
 ```
 
@@ -79,16 +81,16 @@ It starts etcd and simulator-server locally.
 
 #### Run simulator frontend
 
-To run the frontend, please see [README.md](./web/README.md) on ./web dir.
+To run the frontend, please see [README.md](web/README.md) on ./web dir.
 
 ## Contributing
 
-see [CONTRIBUTING.md](./CONTRIBUTING.md)
+see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ### other docs
 
-- [how the simulator works](./docs/how-it-works.md)
-- [API Reference](./docs/api.md)
+- [how the simulator works](docs/how-it-works.md)
+- [API Reference](docs/api.md)
 
 ## Community, discussion, contribution, and support
 

@@ -6,7 +6,7 @@ This doc describes how to use your custom plugins in the simulator.
 
 Please add your custom plugin's registry in `OutOfTreeRegistries` function in config package here:
 
-[kube-scheduler-simulator/scheduler/config/plugin.go](../../config/plugin.go)
+[kube-scheduler-simulator/simulator/scheduler/config/plugin.go](./simulator/scheduler/config/plugin.go)
 
 
 ## 2. Add your custom plugin in OutOfTreeFilterPlugins or OutOfTreeScorePlugins function.
@@ -15,7 +15,7 @@ Please add your custom plugin's registry in `OutOfTreeRegistries` function in co
 
 Please add your custom plugin in `OutOfTreeFilterPlugins` function or `OutOfTreeScorePlugins` function in config package here:
 
-[kube-scheduler-simulator/scheduler/config/plugin.go](../../config/plugin.go)
+[kube-scheduler-simulator/simulator/scheduler/config/plugin.go](./simulator/scheduler/config/plugin.go)
 
 ## 3. Configure the scheduler to enable your custom plugin 
 
@@ -27,7 +27,7 @@ You can change the scheduler configuration in Web UI or by passing a KubeSchedul
 
 ## Example
 
-We will explain the case where you want to add [nodenumber](./nodenumber/plugin.go) plugin as example.
+We will explain the case where you want to add [nodenumber](nodenumber/plugin.go) plugin as example.
 
 The nodenumber plugin is an example plugin that favors nodes that have the number suffix which is the same as the number suffix of the pod name.
 And we can configure it via `NodeNumberArgs`.
@@ -188,4 +188,4 @@ profiles:
           reverse: true
 ```
 
-![result](./result.jpg)
+![result](result.jpg)

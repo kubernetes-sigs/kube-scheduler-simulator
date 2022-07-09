@@ -10,7 +10,7 @@ _As contributors and maintainers of this project, and in the interest of fosteri
 
 ## Getting Started
 
-For the frontend, please see [README.md](./web/README.md) on ./web dir.
+For the frontend, please see [README.md](web/README.md) on ./web dir.
 
 The first step, you have to prepare tools with make.
 
@@ -34,4 +34,4 @@ See [Makefile](Makefile) for more details.
 ## Internal KEP
 
 We may discuss new features in internal KEP.
-See [keps/README.md](./keps/README.md) for more details.
+See [keps/README.md](keps/README.md) for more details.

@@ -1,3 +1,3 @@
-[submodule "submodules/kubernetes"]
-	path = submodules/kubernetes
+[submodule "simulator/submodules/kubernetes"]
+	path = simulator/submodules/kubernetes
 	url = https://github.com/kubernetes/kubernetes.git
