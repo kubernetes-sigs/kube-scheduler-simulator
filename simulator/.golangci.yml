@@ -1,6 +1,6 @@
 linters-settings:
   gci:
-    local-prefixes: github.com/kubernetes-sigs/kube-scheduler-simulator/simulator
+    local-prefixes: sigs.k8s.io/kube-scheduler-simulator/simulator
   gocritic:
     disabled-checks:
       - appendAssign
