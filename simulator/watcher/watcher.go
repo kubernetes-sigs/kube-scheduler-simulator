@@ -6,6 +6,7 @@ package watcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -48,7 +49,6 @@ type WatchEvent struct {
 }
 
 // LastResourceVersions includes each resource's lastResourceVersions.
-// These values are specified from frontend.
 type LastResourceVersions struct {
 	Pods  string `json:"pods"`
 	Nodes string `json:"nodes"`
@@ -232,9 +232,9 @@ func (p *resourceEventProxy) WatchErrorHandler(err error) {
 		// has a semantic that it returns data at least as fresh as provided RV.
 		// So first try to LIST with setting RV to resource version of last observed object.
 		klog.Infof("watch of %v closed with: %w", p.r, err)
-	case xerrors.Is(io.EOF, err):
+	case errors.Is(io.EOF, err):
 		// watch closed normally
-	case xerrors.Is(io.ErrUnexpectedEOF, err):
+	case errors.Is(io.ErrUnexpectedEOF, err):
 		klog.Infof("watch for %v closed with unexpected EOF: %w", p.r, err)
 	default:
 		utilruntime.HandleError(fmt.Errorf("failed to watch %v: %w", p.r, err))

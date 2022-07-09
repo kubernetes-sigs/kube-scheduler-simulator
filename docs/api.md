@@ -102,7 +102,8 @@ You can find sample requests/responses [here](api-samples/v1/import.md)
 
 ## Watch the simulator's resources
 
-Monitor simulator resources and get updates automatically.
+Watch individual changes to all k8s resources in the simulator. This endpoint uses `Server-Sent Events`. 
+Once this API is called, the server will continuously returns a WatchEvent response containing event information for a resource.
 
 ### HTTP Request
 
@@ -114,12 +115,14 @@ If you won't specify it, the simulator failed to watch the resource.
 
 |parameter|requirement|description|
 | ----- | --- | -------- |
-|podsLastResourceVersion|MUST|integer|
-|nodesLastResourceVersion|MUST|integer|
-|pvsLastResourceVersion|MUST|integer|
-|pvcsLastResourceVersion|MUST|integer|
-|scsLastResourceVersion|MUST|integer|
-|pcsLastResourceVersion|MUST|integer|
+|podsLastResourceVersion|MUST|string|
+|nodesLastResourceVersion|MUST|string|
+|pvsLastResourceVersion|MUST|string|
+|pvcsLastResourceVersion|MUST|string|
+|scsLastResourceVersion|MUST|string|
+|pcsLastResourceVersion|MUST|string|
+
+These `resourceVersion` set a constraint on what resource versions a request may be served from. See https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions for details. 
 
 e.g.)
 ```

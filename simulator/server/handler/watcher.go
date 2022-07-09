@@ -10,7 +10,7 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/watcher"
 )
 
-// WatcherHandler is a handler for watching the simulator's resources.
+// WatcherHandler is a handler for watching the k8s resources in the simulator.
 type WatcherHandler struct {
 	service di.WatcherService
 }
@@ -19,7 +19,7 @@ func NewWatcherHandler(s di.WatcherService) *WatcherHandler {
 	return &WatcherHandler{service: s}
 }
 
-// WatchResources provides a server-pushed response.
+//  WatchResources provides resource updates using `server-sent events`.
 func (h *WatcherHandler) WatchResources(c echo.Context) error {
 	ctx := c.Request().Context()
 	versions := &watcher.LastResourceVersions{
