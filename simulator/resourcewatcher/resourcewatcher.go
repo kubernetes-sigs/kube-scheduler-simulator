@@ -76,7 +76,7 @@ func NewResourceWatcherService(client clientset.Interface) *Service {
 	}
 }
 
-// WatchResources watches each simulator's resources and pushes notified events to the frontend continuously.
+// WatchResources watches each simulator's resources and send notified events to the frontend continuously.
 func (s *Service) WatchResources(ctx context.Context, stream ResponseStream, lrVersions *LastResourceVersions) error {
 	sw := newStreamWriter(stream)
 	podsEventProxy := newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pods, &corev1.Pod{}, lrVersions.Pods)
@@ -117,6 +117,9 @@ func (s *Service) WatchResources(ctx context.Context, stream ResponseStream, lrV
 	go s.WatchAndHandleEvent(scsEventProxy, scsWatcher, ctx.Done())
 	go s.WatchAndHandleEvent(pcsEventProxy, pcsWatcher, ctx.Done())
 
+	// This method will return an error and finish to event send when the connection from a client is closed.
+	// It includes browser reload, ReadableStream.cancel() calling and so on.
+	// This is to allow the front end to handle stream connection disconnections.
 	<-ctx.Done()
 	return xerrors.Errorf("terminated to watch: %w", ctx.Err())
 }
