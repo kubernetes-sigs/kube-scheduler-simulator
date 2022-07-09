@@ -35,7 +35,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	schedulercfgHandler := handler.NewSchedulerConfigHandler(dic.SchedulerService())
 	exportHandler := handler.NewExportHandler(dic.ExportService())
 	resetHandler := handler.NewResetHandler(dic.ResetService())
-	watcherHandler := handler.NewWatcherHandler(dic.WatcherService())
+	resourcewatcherHandler := handler.NewResourceWatcherHandler(dic.ResourceWatcherService())
 
 	// register apis
 	v1 := e.Group("/api/v1")
@@ -49,7 +49,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	v1.POST("/import", exportHandler.Import)
 
 	// server push
-	v1.GET("/watchresources", watcherHandler.WatchResources)
+	v1.GET("/watchresources", resourcewatcherHandler.WatchResources)
 
 	// initialize SimulatorServer.
 	s := &SimulatorServer{e: e}

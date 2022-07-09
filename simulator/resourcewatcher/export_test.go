@@ -1,4 +1,4 @@
-package watcher
+package resourcewatcher
 
 import (
 	"k8s.io/apimachinery/pkg/runtime"

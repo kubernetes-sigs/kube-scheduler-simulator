@@ -1,4 +1,4 @@
-package watcher
+package resourcewatcher
 
 //go:generate mockgen -destination=./mock_$GOPACKAGE/streamWriter.go . StreamWriter
 

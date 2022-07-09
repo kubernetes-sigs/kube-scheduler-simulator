@@ -1,7 +1,7 @@
-package watcher
+package resourcewatcher
 
 //go:generate mockgen -destination=./mock_$GOPACKAGE/responseStream.go . ResponseStream
-//go:generate mockgen -destination=./mock_$GOPACKAGE/watchInterface.go -package=mock_watcher -mock_names Interface=MockWatchInterface k8s.io/apimachinery/pkg/watch Interface
+//go:generate mockgen -destination=./mock_$GOPACKAGE/watchInterface.go -package=mock_resourcewatcher -mock_names Interface=MockWatchInterface k8s.io/apimachinery/pkg/watch Interface
 //go:generate mockgen -destination=./mock_$GOPACKAGE/resourceeventproxy.go . ResourceEventProxy
 
 import (
@@ -70,7 +70,7 @@ type Service struct {
 }
 
 // NewWatcherService initializes Service.
-func NewWatcherService(client clientset.Interface) *Service {
+func NewResourceWatcherService(client clientset.Interface) *Service {
 	return &Service{
 		client: client,
 	}

@@ -16,9 +16,9 @@ import (
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/priorityclass"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/replicateexistingcluster"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/reset"
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/resourcewatcher"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/storageclass"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/watcher"
 )
 
 // Container saves and provides dependencies.
@@ -33,7 +33,7 @@ type Container struct {
 	priorityClassService            PriorityClassService
 	resetService                    ResetService
 	replicateExistingClusterService ReplicateExistingClusterService
-	watcherService                  WatcherService
+	resourceWatcherService          ResourceWatcherService
 }
 
 // NewDIContainer initializes Container.
@@ -68,7 +68,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, externalRestClientCfg)
 		c.replicateExistingClusterService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
 	}
-	c.watcherService = watcher.NewWatcherService(client)
+	c.resourceWatcherService = resourcewatcher.NewResourceWatcherService(client)
 
 	return c
 }
@@ -124,9 +124,9 @@ func (c *Container) ReplicateExistingClusterService() ReplicateExistingClusterSe
 	return c.replicateExistingClusterService
 }
 
-// WatcherService returns WatcherService.
-func (c *Container) WatcherService() WatcherService {
-	return c.watcherService
+// ResourceWatcherService returns ResourceWatcherService.
+func (c *Container) ResourceWatcherService() ResourceWatcherService {
+	return c.resourceWatcherService
 }
 
 // createExportServiceForReplicateExistingClusterService creates each services

@@ -6,23 +6,23 @@ import (
 	"github.com/labstack/echo/v4"
 	"k8s.io/klog/v2"
 
+	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/resourcewatcher"
 	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/server/di"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/watcher"
 )
 
 // WatcherHandler is a handler for watching the k8s resources in the simulator.
-type WatcherHandler struct {
-	service di.WatcherService
+type ResourceWatcherHandler struct {
+	service di.ResourceWatcherService
 }
 
-func NewWatcherHandler(s di.WatcherService) *WatcherHandler {
-	return &WatcherHandler{service: s}
+func NewResourceWatcherHandler(s di.ResourceWatcherService) *ResourceWatcherHandler {
+	return &ResourceWatcherHandler{service: s}
 }
 
 //  WatchResources provides resource updates using `server-sent events`.
-func (h *WatcherHandler) WatchResources(c echo.Context) error {
+func (h *ResourceWatcherHandler) WatchResources(c echo.Context) error {
 	ctx := c.Request().Context()
-	versions := &watcher.LastResourceVersions{
+	versions := &resourcewatcher.LastResourceVersions{
 		Pods:  c.FormValue("podsLastResourceVersion"),
 		Nodes: c.FormValue("nodesLastResourceVersion"),
 		Pvs:   c.FormValue("pvsLastResourceVersion"),
