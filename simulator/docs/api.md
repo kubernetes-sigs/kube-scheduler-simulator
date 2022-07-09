@@ -1,5 +1,7 @@
 # API reference
 
+This page describe the simulator's HTTP API endpoint.
+
 ## Get scheduler configuration
 
 get current scheduler configuration.
