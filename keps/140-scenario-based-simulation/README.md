@@ -328,6 +328,17 @@ when it can no longer schedule any more Pods.
 6. update status.scenarioResult.
 7. move to next step.
 
+##### How to detect "when it can no longer schedule any more Pods" at (4)
+
+In the scheduler, the unscheduled Pods are stored in queue.
+
+In a single step, the resources are created/edited/deleted only at (1) in the above description. (except pod deletion by preemption)
+So, the amount of k8s resources in the cluster doesn't get increased during (4) rather got decreased by scheduled Pod.
+
+This means that the number of Pods can be scheduled will decrease and eventually no more Pods can be scheduled 
+(or all Pods will be scheduled).
+Thus, all we have to do in (4) is wait until no more pods are scheduled for a while.
+
 ##### Why scheduler needs to restarts/stops scheduling loop?
 
 To ensure that the results of the simulation do not vary significantly from run to run. 
@@ -342,7 +353,7 @@ We can prevent a scheduling queue from poping next Pods by replacing `Scheduler.
 https://github.com/kubernetes/kubernetes/blob/867b5cc31b376c9f5d04cf9278112368b0337104/pkg/scheduler/scheduler.go#L75
 
 We can provide the function to override `Scheduler.NextPod` so that users can use scenario outside of simulator.
-The override function besically behave like normal `NextPod`, 
+The override function basically behave like normal `NextPod`, 
 but checks the running Scenario's status.SchedulerStatus and decide to stop/restart scheduling.
 
 ##### Adding events to running Scenario 
@@ -354,7 +365,7 @@ The scenario will continue to run until all events in .spec.Events are completed
 
 So, it is strongly recommended adding events to running Scenario only after Scenario have reached "Paused" phase. 
 (since ScenarioStep has stopped moving forward in "Paused" phase as described above.)
-Otherwise you may add the past ScenarioStep events and they are ignored by running Scenario.
+Otherwise, you may add the past ScenarioStep events and they are ignored by running Scenario.
 
 ##### Configure when to update ScenarioResult
 
@@ -379,9 +390,9 @@ We can add a new configuration environment variable `UPDATE_SCENARIO_RESULTS_STR
 
 #### The result calculation packages
 
-ScenarioResult only has the simple data that represent what was happen during the scenario.
+ScenarioResult only has the simple data that represent what was happened during the scenario.
 
-So, we will provide useful functions and data structures to analize the result. 
+So, we will provide useful functions and data structures to analyze the result. 
 
 For example:
 - the function to aggregate changes in allocation rate of the entire cluster.
@@ -430,10 +441,49 @@ The users want to see how their customized scheduler behaves in the worst case s
 Even when a scenario is running, users can add events to that scenario. 
 So, in this case, they can add events that are most worst case for the scheduler by looking at the simulation results and the resources status at that point.
 
-## Alternatives
+## Questions/Answers
 
-<!--
-What other approaches did you consider, and why did you rule them out? These do
-not need to be as detailed as the proposal, but should include enough
-information to express the idea and why it was not acceptable.
--->
+### can scenario work with all kind of schedulers?
+
+Respondent: @sanposhiho.
+
+The current simulator has a scheduler of only fixed one version. (v1.22 at the time I write this.)
+
+Also, schedulers can be customized by adding your plugin to scheduler, and custom plugins can be used in simulator/Scenario. (see [docs/how-to-use-custom-plugins](./docs/how-to-use-custom-plugins))
+
+So, to summarize, the current simulator/Scenario only supports:
+- non-customized scheduler of fixed version.
+- scheduler above + custom plugins.
+
+For who want to use scheduler not supported by simulator, (e.g. scheduler of different versions, patched scheduler, or completely original scheduler)
+the simulator will support "outside scheduler", [issue here](https://github.com/kubernetes-sigs/kube-scheduler-simulator/issues/182).
+
+The outside scheduler literally means the scheduler outside of simulator,
+communicates with the api-server in simulator and schedule all the Pod.
+
+Given the current simulator only supports limited scheduler described above,
+I _guess_ more users will want to use outside scheduler rather than scheduler in simulator.
+
+Get back to the original story - So, which kinds of scheduler can scenario work with.
+
+As described in KEP so far, for scenario, we need to stop scheduler somehow.
+
+If scheduler in simulator is used, it's easy. 
+We just need to replace NextPod field in scheduler as described in [# How to stop scheduling loop](#How-to-stop-scheduling-loop).
+Users don't need to anything for it.
+
+And for any outside scheduler that schedules Pods one by one in loop like scheduler in [kubernetes/kubernetes repo](https://github.com/kubernetes/kubernetes/tree/master/pkg/scheduler),
+it's also easy.
+
+I believe we can provide the function that checks the running Scenario's status.SchedulerStatus and decide to stop/restart scheduling. 
+Users only need to add that func in the beginning of process to schedule a Pod.
+By doing this, Scenario can be used with almost any scheduler.
+
+So... which kind of scheduler **cannot** scenario work with?
+
+I think that, for example, schedulers like following are that scenario cannot work with:
+- scheduler that schedules Pods by the conditions other than k8s resources.
+    - For example, the scheduler that schedules Pods by checking metrics server.
+    - The scenario controller cannot manage metrics value and the Scenario may yield different results for each run.
+- scheduler that creates the new resources.
+    - Only binding Pods or preemption are allowed for scheduler.
