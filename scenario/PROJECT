@@ -3,4 +3,14 @@ layout:
 - go.kubebuilder.io/v3
 projectName: scenario
 repo: sigs.k8s.io/kube-scheduler-simulator/scenario
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kube-scheduler-simulator.x-k8s.io
+  group: simulation
+  kind: Scenario
+  path: sigs.k8s.io/kube-scheduler-simulator/scenario/api/v1alpha1
+  version: v1alpha1
 version: "3"

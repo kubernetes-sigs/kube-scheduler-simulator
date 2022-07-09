@@ -1,0 +1,6 @@
+apiVersion: simulation.kube-scheduler-simulator.x-k8s.io/v1alpha1
+kind: Scenario
+metadata:
+  name: scenario-sample
+spec:
+  # TODO(user): Add fields here
