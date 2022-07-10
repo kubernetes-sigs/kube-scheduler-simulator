@@ -10,8 +10,8 @@ import (
 	schedulingresultstore "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
 )
 
-//go:generate mockgen -destination=./mock/$GOFILE -package=plugin . Store,FilterPluginExtender,ScorePluginExtender,NormalizeScorePluginExtender
-//go:generate mockgen -destination=./mock/framework.go -package=plugin k8s.io/kubernetes/pkg/scheduler/framework FilterPlugin,ScorePlugin,ScoreExtensions
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock/$GOFILE -package=plugin . Store,FilterPluginExtender,ScorePluginExtender,NormalizeScorePluginExtender
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock/framework.go -package=plugin k8s.io/kubernetes/pkg/scheduler/framework FilterPlugin,ScorePlugin,ScoreExtensions
 type Store interface {
 	AddNormalizedScoreResult(namespace, podName, nodeName, pluginName string, normalizedscore int64)
 	AddFilterResult(namespace, podName, nodeName, pluginName, reason string)

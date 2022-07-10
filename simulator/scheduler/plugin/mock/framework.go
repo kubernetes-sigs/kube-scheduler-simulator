@@ -13,30 +13,30 @@ import (
 	framework "k8s.io/kubernetes/pkg/scheduler/framework"
 )
 
-// MockFilterPlugin is a mock of FilterPlugin interface
+// MockFilterPlugin is a mock of FilterPlugin interface.
 type MockFilterPlugin struct {
 	ctrl     *gomock.Controller
 	recorder *MockFilterPluginMockRecorder
 }
 
-// MockFilterPluginMockRecorder is the mock recorder for MockFilterPlugin
+// MockFilterPluginMockRecorder is the mock recorder for MockFilterPlugin.
 type MockFilterPluginMockRecorder struct {
 	mock *MockFilterPlugin
 }
 
-// NewMockFilterPlugin creates a new mock instance
+// NewMockFilterPlugin creates a new mock instance.
 func NewMockFilterPlugin(ctrl *gomock.Controller) *MockFilterPlugin {
 	mock := &MockFilterPlugin{ctrl: ctrl}
 	mock.recorder = &MockFilterPluginMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockFilterPlugin) EXPECT() *MockFilterPluginMockRecorder {
 	return m.recorder
 }
 
-// Filter mocks base method
+// Filter mocks base method.
 func (m *MockFilterPlugin) Filter(arg0 context.Context, arg1 *framework.CycleState, arg2 *v1.Pod, arg3 *framework.NodeInfo) *framework.Status {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Filter", arg0, arg1, arg2, arg3)
@@ -44,13 +44,13 @@ func (m *MockFilterPlugin) Filter(arg0 context.Context, arg1 *framework.CycleSta
 	return ret0
 }
 
-// Filter indicates an expected call of Filter
+// Filter indicates an expected call of Filter.
 func (mr *MockFilterPluginMockRecorder) Filter(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Filter", reflect.TypeOf((*MockFilterPlugin)(nil).Filter), arg0, arg1, arg2, arg3)
 }
 
-// Name mocks base method
+// Name mocks base method.
 func (m *MockFilterPlugin) Name() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Name")
@@ -58,36 +58,36 @@ func (m *MockFilterPlugin) Name() string {
 	return ret0
 }
 
-// Name indicates an expected call of Name
+// Name indicates an expected call of Name.
 func (mr *MockFilterPluginMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockFilterPlugin)(nil).Name))
 }
 
-// MockScorePlugin is a mock of ScorePlugin interface
+// MockScorePlugin is a mock of ScorePlugin interface.
 type MockScorePlugin struct {
 	ctrl     *gomock.Controller
 	recorder *MockScorePluginMockRecorder
 }
 
-// MockScorePluginMockRecorder is the mock recorder for MockScorePlugin
+// MockScorePluginMockRecorder is the mock recorder for MockScorePlugin.
 type MockScorePluginMockRecorder struct {
 	mock *MockScorePlugin
 }
 
-// NewMockScorePlugin creates a new mock instance
+// NewMockScorePlugin creates a new mock instance.
 func NewMockScorePlugin(ctrl *gomock.Controller) *MockScorePlugin {
 	mock := &MockScorePlugin{ctrl: ctrl}
 	mock.recorder = &MockScorePluginMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockScorePlugin) EXPECT() *MockScorePluginMockRecorder {
 	return m.recorder
 }
 
-// Name mocks base method
+// Name mocks base method.
 func (m *MockScorePlugin) Name() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Name")
@@ -95,13 +95,13 @@ func (m *MockScorePlugin) Name() string {
 	return ret0
 }
 
-// Name indicates an expected call of Name
+// Name indicates an expected call of Name.
 func (mr *MockScorePluginMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockScorePlugin)(nil).Name))
 }
 
-// Score mocks base method
+// Score mocks base method.
 func (m *MockScorePlugin) Score(arg0 context.Context, arg1 *framework.CycleState, arg2 *v1.Pod, arg3 string) (int64, *framework.Status) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Score", arg0, arg1, arg2, arg3)
@@ -110,13 +110,13 @@ func (m *MockScorePlugin) Score(arg0 context.Context, arg1 *framework.CycleState
 	return ret0, ret1
 }
 
-// Score indicates an expected call of Score
+// Score indicates an expected call of Score.
 func (mr *MockScorePluginMockRecorder) Score(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Score", reflect.TypeOf((*MockScorePlugin)(nil).Score), arg0, arg1, arg2, arg3)
 }
 
-// ScoreExtensions mocks base method
+// ScoreExtensions mocks base method.
 func (m *MockScorePlugin) ScoreExtensions() framework.ScoreExtensions {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ScoreExtensions")
@@ -124,36 +124,36 @@ func (m *MockScorePlugin) ScoreExtensions() framework.ScoreExtensions {
 	return ret0
 }
 
-// ScoreExtensions indicates an expected call of ScoreExtensions
+// ScoreExtensions indicates an expected call of ScoreExtensions.
 func (mr *MockScorePluginMockRecorder) ScoreExtensions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScoreExtensions", reflect.TypeOf((*MockScorePlugin)(nil).ScoreExtensions))
 }
 
-// MockScoreExtensions is a mock of ScoreExtensions interface
+// MockScoreExtensions is a mock of ScoreExtensions interface.
 type MockScoreExtensions struct {
 	ctrl     *gomock.Controller
 	recorder *MockScoreExtensionsMockRecorder
 }
 
-// MockScoreExtensionsMockRecorder is the mock recorder for MockScoreExtensions
+// MockScoreExtensionsMockRecorder is the mock recorder for MockScoreExtensions.
 type MockScoreExtensionsMockRecorder struct {
 	mock *MockScoreExtensions
 }
 
-// NewMockScoreExtensions creates a new mock instance
+// NewMockScoreExtensions creates a new mock instance.
 func NewMockScoreExtensions(ctrl *gomock.Controller) *MockScoreExtensions {
 	mock := &MockScoreExtensions{ctrl: ctrl}
 	mock.recorder = &MockScoreExtensionsMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockScoreExtensions) EXPECT() *MockScoreExtensionsMockRecorder {
 	return m.recorder
 }
 
-// NormalizeScore mocks base method
+// NormalizeScore mocks base method.
 func (m *MockScoreExtensions) NormalizeScore(arg0 context.Context, arg1 *framework.CycleState, arg2 *v1.Pod, arg3 framework.NodeScoreList) *framework.Status {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NormalizeScore", arg0, arg1, arg2, arg3)
@@ -161,7 +161,7 @@ func (m *MockScoreExtensions) NormalizeScore(arg0 context.Context, arg1 *framewo
 	return ret0
 }
 
-// NormalizeScore indicates an expected call of NormalizeScore
+// NormalizeScore indicates an expected call of NormalizeScore.
 func (mr *MockScoreExtensionsMockRecorder) NormalizeScore(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NormalizeScore", reflect.TypeOf((*MockScoreExtensions)(nil).NormalizeScore), arg0, arg1, arg2, arg3)

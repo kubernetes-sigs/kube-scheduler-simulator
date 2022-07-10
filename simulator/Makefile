@@ -1,6 +1,7 @@
 .PHONY: generate
-generate: format
+generate:
 	go generate ./...
+	make format
 
 # re-generate openapi file for running api-server
 .PHONY: openapi
