@@ -6,9 +6,11 @@ package mock_replicateexistingcluster
 
 import (
 	context "context"
-	gomock "github.com/golang/mock/gomock"
-	export "sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
+
+	export "sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 )
 
 // MockExportService is a mock of ExportService interface

@@ -6,10 +6,11 @@ package plugin
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/core/v1"
 	framework "k8s.io/kubernetes/pkg/scheduler/framework"
-	reflect "reflect"
 )
 
 // MockFilterPlugin is a mock of FilterPlugin interface
