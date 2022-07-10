@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/xerrors"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/export"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 )
 
 // Service has two exportServices.

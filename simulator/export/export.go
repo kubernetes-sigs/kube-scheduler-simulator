@@ -24,7 +24,7 @@ import (
 	"k8s.io/klog/v2"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/util"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
 
 type Service struct {

@@ -7,8 +7,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"golang.org/x/xerrors"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/export"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/replicateexistingcluster/mock_replicateexistingcluster"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/replicateexistingcluster/mock_replicateexistingcluster"
 )
 
 func TestService_ImportFromExistingCluster(t *testing.T) {

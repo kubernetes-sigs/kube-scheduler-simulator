@@ -8,16 +8,16 @@ import (
 	restclient "k8s.io/client-go/rest"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/export"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/node"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/persistentvolume"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/persistentvolumeclaim"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/pod"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/priorityclass"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/replicateexistingcluster"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/reset"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/storageclass"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/node"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/persistentvolume"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/persistentvolumeclaim"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/pod"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/priorityclass"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/replicateexistingcluster"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/reset"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/storageclass"
 )
 
 // Container saves and provides dependencies.

@@ -1,4 +1,4 @@
-module github.com/kubernetes-sigs/kube-scheduler-simulator/simulator
+module sigs.k8s.io/kube-scheduler-simulator/simulator
 
 go 1.17
 
