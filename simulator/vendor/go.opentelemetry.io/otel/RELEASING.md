@@ -18,7 +18,7 @@ Update go.mod for submodules to depend on the new release which will happen in t
 
     This should have changed the version for all modules to be `<new tag>`.
 
-3. Update the [Changelog](CHANGELOG.md).
+3. Update the [Changelog](./CHANGELOG.md).
    - Make sure all relevant changes for this release are included and are in language that non-contributors to the project can understand.
        To verify this, you can look directly at the commits since the `<last tag>`.
 
@@ -30,7 +30,7 @@ Update go.mod for submodules to depend on the new release which will happen in t
    - Update all the appropriate links at the bottom.
 
 4. Push the changes to upstream and create a Pull Request on GitHub.
-    Be sure to include the curated changes from the [Changelog](CHANGELOG.md) in the description.
+    Be sure to include the curated changes from the [Changelog](./CHANGELOG.md) in the description.
 
 
 ## Tag
