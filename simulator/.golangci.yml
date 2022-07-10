@@ -1,6 +1,11 @@
 linters-settings:
+  # if you fix this gci config, you should modify the gci command on `make format` as well.
   gci:
-    local-prefixes: sigs.k8s.io/kube-scheduler-simulator/simulator
+    sections:
+      - Standard
+      - Default
+      - Prefix(sigs.k8s.io/kube-scheduler-simulator/simulator)
+
   gocritic:
     disabled-checks:
       - appendAssign

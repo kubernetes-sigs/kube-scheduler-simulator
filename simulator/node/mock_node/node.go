@@ -6,10 +6,11 @@ package mock_node
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/core/v1"
 	v10 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	reflect "reflect"
 )
 
 // MockPodService is a mock of PodService interface

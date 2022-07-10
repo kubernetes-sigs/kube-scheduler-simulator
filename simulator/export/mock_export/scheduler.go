@@ -5,9 +5,10 @@
 package mock_export
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	v1beta2 "k8s.io/kube-scheduler/config/v1beta2"
-	reflect "reflect"
 )
 
 // MockSchedulerService is a mock of SchedulerService interface
