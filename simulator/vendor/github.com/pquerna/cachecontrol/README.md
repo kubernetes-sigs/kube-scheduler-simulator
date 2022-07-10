@@ -104,4 +104,4 @@ Please [open issues in Github](https://github.com/pquerna/cachecontrol/issues) f
 
 ## License
 
-`cachecontrol` is licensed under the [Apache License, Version 2.0](LICENSE)
+`cachecontrol` is licensed under the [Apache License, Version 2.0](./LICENSE)
