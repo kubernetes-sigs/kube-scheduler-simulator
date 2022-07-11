@@ -6,18 +6,30 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func NewStreamWriter(stream ResponseStream) *streamWriter {
-	return newStreamWriter(stream)
+type ExportStreamWriter streamWriter
+
+func NewStreamWriter(stream ResponseStream) *ExportStreamWriter {
+	return (*ExportStreamWriter)(newStreamWriter(stream))
 }
 
-func CreateWatcher(p *resourceEventProxy) (watch.Interface, error) {
-	return createWatcher(p)
+func (sw *ExportStreamWriter) Write(we *WatchEvent) error {
+	return (*streamWriter)(sw).Write(we)
 }
 
-func NewResourceEventProxy(sw StreamWriter, c cache.Getter, r resourceKind, o runtime.Object, ilrv string) *resourceEventProxy {
-	return newresourceEventProxy(sw, c, r, o, ilrv)
+func CreateWatcher(p *ExportResourceEventProxy) (watch.Interface, error) {
+	return createWatcher((*resourceEventProxy)(p))
 }
 
-func (p *resourceEventProxy) ExportGetLastResourceVersion() string {
+type ExportResourceEventProxy resourceEventProxy
+
+func NewResourceEventProxy(sw StreamWriter, c cache.Getter, r resourceKind, o runtime.Object, ilrv string) *ExportResourceEventProxy {
+	return (*ExportResourceEventProxy)(newresourceEventProxy(sw, c, r, o, ilrv))
+}
+
+func (p *ExportResourceEventProxy) ExportGetLastResourceVersion() string {
 	return p.lastResourceVersion
+}
+
+func (p *ExportResourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error {
+	return (*resourceEventProxy)(p).WatchHandlerFunc(watcher)
 }

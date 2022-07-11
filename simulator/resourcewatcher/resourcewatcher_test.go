@@ -123,7 +123,9 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -143,12 +145,16 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
-					assert.Equal(t, "node2", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node2", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -169,7 +175,9 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -189,12 +197,16 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
-					assert.Equal(t, "node2", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node2", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -215,7 +227,9 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Deleted, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -235,12 +249,16 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Deleted, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Deleted, e.EventType)
-					assert.Equal(t, "node2", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node2", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -261,12 +279,16 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
-					assert.Equal(t, "node2", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node2", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -287,17 +309,23 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
-					assert.Equal(t, "node2", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node2", obj.GetName())
 				})
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
-					assert.Equal(t, "node3", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node3", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -319,17 +347,23 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
-					assert.Equal(t, "node1", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node1", obj.GetName())
 				})
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
-					assert.Equal(t, "node2", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node2", obj.GetName())
 				})
 				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
 					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
 					assert.Equal(t, watch.Deleted, e.EventType)
-					assert.Equal(t, "node3", e.Obj.(metav1.Object).GetName())
+					obj, ok := e.Obj.(metav1.Object)
+					assert.True(t, ok)
+					assert.Equal(t, "node3", obj.GetName())
 				})
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
