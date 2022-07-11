@@ -16,8 +16,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	restfake "k8s.io/client-go/rest/fake"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/resourcewatcher"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/resourcewatcher/mock_resourcewatcher"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/mock_resourcewatcher"
 )
 
 var (

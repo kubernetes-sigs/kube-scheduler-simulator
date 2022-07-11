@@ -25,7 +25,7 @@ and
 [milestones](https://github.com/open-telemetry/opentelemetry-go/milestones).
 
 Project versioning information and stability guarantees can be found in the
-[versioning documentation](VERSIONING.md).
+[versioning documentation](./VERSIONING.md).
 
 ### Compatibility
 

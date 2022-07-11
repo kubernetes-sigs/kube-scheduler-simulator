@@ -1,6 +1,11 @@
 .PHONY: generate
-generate: vendor
-	go generate ./... && \
+generate:
+	go generate ./...
+	make format
+
+# re-generate openapi file for running api-server
+.PHONY: openapi
+openapi: vendor
 	./hack/openapi.sh
 
 .PHONY: lint
@@ -9,6 +14,7 @@ lint:
 
 .PHONY: format
 format:
+	find . -name "*.go" | grep -v "vendor" | grep -v "submodule" | xargs gci write --Section Standard --Section Default --Section "Prefix(sigs.k8s.io/kube-scheduler-simulator/simulator)"
 	golangci-lint run --fix ./...
 
 .PHONY: test

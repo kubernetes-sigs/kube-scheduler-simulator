@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"k8s.io/klog/v2"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/server/di"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 )
 
 // ResetHandler is handler for clean up resources and scheduler configuration.

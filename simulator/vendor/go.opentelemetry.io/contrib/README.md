@@ -22,4 +22,4 @@ board](https://github.com/orgs/open-telemetry/projects/5).
 
 ## Contributing
 
-For information on how to contribute, consult [the contributing guidelines](CONTRIBUTING.md)
+For information on how to contribute, consult [the contributing guidelines](./CONTRIBUTING.md)

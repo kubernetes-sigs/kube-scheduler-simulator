@@ -13,7 +13,7 @@ import (
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 )
 
 // ErrEmptyEnv represents the required environment variable don't exist.

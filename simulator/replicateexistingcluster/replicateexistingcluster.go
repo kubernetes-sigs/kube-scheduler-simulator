@@ -1,13 +1,13 @@
 package replicateexistingcluster
 
-//go:generate mockgen -destination=./mock_$GOPACKAGE/export.go . ExportService
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/export.go . ExportService
 
 import (
 	"context"
 
 	"golang.org/x/xerrors"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/export"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 )
 
 // Service has two exportServices.

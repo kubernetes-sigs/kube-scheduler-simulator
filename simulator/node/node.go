@@ -1,6 +1,6 @@
 package node
 
-//go:generate mockgen -destination=./mock_$GOPACKAGE/$GOFILE . PodService
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/$GOFILE . PodService
 
 import (
 	"context"

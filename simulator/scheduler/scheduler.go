@@ -16,8 +16,8 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/v1beta2"
 	"k8s.io/kubernetes/pkg/scheduler/profile"
 
-	simulatorschedconfig "github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/config"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/plugin"
+	simulatorschedconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin"
 )
 
 // Service manages scheduler.

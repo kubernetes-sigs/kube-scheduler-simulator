@@ -1,8 +1,8 @@
 package resourcewatcher
 
-//go:generate mockgen -destination=./mock_$GOPACKAGE/responseStream.go . ResponseStream
-//go:generate mockgen -destination=./mock_$GOPACKAGE/watchInterface.go -package=mock_resourcewatcher -mock_names Interface=MockWatchInterface k8s.io/apimachinery/pkg/watch Interface
-//go:generate mockgen -destination=./mock_$GOPACKAGE/resourceeventproxy.go . ResourceEventProxy
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/responseStream.go . ResponseStream
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/watchInterface.go -package=mock_resourcewatcher -mock_names Interface=MockWatchInterface k8s.io/apimachinery/pkg/watch Interface
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/resourceeventproxy.go . ResourceEventProxy
 
 import (
 	"context"

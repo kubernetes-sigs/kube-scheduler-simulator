@@ -12,7 +12,9 @@ _As contributors and maintainers of this project, and in the interest of fosteri
 
 For the frontend, please see [README.md](web/README.md) on ./web dir.
 
-The first step, you have to prepare tools with make.
+**prerequisite**: Go 1.17 or more
+
+You have to prepare tools with make.
 
 ```bash
 make tools

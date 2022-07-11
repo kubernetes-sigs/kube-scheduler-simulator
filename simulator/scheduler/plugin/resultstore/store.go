@@ -14,8 +14,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/scheduler/plugin/annotation"
-	"github.com/kubernetes-sigs/kube-scheduler-simulator/simulator/util"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/annotation"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
 
 // Store has results of scheduling.
