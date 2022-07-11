@@ -605,6 +605,38 @@ golang.org/x/tools/container/intsets
 ## explicit; go 1.11
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
+# gonum.org/v1/gonum v0.6.2
+## explicit; go 1.12
+gonum.org/v1/gonum/blas
+gonum.org/v1/gonum/blas/blas64
+gonum.org/v1/gonum/blas/cblas128
+gonum.org/v1/gonum/blas/gonum
+gonum.org/v1/gonum/floats
+gonum.org/v1/gonum/graph
+gonum.org/v1/gonum/graph/encoding
+gonum.org/v1/gonum/graph/encoding/dot
+gonum.org/v1/gonum/graph/formats/dot
+gonum.org/v1/gonum/graph/formats/dot/ast
+gonum.org/v1/gonum/graph/formats/dot/internal/astx
+gonum.org/v1/gonum/graph/formats/dot/internal/errors
+gonum.org/v1/gonum/graph/formats/dot/internal/lexer
+gonum.org/v1/gonum/graph/formats/dot/internal/parser
+gonum.org/v1/gonum/graph/formats/dot/internal/token
+gonum.org/v1/gonum/graph/internal/ordered
+gonum.org/v1/gonum/graph/internal/set
+gonum.org/v1/gonum/graph/internal/uid
+gonum.org/v1/gonum/graph/iterator
+gonum.org/v1/gonum/graph/simple
+gonum.org/v1/gonum/internal/asm/c128
+gonum.org/v1/gonum/internal/asm/c64
+gonum.org/v1/gonum/internal/asm/f32
+gonum.org/v1/gonum/internal/asm/f64
+gonum.org/v1/gonum/internal/cmplx64
+gonum.org/v1/gonum/internal/math32
+gonum.org/v1/gonum/lapack
+gonum.org/v1/gonum/lapack/gonum
+gonum.org/v1/gonum/lapack/lapack64
+gonum.org/v1/gonum/mat
 # google.golang.org/api v0.29.0
 ## explicit; go 1.11
 google.golang.org/api/compute/v0.alpha
@@ -1280,6 +1312,9 @@ k8s.io/client-go/listers/scheduling/v1beta1
 k8s.io/client-go/listers/storage/v1
 k8s.io/client-go/listers/storage/v1alpha1
 k8s.io/client-go/listers/storage/v1beta1
+k8s.io/client-go/metadata
+k8s.io/client-go/metadata/metadatainformer
+k8s.io/client-go/metadata/metadatalister
 k8s.io/client-go/pkg/apis/clientauthentication
 k8s.io/client-go/pkg/apis/clientauthentication/install
 k8s.io/client-go/pkg/apis/clientauthentication/v1
@@ -1332,7 +1367,14 @@ k8s.io/client-go/util/workqueue
 # k8s.io/cloud-provider v0.22.0 => k8s.io/cloud-provider v0.22.0
 ## explicit; go 1.16
 k8s.io/cloud-provider
+k8s.io/cloud-provider/app/config
+k8s.io/cloud-provider/config
+k8s.io/cloud-provider/config/install
+k8s.io/cloud-provider/config/v1alpha1
+k8s.io/cloud-provider/controllers/service/config
+k8s.io/cloud-provider/controllers/service/config/v1alpha1
 k8s.io/cloud-provider/node/helpers
+k8s.io/cloud-provider/options
 k8s.io/cloud-provider/service/helpers
 k8s.io/cloud-provider/volume
 k8s.io/cloud-provider/volume/errors
@@ -1348,6 +1390,7 @@ k8s.io/cluster-bootstrap/util/tokens
 k8s.io/component-base/cli/flag
 k8s.io/component-base/cli/globalflag
 k8s.io/component-base/config
+k8s.io/component-base/config/options
 k8s.io/component-base/config/v1alpha1
 k8s.io/component-base/config/validation
 k8s.io/component-base/featuregate
@@ -1373,6 +1416,19 @@ k8s.io/component-helpers/node/topology
 k8s.io/component-helpers/scheduling/corev1
 k8s.io/component-helpers/scheduling/corev1/nodeaffinity
 k8s.io/component-helpers/storage/volume
+# k8s.io/controller-manager v0.22.0 => k8s.io/controller-manager v0.22.0
+## explicit; go 1.16
+k8s.io/controller-manager/config
+k8s.io/controller-manager/config/v1alpha1
+k8s.io/controller-manager/config/v1beta1
+k8s.io/controller-manager/options
+k8s.io/controller-manager/pkg/clientbuilder
+k8s.io/controller-manager/pkg/features
+k8s.io/controller-manager/pkg/features/register
+k8s.io/controller-manager/pkg/informerfactory
+k8s.io/controller-manager/pkg/leadermigration
+k8s.io/controller-manager/pkg/leadermigration/config
+k8s.io/controller-manager/pkg/leadermigration/options
 # k8s.io/csi-translation-lib v0.22.0 => k8s.io/csi-translation-lib v0.22.0
 ## explicit; go 1.16
 k8s.io/csi-translation-lib
@@ -1409,6 +1465,9 @@ k8s.io/kube-aggregator/pkg/controllers/status
 k8s.io/kube-aggregator/pkg/registry/apiservice
 k8s.io/kube-aggregator/pkg/registry/apiservice/etcd
 k8s.io/kube-aggregator/pkg/registry/apiservice/rest
+# k8s.io/kube-controller-manager v0.0.0 => k8s.io/kube-controller-manager v0.22.0
+## explicit; go 1.16
+k8s.io/kube-controller-manager/config/v1alpha1
 # k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e
 ## explicit; go 1.12
 k8s.io/kube-openapi/pkg/aggregator
@@ -1436,6 +1495,8 @@ k8s.io/kubelet/pkg/apis
 ## explicit; go 1.16
 k8s.io/kubernetes/cmd/kube-apiserver/app
 k8s.io/kubernetes/cmd/kube-apiserver/app/options
+k8s.io/kubernetes/cmd/kube-controller-manager/app/config
+k8s.io/kubernetes/cmd/kube-controller-manager/app/options
 k8s.io/kubernetes/pkg/api/legacyscheme
 k8s.io/kubernetes/pkg/api/persistentvolume
 k8s.io/kubernetes/pkg/api/persistentvolumeclaim
@@ -1573,10 +1634,63 @@ k8s.io/kubernetes/pkg/capabilities
 k8s.io/kubernetes/pkg/cloudprovider/providers
 k8s.io/kubernetes/pkg/cluster/ports
 k8s.io/kubernetes/pkg/controller
+k8s.io/kubernetes/pkg/controller/apis/config
+k8s.io/kubernetes/pkg/controller/apis/config/scheme
+k8s.io/kubernetes/pkg/controller/apis/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/certificates/signer/config
+k8s.io/kubernetes/pkg/controller/certificates/signer/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/cronjob/config
+k8s.io/kubernetes/pkg/controller/cronjob/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/daemon/config
+k8s.io/kubernetes/pkg/controller/daemon/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/deployment
+k8s.io/kubernetes/pkg/controller/deployment/config
+k8s.io/kubernetes/pkg/controller/deployment/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/deployment/util
+k8s.io/kubernetes/pkg/controller/endpoint/config
+k8s.io/kubernetes/pkg/controller/endpoint/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/endpointslice/config
+k8s.io/kubernetes/pkg/controller/endpointslice/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/endpointslicemirroring/config
+k8s.io/kubernetes/pkg/controller/endpointslicemirroring/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/garbagecollector
+k8s.io/kubernetes/pkg/controller/garbagecollector/config
+k8s.io/kubernetes/pkg/controller/garbagecollector/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/garbagecollector/metaonly
+k8s.io/kubernetes/pkg/controller/job/config
+k8s.io/kubernetes/pkg/controller/job/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/namespace/config
+k8s.io/kubernetes/pkg/controller/namespace/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/nodeipam/config
+k8s.io/kubernetes/pkg/controller/nodeipam/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/nodelifecycle/config
+k8s.io/kubernetes/pkg/controller/nodelifecycle/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/podautoscaler/config
+k8s.io/kubernetes/pkg/controller/podautoscaler/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/podgc/config
+k8s.io/kubernetes/pkg/controller/podgc/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/replicaset
+k8s.io/kubernetes/pkg/controller/replicaset/config
+k8s.io/kubernetes/pkg/controller/replicaset/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/replicaset/metrics
+k8s.io/kubernetes/pkg/controller/replication/config
+k8s.io/kubernetes/pkg/controller/replication/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/resourcequota/config
+k8s.io/kubernetes/pkg/controller/resourcequota/config/v1alpha1
 k8s.io/kubernetes/pkg/controller/serviceaccount
+k8s.io/kubernetes/pkg/controller/serviceaccount/config
+k8s.io/kubernetes/pkg/controller/serviceaccount/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/statefulset/config
+k8s.io/kubernetes/pkg/controller/statefulset/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/ttlafterfinished/config
+k8s.io/kubernetes/pkg/controller/ttlafterfinished/config/v1alpha1
+k8s.io/kubernetes/pkg/controller/volume/attachdetach/config
+k8s.io/kubernetes/pkg/controller/volume/attachdetach/config/v1alpha1
 k8s.io/kubernetes/pkg/controller/volume/common
 k8s.io/kubernetes/pkg/controller/volume/events
 k8s.io/kubernetes/pkg/controller/volume/persistentvolume
+k8s.io/kubernetes/pkg/controller/volume/persistentvolume/config
+k8s.io/kubernetes/pkg/controller/volume/persistentvolume/config/v1alpha1
 k8s.io/kubernetes/pkg/controller/volume/persistentvolume/metrics
 k8s.io/kubernetes/pkg/controller/volume/persistentvolume/util
 k8s.io/kubernetes/pkg/controller/volume/scheduling
@@ -1801,6 +1915,7 @@ k8s.io/kubernetes/pkg/util/async
 k8s.io/kubernetes/pkg/util/goroutinemap
 k8s.io/kubernetes/pkg/util/goroutinemap/exponentialbackoff
 k8s.io/kubernetes/pkg/util/hash
+k8s.io/kubernetes/pkg/util/labels
 k8s.io/kubernetes/pkg/util/maps
 k8s.io/kubernetes/pkg/util/node
 k8s.io/kubernetes/pkg/util/parsers
