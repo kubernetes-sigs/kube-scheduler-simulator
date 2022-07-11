@@ -4,7 +4,7 @@ package export
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/node.go . NodeService
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/pv.go . PersistentVolumeService
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/pvc.go . PersistentVolumeClaimService
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/storageClassc.go . StorageClassService
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/storageclass.go . StorageClassService
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/scheduler.go . SchedulerService
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/priorityclass.go . PriorityClassService
 
