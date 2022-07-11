@@ -6,27 +6,29 @@ used to configure kube-scheduler-simulator.
 Please refer [docker-compose.yml](./docker-compose.yml) as an example
 use.
 
-`Port`: This is the port number on which kube-scheduler-simulator
-server is started.
+`Port`: (required) This is the port number on which kube-scheduler-simulator
+server is started. It's default value is `1212`.
 
-`EtcdURL`: This is the URL for etcd. The simulator runs kube-apiserver
-internally, and the kube-apiserver uses this etcd.
+`EtcdURL`: (required) This is the URL for etcd. The simulator runs kube-apiserver
+internally, and the kube-apiserver uses this etcd. It's default value is `http://simulator-etcd:2379`.
 
 `FrontendURL`: This URL represents the URL web UI started. The
 simulator and internal kube-apiserver set the origin as the allowed
 origin for `CORS_ALLOWED_ORIGIN_LIST`.
 
-`KUBECONFIG`: This is for the beta feature "Existing cluster
+`KUBECONFIG`: (required) This is for the beta feature "Existing cluster
 Importing". This variable is used to find Kubeconfig required to
 access your cluster for importing resources to scheduler simulator.
 
-`KUBE_API_HOST`: This is the host of kube-apiserver which the
+`KUBE_API_HOST`: (required) This is the host of kube-apiserver which the
 simulator starts internally.
 
-`KUBE_SCHEDULER_CONFIG_PATH`: The path to a KubeSchedulerConfiguration
+`KUBE_SCHEDULER_CONFIG_PATH`: (required) The path to a KubeSchedulerConfiguration
 file.  If passed, the simulator will start the scheduler with that
 configuration.  Or, if you use web UI, you can change the
 configuration from the web UI as well.
+
+`ExternalImportEnabled`: This variable indicates whether the simulator will import resources from an existing cluster or not.
 
 ## For Web UI
 
