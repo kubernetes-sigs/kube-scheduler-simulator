@@ -1,6 +1,6 @@
 module sigs.k8s.io/kube-scheduler-simulator/scenario
 
-go 1.18
+go 1.17
 
 require (
 	github.com/onsi/ginkgo v1.16.5
