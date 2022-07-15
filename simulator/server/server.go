@@ -48,7 +48,6 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	v1.GET("/export", exportHandler.Export)
 	v1.POST("/import", exportHandler.Import)
 
-	// server push
 	v1.GET("/watchresources", resourcewatcherHandler.WatchResources)
 
 	// initialize SimulatorServer.

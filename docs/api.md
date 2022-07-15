@@ -102,8 +102,8 @@ You can find sample requests/responses [here](api-samples/v1/import.md)
 
 ## Watch the simulator's resources
 
-Watch individual changes to all k8s resources in the simulator. This endpoint uses `Server-Sent Events`. 
-Once this API is called, the server will continuously returns a WatchEvent response containing event information for a resource.
+Watch individual changes to all k8s resources in the simulator. This endpoint uses `Server-Sent Events`.
+Once this API is called, the server will be continuously sending WatchEvent every time the event happens.
 
 ### HTTP Request
 

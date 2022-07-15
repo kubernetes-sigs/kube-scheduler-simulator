@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 )
 
-// WatcherHandler is a handler for watching the k8s resources in the simulator.
+// ResourceWatcherHandler is a handler for watching the k8s resources in the simulator.
 type ResourceWatcherHandler struct {
 	service di.ResourceWatcherService
 }
@@ -19,7 +19,7 @@ func NewResourceWatcherHandler(s di.ResourceWatcherService) *ResourceWatcherHand
 	return &ResourceWatcherHandler{service: s}
 }
 
-//  WatchResources provides resource updates using `server-sent events`.
+// WatchResources provides resource updates using `server-sent events`.
 func (h *ResourceWatcherHandler) WatchResources(c echo.Context) error {
 	ctx := c.Request().Context()
 	versions := &resourcewatcher.LastResourceVersions{
@@ -35,8 +35,9 @@ func (h *ResourceWatcherHandler) WatchResources(c echo.Context) error {
 	// Start to watch and do server push
 	err := h.service.WatchResources(ctx, c.Response(), versions)
 	if err != nil {
-		klog.Errorf("closed to watch resources: %+v", err)
+		klog.Errorf("terminated to watch resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	return nil
+	// We expect this line will be called when the connection is canceled by the client.
+	return c.NoContent(http.StatusOK)
 }

@@ -54,8 +54,8 @@ type LastResourceVersions struct {
 	Nodes string `json:"nodes"`
 	Pvs   string `json:"pvs"`
 	Pvcs  string `json:"pvcs"`
-	Scs   string `json:"storageClasses"`
-	Pcs   string `json:"priorityClasses"`
+	Scs   string `json:"scs"`
+	Pcs   string `json:"pcs"`
 }
 
 // ResponseStream is an interface that allows Server Push to a Service.
@@ -69,7 +69,7 @@ type Service struct {
 	client clientset.Interface
 }
 
-// NewWatcherService initializes Service.
+// NewResourceWatcherService initializes Service.
 func NewResourceWatcherService(client clientset.Interface) *Service {
 	return &Service{
 		client: client,
@@ -79,52 +79,30 @@ func NewResourceWatcherService(client clientset.Interface) *Service {
 // WatchResources watches each simulator's resources and send notified events to the frontend continuously.
 func (s *Service) WatchResources(ctx context.Context, stream ResponseStream, lrVersions *LastResourceVersions) error {
 	sw := newStreamWriter(stream)
-	podsEventProxy := newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pods, &corev1.Pod{}, lrVersions.Pods)
-	nodesEventProxy := newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Nodes, &corev1.Node{}, lrVersions.Nodes)
-	pvsEventProxy := newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pvs, &corev1.PersistentVolume{}, lrVersions.Pvs)
-	pvcsEventProxy := newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pvcs, &corev1.PersistentVolumeClaim{}, lrVersions.Pvcs)
-	scsEventProxy := newresourceEventProxy(sw, s.client.StorageV1().RESTClient(), Scs, &storagev1.StorageClass{}, lrVersions.Scs)
-	pcsEventProxy := newresourceEventProxy(sw, s.client.SchedulingV1().RESTClient(), Pcs, &schedulingv1.PriorityClass{}, lrVersions.Pcs)
-
-	podsWatcher, err := createWatcher(podsEventProxy)
-	if err != nil {
-		return xerrors.Errorf("call createWatcher of pod: %w", err)
+	proxies := []*resourceEventProxy{
+		newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pods, &corev1.Pod{}, lrVersions.Pods),
+		newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Nodes, &corev1.Node{}, lrVersions.Nodes),
+		newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pvs, &corev1.PersistentVolume{}, lrVersions.Pvs),
+		newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pvcs, &corev1.PersistentVolumeClaim{}, lrVersions.Pvcs),
+		newresourceEventProxy(sw, s.client.StorageV1().RESTClient(), Scs, &storagev1.StorageClass{}, lrVersions.Scs),
+		newresourceEventProxy(sw, s.client.SchedulingV1().RESTClient(), Pcs, &schedulingv1.PriorityClass{}, lrVersions.Pcs),
 	}
-	nodesWatcher, err := createWatcher(nodesEventProxy)
-	if err != nil {
-		return xerrors.Errorf("call createWatcher of node: %w", err)
+	for _, p := range proxies {
+		watcher, err := createWatcher(p)
+		if err != nil {
+			return xerrors.Errorf("call createWatcher of %s: %w", p.resourceKind(), err)
+		}
+		go s.WatchAndHandleEvent(p, watcher, ctx.Done())
 	}
-	pvsWatcher, err := createWatcher(pvsEventProxy)
-	if err != nil {
-		return xerrors.Errorf("call createWatcher of pv: %w", err)
-	}
-	pvcsWatcher, err := createWatcher(pvcsEventProxy)
-	if err != nil {
-		return xerrors.Errorf("call createWatcher of pvc: %w", err)
-	}
-	scsWatcher, err := createWatcher(scsEventProxy)
-	if err != nil {
-		return xerrors.Errorf("call createWatcher of scs: %w", err)
-	}
-	pcsWatcher, err := createWatcher(pcsEventProxy)
-	if err != nil {
-		return xerrors.Errorf("call createWatcher of pcs: %w", err)
-	}
-	go s.WatchAndHandleEvent(podsEventProxy, podsWatcher, ctx.Done())
-	go s.WatchAndHandleEvent(nodesEventProxy, nodesWatcher, ctx.Done())
-	go s.WatchAndHandleEvent(pvsEventProxy, pvsWatcher, ctx.Done())
-	go s.WatchAndHandleEvent(pvcsEventProxy, pvcsWatcher, ctx.Done())
-	go s.WatchAndHandleEvent(scsEventProxy, scsWatcher, ctx.Done())
-	go s.WatchAndHandleEvent(pcsEventProxy, pcsWatcher, ctx.Done())
 
 	// This method will return an error and finish to event send when the connection from a client is closed.
 	// It includes browser reload, ReadableStream.cancel() calling and so on.
 	// This is to allow the front end to handle stream connection disconnections.
 	<-ctx.Done()
-	return xerrors.Errorf("terminated to watch: %w", ctx.Err())
+	return nil
 }
 
-// WatchAndHandleEvent prepares an handler for the wacher and runs the handler
+// WatchAndHandleEvent prepares a handler for the wacher and runs the handler
 // until the stopCh is closed.
 func (s *Service) WatchAndHandleEvent(proxy ResourceEventProxy, watcher watch.Interface, stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
@@ -188,7 +166,7 @@ func newresourceEventProxy(sw StreamWriter, c cache.Getter, r resourceKind, o ru
 
 // WatchHandlerFunc watches the specified resource's event and calls the method to send the event
 // and updates lastResourceVersion.
-//nolint: cyclop // For readalibity.
+//nolint: cyclop // For readability.
 func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error {
 	return func(stopCh <-chan struct{}) error {
 		for {
@@ -205,21 +183,24 @@ func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stop
 				if !ok {
 					return xerrors.Errorf("failed to type cast to metav1.Object: %T", event.Object)
 				}
-				var eventType watch.EventType
+				var writingErr error
 				switch event.Type {
 				case watch.Added:
-					eventType = watch.Added
+					writingErr = p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Added, Obj: obj})
 				case watch.Modified:
-					eventType = watch.Modified
+					writingErr = p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Modified, Obj: obj})
 				case watch.Deleted:
-					eventType = watch.Deleted
+					writingErr = p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Deleted, Obj: obj})
+				case watch.Bookmark:
+					// A `Bookmark` means watch has synced here, just update the resourceVersion
+				case watch.Error:
+					return xerrors.Errorf("%s: get an error watch event %#v", p.resourceKind(), obj)
 				default:
-					// we may receive watch.Bookmark and watch.Error events.
-					continue
+					return xerrors.Errorf("%s: unable to understand watch event: %#v", p.resourceKind(), obj)
 				}
-				err := p.writer.Write(&WatchEvent{Kind: p.r, EventType: eventType, Obj: obj})
-				if err != nil {
-					return xerrors.Errorf("call Write: %w", err)
+
+				if writingErr != nil {
+					return xerrors.Errorf("call Write to watch event: %w", writingErr)
 				}
 				p.lastResourceVersion = obj.GetResourceVersion()
 			}
@@ -227,7 +208,7 @@ func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stop
 	}
 }
 
-// WatchErrorHandler hanldes some errors.
+// WatchErrorHandler handles some errors.
 func (p *resourceEventProxy) WatchErrorHandler(err error) {
 	switch {
 	case isExpiredError(err):
@@ -242,6 +223,11 @@ func (p *resourceEventProxy) WatchErrorHandler(err error) {
 	default:
 		utilruntime.HandleError(fmt.Errorf("failed to watch %v: %w", p.r, err))
 	}
+}
+
+// resourceKind returns the resourceKind value that was set in initialization.
+func (p *resourceEventProxy) resourceKind() resourceKind {
+	return p.r
 }
 
 func isExpiredError(err error) bool {
