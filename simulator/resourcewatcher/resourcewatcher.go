@@ -60,15 +60,15 @@ type Service struct {
 	client clientset.Interface
 }
 
-// NewResourceWatcherService initializes Service.
-func NewResourceWatcherService(client clientset.Interface) *Service {
+// NewService initializes Service.
+func NewService(client clientset.Interface) *Service {
 	return &Service{
 		client: client,
 	}
 }
 
-// WatchResources watches each simulator's resources and send notified events to the frontend continuously.
-func (s *Service) WatchResources(ctx context.Context, stream sw.ResponseStream, lrVersions *LastResourceVersions) error {
+// Watch watches each simulator's resources and send notified events to the frontend continuously.
+func (s *Service) Watch(ctx context.Context, stream sw.ResponseStream, lrVersions *LastResourceVersions) error {
 	sw := sw.NewStreamWriter(stream)
 	proxies := []*resourceEventProxy{
 		newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pods, &corev1.Pod{}, lrVersions.Pods),

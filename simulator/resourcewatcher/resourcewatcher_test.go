@@ -510,7 +510,7 @@ func TestService_WatchAndHandleEvent(t *testing.T) {
 			tt.prepareResourceEventProxyMockFn(mockProxy)
 			fw := watch.NewFake()
 
-			s := NewResourceWatcherService(fakeclientset)
+			s := NewService(fakeclientset)
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			s.WatchAndHandleEvent(mockProxy, fw, ctx.Done())

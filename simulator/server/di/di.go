@@ -68,7 +68,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, externalRestClientCfg)
 		c.replicateExistingClusterService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
 	}
-	c.resourceWatcherService = resourcewatcher.NewResourceWatcherService(client)
+	c.resourceWatcherService = resourcewatcher.NewService(client)
 
 	return c
 }
