@@ -1,4 +1,4 @@
-package resourcewatcher_test
+package streamwriter
 
 import (
 	"testing"
@@ -9,13 +9,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/mock_resourcewatcher"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter/mock_streamwriter"
+)
+
+const (
+	Pods ResourceKind = "pods"
 )
 
 var (
-	dummyWatchEvent1 = resourcewatcher.WatchEvent{
-		Kind:      resourcewatcher.Pods,
+	dummyWatchEvent1 = WatchEvent{
+		Kind:      Pods,
 		EventType: watch.Added,
 		Obj:       Pod1,
 	}
@@ -30,12 +33,12 @@ func TestStreamWriter_Writer(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                        string
-		prepareResponseStreamMockFn func(ws *mock_resourcewatcher.MockResponseStream)
+		prepareResponseStreamMockFn func(ws *mock_streamwriter.MockResponseStream)
 		wantErr                     bool
 	}{
 		{
 			name: "should success when ResponseWriter's Write method returns no error",
-			prepareResponseStreamMockFn: func(ws *mock_resourcewatcher.MockResponseStream) {
+			prepareResponseStreamMockFn: func(ws *mock_streamwriter.MockResponseStream) {
 				ws.EXPECT().Flush()
 				ws.EXPECT().Write(gomock.Any()).Return(0, nil)
 			},
@@ -43,7 +46,7 @@ func TestStreamWriter_Writer(t *testing.T) {
 		},
 		{
 			name: "should failed when ResponseWriter's Write method returns an error",
-			prepareResponseStreamMockFn: func(ws *mock_resourcewatcher.MockResponseStream) {
+			prepareResponseStreamMockFn: func(ws *mock_streamwriter.MockResponseStream) {
 				ws.EXPECT().Flush()
 				ws.EXPECT().Write(gomock.Any()).Return(0, xerrors.Errorf("call write"))
 			},
@@ -55,9 +58,9 @@ func TestStreamWriter_Writer(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
-			mockResponseStream := mock_resourcewatcher.NewMockResponseStream(ctrl)
+			mockResponseStream := mock_streamwriter.NewMockResponseStream(ctrl)
 
-			sw := resourcewatcher.NewStreamWriter(mockResponseStream)
+			sw := NewStreamWriter(mockResponseStream)
 			tt.prepareResponseStreamMockFn(mockResponseStream)
 
 			if err := sw.Write(&dummyWatchEvent1); (err != nil) != tt.wantErr {

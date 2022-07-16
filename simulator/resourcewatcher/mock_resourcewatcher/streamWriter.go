@@ -9,7 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 
-	resourcewatcher "sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
+	streamwriter "sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
 )
 
 // MockStreamWriter is a mock of StreamWriter interface.
@@ -36,7 +36,7 @@ func (m *MockStreamWriter) EXPECT() *MockStreamWriterMockRecorder {
 }
 
 // Write mocks base method.
-func (m *MockStreamWriter) Write(arg0 *resourcewatcher.WatchEvent) error {
+func (m *MockStreamWriter) Write(arg0 *streamwriter.WatchEvent) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Write", arg0)
 	ret0, _ := ret[0].(error)

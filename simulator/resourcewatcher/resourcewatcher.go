@@ -1,15 +1,14 @@
 package resourcewatcher
 
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/responseStream.go . ResponseStream
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/watchInterface.go -package=mock_resourcewatcher -mock_names Interface=MockWatchInterface k8s.io/apimachinery/pkg/watch Interface
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/resourceeventproxy.go . ResourceEventProxy
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/streamWriter.go . StreamWriter
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
@@ -26,10 +25,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 	watchtools "k8s.io/client-go/tools/watch"
 	"k8s.io/klog/v2"
+
+	sw "sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
 )
 
-// resourceKind represents k8s resource name.
-type resourceKind string
+type resourceKind = sw.ResourceKind
 
 const (
 	Pods  resourceKind = "pods"
@@ -39,14 +39,6 @@ const (
 	Scs   resourceKind = "storageclasses"
 	Pcs   resourceKind = "priorityclasses"
 )
-
-// WatchEvent represents an event notified by the watched apiserver.
-type WatchEvent struct {
-	Kind      resourceKind
-	EventType watch.EventType
-	// Obj is an object included in the event notified by the watched apiserver.
-	Obj interface{}
-}
 
 // LastResourceVersions includes each resource's lastResourceVersions.
 type LastResourceVersions struct {
@@ -58,10 +50,9 @@ type LastResourceVersions struct {
 	Pcs   string `json:"pcs"`
 }
 
-// ResponseStream is an interface that allows Server Push to a Service.
-type ResponseStream interface {
-	io.Writer
-	http.Flusher
+// StreamWriter is an interface that allows send a received WatchEvent to the frontend.
+type StreamWriter interface {
+	Write(we *sw.WatchEvent) error
 }
 
 // Service watches simulator's resources.
@@ -77,8 +68,8 @@ func NewResourceWatcherService(client clientset.Interface) *Service {
 }
 
 // WatchResources watches each simulator's resources and send notified events to the frontend continuously.
-func (s *Service) WatchResources(ctx context.Context, stream ResponseStream, lrVersions *LastResourceVersions) error {
-	sw := newStreamWriter(stream)
+func (s *Service) WatchResources(ctx context.Context, stream sw.ResponseStream, lrVersions *LastResourceVersions) error {
+	sw := sw.NewStreamWriter(stream)
 	proxies := []*resourceEventProxy{
 		newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Pods, &corev1.Pod{}, lrVersions.Pods),
 		newresourceEventProxy(sw, s.client.CoreV1().RESTClient(), Nodes, &corev1.Node{}, lrVersions.Nodes),
@@ -186,11 +177,11 @@ func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stop
 				var writingErr error
 				switch event.Type {
 				case watch.Added:
-					writingErr = p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Added, Obj: obj})
+					writingErr = p.writer.Write(&sw.WatchEvent{Kind: p.r, EventType: watch.Added, Obj: obj})
 				case watch.Modified:
-					writingErr = p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Modified, Obj: obj})
+					writingErr = p.writer.Write(&sw.WatchEvent{Kind: p.r, EventType: watch.Modified, Obj: obj})
 				case watch.Deleted:
-					writingErr = p.writer.Write(&WatchEvent{Kind: p.r, EventType: watch.Deleted, Obj: obj})
+					writingErr = p.writer.Write(&sw.WatchEvent{Kind: p.r, EventType: watch.Deleted, Obj: obj})
 				case watch.Bookmark:
 					// A `Bookmark` means watch has synced here, just update the resourceVersion
 				case watch.Error:
@@ -228,6 +219,11 @@ func (p *resourceEventProxy) WatchErrorHandler(err error) {
 // resourceKind returns the resourceKind value that was set in initialization.
 func (p *resourceEventProxy) resourceKind() resourceKind {
 	return p.r
+}
+
+// LastResourceVersion returns the lastResourceVersion value that is kept in the proxy.
+func (p *resourceEventProxy) LastResourceVersion() string {
+	return p.lastResourceVersion
 }
 
 func isExpiredError(err error) bool {

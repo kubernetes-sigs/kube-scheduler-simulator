@@ -1,4 +1,4 @@
-package resourcewatcher_test
+package resourcewatcher
 
 import (
 	"context"
@@ -16,8 +16,9 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	restfake "k8s.io/client-go/rest/fake"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/mock_resourcewatcher"
+	sw "sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter/mock_streamwriter"
 )
 
 var (
@@ -94,12 +95,12 @@ func TestResourceEventProxy_CreateWatcher(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 			restclient := tt.prepareFakeRestClientFn()
-			mockResponseStream := mock_resourcewatcher.NewMockResponseStream(ctrl)
+			mockResponseStream := mock_streamwriter.NewMockResponseStream(ctrl)
 
-			sw := resourcewatcher.NewStreamWriter(mockResponseStream)
-			proxy := resourcewatcher.NewResourceEventProxy(sw, restclient, resourcewatcher.Pods, &corev1.Pod{}, tt.resourceversion)
+			sw := sw.NewStreamWriter(mockResponseStream)
+			proxy := newresourceEventProxy(sw, restclient, Pods, &corev1.Pod{}, tt.resourceversion)
 
-			_, err := resourcewatcher.CreateWatcher(proxy)
+			_, err := createWatcher(proxy)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("createWatcher %v test, \nerror = %v", tt.name, err)
 			}
@@ -111,7 +112,7 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                      string
-		prepareStreamWriterMockFn func(rs *mock_resourcewatcher.MockStreamWriter)
+		prepareStreamWriterMockFn func(sw *mock_resourcewatcher.MockStreamWriter)
 		prepareFakeClientSetFn    func() *fake.Clientset
 		doEvent                   func(fw *watch.FakeWatcher)
 		wantErr                   bool
@@ -119,9 +120,9 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 	}{
 		{
 			name: "should call the Write method (with ADDED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -141,16 +142,16 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should call the Write method (with twice ADDED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
 					assert.Equal(t, "node1", obj.GetName())
 				})
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -171,9 +172,9 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should call the Write method (with MODIFIED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -193,16 +194,16 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should call the Write method (with twice MODIFIED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
 					assert.Equal(t, "node1", obj.GetName())
 				})
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -223,9 +224,9 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should call the Write method (with DELETED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Deleted, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -245,16 +246,16 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should call the Write method (with twice DELETED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Deleted, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
 					assert.Equal(t, "node1", obj.GetName())
 				})
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Deleted, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -275,16 +276,16 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should call the Write method (with ADDED and MODIFIED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
 					assert.Equal(t, "node1", obj.GetName())
 				})
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -305,23 +306,23 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should call the Write method (with ADDED and twice MODIFIED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
 					assert.Equal(t, "node1", obj.GetName())
 				})
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
 					assert.Equal(t, "node2", obj.GetName())
 				})
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -343,23 +344,23 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should call the Write method (with ADDED, MODIFIED and DELETED event)",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Added, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
 					assert.Equal(t, "node1", obj.GetName())
 				})
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Modified, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
 					assert.Equal(t, "node2", obj.GetName())
 				})
-				rs.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *resourcewatcher.WatchEvent) {
-					assert.Equal(t, resourcewatcher.Nodes, e.Kind)
+				w.EXPECT().Write(gomock.Any()).Return(nil).Do(func(e *sw.WatchEvent) {
+					assert.Equal(t, Nodes, e.Kind)
 					assert.Equal(t, watch.Deleted, e.EventType)
 					obj, ok := e.Obj.(metav1.Object)
 					assert.True(t, ok)
@@ -381,7 +382,7 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should return an error if the passed object is failed to cast to a metav1.Object",
-			prepareStreamWriterMockFn: func(rs *mock_resourcewatcher.MockStreamWriter) {
+			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				return fake.NewSimpleClientset()
@@ -406,7 +407,7 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 			tt.prepareStreamWriterMockFn(mockStreamWriter)
 			fw := watch.NewFake()
 
-			proxy := resourcewatcher.NewResourceEventProxy(mockStreamWriter, fakeclientset.CoreV1().RESTClient(), resourcewatcher.Nodes, &corev1.Node{}, "1")
+			proxy := newresourceEventProxy(mockStreamWriter, fakeclientset.CoreV1().RESTClient(), Nodes, &corev1.Node{}, "1")
 
 			testFunc := proxy.WatchHandlerFunc(fw)
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -417,7 +418,7 @@ func TestResourceEventProxy_WatchHandlerFunc(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("watchHandlerFunc %v test, \nerror = %v", tt.name, err)
 			}
-			v := proxy.ExportGetLastResourceVersion()
+			v := proxy.LastResourceVersion()
 			if v != tt.wantLastResourceVersion {
 				t.Fatalf("watchHandlerFunc %v test, \nlastResourceVersion = %v, want = %v", tt.name, v, tt.wantLastResourceVersion)
 			}
@@ -456,7 +457,7 @@ func TestResourceEventProxy_WatchHandlerFuncFails(t *testing.T) {
 			mockWatcher := mock_resourcewatcher.NewMockWatchInterface(ctrl)
 			tt.prepareWatchInterfaceMockFn(mockWatcher)
 
-			proxy := resourcewatcher.NewResourceEventProxy(mockStreamWriter, fakeclientset.CoreV1().RESTClient(), resourcewatcher.Nodes, &corev1.Node{}, "1")
+			proxy := newresourceEventProxy(mockStreamWriter, fakeclientset.CoreV1().RESTClient(), Nodes, &corev1.Node{}, "1")
 
 			testFunc := proxy.WatchHandlerFunc(mockWatcher)
 
@@ -509,7 +510,7 @@ func TestService_WatchAndHandleEvent(t *testing.T) {
 			tt.prepareResourceEventProxyMockFn(mockProxy)
 			fw := watch.NewFake()
 
-			s := resourcewatcher.NewResourceWatcherService(fakeclientset)
+			s := NewResourceWatcherService(fakeclientset)
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			s.WatchAndHandleEvent(mockProxy, fw, ctx.Done())
