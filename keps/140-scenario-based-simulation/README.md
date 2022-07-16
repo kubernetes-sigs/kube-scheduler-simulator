@@ -49,13 +49,12 @@ https://etcd.io/docs/v3.4/dev-guide/limit/#request-size-limit
 ```go
 // Scenario is the Schema for the scenarios API
 type Scenario struct {
-  metav1.TypeMeta   `json:",inline"`
-  metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-  Spec   ScenarioSpec   `json:"spec,omitempty"`
-  Status ScenarioStatus `json:"status,omitempty"`
+	Spec   ScenarioSpec   `json:"spec,omitempty"`
+	Status ScenarioStatus `json:"status,omitempty"`
 }
-
 // ScenarioSpec defines the desired state of Scenario
 type ScenarioSpec struct {
 	// Events field has all operations for a scenario.
@@ -155,17 +154,13 @@ type ScenarioStatus struct {
 	//
 	// +optional
 	Phase ScenarioPhase `json:"phase,omitempty"`
-	// Current state of scheduler.
-	//
-	// +optional
-	SchedulerStatus SchedulerStatus `json:"schedulerStatus,omitempty"`
 	// A human-readable message indicating details about why the scenario is in this phase.
 	//
 	// +optional
 	Message *string `json:"message,omitempty"`
 	// StepStatus has the status related to step.
-	// 
-    StepStatus ScenarioStepStatus
+	//
+	StepStatus ScenarioStepStatus
 	// ScenarioResult has the result of the simulation.
 	// Just before Step advances, this result is updated based on all occurrences at that step.
 	//
@@ -174,19 +169,19 @@ type ScenarioStatus struct {
 }
 
 type ScenarioStepStatus struct {
-    // Step indicates the current step.
-    //
-    // +optional
-    Step ScenarioStep `json:"step,omitempty"`
+	// Step indicates the current step.
+	//
+	// +optional
+	Step ScenarioStep `json:"step,omitempty"`
 	// Phase indicates the current phase in single step.
 	//
 	// Within a single step, the phase proceeds as follows:
 	// 1. run all scenario.Spec.Events defined for that step. (OperatingEvents)
-    // 2. finish (1) (OperatingEventsFinished)
-    // 3. the scheduler starts scheduling. (Scheduling)
-    // 4. the scheduler stops scheduling and changes scenario.Status.StepStatus.Phase to SchedulingFinished
-    //    when it can no longer schedule any more Pods. (Scheduling -> SchedulingFinished)
-    // 5. update status.scenarioResult and move to next step. (StepFinished)
+	// 2. finish (1) (OperatingEventsFinished)
+	// 3. the scheduler starts scheduling. (Scheduling)
+	// 4. the scheduler stops scheduling and changes scenario.Status.StepStatus.Phase to SchedulingFinished
+	//    when it can no longer schedule any more Pods. (Scheduling -> SchedulingFinished)
+	// 5. update status.scenarioResult and move to next step. (StepFinished)
 	// +optional
 	Phase StepPhase `json:"phase,omitempty"`
 }
@@ -195,16 +190,16 @@ type StepPhase string
 
 const (
 	// OperatingEvents means controller is currently operating event defined for the step.
-    OperatingEvents          StepPhase = "OperatingEvents"
-    // OperatingEventsFinished means controller have finished operating event defined for the step.
-    OperatingEventsFinished  StepPhase = "OperatingEventsFinished"
-    // Scheduling means scheduler is scheduling Pods.
-    Scheduling               StepPhase = "Scheduling"
-    // SchedulingFinished means scheduler is trying to schedule Pods.
-	// But, it can no longer schedule any more Pods. 
-    SchedulingFinished       StepPhase = "SchedulingFinished"
+	OperatingEvents StepPhase = "OperatingEvents"
+	// OperatingEventsFinished means controller have finished operating event defined for the step.
+	OperatingEventsFinished StepPhase = "OperatingEventsFinished"
+	// Scheduling means scheduler is scheduling Pods.
+	Scheduling StepPhase = "Scheduling"
+	// SchedulingFinished means scheduler is trying to schedule Pods.
+	// But, it can no longer schedule any more Pods.
+	SchedulingFinished StepPhase = "SchedulingFinished"
 	// StepFinished means controller is preparing to move to next step.
-    StepFinished             StepPhase = "Finished"
+	StepFinished StepPhase = "Finished"
 )
 
 type ScenarioPhase string
