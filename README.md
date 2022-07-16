@@ -8,22 +8,22 @@ Nowadays, the scheduler is configurable/extendable in the multiple ways:
 - add [Extenders](https://github.com/kubernetes/enhancements/tree/5320deb4834c05ad9fb491dcd361f952727ece3e/keps/sig-scheduling/1819-scheduler-extender)
 - etc...
 
-But, unfortunately, not all configuration/expansions yield good results.
+But, unfortunately, not all configurations/expansions yield good results.
 Those who customize the scheduler need to make sure their scheduler is working as expected, and doesn't have an unacceptably negative impact on the scheduling. 
 
-In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually requires privileged access to the control plane.
+In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually require privileged access to the control plane.
 That's way we are developing a simulator for kube-scheduler -- you can try out the behavior of the scheduler with web UI while checking which plugin made what decision for which Node.
 
 ## Simulator's architecture
 
 We have several components:
-- simulator (in `/simulator`)
+- Simulator (in `/simulator`)
 - Web UI (in `/web`)
-- coming soon... :)  (see [./keps](./keps) to see some nice ideas we're working on)
+- Coming soon... :)  (see [./keps](./keps) to see some nice ideas we're working on)
 
-### simulator
+### Simulator
 
-Simulator internally has kube-apiserver, scheduler, and HTTP server for web UI.
+Simulator internally has kube-apiserver, scheduler, and HTTP server.
 
 You can create any resources by communicating with kube-apiserver via kubectl, k8s client library, or web UI.
 
@@ -32,7 +32,7 @@ See the following docs to know more about simulator:
 - [kube-apiserver.md](simulator/docs/kube-apiserver.md): describe about kube-apiserver in simulator. (how you can configure and access) 
 - [api.md](simulator/docs/api.md): describes about HTTP server the simulator has.
 
-### web
+### Web UI
 
 Web UI is one of the clients of simulator, but it's optimized for simulator.
 
