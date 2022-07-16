@@ -159,14 +159,13 @@ type ScenarioStatus struct {
 	//
 	// +optional
 	SchedulerStatus SchedulerStatus `json:"schedulerStatus,omitempty"`
-	// A human readable message indicating details about why the scenario is in this phase.
+	// A human-readable message indicating details about why the scenario is in this phase.
 	//
 	// +optional
 	Message *string `json:"message,omitempty"`
-	// Step indicates the current step.
-	//
-	// +optional
-	Step ScenarioStep `json:"step,omitempty"`
+	// StepStatus has the status related to step.
+	// 
+    StepStatus ScenarioStepStatus
 	// ScenarioResult has the result of the simulation.
 	// Just before Step advances, this result is updated based on all occurrences at that step.
 	//
@@ -174,23 +173,38 @@ type ScenarioStatus struct {
 	ScenarioResult ScenarioResult `json:"scenarioResult,omitempty"`
 }
 
-type SchedulerStatus string
+type ScenarioStepStatus struct {
+    // Step indicates the current step.
+    //
+    // +optional
+    Step ScenarioStep `json:"step,omitempty"`
+	// Phase indicates the current phase in single step.
+	//
+	// Within a single step, the phase proceeds as follows:
+	// 1. run all scenario.Spec.Events defined for that step. (OperatingEvents)
+    // 2. finish (1) (OperatingEventsFinished)
+    // 3. the scheduler starts scheduling. (Scheduling)
+    // 4. the scheduler stops scheduling and changes scenario.Status.StepStatus.Phase to SchedulingFinished
+    //    when it can no longer schedule any more Pods. (Scheduling -> SchedulingFinished)
+    // 5. update status.scenarioResult and move to next step. (StepFinished)
+	// +optional
+	Phase StepPhase `json:"phase,omitempty"`
+}
+
+type StepPhase string
 
 const (
-	// SchedulerWillRun indicates the scheduler is expected to start to schedule.
-	// In other words, the scheduler is currently stopped,
-	// and will start to schedule Pods when the state is SchedulerWillRun.
-	SchedulerWillRun SchedulerStatus = "WillRun"
-	// SchedulerRunning indicates the scheduler is scheduling Pods.
-	SchedulerRunning SchedulerStatus = "Running"
-	// SchedulerWillStop indicates the scheduler is expected to stop scheduling.
-	// In other words, the scheduler is currently scheduling Pods,
-	// and will stop scheduling when the state is SchedulerWillStop.
-	SchedulerWillStop SchedulerStatus = "WillStop"
-	// SchedulerStoped indicates the scheduler stops scheduling Pods.
-	SchedulerStoped SchedulerStatus = "Stoped"
-	// SchedulerUnknown indicates the scheduler's status is unknown.
-	SchedulerUnknown ScenarioPhase = "Unknown"
+	// OperatingEvents means controller is currently operating event defined for the step.
+    OperatingEvents          StepPhase = "OperatingEvents"
+    // OperatingEventsFinished means controller have finished operating event defined for the step.
+    OperatingEventsFinished  StepPhase = "OperatingEventsFinished"
+    // Scheduling means scheduler is scheduling Pods.
+    Scheduling               StepPhase = "Scheduling"
+    // SchedulingFinished means scheduler is trying to schedule Pods.
+	// But, it can no longer schedule any more Pods. 
+    SchedulingFinished       StepPhase = "SchedulingFinished"
+	// StepFinished means controller is preparing to move to next step.
+    StepFinished             StepPhase = "Finished"
 )
 
 type ScenarioPhase string
@@ -350,52 +364,109 @@ type ScenarioPluginsScoreResult struct {
 
 ```
 
+#### supported scheduler in simulator
+
+The goal of this KEP is to make schedulers that meet the all following criteria work with scenario:
+
+1. schedule Pods by the conditions of k8s resources.
+    - In other words, schedulers shouldn't schedule Pods by the conditions other than k8s resources.
+    - For example, if the scheduler that schedules Pods by checking some metrics from external server, 
+    the scenario controller cannot manage metrics value and the Scenario may yield different results for each run.
+2. scheduler that doesn't creates/edits/deletes resource. (except preemption and binding)
+    - Basically, no one other than scenario controller should create/edit/delete resources.
+3. scheduler included in simulator. Or outside scheduler which is based on scheduler in [kubernetes/kubernetes repo](https://github.com/kubernetes/kubernetes/tree/master/pkg/scheduler)
+    - In other words, scheduler needs to have [`NextPod`](https://github.com/kubernetes/kubernetes/blob/867b5cc31b376c9f5d04cf9278112368b0337104/pkg/scheduler/scheduler.go#L75) field and uses it for fetch Pod from queue, 
+    because we want to replace it to make scenario work correctly. (see [# Required setup for scheduler](#required-setup-for-scheduler).)
+
+#### Required setup for scheduler
+
+Those who want to use outside scheduler need to do replace [`scheduler.NextPod`](https://github.com/kubernetes/kubernetes/blob/d14ba948ef63769e9767aebd5a08171832a1bbf6/pkg/scheduler/scheduler.go#L73) with a function provided by us.
+
+The function we provide will does:
+- restart/stop scheduling (see [# How to stop scheduling loop](#How-to-stop-scheduling-loop))
+- check which Pods are scheduled and judge if it can no longer schedule any more Pods. (see [# How scheduler detects "when it can no longer schedule any more Pods" at (4)](#How-scheduler-detects-"when-it-can-no-longer-schedule-any-more-Pods"-at-(4)))
+
+Those who want to use scheduler included in simulator don't need to do anything for setup since we does this set up for users.
+
 #### The concept "ScenarioStep"
 
-ScenarioStep is: 
+ScenarioStep is:
 - simply represented by numbers. like 1, 2, 3…
 - moved to next step **when it can no longer schedule any more Pods**.
 
-The following shows what happens at a single step in ScenarioStep:
-
-1. run all operations defined for that step.
-2. the scenario controller changes status.SchedulerStatus to SchedulerWillRun.
-3. the scheduler starts scheduling and changes status.SchedulerStatus to SchedulerRunning.
-4. the scenario controller changes status.SchedulerStatus to SchedulerWillStop, 
-when it can no longer schedule any more Pods.
-5. the scheduler stop scheduling and changes status.SchedulerStatus to SchedulerStoped.
-6. update status.scenarioResult.
-7. move to next step.
-
-##### How to detect "when it can no longer schedule any more Pods" at (4)
-
-In the scheduler, the unscheduled Pods are stored in queue.
-
-In a single step, the resources are created/edited/deleted only at (1) in the above description. (except pod deletion by preemption)
-So, the amount of k8s resources in the cluster doesn't get increased during (4) rather got decreased by scheduled Pod.
-
-This means that the number of Pods can be scheduled will decrease and eventually no more Pods can be scheduled 
-(or all Pods will be scheduled).
-Thus, all we have to do in (4) is wait until no more pods are scheduled for a while.
+Within a single step, the phase proceeds as follows:
+1. run all scenario.Spec.Events defined for that step. (OperatingEvents)
+2. finish (1) (OperatingEventsFinished)
+3. the scheduler starts scheduling. (Scheduling)
+4. the scheduler stops scheduling and changes scenario.Status.StepStatus.Phase to SchedulingFinished
+   when it can no longer schedule any more Pods. (Scheduling -> SchedulingFinished)
+5. update status.scenarioResult and move to next step. (StepFinished)
 
 ##### Why scheduler needs to restarts/stops scheduling loop?
 
-To ensure that the results of the simulation do not vary significantly from run to run. 
+To ensure that the results of the simulation do not vary significantly from run to run.
 
-If we don't have "ScenarioStep" concept and when users want to define multiple operations for the same time, users expect them to run concurrently and them to be run at the same time. But, in practice it is difficult to run them at the same time, because the scheduler is constantly attempting to schedule. 
+If we don't have "ScenarioStep" concept and when users want to define multiple operations for the same time, users expect them to run concurrently and them to be run at the same time. But, in practice it is difficult to run them at the same time, because the scheduler is constantly attempting to schedule.
 For example, suppose a user has defined a scenario to create 1000 Nodes at the same time. Since it is strictly impossible to create 1000 Nodes at the same time, pending Pods will be scheduled to the Nodes created first. And depending on what order the Nodes were created, the results of the simulation may change.
 To prevent this, the scheduler needs to be stopped scheduling until 1000 Nodes are created.
 
 ##### How to stop scheduling loop
 
-We can prevent a scheduling queue from poping next Pods by replacing `Scheduler.NextPod` function.
-https://github.com/kubernetes/kubernetes/blob/867b5cc31b376c9f5d04cf9278112368b0337104/pkg/scheduler/scheduler.go#L75
+If the scheduler is based on implementation of the current scheduler in kubernetes/kubernetes, 
+we can prevent a scheduling queue from poping next Pods by overwriting [`Scheduler.NextPod`](https://github.com/kubernetes/kubernetes/blob/867b5cc31b376c9f5d04cf9278112368b0337104/pkg/scheduler/scheduler.go#L75) function.
 
-We can provide the function to override `Scheduler.NextPod` so that users can use scenario outside of simulator.
-The override function basically behave like normal `NextPod`, 
+The override function basically behave like normal `NextPod`,
 but checks the running Scenario's status.SchedulerStatus and decide to stop/restart scheduling.
 
-##### Adding events to running Scenario 
+##### How scheduler detects "when it can no longer schedule any more Pods" at (4)
+
+The most schedulers try to schedule Pods one by one. 
+
+The idea here is detecting "when it can no longer schedule any more Pods" **by recording Pods scheduler have tried to schedule**.
+
+Basically, scheduler are checking other resources' status and decide the best Node for a Pod.
+That means if any resource haven't created/edited/deleted, the scheduling result shouldn't be changed.
+
+Resource creation/changes/deletion should be only run during `OperatingEvents` phase,
+and only preemption(deleting Pod) or binding(scheduling Pod to a Node) happens during scheduling.
+
+Thus, we can consider it can no longer schedule any more Pods when the following conditions are met:
+1. all unscheduled Pods are tried to be scheduled twice or more.
+2. no Pods are preempted and no Pods are scheduled during (1).
+
+For example, there are Pod1 - Pod4 in the cluster and all of them aren't scheduled yet.
+1. scheduler try to schedule Pod1 but cannot schedule it. Pod1 is moved back to queue.
+2. scheduler try to schedule Pod2 and can schedule it.
+3. scheduler try to schedule Pod3 and cannot schedule it. Pod3 is moved back to queue.
+4. scheduler try to schedule Pod4 and cannot schedule it. Pod4 is moved back to queue.
+5. scheduler try to schedule Pod1 and cannot schedule it. Pod1 is moved back to queue.
+6. scheduler try to schedule Pod3 and cannot schedule it. Pod3 is moved back to queue.
+7. scheduler try to schedule Pod4 and cannot schedule it. Pod4 is moved back to queue.
+8. scheduler try to schedule Pod1 but cannot schedule it. Pod1 is moved back to queue.
+9. during (3) - (8), no Pods are preempted, no Pods are scheduled, and Pod1,3,4 are tried to be scheduled twice.
+So, we can consider it can no longer schedule any more Pods.
+
+The reason why all unscheduled Pods are tried to be scheduled twice or more is that [binding cycle is run in parallel](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/#scheduling-cycle-binding-cycle).
+
+You will understand why it is necessary twice, after seeing the following case:
+1. scheduler try to schedule Pod1 but cannot schedule it. Pod1 is moved back to queue.
+2. scheduler try to schedule Pod2 and can schedule it.
+3. scheduler try to schedule Pod3 and cannot schedule it. Pod3 is moved back to queue.
+4. scheduler try to schedule Pod4 and cannot schedule it. Pod4 is moved back to queue.
+5. scheduler try to schedule Pod1 and can schedule it. 
+
+Note that we can only record what Pods scheduler are trying to schedule next in `NextPod`. 
+That means we cannot see what Pods scheduler moves back to queue when cannot schedule Pods.
+
+During (3) - (5), no Pods are preempted, and Pod1,3,4 are tried to be scheduled once. 
+**But, Pod1 is scheduled at (5)**.
+
+In `NextPod`, we may not realize the Pod1 is scheduled at (5), 
+since the binding cycle is run in parallel and binding may just not be finished when NextPod is judging if it can no longer schedule any more Pods.
+
+So, to make sure the all unscheduled Pods cannot be scheduled anymore, we need to see the all unscheduled Pods are tried to be scheduled twice or more in `NextPod`.
+
+#### Adding events to running Scenario 
 
 It is allowed to add events while the Scenario is running.
 
@@ -406,7 +477,7 @@ So, it is strongly recommended adding events to running Scenario only after Scen
 (since ScenarioStep has stopped moving forward in "Paused" phase as described above.)
 Otherwise, you may add the past ScenarioStep events and they are ignored by running Scenario.
 
-##### Configure when to update ScenarioResult
+#### Configure when to update ScenarioResult
 
 As described in the above, the controller only update status.scenarioResult in Scenario resource when proceeding to the next ScenarioStep.
 
@@ -482,20 +553,21 @@ So, in this case, they can add events that are most worst case for the scheduler
 
 ## Questions/Answers
 
-### can scenario work with all kind of schedulers?
+### Can you elaborate a bit more on which schedulers will be supported?
 
 Respondent: @sanposhiho.
 
-The current simulator has a scheduler of only fixed one version. (v1.22 at the time I write this.)
+The current simulator has scheduler internally.
+(see [simulator/docs/how-it-works.md](simulator/docs/how-it-works.md))
 
-Also, schedulers can be customized by adding your plugin to scheduler, and custom plugins can be used in simulator/Scenario. (see [docs/how-to-use-custom-plugins](./docs/how-to-use-custom-plugins))
+And the scheduler version can be used is only fixed one. (v1.22 at the time I write this.)
+That Scheduler can be customized by adding your plugin to scheduler or by scheduler configuration.
+(see [docs/how-to-use-custom-plugins](./docs/how-to-use-custom-plugins))
 
-So, to summarize, the current simulator/Scenario only supports:
-- non-customized scheduler of fixed version.
-- scheduler above + custom plugins.
+So, that means the current simulator can simulate scheduling with only limited scheduler.
 
-For who want to use scheduler not supported by simulator, (e.g. scheduler of different versions, patched scheduler, or completely original scheduler)
-the simulator will support "outside scheduler", [issue here](https://github.com/kubernetes-sigs/kube-scheduler-simulator/issues/182).
+And, for who want to use scheduler not supported by simulator, (e.g. scheduler of different versions, scheduler applied some patches, or completely original scheduler)
+we plan to support "outside scheduler" in simulator. ([issue here](https://github.com/kubernetes-sigs/kube-scheduler-simulator/issues/182))
 
 The outside scheduler literally means the scheduler outside of simulator,
 communicates with the api-server in simulator and schedule all the Pod.
@@ -503,26 +575,33 @@ communicates with the api-server in simulator and schedule all the Pod.
 Given the current simulator only supports limited scheduler described above,
 I _guess_ more users will want to use outside scheduler rather than scheduler in simulator.
 
-Get back to the original story - So, which kinds of scheduler can scenario work with.
+Any kinds of scheduler can be created in this world.
+But, the goal of this KEP is to support only schedulers listed in [# supported scheduler in simulator](#supported-scheduler-in-simulator) in scenario.
 
-As described in KEP so far, for scenario, we need to stop scheduler somehow.
+However, we believe we can provide a function to make most schedulers work with scenario in the future,
+(although we won't go into much detail in this KEP.)
 
-If scheduler in simulator is used, it's easy. 
-We just need to replace NextPod field in scheduler as described in [# How to stop scheduling loop](#How-to-stop-scheduling-loop).
-Users don't need to anything for it.
+That schedulers only needs to satisfy the condition that it schedule Pods one by one with same process,
+and users only need to put the provided function into the top of the process to make scheduler work with scenario like:
 
-And for any outside scheduler that schedules Pods one by one in loop like scheduler in [kubernetes/kubernetes repo](https://github.com/kubernetes/kubernetes/tree/master/pkg/scheduler),
-it's also easy.
+```go
+// this scheduler trys to schedule Pods one by one.
+func (s *scheduler) run() {
+	for {
+	    scheduleOne(pod)	
+    }
+}
 
-I believe we can provide the function that checks the running Scenario's status.SchedulerStatus and decide to stop/restart scheduling. 
-Users only need to add that func in the beginning of process to schedule a Pod.
-By doing this, Scenario can be used with almost any scheduler.
+// scheduleOne schedule a given Pod.
+func (s *scheduler) scheduleOne(pod *v1.Pod) {
+    // fetch one pod and try to schedule it.
+    pod := s.fetchPodFromSomewhere()
+	
+	// user only need to put this function provided by us so that make this scheduler work with scenario.
+	functionProvidedByUs(pod)
+	
+    // scheduling implementation
+}
+```
 
-So... which kind of scheduler **cannot** scenario work with?
-
-I think that, for example, schedulers like following are that scenario cannot work with:
-- scheduler that schedules Pods by the conditions other than k8s resources.
-    - For example, the scheduler that schedules Pods by checking metrics server.
-    - The scenario controller cannot manage metrics value and the Scenario may yield different results for each run.
-- scheduler that creates the new resources.
-    - Only binding Pods or preemption are allowed for scheduler.
+But, even with this function, I think we cannot support the scheduler that doesn't meet the criteria (1)(2) in [# supported scheduler in simulator](#supported-scheduler-in-simulator).
