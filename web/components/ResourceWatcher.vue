@@ -12,6 +12,7 @@ import PersistentVolumeClaimStoreKey from "./StoreKey/PVCStoreKey";
 import PersistentVolumeStoreKey from "./StoreKey/PVStoreKey";
 import PriorityClassStoreKey from "./StoreKey/PriorityClassStoreKey";
 import StorageClassStoreKey from "./StoreKey/StorageClassStoreKey";
+import SnackBarStoreKey from "./StoreKey/SnackBarStoreKey"
 import { WatcherAPIKey } from "~/api/APIProviderKeys";
 import { WatchEventType } from "@/types/resources";
 import { LastResourceVersions } from "@/types/api/v1";
@@ -54,6 +55,10 @@ export default defineComponent({
     if (!storageclassstore) {
       throw new Error(`${StorageClassStoreKey} is not provided`);
     }
+    const snackbarstore = inject(SnackBarStoreKey);
+    if (!snackbarstore) {
+      throw new Error(`${SnackBarStoreKey} is not provided`);
+    }
 
     // Initializes each resource and starts watching.
     onMounted(async () => {
@@ -91,7 +96,9 @@ export default defineComponent({
 
           return stream.read().then(function processText({ done, value }): any {
             if (done) {
-              console.log("Request terminated");
+              snackbarstore.setServerErrorMessage(
+                "The watch stream is terminated. Please reload your browser if you don't expect this."
+              );
               return;
             }
             buffer += utf8Decoder.decode(value);

@@ -79,50 +79,86 @@ func (s *Service) Watch(ctx context.Context, stream sw.ResponseStream, lrVersion
 		newresourceEventProxy(sw, s.client.StorageV1().RESTClient(), Scs, &storagev1.StorageClass{}, lrVersions.Scs),
 		newresourceEventProxy(sw, s.client.SchedulingV1().RESTClient(), Pcs, &schedulingv1.PriorityClass{}, lrVersions.Pcs),
 	}
-
+	runctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	for _, p := range proxies {
-		lw := createListWatch(p)
-		// If the lastResourceVersion isn't specified by client, call the list and return the result as ADDED event first.
-		if p.lastResourceVersion == "" {
-			list, err := lw.List(metav1.ListOptions{})
-			if err != nil {
-				return xerrors.Errorf("failed to list: %w", err)
-			}
-			listMetaInterface, err := meta.ListAccessor(list)
-			if err != nil {
-				return xerrors.Errorf("unable to understand list result %#v: %w", list, err)
-			}
-			p.lastResourceVersion = listMetaInterface.GetResourceVersion()
-			items, err := meta.ExtractList(list)
-			if err != nil {
-				return xerrors.Errorf("unable to understand list result %#v: %w", list, err)
-			}
-			if err := p.ListItemsHandle(items); err != nil {
-				return xerrors.Errorf("call ListItemsHandle: %w", err)
-			}
-		}
-		watcher, err := createWatcher(p, lw)
-		if err != nil {
-			return xerrors.Errorf("call createWatcher of %s: %w", p.resourceKind(), err)
-		}
-		go s.WatchAndHandleEvent(p, watcher, ctx.Done())
+		go s.Run(p, runctx.Done(), cancel)
 	}
 
-	// This method will return an error and finish to event send when the connection from a client is closed.
-	// It includes browser reload, ReadableStream.cancel() calling and so on.
-	// This is to allow the front end to handle stream connection disconnections.
-	<-ctx.Done()
+	select {
+	case <-runctx.Done():
+		// runctx monitors s.Run (ListAndWatch) for each resource.
+		// If some error occurs in the process before starting the watch,
+		// this error is returned.
+		return xerrors.Errorf("failed to run ListAndWatch: %w", runctx.Err())
+	case <-ctx.Done():
+		// This method will return an error and finish to event send when the connection from a client is closed.
+		// It includes browser reload, ReadableStream.cancel() calling and so on.
+		// This is to allow the front end to handle stream connection disconnections.
+		return nil
+	}
+}
+
+// Run runs ListAndWatch method.
+// If an error is returned, call cancel to abort ListAndWatch of other resources being processed in parallel.
+func (s *Service) Run(p *resourceEventProxy, stopCh <-chan struct{}, cancel context.CancelFunc) {
+	if p.resourceKind() == Pcs {
+		cancel()
+		return
+	}
+	if err := s.ListAndWatch(p, stopCh); err != nil {
+		cancel()
+	}
+}
+
+// ListAndWatch runs list and watch on the target resource. The list is not always ran
+// This method returns error unless an error occurs in the watch. If an error occurs in the watch,
+// it outputs a log and re-run the watch.
+func (s *Service) ListAndWatch(p *resourceEventProxy, stopCh <-chan struct{}) error {
+	lw := createListWatch(p)
+	// If the lastResourceVersion isn't specified by client, call the list and return the result as ADDED event first.
+	if p.lastResourceVersion == "" {
+		if err := p.ListAndHandleItems(*lw); err != nil {
+			return xerrors.Errorf("call to ListAndHandleItems of %s: %w", p.resourceKind(), err)
+		}
+	}
+	watcher, err := createWatcher(p, lw)
+	if err != nil {
+		return xerrors.Errorf("call to createWatcher of %s: %w", p.resourceKind(), err)
+	}
+	s.WatchAndHandleEvent(p, watcher, stopCh)
+	return nil
+}
+
+// ListAndHandleItems call the list for the resource and the results is send to the client by ListItemsHandler method.
+func (p *resourceEventProxy) ListAndHandleItems(lw cache.ListWatch) error {
+	list, err := lw.List(metav1.ListOptions{})
+	if err != nil {
+		return xerrors.Errorf("failed to list: %w", err)
+	}
+	listMetaInterface, err := meta.ListAccessor(list)
+	if err != nil {
+		return xerrors.Errorf("unable to understand list result %#v: %w", list, err)
+	}
+	p.lastResourceVersion = listMetaInterface.GetResourceVersion()
+	items, err := meta.ExtractList(list)
+	if err != nil {
+		return xerrors.Errorf("unable to understand list result %#v: %w", list, err)
+	}
+	if err := p.ListItemsHandler(items); err != nil {
+		return xerrors.Errorf("call ListItemsHandle: %w", err)
+	}
 	return nil
 }
 
 // WatchAndHandleEvent prepares a handler for the wacher and runs the handler
 // until the stopCh is closed.
-func (s *Service) WatchAndHandleEvent(proxy ResourceEventProxy, watcher watch.Interface, stopCh <-chan struct{}) {
+func (s *Service) WatchAndHandleEvent(p ResourceEventProxy, watcher watch.Interface, stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
-	whandler := proxy.WatchHandlerFunc(watcher)
+	whandler := p.WatchHandlerFunc(watcher)
 	run := func(stopCh <-chan struct{}) {
 		if err := whandler(stopCh); err != nil {
-			proxy.WatchErrorHandler(err)
+			p.WatchErrorHandler(err)
 		}
 	}
 	var wg wait.Group
@@ -181,9 +217,9 @@ func newresourceEventProxy(sw StreamWriter, c cache.Getter, r resourceKind, o ru
 	}
 }
 
-// ListItemsHandle sends results of list as "ADDED" event to the client.
+// ListItemsHandler sends results of list as "ADDED" event to the client.
 // This method will be expected to call before starting the watch.
-func (p *resourceEventProxy) ListItemsHandle(items []runtime.Object) error {
+func (p *resourceEventProxy) ListItemsHandler(items []runtime.Object) error {
 	for _, item := range items {
 		if err := p.writer.Write(&sw.WatchEvent{Kind: p.r, EventType: watch.Added, Obj: item}); err != nil {
 			return xerrors.Errorf("call Write to return list item %#v: %w", item, err)
