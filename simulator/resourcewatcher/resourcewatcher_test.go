@@ -100,7 +100,8 @@ func TestResourceEventProxy_CreateWatcher(t *testing.T) {
 			sw := sw.NewStreamWriter(mockResponseStream)
 			proxy := newresourceEventProxy(sw, restclient, Pods, &corev1.Pod{}, tt.resourceversion)
 
-			_, err := createWatcher(proxy)
+			lw := createListWatch(proxy)
+			_, err := createWatcher(proxy, lw)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("createWatcher %v test, \nerror = %v", tt.name, err)
 			}

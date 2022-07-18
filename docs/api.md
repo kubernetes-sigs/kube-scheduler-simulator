@@ -107,22 +107,26 @@ Once this API is called, the server will be continuously sending WatchEvent ever
 
 ### HTTP Request
 
-`GET /api/v1/watchresources`
+`GET /api/v1/listwatchresources`
 
 #### Parameter
-You must specify the `lastResourceVersion` of each resource, which can be retrieved using the `list` function of each resource.
-If you won't specify it, the simulator failed to watch the resource.
+You can specify the `lastResourceVersion` of each resource, which can be retrieved using the `list` API of each resource.
+If you won't specify it, this API calls the `list` and returns the result as "ADDED" Events before starting watch.  
 
-|parameter|requirement|description|
-| ----- | --- | -------- |
-|podsLastResourceVersion|MUST|string|
-|nodesLastResourceVersion|MUST|string|
-|pvsLastResourceVersion|MUST|string|
-|pvcsLastResourceVersion|MUST|string|
-|scsLastResourceVersion|MUST|string|
-|pcsLastResourceVersion|MUST|string|
+We recommend to call the `list` API before the calling and to use `XXXLastResourceVersion` parameters.
 
-These `resourceVersion` set a constraint on what resource versions a request may be served from. See https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions for details. 
+The `ResourceVersion` must be treated as opaque by clients and passed unmodified back to the server.
+See also [this page](https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions).
+
+
+| parameter                | requirement | description                                                                                        |
+|--------------------------|-------------|----------------------------------------------------------------------------------------------------|
+| podsLastResourceVersion  | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
+| nodesLastResourceVersion | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
+| pvsLastResourceVersion   | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
+| pvcsLastResourceVersion  | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
+| scsLastResourceVersion   | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
+| pcsLastResourceVersion   | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
 
 e.g.)
 ```
@@ -131,7 +135,7 @@ e.g.)
 
 ### Response
 
-[WatchEvent](watcher/watcher.go#43)
+[WatchEvent](/simulator/watcher/watcher.go#43)
 
 | code  | description |
 | ----- | -------- |

@@ -22,6 +22,7 @@ func NewResourceWatcherHandler(s di.ResourceWatcherService) *ResourceWatcherHand
 // WatchResources provides resource updates using `server-sent events`.
 func (h *ResourceWatcherHandler) WatchResources(c echo.Context) error {
 	ctx := c.Request().Context()
+	// If key is not present, FormValue returns the empty string.
 	versions := &resourcewatcher.LastResourceVersions{
 		Pods:  c.FormValue("podsLastResourceVersion"),
 		Nodes: c.FormValue("nodesLastResourceVersion"),

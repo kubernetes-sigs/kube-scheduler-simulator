@@ -15,6 +15,7 @@ import (
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -78,8 +79,29 @@ func (s *Service) Watch(ctx context.Context, stream sw.ResponseStream, lrVersion
 		newresourceEventProxy(sw, s.client.StorageV1().RESTClient(), Scs, &storagev1.StorageClass{}, lrVersions.Scs),
 		newresourceEventProxy(sw, s.client.SchedulingV1().RESTClient(), Pcs, &schedulingv1.PriorityClass{}, lrVersions.Pcs),
 	}
+
 	for _, p := range proxies {
-		watcher, err := createWatcher(p)
+		lw := createListWatch(p)
+		// If the lastResourceVersion isn't specified by client, call the list and return the result as ADDED event first.
+		if p.lastResourceVersion == "" {
+			list, err := lw.List(metav1.ListOptions{})
+			if err != nil {
+				return xerrors.Errorf("failed to list: %w", err)
+			}
+			listMetaInterface, err := meta.ListAccessor(list)
+			if err != nil {
+				return xerrors.Errorf("unable to understand list result %#v: %w", list, err)
+			}
+			p.lastResourceVersion = listMetaInterface.GetResourceVersion()
+			items, err := meta.ExtractList(list)
+			if err != nil {
+				return xerrors.Errorf("unable to understand list result %#v: %w", list, err)
+			}
+			if err := p.ListItemsHandle(items); err != nil {
+				return xerrors.Errorf("call ListItemsHandle: %w", err)
+			}
+		}
+		watcher, err := createWatcher(p, lw)
 		if err != nil {
 			return xerrors.Errorf("call createWatcher of %s: %w", p.resourceKind(), err)
 		}
@@ -108,10 +130,14 @@ func (s *Service) WatchAndHandleEvent(proxy ResourceEventProxy, watcher watch.In
 	wg.Wait()
 }
 
+// createListWatch creates and returns ListWatch.
+func createListWatch(p *resourceEventProxy) *cache.ListWatch {
+	return cache.NewListWatchFromClient(p.c, string(p.r), corev1.NamespaceAll, fields.Everything())
+}
+
 // createWatcher creates and returns RetryWatcher.
-func createWatcher(p *resourceEventProxy) (watch.Interface, error) {
-	watcher := cache.NewListWatchFromClient(p.c, string(p.r), corev1.NamespaceAll, fields.Everything())
-	rWatcher, err := watchtools.NewRetryWatcher(p.lastResourceVersion, watcher)
+func createWatcher(p *resourceEventProxy, lw *cache.ListWatch) (watch.Interface, error) {
+	rWatcher, err := watchtools.NewRetryWatcher(p.lastResourceVersion, lw)
 	if err != nil {
 		return nil, xerrors.Errorf("call NewRetryWatcher: %w", err)
 	}
@@ -153,6 +179,17 @@ func newresourceEventProxy(sw StreamWriter, c cache.Getter, r resourceKind, o ru
 		o:                   o,
 		lastResourceVersion: ilrv,
 	}
+}
+
+// ListItemsHandle sends results of list as "ADDED" event to the client.
+// This method will be expected to call before starting the watch.
+func (p *resourceEventProxy) ListItemsHandle(items []runtime.Object) error {
+	for _, item := range items {
+		if err := p.writer.Write(&sw.WatchEvent{Kind: p.r, EventType: watch.Added, Obj: item}); err != nil {
+			return xerrors.Errorf("call Write to return list item %#v: %w", item, err)
+		}
+	}
+	return nil
 }
 
 // WatchHandlerFunc watches the specified resource's event and calls the method to send the event
