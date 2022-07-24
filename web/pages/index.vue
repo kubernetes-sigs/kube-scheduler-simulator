@@ -7,15 +7,15 @@
             <SchedulerConfigurationStoreProvider>
               <StorageClassStoreProvider>
                 <PriorityClassStoreProvider>
-                  <ResourceWatcher>
-                    <SnackbarStoreProvider>
+                  <SnackbarStoreProvider>
+                    <ResourceWatcher>
                       <ResourceBar />
                       <TopBar />
                       <ResourceAddButton />
                       <ResourceViewPanel />
                       <Snackbar />
-                    </SnackbarStoreProvider>
-                  </ResourceWatcher>
+                    </ResourceWatcher>
+                  </SnackbarStoreProvider>
                 </PriorityClassStoreProvider>
               </StorageClassStoreProvider>
             </SchedulerConfigurationStoreProvider>

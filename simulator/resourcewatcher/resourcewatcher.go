@@ -1,6 +1,7 @@
 package resourcewatcher
 
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/watchInterface.go -package=mock_resourcewatcher -mock_names Interface=MockWatchInterface k8s.io/apimachinery/pkg/watch Interface
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/lister.go -package=mock_resourcewatcher -mock_names Interface=MockListerInterface k8s.io/client-go/tools/cache Lister
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/resourceeventproxy.go . ResourceEventProxy
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/streamWriter.go . StreamWriter
 
@@ -102,78 +103,41 @@ func (s *Service) Watch(ctx context.Context, stream sw.ResponseStream, lrVersion
 // Run runs ListAndWatch method.
 // If an error is returned, call cancel to abort ListAndWatch of other resources being processed in parallel.
 func (s *Service) Run(p *resourceEventProxy, stopCh <-chan struct{}, cancel context.CancelFunc) {
-	if p.resourceKind() == Pcs {
-		cancel()
-		return
-	}
+	defer cancel()
+	// ListAndWatch usually continues to wait for WATCH to end and does not return any value.
 	if err := s.ListAndWatch(p, stopCh); err != nil {
 		cancel()
+		klog.Errorf("call ListAndWatch: %w", err)
 	}
 }
 
 // ListAndWatch runs list and watch on the target resource. The list is not always ran
 // This method returns error unless an error occurs in the watch. If an error occurs in the watch,
 // it outputs a log and re-run the watch.
-func (s *Service) ListAndWatch(p *resourceEventProxy, stopCh <-chan struct{}) error {
+func (s *Service) ListAndWatch(p ResourceEventProxy, stopCh <-chan struct{}) error {
 	lw := createListWatch(p)
 	// If the lastResourceVersion isn't specified by client, call the list and return the result as ADDED event first.
-	if p.lastResourceVersion == "" {
-		if err := p.ListAndHandleItems(*lw); err != nil {
-			return xerrors.Errorf("call to ListAndHandleItems of %s: %w", p.resourceKind(), err)
+	if p.LastResourceVersion() == "" {
+		if err := p.ListAndHandleItems(lw); err != nil {
+			return xerrors.Errorf("call to ListAndHandleItems of %s: %w", p.ResourceKind(), err)
 		}
 	}
 	watcher, err := createWatcher(p, lw)
 	if err != nil {
-		return xerrors.Errorf("call to createWatcher of %s: %w", p.resourceKind(), err)
+		return xerrors.Errorf("call to createWatcher of %s: %w", p.ResourceKind(), err)
 	}
-	s.WatchAndHandleEvent(p, watcher, stopCh)
+	p.WatchAndHandleEvent(watcher, stopCh)
 	return nil
-}
-
-// ListAndHandleItems call the list for the resource and the results is send to the client by ListItemsHandler method.
-func (p *resourceEventProxy) ListAndHandleItems(lw cache.ListWatch) error {
-	list, err := lw.List(metav1.ListOptions{})
-	if err != nil {
-		return xerrors.Errorf("failed to list: %w", err)
-	}
-	listMetaInterface, err := meta.ListAccessor(list)
-	if err != nil {
-		return xerrors.Errorf("unable to understand list result %#v: %w", list, err)
-	}
-	p.lastResourceVersion = listMetaInterface.GetResourceVersion()
-	items, err := meta.ExtractList(list)
-	if err != nil {
-		return xerrors.Errorf("unable to understand list result %#v: %w", list, err)
-	}
-	if err := p.ListItemsHandler(items); err != nil {
-		return xerrors.Errorf("call ListItemsHandle: %w", err)
-	}
-	return nil
-}
-
-// WatchAndHandleEvent prepares a handler for the wacher and runs the handler
-// until the stopCh is closed.
-func (s *Service) WatchAndHandleEvent(p ResourceEventProxy, watcher watch.Interface, stopCh <-chan struct{}) {
-	defer utilruntime.HandleCrash()
-	whandler := p.WatchHandlerFunc(watcher)
-	run := func(stopCh <-chan struct{}) {
-		if err := whandler(stopCh); err != nil {
-			p.WatchErrorHandler(err)
-		}
-	}
-	var wg wait.Group
-	wg.StartWithChannel(stopCh, run)
-	wg.Wait()
 }
 
 // createListWatch creates and returns ListWatch.
-func createListWatch(p *resourceEventProxy) *cache.ListWatch {
-	return cache.NewListWatchFromClient(p.c, string(p.r), corev1.NamespaceAll, fields.Everything())
+func createListWatch(p ResourceEventProxy) cache.ListerWatcher {
+	return cache.NewListWatchFromClient(p.RestClient(), string(p.ResourceKind()), corev1.NamespaceAll, fields.Everything())
 }
 
 // createWatcher creates and returns RetryWatcher.
-func createWatcher(p *resourceEventProxy, lw *cache.ListWatch) (watch.Interface, error) {
-	rWatcher, err := watchtools.NewRetryWatcher(p.lastResourceVersion, lw)
+func createWatcher(p ResourceEventProxy, lw cache.ListerWatcher) (watch.Interface, error) {
+	rWatcher, err := watchtools.NewRetryWatcher(p.LastResourceVersion(), lw)
 	if err != nil {
 		return nil, xerrors.Errorf("call NewRetryWatcher: %w", err)
 	}
@@ -182,8 +146,11 @@ func createWatcher(p *resourceEventProxy, lw *cache.ListWatch) (watch.Interface,
 
 // ResourceEventProxy is an interface that allows handle events and errors.
 type ResourceEventProxy interface {
-	WatchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error
-	WatchErrorHandler(err error)
+	ListAndHandleItems(lw cache.Lister) error
+	WatchAndHandleEvent(watcher watch.Interface, stopCh <-chan struct{})
+	LastResourceVersion() string
+	ResourceKind() resourceKind
+	RestClient() cache.Getter
 }
 
 // resourceEventProxy implements event handler for the specified resource
@@ -217,9 +184,54 @@ func newresourceEventProxy(sw StreamWriter, c cache.Getter, r resourceKind, o ru
 	}
 }
 
-// ListItemsHandler sends results of list as "ADDED" event to the client.
+// ListAndHandleItems calls the list for the resource and the results is send to the client by ListItemsHandler method.
+func (p *resourceEventProxy) ListAndHandleItems(lw cache.Lister) error {
+	list, err := lw.List(metav1.ListOptions{})
+	if err != nil {
+		return xerrors.Errorf("failed to list: %w", err)
+	}
+	items, lrv, err := extractListItem(list)
+	if err != nil {
+		return xerrors.Errorf("call HandleListItems: %w", err)
+	}
+	if err := p.listItemsHandler(items); err != nil {
+		return xerrors.Errorf("call ListItemsHandle: %w", err)
+	}
+	p.lastResourceVersion = lrv
+	return nil
+}
+
+// extractListItem validates whether the object is a list object and returns these items and lastResourceVersion.
+func extractListItem(list runtime.Object) ([]runtime.Object, string, error) {
+	listMetaInterface, err := meta.ListAccessor(list)
+	if err != nil {
+		return nil, "", xerrors.Errorf("failed to ListAccessor, unable to understand list result %#v: %w", list, err)
+	}
+	items, err := meta.ExtractList(list)
+	if err != nil {
+		return nil, "", xerrors.Errorf("failed to ExtractList, unable to understand list result %#v: %w", list, err)
+	}
+	return items, listMetaInterface.GetResourceVersion(), nil
+}
+
+// WatchAndHandleEvent prepares a handler for the wacher and runs the handler
+// until the stopCh is closed.
+func (p *resourceEventProxy) WatchAndHandleEvent(watcher watch.Interface, stopCh <-chan struct{}) {
+	defer utilruntime.HandleCrash()
+	handleFunc := p.watchHandlerFunc(watcher)
+	run := func(stopCh <-chan struct{}) {
+		if err := handleFunc(stopCh); err != nil {
+			p.watchErrorHandler(err)
+		}
+	}
+	var wg wait.Group
+	wg.StartWithChannel(stopCh, run)
+	wg.Wait()
+}
+
+// listItemsHandler sends results of list as "ADDED" event to the client.
 // This method will be expected to call before starting the watch.
-func (p *resourceEventProxy) ListItemsHandler(items []runtime.Object) error {
+func (p *resourceEventProxy) listItemsHandler(items []runtime.Object) error {
 	for _, item := range items {
 		if err := p.writer.Write(&sw.WatchEvent{Kind: p.r, EventType: watch.Added, Obj: item}); err != nil {
 			return xerrors.Errorf("call Write to return list item %#v: %w", item, err)
@@ -231,7 +243,7 @@ func (p *resourceEventProxy) ListItemsHandler(items []runtime.Object) error {
 // WatchHandlerFunc watches the specified resource's event and calls the method to send the event
 // and updates lastResourceVersion.
 //nolint: cyclop // For readability.
-func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error {
+func (p *resourceEventProxy) watchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error {
 	return func(stopCh <-chan struct{}) error {
 		for {
 			// give the stopCh a chance to stop the loop, even in case of continue statements further down on errors
@@ -258,9 +270,9 @@ func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stop
 				case watch.Bookmark:
 					// A `Bookmark` means watch has synced here, just update the resourceVersion
 				case watch.Error:
-					return xerrors.Errorf("%s: get an error watch event %#v", p.resourceKind(), obj)
+					return xerrors.Errorf("%s: get an error watch event %#v", p.ResourceKind(), obj)
 				default:
-					return xerrors.Errorf("%s: unable to understand watch event: %#v", p.resourceKind(), obj)
+					return xerrors.Errorf("%s: unable to understand watch event: %#v", p.ResourceKind(), obj)
 				}
 
 				if writingErr != nil {
@@ -272,8 +284,21 @@ func (p *resourceEventProxy) WatchHandlerFunc(watcher watch.Interface) func(stop
 	}
 }
 
+func (p *resourceEventProxy) ResourceKind() resourceKind {
+	return p.r
+}
+
+func (p *resourceEventProxy) RestClient() cache.Getter {
+	return p.c
+}
+
+// LastResourceVersion returns the lastResourceVersion value that is kept in the proxy.
+func (p *resourceEventProxy) LastResourceVersion() string {
+	return p.lastResourceVersion
+}
+
 // WatchErrorHandler handles some errors.
-func (p *resourceEventProxy) WatchErrorHandler(err error) {
+func (p *resourceEventProxy) watchErrorHandler(err error) {
 	switch {
 	case isExpiredError(err):
 		// Don't set LastSyncResourceVersionUnavailable - LIST call with ResourceVersion=RV already
@@ -287,16 +312,6 @@ func (p *resourceEventProxy) WatchErrorHandler(err error) {
 	default:
 		utilruntime.HandleError(fmt.Errorf("failed to watch %v: %w", p.r, err))
 	}
-}
-
-// resourceKind returns the resourceKind value that was set in initialization.
-func (p *resourceEventProxy) resourceKind() resourceKind {
-	return p.r
-}
-
-// LastResourceVersion returns the lastResourceVersion value that is kept in the proxy.
-func (p *resourceEventProxy) LastResourceVersion() string {
-	return p.lastResourceVersion
 }
 
 func isExpiredError(err error) bool {

@@ -9,6 +9,9 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	watch "k8s.io/apimachinery/pkg/watch"
+	cache "k8s.io/client-go/tools/cache"
+
+	streamwriter "sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
 )
 
 // MockResourceEventProxy is a mock of ResourceEventProxy interface.
@@ -34,28 +37,70 @@ func (m *MockResourceEventProxy) EXPECT() *MockResourceEventProxyMockRecorder {
 	return m.recorder
 }
 
-// WatchErrorHandler mocks base method.
-func (m *MockResourceEventProxy) WatchErrorHandler(arg0 error) {
+// LastResourceVersion mocks base method.
+func (m *MockResourceEventProxy) LastResourceVersion() string {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "WatchErrorHandler", arg0)
-}
-
-// WatchErrorHandler indicates an expected call of WatchErrorHandler.
-func (mr *MockResourceEventProxyMockRecorder) WatchErrorHandler(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchErrorHandler", reflect.TypeOf((*MockResourceEventProxy)(nil).WatchErrorHandler), arg0)
-}
-
-// WatchHandlerFunc mocks base method.
-func (m *MockResourceEventProxy) WatchHandlerFunc(arg0 watch.Interface) func(<-chan struct{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WatchHandlerFunc", arg0)
-	ret0, _ := ret[0].(func(<-chan struct{}) error)
+	ret := m.ctrl.Call(m, "LastResourceVersion")
+	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// WatchHandlerFunc indicates an expected call of WatchHandlerFunc.
-func (mr *MockResourceEventProxyMockRecorder) WatchHandlerFunc(arg0 interface{}) *gomock.Call {
+// LastResourceVersion indicates an expected call of LastResourceVersion.
+func (mr *MockResourceEventProxyMockRecorder) LastResourceVersion() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchHandlerFunc", reflect.TypeOf((*MockResourceEventProxy)(nil).WatchHandlerFunc), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LastResourceVersion", reflect.TypeOf((*MockResourceEventProxy)(nil).LastResourceVersion))
+}
+
+// ListAndHandleItems mocks base method.
+func (m *MockResourceEventProxy) ListAndHandleItems(arg0 cache.Lister) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAndHandleItems", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ListAndHandleItems indicates an expected call of ListAndHandleItems.
+func (mr *MockResourceEventProxyMockRecorder) ListAndHandleItems(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAndHandleItems", reflect.TypeOf((*MockResourceEventProxy)(nil).ListAndHandleItems), arg0)
+}
+
+// ResourceKind mocks base method.
+func (m *MockResourceEventProxy) ResourceKind() streamwriter.ResourceKind {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResourceKind")
+	ret0, _ := ret[0].(streamwriter.ResourceKind)
+	return ret0
+}
+
+// ResourceKind indicates an expected call of ResourceKind.
+func (mr *MockResourceEventProxyMockRecorder) ResourceKind() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResourceKind", reflect.TypeOf((*MockResourceEventProxy)(nil).ResourceKind))
+}
+
+// RestClient mocks base method.
+func (m *MockResourceEventProxy) RestClient() cache.Getter {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RestClient")
+	ret0, _ := ret[0].(cache.Getter)
+	return ret0
+}
+
+// RestClient indicates an expected call of RestClient.
+func (mr *MockResourceEventProxyMockRecorder) RestClient() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RestClient", reflect.TypeOf((*MockResourceEventProxy)(nil).RestClient))
+}
+
+// WatchAndHandleEvent mocks base method.
+func (m *MockResourceEventProxy) WatchAndHandleEvent(arg0 watch.Interface, arg1 <-chan struct{}) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "WatchAndHandleEvent", arg0, arg1)
+}
+
+// WatchAndHandleEvent indicates an expected call of WatchAndHandleEvent.
+func (mr *MockResourceEventProxyMockRecorder) WatchAndHandleEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchAndHandleEvent", reflect.TypeOf((*MockResourceEventProxy)(nil).WatchAndHandleEvent), arg0, arg1)
 }

@@ -12,7 +12,7 @@ import PersistentVolumeClaimStoreKey from "./StoreKey/PVCStoreKey";
 import PersistentVolumeStoreKey from "./StoreKey/PVStoreKey";
 import PriorityClassStoreKey from "./StoreKey/PriorityClassStoreKey";
 import StorageClassStoreKey from "./StoreKey/StorageClassStoreKey";
-import SnackBarStoreKey from "./StoreKey/SnackBarStoreKey"
+import SnackBarStoreKey from "./StoreKey/SnackBarStoreKey";
 import { WatcherAPIKey } from "~/api/APIProviderKeys";
 import { WatchEventType } from "@/types/resources";
 import { LastResourceVersions } from "@/types/api/v1";
@@ -29,35 +29,35 @@ export default defineComponent({
   setup() {
     const watcherAPI = inject(WatcherAPIKey);
     if (!watcherAPI) {
-      throw new Error(`${watcherAPI} is not provided`);
+      throw new Error(`${WatcherAPIKey.description} is not provided`);
     }
     const pstore = inject(PodStoreKey);
     if (!pstore) {
-      throw new Error(`${PodStoreKey} is not provided`);
+      throw new Error(`${PodStoreKey.description} is not provided`);
     }
     const nstore = inject(NodeStoreKey);
     if (!nstore) {
-      throw new Error(`${NodeStoreKey} is not provided`);
+      throw new Error(`${NodeStoreKey.description} is not provided`);
     }
     const pvcstore = inject(PersistentVolumeClaimStoreKey);
     if (!pvcstore) {
-      throw new Error(`${pvcstore} is not provided`);
+      throw new Error(`${PersistentVolumeClaimStoreKey.description} is not provided`);
     }
     const pvstore = inject(PersistentVolumeStoreKey);
     if (!pvstore) {
-      throw new Error(`${pvstore} is not provided`);
+      throw new Error(`${PersistentVolumeStoreKey.description} is not provided`);
     }
     const priorityclassstore = inject(PriorityClassStoreKey);
     if (!priorityclassstore) {
-      throw new Error(`${PriorityClassStoreKey} is not provided`);
+      throw new Error(`${PriorityClassStoreKey.description} is not provided`);
     }
     const storageclassstore = inject(StorageClassStoreKey);
     if (!storageclassstore) {
-      throw new Error(`${StorageClassStoreKey} is not provided`);
+      throw new Error(`${StorageClassStoreKey.description} is not provided`);
     }
     const snackbarstore = inject(SnackBarStoreKey);
     if (!snackbarstore) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
+      throw new Error(`${SnackBarStoreKey.description} is not provided`);
     }
 
     // Initializes each resource and starts watching.
