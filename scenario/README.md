@@ -1,5 +1,10 @@
 # scenario
 
+**This Scenario is currently under development.** 
+
+**All the following descriptions are subject to change as they are undecided.** 
+**And, the implementations are subject to breaking changes without notice.**
+
 This module contains the Scenario CRD and the controller for it.
 The Scenario allows you to write scenario for scenario-based simulation of scheduler.
 
@@ -71,10 +76,10 @@ make undeploy
 ```
 
 ### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
+which provides a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster.
 
 ### Test It Out
 1. Install the CRDs into the cluster:
@@ -100,4 +105,4 @@ make manifests
 
 **NOTE:** Run `make --help` for more information on all potential `make` targets
 
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html).
