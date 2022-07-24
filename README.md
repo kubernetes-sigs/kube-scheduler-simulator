@@ -1,8 +1,42 @@
-# Web-based Kubernetes scheduler simulator
+# Kubernetes scheduler simulator
 
-Hello world. Here is web-based Kubernetes scheduler simulator.
+Hello world. Here is Kubernetes scheduler simulator.
 
-On the simulator, you can create/edit/delete these resources to simulate a cluster.
+Nowadays, the scheduler is configurable/extendable in the multiple ways:
+- configure with [KubeSchedulerConfiguration](https://kubernetes.io/docs/reference/scheduling/config/)
+- add Plugins of [Scheduling Framework](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/)
+- add [Extenders](https://github.com/kubernetes/enhancements/tree/5320deb4834c05ad9fb491dcd361f952727ece3e/keps/sig-scheduling/1819-scheduler-extender)
+- etc...
+
+But, unfortunately, not all configurations/expansions yield good results.
+Those who customize the scheduler need to make sure their scheduler is working as expected, and doesn't have an unacceptably negative impact on the scheduling. 
+
+In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually require privileged access to the control plane.
+That's way we are developing a simulator for kube-scheduler -- you can try out the behavior of the scheduler with web UI while checking which plugin made what decision for which Node.
+
+## Simulator's architecture
+
+We have several components:
+- Simulator (in `/simulator`)
+- Web UI (in `/web`)
+- Coming soon... :)  (see [./keps](./keps) to see some nice ideas we're working on)
+
+### Simulator
+
+Simulator internally has kube-apiserver, scheduler, and HTTP server.
+
+You can create any resources by communicating with kube-apiserver via kubectl, k8s client library, or web UI.
+
+See the following docs to know more about simulator:
+- [how-it-works.md](simulator/docs/how-it-works.md): describes about how the simulator works.
+- [kube-apiserver.md](simulator/docs/kube-apiserver.md): describe about kube-apiserver in simulator. (how you can configure and access) 
+- [api.md](simulator/docs/api.md): describes about HTTP server the simulator has.
+
+### Web UI
+
+Web UI is one of the clients of simulator, but it's optimized for simulator.
+
+From the web, you can create/edit/delete these resources to simulate a cluster.
 
 - Nodes
 - Pods
@@ -11,11 +45,11 @@ On the simulator, you can create/edit/delete these resources to simulate a clust
 - Storage Classes
 - Priority Classes
 
-![list resources](docs/images/resources.png)
+![list resources](simulator/docs/images/resources.png)
 
 You can create resources with yaml file as usual.
 
-![create node](docs/images/create-node.png)
+![create node](simulator/docs/images/create-node.png)
 
 And, after pods are scheduled, you can see the results of
 
@@ -23,7 +57,7 @@ And, after pods are scheduled, you can see the results of
 - Each Score plugins
 - Final score (normalized and applied Plugin Weight)
 
-![result](docs/images/result.jpg)
+![result](simulator/docs/images/result.jpg)
 
 You can configure the scheduler on the simulator through KubeSchedulerConfiguration.
 
@@ -33,16 +67,9 @@ You can pass a KubeSchedulerConfiguration file via the environment variable `KUB
 
 Note: changes to any fields other than `.profiles` are disabled on simulator, since they do not affect the results of the scheduling.
 
-![configure scheduler](docs/images/schedulerconfiguration.png)
+![configure scheduler](simulator/docs/images/schedulerconfiguration.png)
 
-If you want to use your custom plugins as out-of-tree plugins in the simulator, please follow [this doc](docs/how-to-use-custom-plugins/README.md).
-
-## Background
-
-In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually requires privileged access to the control plane.
-Therefore, we have developed a simulator for kube-scheduler -- you can try out the behavior of the scheduler with web UI while checking which plugin made what decision for which Node.
-
-It can be used to learn about the Kubernetes scheduler or to examine the detailed behavior of plugins, etc.
+If you want to use your custom plugins as out-of-tree plugins in the simulator, please follow [this doc](simulator/docs/how-to-use-custom-plugins/README.md).
 
 ## Getting started
 
@@ -86,11 +113,6 @@ To run the frontend, please see [README.md](web/README.md) on ./web dir.
 ## Contributing
 
 see [CONTRIBUTING.md](CONTRIBUTING.md)
-
-### other docs
-
-- [how the simulator works](docs/how-it-works.md)
-- [API Reference](docs/api.md)
 
 ## Community, discussion, contribution, and support
 
