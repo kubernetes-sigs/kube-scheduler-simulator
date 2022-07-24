@@ -137,7 +137,7 @@ e.g.)
 
 ### Response
 
-[WatchEvent](/simulator/watcher/watcher.go#43)
+[WatchEvent](/simulator/watcher/streamwriter/streamwriter.go#18)
 
 | code  | description |
 | ----- | -------- |
