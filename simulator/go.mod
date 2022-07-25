@@ -43,6 +43,7 @@ require (
 	k8s.io/apimachinery v1.22.0
 	k8s.io/apiserver v1.22.0
 	k8s.io/client-go v1.22.0
+	k8s.io/controller-manager v0.22.0
 	k8s.io/klog/v2 v2.9.0
 	k8s.io/kube-aggregator v0.0.0
 	k8s.io/kube-scheduler v1.22.0
@@ -157,6 +158,7 @@ require (
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/tools v0.1.3 // indirect
+	gonum.org/v1/gonum v0.6.2 // indirect
 	google.golang.org/api v0.29.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
@@ -175,6 +177,7 @@ require (
 	k8s.io/component-base v0.23.4 // indirect
 	k8s.io/component-helpers v0.22.0 // indirect
 	k8s.io/csi-translation-lib v0.22.0 // indirect
+	k8s.io/kube-controller-manager v0.0.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e // indirect
 	k8s.io/kubelet v0.0.0 // indirect
 	k8s.io/legacy-cloud-providers v0.0.0 // indirect
