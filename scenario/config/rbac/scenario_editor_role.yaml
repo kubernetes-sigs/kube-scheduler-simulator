@@ -1,0 +1,24 @@
+# permissions for end users to edit scenarios.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: scenario-editor-role
+rules:
+- apiGroups:
+  - simulation.kube-scheduler-simulator.x-k8s.io
+  resources:
+  - scenarios
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - simulation.kube-scheduler-simulator.x-k8s.io
+  resources:
+  - scenarios/status
+  verbs:
+  - get

@@ -1,0 +1,20 @@
+# permissions for end users to view scenarios.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: scenario-viewer-role
+rules:
+- apiGroups:
+  - simulation.kube-scheduler-simulator.x-k8s.io
+  resources:
+  - scenarios
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - simulation.kube-scheduler-simulator.x-k8s.io
+  resources:
+  - scenarios/status
+  verbs:
+  - get
