@@ -97,5 +97,5 @@ type ReplicateExistingClusterService interface {
 
 // ResourceWatcherService represents service for watch k8s resources.
 type ResourceWatcherService interface {
-	Watch(ctx context.Context, stream streamwriter.ResponseStream, lrVersions *resourcewatcher.LastResourceVersions) error
+	ListWatch(ctx context.Context, stream streamwriter.ResponseStream, lrVersions *resourcewatcher.LastResourceVersions) error
 }

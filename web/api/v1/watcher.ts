@@ -9,7 +9,7 @@ export default function watcherAPI(instance: AxiosInstance) {
         const queries = `podsLastResourceVersion=${lrvs.pods}&nodesLastResourceVersion=${lrvs.nodes}&pvsLastResourceVersion=${lrvs.pvs}&pvcsLastResourceVersion=${lrvs.pvcs}&scsLastResourceVersion=${lrvs.storageClasses}&pcsLastResourceVersion=${lrvs.priorityClasses}`;
         // return stream of Node events.
         return await fetch(
-          `${instance.defaults.baseURL}/watchresources?${queries}`
+          `${instance.defaults.baseURL}/listwatchresources?${queries}`
         );
       } catch (e: any) {
         throw new Error(`failed to watch nodes: ${e}`);

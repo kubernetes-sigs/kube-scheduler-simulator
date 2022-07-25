@@ -19,8 +19,8 @@ func NewResourceWatcherHandler(s di.ResourceWatcherService) *ResourceWatcherHand
 	return &ResourceWatcherHandler{service: s}
 }
 
-// WatchResources provides resource updates using `server-sent events`.
-func (h *ResourceWatcherHandler) WatchResources(c echo.Context) error {
+// ListWatchResources provides resource updates using `server-sent events`.
+func (h *ResourceWatcherHandler) ListWatchResources(c echo.Context) error {
 	ctx := c.Request().Context()
 	// If key is not present, FormValue returns the empty string.
 	versions := &resourcewatcher.LastResourceVersions{
@@ -34,7 +34,7 @@ func (h *ResourceWatcherHandler) WatchResources(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	// Start to watch and do server push
-	err := h.service.Watch(ctx, c.Response(), versions)
+	err := h.service.ListWatch(ctx, c.Response(), versions)
 	if err != nil {
 		klog.Errorf("terminated to watch resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)

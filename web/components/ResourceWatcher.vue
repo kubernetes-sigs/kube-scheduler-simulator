@@ -41,11 +41,15 @@ export default defineComponent({
     }
     const pvcstore = inject(PersistentVolumeClaimStoreKey);
     if (!pvcstore) {
-      throw new Error(`${PersistentVolumeClaimStoreKey.description} is not provided`);
+      throw new Error(
+        `${PersistentVolumeClaimStoreKey.description} is not provided`
+      );
     }
     const pvstore = inject(PersistentVolumeStoreKey);
     if (!pvstore) {
-      throw new Error(`${PersistentVolumeStoreKey.description} is not provided`);
+      throw new Error(
+        `${PersistentVolumeStoreKey.description} is not provided`
+      );
     }
     const priorityclassstore = inject(PriorityClassStoreKey);
     if (!priorityclassstore) {
@@ -71,7 +75,7 @@ export default defineComponent({
       await watchAndUpdates();
     });
 
-    const createLastResourceVersions = (): LastResourceVersions => {
+    const createlastResourceVersions = (): LastResourceVersions => {
       return {
         pods: pstore.lastResourceVersion,
         nodes: nstore.lastResourceVersion,
@@ -85,7 +89,7 @@ export default defineComponent({
     // Call watch API and allocates the event to each resource's handler.
     const watchAndUpdates = () => {
       watcherAPI
-        .watchResources(createLastResourceVersions() as LastResourceVersions)
+        .watchResources(createlastResourceVersions() as LastResourceVersions)
         .then((response) => {
           if (!response.body) {
             return;
@@ -109,7 +113,7 @@ export default defineComponent({
               try {
                 const event = JSON.parse(chunk) as WatchEvent;
                 switch (event.Kind) {
-                  case ResourceKind.PODS: {
+                  case resourceKind.PODS: {
                     pstore.watchEventHandler(
                       event.EventType,
                       event.Obj as V1Pod
@@ -117,7 +121,7 @@ export default defineComponent({
                     pstore.setLastResourceVersion(event.Obj as V1Pod);
                     break;
                   }
-                  case ResourceKind.NODES: {
+                  case resourceKind.NODES: {
                     nstore.watchEventHandler(
                       event.EventType,
                       event.Obj as V1Node
@@ -125,7 +129,7 @@ export default defineComponent({
                     nstore.setLastResourceVersion(event.Obj as V1Node);
                     break;
                   }
-                  case ResourceKind.PVS: {
+                  case resourceKind.PVS: {
                     pvstore.watchEventHandler(
                       event.EventType,
                       event.Obj as V1PersistentVolume
@@ -135,7 +139,7 @@ export default defineComponent({
                     );
                     break;
                   }
-                  case ResourceKind.PVCS: {
+                  case resourceKind.PVCS: {
                     pvcstore.watchEventHandler(
                       event.EventType,
                       event.Obj as V1PersistentVolumeClaim
@@ -145,7 +149,7 @@ export default defineComponent({
                     );
                     break;
                   }
-                  case ResourceKind.SCS: {
+                  case resourceKind.SCS: {
                     storageclassstore.watchEventHandler(
                       event.EventType,
                       event.Obj as V1StorageClass
@@ -155,7 +159,7 @@ export default defineComponent({
                     );
                     break;
                   }
-                  case ResourceKind.PCS: {
+                  case resourceKind.PCS: {
                     priorityclassstore.watchEventHandler(
                       event.EventType,
                       event.Obj as V1PriorityClass
@@ -184,12 +188,12 @@ export default defineComponent({
 });
 
 type WatchEvent = {
-  Kind: ResourceKind;
+  Kind: resourceKind;
   EventType: WatchEventType;
   Obj: Object;
 };
 
-enum ResourceKind {
+enum resourceKind {
   PODS = "pods",
   NODES = "nodes",
   PVS = "persistentvolumes",

@@ -115,24 +115,24 @@ Once this API is called, the server will be continuously sending WatchEvent ever
 You can specify the `lastResourceVersion` of each resource, which can be retrieved using the `list` API of each resource.
 If you won't specify it, this API calls the `list` and returns the result as "ADDED" Events before starting watch.  
 
-We recommend to call the `list` API before the calling and to use `XXXLastResourceVersion` parameters.
+We recommend to call the `list` API before the calling and to use `XXXlastResourceVersion` parameters.
 
 The `ResourceVersion` must be treated as opaque by clients and passed unmodified back to the server.
 See also [this page](https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions).
 
 
-| parameter                | requirement | description                                                                                        |
-|--------------------------|-------------|----------------------------------------------------------------------------------------------------|
-| podsLastResourceVersion  | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
-| nodesLastResourceVersion | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
-| pvsLastResourceVersion   | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
-| pvcsLastResourceVersion  | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
-| scsLastResourceVersion   | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
-| pcsLastResourceVersion   | OPTIONAL    | If not specified, some existing resource data is returned as `ADDED` Events before starting watch. |
+| parameter                | requirement | description                                                                                   |
+|--------------------------|-------------|-----------------------------------------------------------------------------------------------|
+| podslastResourceVersion  | OPTIONAL    | If not specified, all resources are returned as `ADDED` Events first and then start to watch. |
+| nodeslastResourceVersion | OPTIONAL    | If not specified, all resources are returned as `ADDED` Events first and then start to watch. |
+| pvslastResourceVersion   | OPTIONAL    | If not specified, all resources are returned as `ADDED` Events first and then start to watch. |
+| pvcslastResourceVersion  | OPTIONAL    | If not specified, all resources are returned as `ADDED` Events first and then start to watch. |
+| scslastResourceVersion   | OPTIONAL    | If not specified, all resources are returned as `ADDED` Events first and then start to watch. |
+| pcslastResourceVersion   | OPTIONAL    | If not specified, all resources are returned as `ADDED` Events first and then start to watch. |
 
 e.g.)
 ```
-/api/v1/watchresources?podsLastResourceVersion=213&nodesLastResourceVersion=213&pvsLastResourceVersion=213&pvcsLastResourceVersion=213&scsLastResourceVersion=213&pcsLastResourceVersion=213
+/api/v1/listwatchresources?podslastResourceVersion=213&nodeslastResourceVersion=213&pvslastResourceVersion=213&pvcslastResourceVersion=213&scslastResourceVersion=213&pcslastResourceVersion=213
 ```
 
 ### Response
