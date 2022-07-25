@@ -13,6 +13,8 @@ import (
 	"k8s.io/kube-scheduler/config/v1beta2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
 )
 
 // PodService represents service for manage Pods.
@@ -91,4 +93,9 @@ type ResetService interface {
 // ReplicateExistingClusterService represents a service to import resources from the existing cluster.
 type ReplicateExistingClusterService interface {
 	ImportFromExistingCluster(ctx context.Context) error
+}
+
+// ResourceWatcherService represents service for watch k8s resources.
+type ResourceWatcherService interface {
+	ListWatch(ctx context.Context, stream streamwriter.ResponseStream, lrVersions *resourcewatcher.LastResourceVersions) error
 }

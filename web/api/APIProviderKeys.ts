@@ -8,6 +8,7 @@ import { PVCAPI } from "./v1/pvc";
 import { ResetAPI } from "./v1/reset";
 import { SchedulerconfigurationAPI } from "./v1/schedulerconfiguration";
 import { StorageClassAPI } from "./v1/storageclass";
+import { WatcherAPI } from "./v1/watcher";
 
 export const PodAPIKey: InjectionKey<PodAPI> = Symbol("PodAPI");
 export const NodeAPIKey: InjectionKey<NodeAPI> = Symbol("NodeAPI");
@@ -21,3 +22,4 @@ export const SchedulerconfigurationAPIKey: InjectionKey<SchedulerconfigurationAP
   Symbol("SchedulerconfigurationAPI");
 export const StorageClassAPIKey: InjectionKey<StorageClassAPI> =
   Symbol("StorageClassAPI");
+export const WatcherAPIKey: InjectionKey<WatcherAPI> = Symbol("WatcherAPI");

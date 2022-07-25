@@ -53,12 +53,6 @@ import {
 import { ResourcesForImport } from "~/api/v1/export";
 import yaml from "js-yaml";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
-import PriorityClassStoreKey from "../StoreKey/PriorityClassStoreKey";
-import StorageClassStoreKey from "../StoreKey/StorageClassStoreKey";
-import PersistentVolumeClaimStoreKey from "../StoreKey/PVCStoreKey";
-import PersistentVolumeStoreKey from "../StoreKey/PVStoreKey";
-import NodeStoreKey from "../StoreKey/NodeStoreKey";
-import PodStoreKey from "../StoreKey/PodStoreKey";
 import { ExportAPIKey } from "~/api/APIProviderKeys";
 
 interface SelectedItem {
@@ -73,30 +67,7 @@ export default defineComponent({
       dialog: false,
       isImportButtonDisabled: true,
     } as SelectedItem);
-    const priorityclassstore = inject(PriorityClassStoreKey);
-    if (!priorityclassstore) {
-      throw new Error(`${PriorityClassStoreKey} is not provided`);
-    }
-    const storageclassstore = inject(StorageClassStoreKey);
-    if (!storageclassstore) {
-      throw new Error(`${StorageClassStoreKey} is not provided`);
-    }
-    const pvcstore = inject(PersistentVolumeClaimStoreKey);
-    if (!pvcstore) {
-      throw new Error(`${PersistentVolumeClaimStoreKey} is not provided`);
-    }
-    const pvstore = inject(PersistentVolumeStoreKey);
-    if (!pvstore) {
-      throw new Error(`${PersistentVolumeStoreKey} is not provided`);
-    }
-    const nstore = inject(NodeStoreKey);
-    if (!nstore) {
-      throw new Error(`${NodeStoreKey} is not provided`);
-    }
-    const pstore = inject(PodStoreKey);
-    if (!pstore) {
-      throw new Error(`${PodStoreKey} is not provided`);
-    }
+
     const exportAPI = inject(ExportAPIKey);
     if (!exportAPI) {
       throw new Error(`${exportAPI} is not provided`);
@@ -121,14 +92,6 @@ export default defineComponent({
     const ImportScheduler = async () => {
       exportAPI
         .importScheduler(data.filedata as ResourcesForImport)
-        .then(() => {
-          priorityclassstore.fetchlist();
-          storageclassstore.fetchlist();
-          pvcstore.fetchlist();
-          pvstore.fetchlist();
-          nstore.fetchlist();
-          pstore.fetchlist();
-        })
         .catch((e) => setServerErrorMessage(e))
         .finally(() => {
           data.dialog = false;
