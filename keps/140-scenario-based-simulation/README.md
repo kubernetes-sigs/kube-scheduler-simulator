@@ -2,28 +2,49 @@
 
 ## Summary
 
-A new scenario-based simulation feature is introduced to kube-scheduler-simulator by new `Scenario` CRD.
+A new scenario-based simulation feature is introduced to kube-scheduler-simulator by the new `Scenario` CRD.
 
 ## Motivation
 
-Nowadays, the scheduler is extendable in the multiple ways:
+Nowadays, the scheduler is extendable in multiple ways:
 - configure with [KubeSchedulerConfiguration](https://kubernetes.io/docs/reference/scheduling/config/)
 - add Plugins of [Scheduling Framework](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/)
 - add [Extenders](https://github.com/kubernetes/enhancements/tree/5320deb4834c05ad9fb491dcd361f952727ece3e/keps/sig-scheduling/1819-scheduler-extender)
 - etc...
 
-But, unfortunately, not all expansions yield good results.
-Those who customize the scheduler need to make sure their scheduler is working as expected, and doesn't have an unacceptably negative impact on the scheduling result or scheduling performance. And, usually, evaluating the scheduler is not so easy because there are many factors for the evaluation of the scheduler's ability.
+But unfortunately, not all expansions yield good results.
+Those who customize the scheduler need to ensure it is working as expected and doesn't have an unacceptably negative impact on the scheduling result or performance. And usually, evaluating the scheduler is not easy because there are many factors for evaluating the scheduler's ability.
 
-The scenario-based simulation feature will be useful for those who customize the scheduler to evaluate their scheduler.
+The scenario-based simulation feature will be helpful for those who customize the scheduler to evaluate their scheduler.
 
-### Goals
+## Goals
 
-Users can simulate their scheduler with some defined scenarios and can evaluate their scheduler with the result.
+Users can simulate their controller with defined scenarios and evaluate their controller's behavior.
+It's mainly designed for the scheduler, but you can use it for other controllers like a cluster autoscaler.
 
-### Non-Goals
+## Non-Goals
 
-See the result of scenario-based simulation from Web UI. (may be implemented in the future, but out of scope of this proposal.)
+See the result of scenario-based simulation from Web UI. (maybe implemented in the future, but out of the scope of this proposal.)
+
+## User Stories 
+
+### Story 1
+
+The company has added many features into scheduler via some custom plugins, 
+and they want to make sure that their expansions are working as expected and has not negatively impacted the scheduling results.
+
+#### Solution
+
+They can define appropriate scenario and analyze the .status.result with the result calculation package.
+
+### Story 2
+
+The users want to see how their customized scheduler behaves in the worst case scenario.
+
+#### Solution
+
+Even when a scenario is running, users can add operations to that scenario. 
+So, in this case, they can add operations that are most worst case for the scheduler by looking at the simulation results and the resources status at that point.
 
 ## Proposal
 
@@ -31,10 +52,10 @@ See the result of scenario-based simulation from Web UI. (may be implemented in 
 
 #### The current simulator and proposal
 
-The simulator was initially designed with a strong emphasis on Web UI. 
-Then, thanks to so much contributions from everyone, we've expanded the simulator to be able to be used from other clients like kubectl, client-go, etc.
+We initially designed the simulator with a strong emphasis on Web UI. 
+Then, thanks to so many contributions from everyone, we've expanded the simulator to be able to be used from other clients like kubectl, client-go, etc.
 
-Now that simulators are no longer just for webUI, we need to think about how we can design scenario-based simulation to be easy to use from other clients as well.
+Now that simulators are no longer just for WebUI, we need to think about how we can design scenario-based simulations to be easy to use from other clients as well.
 
 Therefore, this kep proposes to define the scenario **as CRD**. All clients, including web UI, can use the scenario-based simulation feature by creating the Scenario resource.
 
@@ -43,65 +64,85 @@ Therefore, this kep proposes to define the scenario **as CRD**. All clients, inc
 The Scenario is a non-namespaced resource. 
 This CRD will be applied to kube-apiserver started in kube-scheduler-simulator.
 
-We may need to change etcd request-size limitation by --max-request-bytes since the scenario resource may be bigger than other normal resources.
+We may need to change etcd request-size limitation by --max-request-bytes since the scenario resource may be more significant than other standard resources.
 https://etcd.io/docs/v3.4/dev-guide/limit/#request-size-limit
 
 ```go
-// Scenario is the Schema for the scenarios API
-type Scenario struct {
-  metav1.TypeMeta   `json:",inline"`
-  metav1.ObjectMeta `json:"metadata,omitempty"`
-
-  Spec   ScenarioSpec   `json:"spec,omitempty"`
-  Status ScenarioStatus `json:"status,omitempty"`
-}
-
 // ScenarioSpec defines the desired state of Scenario
 type ScenarioSpec struct {
-	// Events field has all operations for a scenario.
-	// Also you can add new events during the scenario is running.
+	// Operations field has all operations for a scenario.
+	// Also, you can add a new operation while the scenario runs.
 	//
 	// +patchMergeKey=ID
 	// +patchStrategy=merge
-	Events []*ScenarioEvent `json:"events"`
+	Operations []*ScenarioOperation `json:"operations"`
+
+	// Controllers have the configuration for controllers working with simulation.
+	Controllers *Controllers `json:"controllers"`
 }
 
-type ScenarioEvent struct {
-	// ID for this event. Normally, the system sets this field for you.
+type Controllers struct {
+	// PreparingControllers is a list of controllers that should be run before SimulatedControllers.
+	// They will run in parallel.
+	// 
+	// It's an optional field. 
+	// All controllers registered in the simulator will be enabled automatically. (except controllers set in Simulate.)
+	// So, you need to configure it only when you want to disable some controllers enabled by default.
+	//
+	// +optional
+	PreparingControllers    *ControllerSet `json:"preparingControllers`
+	// SimulatedControllers is a list of controllers that are the target of this simulation.
+	// These are run one by one in the same order specified in Enabled field.
+	// 
+	// It's a required field; no controllers will be enabled automatically.
+	SimulatedControllers  *ControllerSet `json:"simulatedControllers"`
+}
+
+type ControllerSet struct {
+	// Enabled specifies controllers that should be enabled.
+	// +listType=atomic
+	Enabled  []Controller `json:"enabled"`
+	// Disabled specifies controllers that should be disabled.
+	// When all controllers need to be disabled, an array containing only one "*" should be provided.
+	// +listType=map
+	// +listMapKey=name
+	Disabled []Controller `json:"disabled"`
+}
+
+type Controller struct {
+	Name string
+}
+
+type ScenarioOperation struct {
+	// ID for this operation. Normally, the system sets this field for you.
 	ID string `json:"id"`
-	// Step indicates the step at which the event occurs.
-	Step ScenarioStep `json:"step"`
-	// Operation describes which operation this event wants to do.
-	// Only "Create", "Patch", "Delete", "Done" are valid operations in ScenarioEvent.
-	Operation OperationType `json:"operation"`
+	// MajorStep indicates when the operation should be done.
+	MajorStep int64 `json:"step"`
 
 	// One of the following four fields must be specified.
-	// If more than one is specified or if all are empty, the event is invalid and the scenario will fail.
+	// If more than one is set or all are empty, the operation is invalid, and the scenario will fail.
 
-	// CreateOperation is the operation to create new resource.
-	// When use CreateOperation, Operation should be "Create".
+	// Create is the operation to create a new resource.
 	//
 	// +optional
-	CreateOperation *CreateOperation `json:"createOperation,omitempty"`
-	// PatchOperation is the operation to patch a resource.
-	// When use PatchOperation, Operation should be "Patch".
+	Create *CreateOperation `json:"createOperation,omitempty"`
+	// Patch is the operation to patch a resource.
 	//
 	// +optional
-	PatchOperation *PatchOperation `json:"patchOperation,omitempty"`
-	// DeleteOperation indicates the operation to delete a resource.
-	// When use DeleteOperation, Operation should be "Delete".
+	Patch *PatchOperation `json:"patchOperation,omitempty"`
+	// Delete indicates the operation to delete a resource.
 	//
 	// +optional
-	DeleteOperation *DeleteOperation `json:"deleteOperation,omitempty"`
-	// DoneOperation indicates the operation to mark the scenario as DONE.
-	// When use DoneOperation, Operation should be "Done".
+	Delete *DeleteOperation `json:"deleteOperation,omitempty"`
+	// Done indicates the operation to mark the scenario as Succeeded.
+	// When finish the step DoneOperation belongs, this Scenario changes its status to Succeeded.
 	//
 	// +optional
-	DoneOperation *DoneOperation `json:"doneOperation,omitempty"`
+	Done *DoneOperation `json:"doneOperation,omitempty"`
 }
 
 // OperationType describes Operation.
-// Please see the following defined OperationType, all operation types not listed below are invalid.
+// Please see the following defined OperationType; all operation types not listed below are invalid.
 type OperationType string
 
 const (
@@ -116,7 +157,7 @@ const (
 
 type CreateOperation struct {
 	// Object is the Object to be created.
-	Object unstructured.Unstructured `json:"object"`
+	Object *unstructured.Unstructured `json:"object"`
 
 	// +optional
 	CreateOptions metav1.CreateOptions `json:"createOptions,omitempty"`
@@ -127,6 +168,8 @@ type PatchOperation struct {
 	ObjectMeta metav1.ObjectMeta `json:"objectMeta"`
 	// Patch is the patch for target.
 	Patch string `json:"patch"`
+	// PatchType
+	PatchType types.PatchType
 
 	// +optional
 	PatchOptions metav1.PatchOptions `json:"patchOptions,omitempty"`
@@ -140,14 +183,16 @@ type DeleteOperation struct {
 	DeleteOptions metav1.DeleteOptions `json:"deleteOptions,omitempty"`
 }
 
-type DoneOperation struct {
-	Done bool `json:"done"`
-}
+type DoneOperation struct{}
 
-// ScenarioStep is the step simply represented by numbers and used in the simulation.
-// In ScenarioStep, step is moved to next step when it can no longer schedule any more Pods in that step.
-// See [TODO: document here] for more information about ScenarioStep.
-type ScenarioStep int32
+// ScenarioStep is the time represented by a set of numbers, MajorStep and MinorStep,
+// which are like hours and minutes in clocks in the real world.
+// ScenarioStep.Major is moved to the next ScenarioStep.Major when the simulated controller can no longer do anything with the current cluster state.
+// Scenario.Minor is moved to the next Scenario.Minor when any resources operations(create/edit/delete) happens.
+type ScenarioStep struct {
+	Major int32 `json:"major"`
+	Minor int32 `json:"minor"`
+}
 
 // ScenarioStatus defines the observed state of Scenario
 type ScenarioStatus struct {
@@ -155,17 +200,13 @@ type ScenarioStatus struct {
 	//
 	// +optional
 	Phase ScenarioPhase `json:"phase,omitempty"`
-	// Current state of scheduler.
-	//
-	// +optional
-	SchedulerStatus SchedulerStatus `json:"schedulerStatus,omitempty"`
 	// A human-readable message indicating details about why the scenario is in this phase.
 	//
 	// +optional
 	Message *string `json:"message,omitempty"`
 	// StepStatus has the status related to step.
-	// 
-    StepStatus ScenarioStepStatus
+	//
+	StepStatus ScenarioStepStatus `json:"stepStatus"`
 	// ScenarioResult has the result of the simulation.
 	// Just before Step advances, this result is updated based on all occurrences at that step.
 	//
@@ -174,58 +215,54 @@ type ScenarioStatus struct {
 }
 
 type ScenarioStepStatus struct {
-    // Step indicates the current step.
+    // Step indicates the current ScenarioStep.
     //
     // +optional
     Step ScenarioStep `json:"step,omitempty"`
-	// Phase indicates the current phase in single step.
-	//
-	// Within a single step, the phase proceeds as follows:
-	// 1. run all scenario.Spec.Events defined for that step. (OperatingEvents)
-    // 2. finish (1) (OperatingEventsFinished)
-    // 3. the scheduler starts scheduling. (Scheduling)
-    // 4. the scheduler stops scheduling and changes scenario.Status.StepStatus.Phase to SchedulingFinished
-    //    when it can no longer schedule any more Pods. (Scheduling -> SchedulingFinished)
-    // 5. update status.scenarioResult and move to next step. (StepFinished)
+	// Phase indicates the current phase in a single step.
+	// 
 	// +optional
 	Phase StepPhase `json:"phase,omitempty"`
+	// RunningSimulatedController indicates one of the simulated controllers that is currently running/paused/completed.
+	RunningSimulatedController string `json:"runningSimulatedController"`
 }
 
 type StepPhase string
 
 const (
-	// OperatingEvents means controller is currently operating event defined for the step.
-    OperatingEvents          StepPhase = "OperatingEvents"
-    // OperatingEventsFinished means controller have finished operating event defined for the step.
-    OperatingEventsFinished  StepPhase = "OperatingEventsFinished"
-    // Scheduling means scheduler is scheduling Pods.
-    Scheduling               StepPhase = "Scheduling"
-    // SchedulingFinished means scheduler is trying to schedule Pods.
-	// But, it can no longer schedule any more Pods. 
-    SchedulingFinished       StepPhase = "SchedulingFinished"
-	// StepFinished means controller is preparing to move to next step.
-    StepFinished             StepPhase = "Finished"
+	// Operating means controller is currently operating operation defined for the step.
+	Operating StepPhase = "Operating"
+	// OperatingCompleted means the preparing controllers have finished operating operation defined for the step.
+	OperatingCompleted StepPhase = "OperatingCompleted"
+    // ControllerRunning means the simulated controller is working.
+    ControllerRunning StepPhase = "ControllerRunning"
+    // ControllerPaused means the simulated controller is paused(or will be paused).
+    ControllerPaused    StepPhase = "ControllerPaused"
+	// ControllerCompleted means the current running simulated controller no longer do anything with the current cluster state.
+    ControllerCompleted StepPhase = "ControllerCompleted"
+	// StepCompleted means the controller is preparing to move to the next step.
+	StepCompleted StepPhase = "Finished"
 )
 
 type ScenarioPhase string
 
 const (
 	// ScenarioPending phase indicates the scenario isn't started yet.
-	// e.g. waiting for another scenario to finish running.
+	// e.g., waiting for another scenario to finish running.
 	ScenarioPending ScenarioPhase = "Pending"
 	// ScenarioRunning phase indicates the scenario is running.
 	ScenarioRunning ScenarioPhase = "Running"
-	// ScenarioPaused phase indicates all ScenarioSpec.Events
-	// has been finished but has not been marked as done by ScenarioDone ScenarioEvent.
+	// ScenarioPaused phase indicates all ScenarioSpec.Operations
+	// has been finished but not marked as done by ScenarioDone ScenarioOperations.
 	ScenarioPaused ScenarioPhase = "Paused"
 	// ScenarioSucceeded phase describes Scenario is fully completed
-	// by ScenarioDone ScenarioEvent. User
-	// can’t add any ScenarioEvent once
-	// Scenario reached at the phase.
+	// by ScenarioDone ScenarioOperations. User
+	// can’t add any ScenarioOperations once
+	// Scenario reached this phase.
 	ScenarioSucceeded ScenarioPhase = "Succeeded"
-	// ScenarioFailed phase indicates something wrong happened during running scenario.
+	// ScenarioFailed phase indicates something wrong happened while running the scenario.
 	// For example:
-	// - the controller cannot create resource for some reason.
+	// - the controller cannot create a resource for some reason.
 	// - users change the scheduler configuration via simulator API.
 	ScenarioFailed  ScenarioPhase = "Failed"
 	ScenarioUnknown ScenarioPhase = "Unknown"
@@ -234,8 +271,8 @@ const (
 type ScenarioResult struct {
 	// SimulatorVersion represents the version of the simulator that runs this scenario.
 	SimulatorVersion string `json:"simulatorVersion"`
-	// Timeline is a map of events keyed with ScenarioStep.
-	// This may have many of the same events as .spec.events, but has additional PodScheduled and Delete events for Pods
+	// Timeline is a map of operations keyed with ScenarioStep.
+	// This may have many of the same operations as .spec.operations but has additional PodScheduled and Delete operations for Pods
 	// to represent a Pod is scheduled or preempted by the scheduler.
 	//
 	// +patchMergeKey=ID
@@ -244,51 +281,39 @@ type ScenarioResult struct {
 }
 
 type ScenarioTimelineEvent struct {
-	// The ID will be the same as spec.ScenarioEvent.ID if it is from the defined event.
+	// The ID will be the same as spec.ScenarioOperations.ID if it is from the defined operation.
 	// Otherwise, it'll be newly generated.
 	ID string
-	// Step indicates the step at which the event occurs.
-	Step ScenarioStep `json:"step"`
-	// Operation describes which operation this event wants to do.
-	// Only "Create", "Patch", "Delete", "Done", "PodScheduled", "PodUnscheduled", "PodPreempted" are valid operations in ScenarioTimelineEvent.
-	Operation OperationType `json:"operation"`
+	// Step indicates the ScenarioStep at which the operation has been done.
+	Step    ScenarioStep `json:"step"`
 
 	// Only one of the following fields must be non-empty.
 
-	// Create is the result of ScenarioSpec.Events.CreateOperation.
-	// When Create is non nil, Operation should be "Create".
+	// Create is the result of ScenarioSpec.Operations.CreateOperation.
 	Create *CreateOperationResult `json:"create"`
-	// Patch is the result of ScenarioSpec.Events.PatchOperation.
-	// When Patch is non nil, Operation should be "Patch".
+	// Patch is the result of ScenarioSpec.Operations.PatchOperation.
 	Patch *PatchOperationResult `json:"patch"`
-	// Delete is the result of ScenarioSpec.Events.DeleteOperation.
-	// When Delete is non nil, Operation should be "Delete".
+	// Delete is the result of ScenarioSpec.Operations.DeleteOperation.
 	Delete *DeleteOperationResult `json:"delete"`
-	// Done is the result of ScenarioSpec.Events.DoneOperation.
-	// When Done is non nil, Operation should be "Done".
+	// Done is the result of ScenarioSpec.Operations.DoneOperation.
 	Done *DoneOperationResult `json:"done"`
 	// PodScheduled represents the Pod is scheduled to a Node.
-	// When PodScheduled is non nil, Operation should be "PodScheduled".
 	PodScheduled *PodResult `json:"podScheduled"`
-	// PodUnscheduled represents the scheduler tried to schedule the Pod, but cannot schedule to any Node.
-	// When PodUnscheduled is non nil, Operation should be "PodUnscheduled".
+	// PodUnscheduled represents "the scheduler tried to schedule the Pod, but cannot schedule to any Node."
 	PodUnscheduled *PodResult `json:"podUnscheduled"`
-	// PodPreempted represents the scheduler preempted the Pod.
-	// When PodPreempted is non nil, Operation should be "PodPreempted".
-	PodPreempted *PodResult `json:"podPreempted"`
 }
 
 type CreateOperationResult struct {
 	// Operation is the operation that was done.
 	Operation CreateOperation `json:"operation"`
-	// Result is the resource after patch.
+	// Result is the resource after the creation.
 	Result unstructured.Unstructured `json:"result"`
 }
 
 type PatchOperationResult struct {
 	// Operation is the operation that was done.
 	Operation PatchOperation `json:"operation"`
-	// Result is the resource after patch.
+	// Result is the resource after the patch.
 	Result unstructured.Unstructured `json:"result"`
 }
 
@@ -308,22 +333,22 @@ type PodResult struct {
 	Pod v1.Pod `json:"pod"`
 	// BoundTo indicates to which Node the Pod was scheduled.
 	BoundTo *string `json:"boundTo"`
-	// PreemptedBy indicates which Pod the Pod was deleted for.
+	// PreemptedBy indicates which Pod the scheduler deleted this Pod for.
 	// This field may be nil if this Pod has not been preempted.
 	PreemptedBy *string `json:"preemptedBy"`
 	// CreatedAt indicates when the Pod was created.
 	CreatedAt ScenarioStep `json:"createdAt"`
-	// BoundAt indicates when the Pod was scheduled.
+	// BoundAt indicates when the scheduler schedule this Pod.
 	// This field may be nil if this Pod has not been scheduled.
 	BoundAt *ScenarioStep `json:"boundAt"`
-	// PreemptedAt indicates when the Pod was preempted.
+	// PreemptedAt indicates when the scheduler preempted this Pod.
 	// This field may be nil if this Pod has not been preempted.
 	PreemptedAt *ScenarioStep `json:"preemptedAt"`
 	// ScheduleResult has the results of all scheduling for the Pod.
 	//
-	// If the scheduler working with a simulator isn't worked on scheduling framework,
+	// If the scheduler working with a simulator isn't created on the scheduling framework,
 	// this field will be empty.
-	// TODO: add the link to doc when it's empty.
+	// TODO: add the link to the doc when it's empty.
 	//
 	// +patchStrategy=replace
 	// +optional
@@ -331,13 +356,13 @@ type PodResult struct {
 }
 
 type ScenarioPodScheduleResult struct {
-	// Step indicates the step scheduling at which the scheduling is performed.
+	// Step indicates when the scheduler performs this schedule.
 	Step *ScenarioStep `json:"step"`
 	// AllCandidateNodes indicates all candidate Nodes before Filter.
 	AllCandidateNodes []string `json:"allCandidateNodes"`
 	// AllFilteredNodes indicates all candidate Nodes after Filter.
 	AllFilteredNodes []string `json:"allFilteredNodes"`
-	// PluginResults has each plugin’s result.
+	// PluginResults has each plugin's result.
 	PluginResults ScenarioPluginsResults `json:"pluginResults"`
 }
 
@@ -347,160 +372,278 @@ type (
 )
 
 type ScenarioPluginsResults struct {
-	// Filter has each filter plugin’s result.
+	// Filter has each filter plugin's result.
 	Filter map[NodeName]map[PluginName]string `json:"filter"`
-	// Score has each score plugin’s score.
+	// Score has each score plugin's score.
 	Score map[NodeName]map[PluginName]ScenarioPluginsScoreResult `json:"score"`
 }
 
 type ScenarioPluginsScoreResult struct {
-	// RawScore has the score from Score method of Score plugins.
+	// RawScore has the score from the Score method of Score plugins.
 	RawScore int64 `json:"rawScore"`
-	// NormalizedScore has the score calculated by NormalizeScore method of Score plugins.
+	// NormalizedScore has the score calculated by the NormalizeScore method of Score plugins.
 	NormalizedScore int64 `json:"normalizedScore"`
-	// FinalScore has score plugin’s final score calculated by normalizing with NormalizedScore and applied Score plugin weight.
+	// FinalScore has the score plugin's final score calculated by NormalizedScore and the score plugin weight.
 	FinalScore int64 `json:"finalScore"`
 }
 
+// Scenario is the Schema for the scenario API
+type Scenario struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ScenarioSpec   `json:"spec,omitempty"`
+	Status ScenarioStatus `json:"status,omitempty"`
+}
 ```
 
-#### supported scheduler in simulator
+#### The detailed goal of the scenario
 
-The goal of this KEP is to make schedulers that meet the all following criteria work with scenario:
+- Users can define Scenario and see how the simulated controllers work with a scenario.
+- Users can analyze and evaluate the controller with .status.Result.Timeline.
+	- All operations that happened while running the scenario will be recorded in Timeline and users can analyze Timeline by using our functions.
+- The result from the same Scenario won't be much changed run by run.
+	- Hopefully, if the Scenario and controllers are the same, the result should be similar. 
 
-1. schedule Pods by the conditions of k8s resources.
-    - In other words, schedulers shouldn't schedule Pods by the conditions other than k8s resources.
-    - For example, if the scheduler that schedules Pods by checking some metrics from external server, 
-    the scenario controller cannot manage metrics value and the Scenario may yield different results for each run.
-2. scheduler that doesn't creates/edits/deletes resource. (except preemption and binding)
-    - Basically, no one other than scenario controller should create/edit/delete resources.
-3. scheduler included in simulator. Or outside scheduler which is based on scheduler in [kubernetes/kubernetes repo](https://github.com/kubernetes/kubernetes/tree/master/pkg/scheduler)
-    - In other words, scheduler needs to have [`NextPod`](https://github.com/kubernetes/kubernetes/blob/867b5cc31b376c9f5d04cf9278112368b0337104/pkg/scheduler/scheduler.go#L75) field and uses it for fetch Pod from queue, 
-    because we want to replace it to make scenario work correctly. (see [# Required setup for scheduler](#required-setup-for-scheduler).)
+#### The required configuration for users
 
-#### Required setup for scheduler
+- add the comment directive to all simulated controller's codes and modify the code by our code generator.
+  - The simulator has the scheduler internally by default, and this scheduler has already been set up. 
+  - See [# How to stop the simulated controllers loop](#How-to-stop-the-simulated-controllers-loop).
+- define the functions for controllers to expect when controllers start to work and when controllers finish working.
+  - The simulator has some controllers internally by default, and they have already been set up. 
+  - See [# Expect when controllers start to work and when controllers finish working](#Expect-when-controllers-start-to-work-and-when-controllers-finish-working).
 
-Those who want to use outside scheduler need to do replace [`scheduler.NextPod`](https://github.com/kubernetes/kubernetes/blob/d14ba948ef63769e9767aebd5a08171832a1bbf6/pkg/scheduler/scheduler.go#L73) with a function provided by us.
+#### Kubernetes controller
 
-The function we provide will does:
-- restart/stop scheduling (see [# How to stop scheduling loop](#How-to-stop-scheduling-loop))
-- check which Pods are scheduled and judge if it can no longer schedule any more Pods. (see [# How scheduler detects "when it can no longer schedule any more Pods" at (4)](#How-scheduler-detects-"when-it-can-no-longer-schedule-any-more-Pods"-at-(4)))
+Let's talk about the controllers in Kubernetes first.
 
-Those who want to use scheduler included in simulator don't need to do anything for setup since we does this set up for users.
+> In Kubernetes, controllers are control loops that watch the state of your cluster, then make or request changes where needed. Each controller tries to move the current cluster state closer to the desired state.
+https://kubernetes.io/docs/concepts/architecture/controller/
+
+The Kubernetes controller has the desired state.
+For example, the ReplicaSet controller. It's working on managing the number of Pods to satisfy all replicaset's `.spec.replicas`.
+
+Some controllers in this world refer to something other than k8s resources like external metrics and real time to determine their ideal state. But, they cannot be used in our Scenario. In other words, **controllers that refer only to resources on k8s can be used in Scenario.**
+This is because the scenario controller cannot manage something other than k8s resources, and unexpected operations based on them may happen during the Scenario, which we want to avoid.
+
+The following controllers cannot be used in Scenario, for example:
+- controllers that use external metrics.
+  - e.g., the cluster autoscaler that scales Nodes based on external metrics.
+- controllers that do something based on real time.
+  - e.g., the cronjob controller that creates Job based on real time.
+
+All controllers that refer only to k8s resources won't do anything if there is no change on k8s resources state.
+In other words, all controllers may do something only when someone performs a k8s resource operation.
+
+#### Expect when controllers finish working
+
+In the simulator, users define the `WaitForControllerFinish` function for all controllers so that we can expect when a controller finish working.
+
+```go
+// ControllerBehaviorDefinition has the method to define a behavior for a controllers.
+type ControllerBehaviorDefinition interface {
+	// WaitForControllerFinish detects the cluster becomes the ideal state for the controller, or the controller cannot do any more to move the cluster state closer to the ideal state.
+	WaitForControllerFinish(v1.AdmissionReview) error
+}
+```
+
+For example, the ReplicaSet controller. `WaitForControllerFinish` detects wait for either of the following:
+  - Become ReplicaSet.spec.replicas == {the number of Pods matching ReplicaSet.spec.selector} (the ideal state for the ReplicaSet controller)
+  - Become Replicaset.status.conditions has ReplicaFailure true (cannot do any more to move the cluster state closer to the ideal state)
+
+Talk about why we need to expect it in the later section.
+
+#### Simulated controllers and preparing controllers
+
+We have two types of controllers; simulated controllers and preparing controllers.
+
+Simulated controllers are the target of this simulation,
+and Preparing controllers are the other controllers that are needed to simulate.
+
+Let's say you want to simulate the scheduler and you are going to use ReplicaSet in the simulation. 
+In that case, you will set scheduler as Simulated controller and ReplicaSet controller as Preparing controllers.
 
 #### The concept "ScenarioStep"
 
-ScenarioStep is:
-- simply represented by numbers. like 1, 2, 3…
-- moved to next step **when it can no longer schedule any more Pods**.
+The Scenario has the concept "ScenarioStep" to represent the time.
+ScenarioStep is the time represented by a set of numbers, "MajorStep" and "MinorStep", which are like hours and minutes in clocks in the real world.
 
-Within a single step, the phase proceeds as follows:
-1. run all scenario.Spec.Events defined for that step. (OperatingEvents)
-2. finish (1) (OperatingEventsFinished)
-3. the scheduler starts scheduling. (Scheduling)
-4. the scheduler stops scheduling and changes scenario.Status.StepStatus.Phase to SchedulingFinished
-   when it can no longer schedule any more Pods. (Scheduling -> SchedulingFinished)
-5. update status.scenarioResult and move to next step. (StepFinished)
+So, ScenarioStep.Major and ScenarioStep.Minor are similar. The difference is who performs the operations. 
+- ScenarioStep.Major is moved to the next ScenarioStep.Major before the scenario controller will perform the next resource operations defined in .spec.Operations.
+	- the scenario controller will do so when the simulated controller can no longer do anything with the current cluster state.
+- ScenarioStep.Minor is moved to the next ScenarioStep.Minor before the simulated controller will perform resource operations.
 
-##### Why scheduler needs to restarts/stops scheduling loop?
+#### what happens in a single MajorStep.
 
-To ensure that the results of the simulation do not vary significantly from run to run.
+The following diagram shows all what happens at a single ScenarioStep:
 
-If we don't have "ScenarioStep" concept and when users want to define multiple operations for the same time, users expect them to run concurrently and them to be run at the same time. But, in practice it is difficult to run them at the same time, because the scheduler is constantly attempting to schedule.
-For example, suppose a user has defined a scenario to create 1000 Nodes at the same time. Since it is strictly impossible to create 1000 Nodes at the same time, pending Pods will be scheduled to the Nodes created first. And depending on what order the Nodes were created, the results of the simulation may change.
-To prevent this, the scheduler needs to be stopped scheduling until 1000 Nodes are created.
+![diagram](images/step.png)
 
-##### How to stop scheduling loop
+And if a Scenario has two simulated controllers, the simulated controller will be run one by one in the same order specified in .spec.controllers.simulatedControllers.enabled field.
 
-If the scheduler is based on implementation of the current scheduler in kubernetes/kubernetes, 
-we can prevent a scheduling queue from poping next Pods by overwriting [`Scheduler.NextPod`](https://github.com/kubernetes/kubernetes/blob/867b5cc31b376c9f5d04cf9278112368b0337104/pkg/scheduler/scheduler.go#L75) function.
+![diagram2](images/step-two-simulated-controllers.png)
 
-The override function basically behave like normal `NextPod`,
-but checks the running Scenario's status.SchedulerStatus and decide to stop/restart scheduling.
+Let's go into the details.
 
-##### How scheduler detects "when it can no longer schedule any more Pods" at (4)
+##### 1. .spec.operations for the ScenarioStep is operated
 
-The most schedulers try to schedule Pods one by one. 
+ScenarioStep: {X, 0}
+StepPhase: Operating
 
-The idea here is detecting "when it can no longer schedule any more Pods" **by recording Pods scheduler have tried to schedule**.
+First, the scenario controller operate all .spec.operations for the MajorStep X.
 
-Basically, scheduler are checking other resources' status and decide the best Node for a Pod.
-That means if any resource haven't created/edited/deleted, the scheduling result shouldn't be changed.
+##### 2. wait preparing controllers to handle resource changes
 
-Resource creation/changes/deletion should be only run during `OperatingEvents` phase,
-and only preemption(deleting Pod) or binding(scheduling Pod to a Node) happens during scheduling.
+ScenarioStep: {X, 0}
+StepPhase: Operating
 
-Thus, we can consider it can no longer schedule any more Pods when the following conditions are met:
-1. all unscheduled Pods are tried to be scheduled twice or more.
-2. no Pods are preempted and no Pods are scheduled during (1).
+In [# Kubernetes controller](#Kubernetes-controller) section, we describe it:
+> All controllers that refer only to k8s resources won't do anything if there is no change on k8s resources state.
+In other words, all controllers may do something only when someone performs a k8s resource operation.
 
-For example, there are Pod1 - Pod4 in the cluster and all of them aren't scheduled yet.
-1. scheduler try to schedule Pod1 but cannot schedule it. Pod1 is moved back to queue.
-2. scheduler try to schedule Pod2 and can schedule it.
-3. scheduler try to schedule Pod3 and cannot schedule it. Pod3 is moved back to queue.
-4. scheduler try to schedule Pod4 and cannot schedule it. Pod4 is moved back to queue.
-5. scheduler try to schedule Pod1 and cannot schedule it. Pod1 is moved back to queue.
-6. scheduler try to schedule Pod3 and cannot schedule it. Pod3 is moved back to queue.
-7. scheduler try to schedule Pod4 and cannot schedule it. Pod4 is moved back to queue.
-8. scheduler try to schedule Pod1 but cannot schedule it. Pod1 is moved back to queue.
-9. during (3) - (8), no Pods are preempted, no Pods are scheduled, and Pod1,3,4 are tried to be scheduled twice.
-So, we can consider it can no longer schedule any more Pods.
+At (1), .spec.operations is performed and preparing controllers may perform some operations to move the current cluster state closer to the desired state.
 
-The reason why all unscheduled Pods are tried to be scheduled twice or more is that [binding cycle is run in parallel](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/#scheduling-cycle-binding-cycle).
+And **the simulated controllers need to stop working while the preparing controllers work.** (Actually, the simulated controller has been stopped since (1))
+In .status.Result.Timeline, Preparing controllers actions are treated as if they were instantaneous.
 
-You will understand why it is necessary twice, after seeing the following case:
-1. scheduler try to schedule Pod1 but cannot schedule it. Pod1 is moved back to queue.
-2. scheduler try to schedule Pod2 and can schedule it.
-3. scheduler try to schedule Pod3 and cannot schedule it. Pod3 is moved back to queue.
-4. scheduler try to schedule Pod4 and cannot schedule it. Pod4 is moved back to queue.
-5. scheduler try to schedule Pod1 and can schedule it. 
+So, why..? This is because we need to ensure that the simulation results do not vary significantly from run to run. 
 
-Note that we can only record what Pods scheduler are trying to schedule next in `NextPod`. 
-That means we cannot see what Pods scheduler moves back to queue when cannot schedule Pods.
+For example:
+The user has the CRD named "NodeSet". It's like ReplicaSet, but literally, it creates a defined number of Nodes.
+Let's say the user wants to simulate the scheduler and defines the operation in the Scenario that creates NodeSet to create 1000 Nodes. Since it is strictly impossible to create 1000 Nodes simultaneously, the scheduler will schedule pending Pods to the Nodes created first. 
+And depending on how fast the NodeSet controller creates the 1000 Node, the simulation results will change.
+The scheduler needs to be stopped scheduling until the NodeSet controller creates 1000 Nodes so that the speed of the NodeSet controller doesn't affect the simulation result.
 
-During (3) - (5), no Pods are preempted, and Pod1,3,4 are tried to be scheduled once. 
-**But, Pod1 is scheduled at (5)**.
+##### 3. preparing controllers finish to work 
 
-In `NextPod`, we may not realize the Pod1 is scheduled at (5), 
-since the binding cycle is run in parallel and binding may just not be finished when NextPod is judging if it can no longer schedule any more Pods.
+ScenarioStep: {X, 0}
+StepPhase: OperatingCompleted
 
-So, to make sure the all unscheduled Pods cannot be scheduled anymore, we need to see the all unscheduled Pods are tried to be scheduled twice or more in `NextPod`.
+See [#Expect when controllers finish working](#Expect-when-controllers-finish-working).
 
-#### Adding events to running Scenario 
+We use `WaitForControllerFinish` to wait for all controllers to finish their work to deal with (1).
 
-It is allowed to add events while the Scenario is running.
+##### 4. the simulated controller starts
 
-Note that it does not make sense to add past ScenarioStep events.
-The scenario will continue to run until all events in .spec.Events are completed, and when all events are completed, the scenario will be "Paused" phase in the case .spec.Events doesn't have "Done" operation.
+ScenarioStep: {X, 0}
+StepPhase: ControllerRunning
 
-So, it is strongly recommended adding events to running Scenario only after Scenario have reached "Paused" phase. 
-(since ScenarioStep has stopped moving forward in "Paused" phase as described above.)
-Otherwise, you may add the past ScenarioStep events and they are ignored by running Scenario.
+The simulated controllers have been stopped until now.
 
-#### Configure when to update ScenarioResult
+Here, start one of the simulated controllers.
 
-As described in the above, the controller only update status.scenarioResult in Scenario resource when proceeding to the next ScenarioStep.
+##### 5. the simulated controller does operation(s) for k8s resources
 
-This is because kube-apiserver will be so busy if the controller update status.scenarioResult everytime it updated,
-especially when the size of Scenario is so big.
+ScenarioStep: {X, 0} -> {X, 1}
+StepPhase: ControllerRunning -> ControllerPaused
 
-> etcd is designed to handle small key value pairs typical for metadata. Larger requests will work, but may increase the latency of other requests. By default, the maximum size of any request is 1.5 MiB. This limit is configurable through --max-request-bytes flag for etcd server.
-https://etcd.io/docs/v3.4/dev-guide/limit/#request-size-limit
+The simulated controller may perform some operations for k8s resources.
+In admission webhook, we changes the StepPhase to ControllerStopped and increment MinorStep. (Then, the requests are accepted.)
 
-And, sometimes, users may want to reduce this updating request more for some reasons. 
+##### 6. the simulated controller stops working
 
-For example, 
-- when watching Scenario for dynamic event addition 
-- when using Scenario for accurate benchmark testing, users may want to reduce the request to update Scenario for kube-apiserver as much as possible
+ScenarioStep: {X, 1}
+StepPhase: ControllerPaused
 
-We can add a new configuration environment variable `UPDATE_SCENARIO_RESULTS_STRATEGY` and define some strategy like:
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=AtMovingNextStep`: default value. update status.scenarioResult in Scenario resource when proceeding to the next ScenarioStep.
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnPause`: update status.scenarioResult in Scenario resource when the Scenario's phase becomes `Paused`, `Succeeded` or `Failed`.
-- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnDone`: update status.scenarioResult in Scenario resource when the Scenario's phase becomes `Succeeded` or `Failed`.
+In [# Kubernetes controller](#Kubernetes-controller) section, we see the controllers are working in **loops**.
+
+> In Kubernetes, controllers are control loops that watch the state of your cluster, then make or request changes where needed. Each controller tries to move the current cluster state closer to the desired state.
+https://kubernetes.io/docs/concepts/architecture/controller/
+
+The simulated controller always checks ScenarioStep at the end of its loop. And if StepPhase is ControllerPaused, the controller stops working. 
+
+StepPhase was changed to ControllerStopped at (5), and the simulated controller should be stopped at the end of that loop.
+
+See also [# How to stop the simulated controllers loop](#How-to-stop-the-simulated-controllers-loop).
+
+##### 7. wait preparing controllers to handle resource changes
+
+ScenarioStep: {X, 1}
+StepPhase: ControllerPaused
+
+The preparing controllers may work when the simulated controllers perform some operations on k8s resources. 
+
+So, every time the working simulated controller performs operations, we need to wait for the preparing controllers to handle resource changes like (2).
+
+It will repeat from (3) to (7) until the simulated controller can no longer do anything with the current cluster state.
+
+##### 8. the simulated controller can no longer do anything with the current cluster state
+
+ScenarioStep: {X, Y} 
+StepPhase: ControllerRunning -> ControllerCompleted
+
+We use `WaitForControllerFinish` of the simulated controller to detect this (like at (3)).
+The simulated controller stops working again like at (6).
+
+After ControllerCompleted, the next simulated controller is started. 
+And it will repeat from (4) to (8). 
+
+##### 9. all the simulated controller can no longer do anything with the current cluster state
+
+ScenarioStep: {X, Z}
+StepPhase: ControllerCompleted -> StepCompleted
+
+Yey! The simulation in the single MajorStep is finished!
+
+Increment ScenarioMajorStep and reset ScenarioMinorStep to 0.
+
+#### How to stop the simulated controllers loop
+
+In [# Kubernetes controller](#Kubernetes-controller) section, we see the controllers are working in **loops**.
+
+> In Kubernetes, controllers are control loops that watch the state of your cluster, then make or request changes where needed. Each controller tries to move the current cluster state closer to the desired state.
+https://kubernetes.io/docs/concepts/architecture/controller/
+
+The following is a super simplified implementation of controllers.
+
+It's required to add the comment directive to all simulated controllers, and the code generator will modify the code to stop the simulated controllers loop when a running Scenario wants.
+Users need to use the simulated controller modified by the code generator for the Scenario.
+
+```go
+// Run runs HogeController.
+func (h *HogeController) Run() {
+	for {
+		runOnce()
+	}
+}
+
+// runOnce checks the cluster state and move the current cluster state closer to the desired state.
+func (h *HogeController) runOnce() {
+	//kube-controller-simulator:loop-start:hoge-controller
+}
+```
+
+All the simulated controllers should have the comment directive in the format `//kube-controller-simulator:loop-start:{controller name}` at the top of loop.
+And, our code generator finds the comment directive and insert the code like the following.
+
+```go
+// Run runs HogeController.
+func (h *HogeController) Run() {
+	for {
+		runOnce()
+	}
+}
+
+// runOnce checks the cluster state and move the current cluster state closer to the desired state.
+func (h *HogeController) runOnce() {
+	//kube-controller-simulator:loop-start:hoge-controller
+	defer func () {
+		controllermanager.CheckScenario("hoge-controller")
+	}
+}
+```
+
+The funciton `controllermanager.CheckScenario("hoge-controller")` is always executed at the end of `runOnce`, and checks the running Scenario's .status.stepStatus.phase and .status.stepStatus.runningSimulatedController. 
+And when .status.stepStatus.phase is ControllerPaused and .status.stepStatus.runningSimulatedController is "hoge-controller", it is blocked at that point until .status.stepStatus.phase becomes OperatingCompleted.
+
+See the diagram in [the previous section](#The-core-concept-"ScenarioStep"), when the hoge-controller performs some operation for k8s resources, the admission webhook will change .status.stepStatus.phase to ControllerPaused. Then `controllermanager.CheckScenario` will be executed at the end of `runOnce` and the hoge-controller will stop looping.
+
+Note: Even if multiple k8s resource operations happen in a single `runOnce`, the controller will stop at the end of `runOnce`.
 
 #### The result calculation packages
 
-ScenarioResult only has the simple data that represent what was happened during the scenario.
+ScenarioResult only has the simple data that represent what was happen during the scenario.
 
 So, we will provide useful functions and data structures to analyze the result. 
 
@@ -511,97 +654,46 @@ For example:
 - the generic iterator function that users can aggregate custom values.
 - (Do you have any other idea? Tell us!)
 
-By putting only the minimum simple information in ScenarioResult and providing functions to change it into a user-friendly structs, many data structures can be supported in the future without any changes to API.
+By putting only the minimum simple information in ScenarioResult and providing functions to change it into a user-friendly structs, we can support many data structures without any changes to Scenario API.
 
-#### The case kube-apiserver have Scenarios when the controller start to run
+#### Adding operations to running Scenario 
 
-When the controller is started and finds the Scenario which phase is "Running", the controller just changes the status "Failed" with updating the `.status.message` like "the controller restarted while the Scenario was running".
+It is allowed to add operations while the Scenario is running.
 
-In the future, it would be nice if we could implement the endpoint in simulator that tells the Scenario controller that the simulator is going to be shuted down. 
+Note that it does not make sense to add past ScenarioStep operations.
+And, it is strongly recommended to add operations to running Scenario only after Scenario has reached "Paused" ScenarioPhase because ScenarioStep always continues to move forward until it has reached "Paused" ScenarioPhase.
+Otherwise, you may add the past ScenarioStep operations, which are ignored by running Scenario.
 
-#### Prohibitions and Restrictions
+#### Configure when to update ScenarioResult
 
-When Scenario is created, the scenario is started by the controller. The scenario is run one by one, and multiple scenarios are never run at the same time. 
-This means the controller will run the next Scenario after the current running Scenario becomes "Failed" or "Succeeded".
+The scenario controller only updates status.scenarioResult in Scenario resource when proceeding to the next ScenarioStep.
+This is because kube-apiserver will be so busy if the controller update status.scenarioResult everytime it updated,
+especially when the size of Scenario is so big.
 
-In addition, the following actions are prohibited during scenario execution The scenario result will be unstable or invalid if any of these actions are performed.
+> etcd is designed to handle small key value pairs typical for metadata. Larger requests will work, but may increase the latency of other requests. By default, the maximum size of any request is 1.5 MiB. This limit is configurable through --max-request-bytes flag for etcd server.
+https://etcd.io/docs/v3.4/dev-guide/limit/#request-size-limit
+
+For example, when using Scenario for accurate benchmark testing, users may want to reduce the request to update Scenario for kube-apiserver as much as possible.
+
+We can add a new configuration environment variable `UPDATE_SCENARIO_RESULTS_STRATEGY` and define some strategies like:
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=AtMovingNextStep`: It's default value. update status.scenarioResult in Scenario resource when proceeding to the next ScenarioStep.
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnPause`: update status.scenarioResult in Scenario resource when the Scenario's phase becomes `Paused`, `Succeeded` or `Failed`.
+- `UPDATE_SCENARIO_RESULTS_STRATEGY=OnDone`: update status.scenarioResult in Scenario resource when the Scenario's phase becomes `Succeeded` or `Failed`.
+
+We can discuss it after all the implementation of Scenario is done.
+
+#### The case kube-apiserver has Scenarios when the scenario controller starts to run
+
+When the scenario controller is started and finds the Scenario which phase is "Running", the controller changes the status "Failed" with updating the `.status.message` like "the controller restarted while the Scenario was running".
+
+#### Prohibitions and restrictions
+
+The scenarios run one by one, and multiple scenarios are never run simultaneously. 
+That means the scenario controller will run the following Scenario after the current running Scenario becomes "Failed" or "Succeeded".
+
+In addition, the following actions are prohibited during scenario execution. The scenario result will be unstable or invalid if these actions are performed.
 - change the scheduler configuration via simulator API.
 - create/delete/edit any resources.
 
 And all resources created before starting a scenario are deleted at the start of the scenario,
 so that they don't affect the simulation results.
-
-### User Stories 
-
-#### Story 1
-
-The company has added many features into scheduler via some custom plugins, 
-and they want to make sure that their expansions are working as expected and has not negatively impacted the scheduling results.
-
-##### Solution
-
-They can define appropriate scenario and analize the results.
-
-#### Story 2
-
-The users want to see how their customized scheduler behaves in the worst case scenario.
-
-##### Solution
-
-Even when a scenario is running, users can add events to that scenario. 
-So, in this case, they can add events that are most worst case for the scheduler by looking at the simulation results and the resources status at that point.
-
-## Questions/Answers
-
-### Can you elaborate a bit more on which schedulers will be supported?
-
-Respondent: @sanposhiho.
-
-The current simulator has scheduler internally.
-(see [simulator/docs/how-it-works.md](simulator/docs/how-it-works.md))
-
-And the scheduler version can be used is only fixed one. (v1.22 at the time I write this.)
-That Scheduler can be customized by adding your plugin to scheduler or by scheduler configuration.
-(see [docs/how-to-use-custom-plugins](./docs/how-to-use-custom-plugins))
-
-So, that means the current simulator can simulate scheduling with only limited scheduler.
-
-And, for who want to use scheduler not supported by simulator, (e.g. scheduler of different versions, scheduler applied some patches, or completely original scheduler)
-we plan to support "outside scheduler" in simulator. ([issue here](https://github.com/kubernetes-sigs/kube-scheduler-simulator/issues/182))
-
-The outside scheduler literally means the scheduler outside of simulator,
-communicates with the api-server in simulator and schedule all the Pod.
-
-Given the current simulator only supports limited scheduler described above,
-I _guess_ more users will want to use outside scheduler rather than scheduler in simulator.
-
-Any kinds of scheduler can be created in this world.
-But, the goal of this KEP is to support only schedulers listed in [# supported scheduler in simulator](#supported-scheduler-in-simulator) in scenario.
-
-However, we believe we can provide a function to make most schedulers work with scenario in the future,
-(although we won't go into much detail in this KEP.)
-
-That schedulers only needs to satisfy the condition that it schedule Pods one by one with same process,
-and users only need to put the provided function into the top of the process to make scheduler work with scenario like:
-
-```go
-// this scheduler trys to schedule Pods one by one.
-func (s *scheduler) run() {
-	for {
-	    scheduleOne(pod)	
-    }
-}
-
-// scheduleOne schedule a given Pod.
-func (s *scheduler) scheduleOne(pod *v1.Pod) {
-    // fetch one pod and try to schedule it.
-    pod := s.fetchPodFromSomewhere()
-	
-	// user only need to put this function provided by us so that make this scheduler work with scenario.
-	functionProvidedByUs(pod)
-	
-    // scheduling implementation
-}
-```
-
-But, even with this function, I think we cannot support the scheduler that doesn't meet the criteria (1)(2) in [# supported scheduler in simulator](#supported-scheduler-in-simulator).
