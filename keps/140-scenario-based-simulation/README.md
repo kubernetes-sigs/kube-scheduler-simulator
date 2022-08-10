@@ -595,27 +595,10 @@ In [# Kubernetes controller](#Kubernetes-controller) section, we see the control
 > In Kubernetes, controllers are control loops that watch the state of your cluster, then make or request changes where needed. Each controller tries to move the current cluster state closer to the desired state.
 https://kubernetes.io/docs/concepts/architecture/controller/
 
-The following is a super simplified implementation of controllers.
+It's required to add the function `CheckScenarioStepPhase()` to all simulated controllers, that stops the simulated controllers loop when a running Scenario wants.
 
-It's required to add the comment directive to all simulated controllers, and the code generator will modify the code to stop the simulated controllers loop when a running Scenario wants.
-Users need to use the simulated controller modified by the code generator for the Scenario.
-
-```go
-// Run runs HogeController.
-func (h *HogeController) Run() {
-	for {
-		runOnce()
-	}
-}
-
-// runOnce checks the cluster state and move the current cluster state closer to the desired state.
-func (h *HogeController) runOnce() {
-	//kube-controller-simulator:loop-start:hoge-controller
-}
-```
-
-All the simulated controllers should have the comment directive in the format `//kube-controller-simulator:loop-start:{controller name}` at the top of loop.
-And, our code generator finds the comment directive and insert the code like the following.
+The following is an example for super simplified implementation of controllers.
+`CheckScenarioStepPhase()` needs to be added at the end of loop.
 
 ```go
 // Run runs HogeController.
@@ -627,14 +610,11 @@ func (h *HogeController) Run() {
 
 // runOnce checks the cluster state and move the current cluster state closer to the desired state.
 func (h *HogeController) runOnce() {
-	//kube-controller-simulator:loop-start:hoge-controller
-	defer func () {
-		controllermanager.CheckScenario("hoge-controller")
-	}
+	defer scenario.CheckScenarioStepPhase("hoge-controller", config) // config: *(k8s.io/client-go/rest).Config to be used to connect kube-apiserver in the simulator.
 }
 ```
 
-The funciton `controllermanager.CheckScenario("hoge-controller")` is always executed at the end of `runOnce`, and checks the running Scenario's .status.stepStatus.phase and .status.stepStatus.runningSimulatedController. 
+The function `scenario.CheckScenarioStepPhase()` is always executed at the end of `runOnce`, and checks the running Scenario's .status.stepStatus.phase and .status.stepStatus.runningSimulatedController. 
 And when .status.stepStatus.phase is ControllerPaused and .status.stepStatus.runningSimulatedController is "hoge-controller", it is blocked at that point until .status.stepStatus.phase becomes OperatingCompleted.
 
 See the diagram in [the previous section](#The-core-concept-"ScenarioStep"), when the hoge-controller performs some operation for k8s resources, the admission webhook will change .status.stepStatus.phase to ControllerPaused. Then `controllermanager.CheckScenario` will be executed at the end of `runOnce` and the hoge-controller will stop looping.
