@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/priorityclass"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/replicateexistingcluster"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/reset"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/storageclass"
 )
@@ -32,6 +33,7 @@ type Container struct {
 	priorityClassService            PriorityClassService
 	resetService                    ResetService
 	replicateExistingClusterService ReplicateExistingClusterService
+	resourceWatcherService          ResourceWatcherService
 }
 
 // NewDIContainer initializes Container.
@@ -66,6 +68,8 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, externalRestClientCfg)
 		c.replicateExistingClusterService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
 	}
+	c.resourceWatcherService = resourcewatcher.NewService(client)
+
 	return c
 }
 
@@ -118,6 +122,11 @@ func (c *Container) ResetService() ResetService {
 // Note: this service will return nil when `externalImportEnabled` is false.
 func (c *Container) ReplicateExistingClusterService() ReplicateExistingClusterService {
 	return c.replicateExistingClusterService
+}
+
+// ResourceWatcherService returns ResourceWatcherService.
+func (c *Container) ResourceWatcherService() ResourceWatcherService {
+	return c.resourceWatcherService
 }
 
 // createExportServiceForReplicateExistingClusterService creates each services
