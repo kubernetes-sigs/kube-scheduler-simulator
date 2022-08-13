@@ -9,16 +9,10 @@
 
 <script lang="ts">
 import { V1Pod } from "@kubernetes/client-node";
-import {
-  computed,
-  inject,
-  onMounted,
-  defineComponent,
-} from "@nuxtjs/composition-api";
+import { computed, inject, defineComponent } from "@nuxtjs/composition-api";
 import DataTable from "./DataTable.vue";
 import {} from "../../lib/util";
 import PodStoreKey from "../../StoreKey/PodStoreKey";
-import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 
 export default defineComponent({
   components: {
@@ -30,22 +24,10 @@ export default defineComponent({
       throw new Error(`${PodStoreKey} is not provided`);
     }
 
-    const snackbarstore = inject(SnackBarStoreKey);
-    if (!snackbarstore) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
-    }
-
-    const setServerErrorMessage = (error: string) => {
-      snackbarstore.setServerErrorMessage(error);
-    };
-
-    const getPodList = async () => {
-      await store.fetchlist().catch((e) => setServerErrorMessage(e));
-    };
     const onClick = (pod: V1Pod) => {
       store.select(pod, false);
     };
-    onMounted(getPodList);
+
     const pods = computed(() => {
       return Array<V1Pod>().concat(
         ...Object.values(store.pods).map((p) => {

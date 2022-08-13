@@ -1,10 +1,18 @@
 import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1PersistentVolumeClaim } from "@kubernetes/client-node";
 import { PVCAPIKey } from "~/api/APIProviderKeys";
+import {
+  createResourceState,
+  addResourceToState,
+  modifyResourceInState,
+  deleteResourceInState,
+} from "./helpers/storeHelper";
+import { WatchEventType } from "@/types/resources";
 
 type stateType = {
   selectedPersistentVolumeClaim: selectedPersistentVolumeClaim | null;
   pvcs: V1PersistentVolumeClaim[];
+  lastResourceVersion: string;
 };
 
 type selectedPersistentVolumeClaim = {
@@ -19,6 +27,7 @@ export default function pvcStore() {
   const state: stateType = reactive({
     selectedPersistentVolumeClaim: null,
     pvcs: [],
+    lastResourceVersion: "",
   });
 
   const pvcAPI = inject(PVCAPIKey);
@@ -54,11 +63,6 @@ export default function pvcStore() {
       state.selectedPersistentVolumeClaim = null;
     },
 
-    async fetchlist() {
-      const pvcs = await pvcAPI.listPersistentVolumeClaim();
-      state.pvcs = pvcs.items;
-    },
-
     async apply(n: V1PersistentVolumeClaim) {
       if (n.metadata?.name) {
         await pvcAPI.applyPersistentVolumeClaim(n);
@@ -70,7 +74,6 @@ export default function pvcStore() {
           "failed to apply persistentvolumeclaim: persistentvolumeclaim should have metadata.name or metadata.generateName"
         );
       }
-      await this.fetchlist();
     },
 
     async fetchSelected() {
@@ -87,7 +90,45 @@ export default function pvcStore() {
 
     async delete(name: string) {
       await pvcAPI.deletePersistentVolumeClaim(name);
-      await this.fetchlist();
+    },
+
+    // initList calls list API, and stores current resource data and lastResourceVersion.
+    async initList() {
+      const listpvcs = await pvcAPI.listPersistentVolumeClaim();
+      state.pvcs = createResourceState<V1PersistentVolumeClaim>(listpvcs.items);
+      state.lastResourceVersion = listpvcs.metadata?.resourceVersion!;
+    },
+
+    // watchEventHandler handles each notified event.
+    async watchEventHandler(
+      eventType: WatchEventType,
+      pvc: V1PersistentVolumeClaim
+    ) {
+      switch (eventType) {
+        case WatchEventType.ADDED: {
+          state.pvcs = addResourceToState(state.pvcs, pvc);
+          break;
+        }
+        case WatchEventType.MODIFIED: {
+          state.pvcs = modifyResourceInState(state.pvcs, pvc);
+          break;
+        }
+        case WatchEventType.DELETED: {
+          state.pvcs = deleteResourceInState(state.pvcs, pvc);
+          break;
+        }
+        default:
+          break;
+      }
+    },
+
+    get lastResourceVersion() {
+      return state.lastResourceVersion;
+    },
+
+    async setLastResourceVersion(pvc: V1PersistentVolumeClaim) {
+      state.lastResourceVersion =
+        pvc.metadata!.resourceVersion || state.lastResourceVersion;
     },
   };
 }
