@@ -4,10 +4,9 @@ import (
 	"context"
 	"runtime"
 
-	"golang.org/x/xerrors"
-
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
+	"golang.org/x/xerrors"
 )
 
 type SemaphoredErrGroup struct {
