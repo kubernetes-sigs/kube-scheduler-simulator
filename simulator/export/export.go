@@ -167,7 +167,7 @@ func (s *Service) get(ctx context.Context, opts options) (*ResourcesForExport, e
 	if err := s.listPcs(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPcs: %w", err)
 	}
-	if err := s.getSchedulerConfig(ctx, &resources, errgrp); err != nil {
+	if err := s.getSchedulerConfig(&resources, errgrp); err != nil {
 		return nil, xerrors.Errorf("call getSchedulerConfig: %w", err)
 	}
 
@@ -358,7 +358,7 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.S
 	return nil
 }
 
-func (s *Service) getSchedulerConfig(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup) error {
+func (s *Service) getSchedulerConfig(r *ResourcesForExport, eg *util.SemaphoredErrGroup) error {
 	if err := eg.Go(func() error {
 		ss := s.schedulerService.GetSchedulerConfig()
 		r.SchedulerConfig = ss
