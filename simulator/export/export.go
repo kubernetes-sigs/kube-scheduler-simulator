@@ -149,29 +149,29 @@ func (s *Service) get(ctx context.Context, opts options) (*ResourcesForExport, e
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
 	resources := ResourcesForExport{}
 
-	if err := s.listPods(ctx, &resources, &errgrp, opts); err != nil {
+	if err := s.listPods(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPods: %w", err)
 	}
-	if err := s.listNodes(ctx, &resources, &errgrp, opts); err != nil {
+	if err := s.listNodes(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listNodes: %w", err)
 	}
-	if err := s.listPvs(ctx, &resources, &errgrp, opts); err != nil {
+	if err := s.listPvs(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPvs: %w", err)
 	}
-	if err := s.listPvcs(ctx, &resources, &errgrp, opts); err != nil {
+	if err := s.listPvcs(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPvcs: %w", err)
 	}
-	if err := s.listStorageClasses(ctx, &resources, &errgrp, opts); err != nil {
+	if err := s.listStorageClasses(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listStorageClasses: %w", err)
 	}
-	if err := s.listPcs(ctx, &resources, &errgrp, opts); err != nil {
+	if err := s.listPcs(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPcs: %w", err)
 	}
-	if err := s.getSchedulerConfig(ctx, &resources, &errgrp); err != nil {
+	if err := s.getSchedulerConfig(ctx, &resources, errgrp); err != nil {
 		return nil, xerrors.Errorf("call getSchedulerConfig: %w", err)
 	}
 
-	if err := errgrp.Grp.Wait(); err != nil {
+	if err := errgrp.Wait(); err != nil {
 		return nil, xerrors.Errorf("get resources all: %w", err)
 	}
 	return &resources, nil
@@ -193,32 +193,32 @@ func (s *Service) Export(ctx context.Context, opts ...Option) (*ResourcesForExpo
 func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts options) error {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
 
-	if err := s.applyPcs(ctx, resources, &errgrp, opts); err != nil {
+	if err := s.applyPcs(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPcs: %w", err)
 	}
-	if err := s.applyStorageClasses(ctx, resources, &errgrp, opts); err != nil {
+	if err := s.applyStorageClasses(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyStorageClasses: %w", err)
 	}
-	if err := s.applyPvcs(ctx, resources, &errgrp, opts); err != nil {
+	if err := s.applyPvcs(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPvcs: %w", err)
 	}
-	if err := s.applyNodes(ctx, resources, &errgrp, opts); err != nil {
+	if err := s.applyNodes(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyNodes: %w", err)
 	}
-	if err := s.applyPods(ctx, resources, &errgrp, opts); err != nil {
+	if err := s.applyPods(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPods: %w", err)
 	}
 
-	if err := errgrp.Grp.Wait(); err != nil {
+	if err := errgrp.Wait(); err != nil {
 		return xerrors.Errorf("apply resources: %w", err)
 	}
 
 	// `applyPvs` should be called after `applyPvcs` finished,
 	// because `applyPvs` look up PersistentVolumeClaim for `Spec.ClaimRef.UID` field.
-	if err := s.applyPvs(ctx, resources, &errgrp, opts); err != nil {
+	if err := s.applyPvs(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPvs: %w", err)
 	}
-	if err := errgrp.Grp.Wait(); err != nil {
+	if err := errgrp.Wait(); err != nil {
 		return xerrors.Errorf("apply PVs: %w", err)
 	}
 	return nil
@@ -244,12 +244,8 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport, opt
 	return nil
 }
 
-func (s *Service) listPods(ctx context.Context, r *ResourcesForExport, eg *util.ErrGroupWithSemaphore, opts options) error {
-	if err := eg.Sem.Acquire(ctx, 1); err != nil {
-		return xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	eg.Grp.Go(func() error {
-		defer eg.Sem.Release(1)
+func (s *Service) listPods(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+	if err := eg.Go(func() error {
 		pods, err := s.podService.List(ctx, metav1.NamespaceAll)
 		if err != nil {
 			if !opts.ignoreErr {
@@ -260,16 +256,14 @@ func (s *Service) listPods(ctx context.Context, r *ResourcesForExport, eg *util.
 		}
 		r.Pods = pods.Items
 		return nil
-	})
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
 	return nil
 }
 
-func (s *Service) listNodes(ctx context.Context, r *ResourcesForExport, eg *util.ErrGroupWithSemaphore, opts options) error {
-	if err := eg.Sem.Acquire(ctx, 1); err != nil {
-		return xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	eg.Grp.Go(func() error {
-		defer eg.Sem.Release(1)
+func (s *Service) listNodes(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+	if err := eg.Go(func() error {
 		nodes, err := s.nodeService.List(ctx)
 		if err != nil {
 			if !opts.ignoreErr {
@@ -280,16 +274,14 @@ func (s *Service) listNodes(ctx context.Context, r *ResourcesForExport, eg *util
 		}
 		r.Nodes = nodes.Items
 		return nil
-	})
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
 	return nil
 }
 
-func (s *Service) listPvs(ctx context.Context, r *ResourcesForExport, eg *util.ErrGroupWithSemaphore, opts options) error {
-	if err := eg.Sem.Acquire(ctx, 1); err != nil {
-		return xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	eg.Grp.Go(func() error {
-		defer eg.Sem.Release(1)
+func (s *Service) listPvs(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+	if err := eg.Go(func() error {
 		pvs, err := s.pvService.List(ctx)
 		if err != nil {
 			if !opts.ignoreErr {
@@ -300,16 +292,14 @@ func (s *Service) listPvs(ctx context.Context, r *ResourcesForExport, eg *util.E
 		}
 		r.Pvs = pvs.Items
 		return nil
-	})
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
 	return nil
 }
 
-func (s *Service) listPvcs(ctx context.Context, r *ResourcesForExport, eg *util.ErrGroupWithSemaphore, opts options) error {
-	if err := eg.Sem.Acquire(ctx, 1); err != nil {
-		return xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	eg.Grp.Go(func() error {
-		defer eg.Sem.Release(1)
+func (s *Service) listPvcs(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+	if err := eg.Go(func() error {
 		pvcs, err := s.pvcService.List(ctx, metav1.NamespaceAll)
 		if err != nil {
 			if !opts.ignoreErr {
@@ -320,16 +310,14 @@ func (s *Service) listPvcs(ctx context.Context, r *ResourcesForExport, eg *util.
 		}
 		r.Pvcs = pvcs.Items
 		return nil
-	})
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
 	return nil
 }
 
-func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForExport, eg *util.ErrGroupWithSemaphore, opts options) error {
-	if err := eg.Sem.Acquire(ctx, 1); err != nil {
-		return xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	eg.Grp.Go(func() error {
-		defer eg.Sem.Release(1)
+func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+	if err := eg.Go(func() error {
 		scs, err := s.storageClassService.List(ctx)
 		if err != nil {
 			if !opts.ignoreErr {
@@ -340,16 +328,14 @@ func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForExport,
 		}
 		r.StorageClasses = scs.Items
 		return nil
-	})
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
 	return nil
 }
 
-func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.ErrGroupWithSemaphore, opts options) error {
-	if err := eg.Sem.Acquire(ctx, 1); err != nil {
-		return xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	eg.Grp.Go(func() error {
-		defer eg.Sem.Release(1)
+func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+	if err := eg.Go(func() error {
 		pcs, err := s.priorityclassService.List(ctx)
 		if err != nil {
 			if !opts.ignoreErr {
@@ -366,34 +352,30 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.E
 		}
 		r.PriorityClasses = result
 		return nil
-	})
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
 	return nil
 }
 
-func (s *Service) getSchedulerConfig(ctx context.Context, r *ResourcesForExport, eg *util.ErrGroupWithSemaphore) error {
-	if err := eg.Sem.Acquire(ctx, 1); err != nil {
-		return xerrors.Errorf("acquire semaphore: %w", err)
-	}
-	eg.Grp.Go(func() error {
-		defer eg.Sem.Release(1)
+func (s *Service) getSchedulerConfig(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup) error {
+	if err := eg.Go(func() error {
 		ss := s.schedulerService.GetSchedulerConfig()
 		r.SchedulerConfig = ss
 		return nil
-	})
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
 	return nil
 }
 
-func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.ErrGroupWithSemaphore, opts options) error {
+func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.PriorityClasses {
 		pc := r.PriorityClasses[i]
 		if isSystemPriorityClass(*pc.Name) {
 			continue
 		}
-		if err := eg.Sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
-		}
-		eg.Grp.Go(func() error {
-			defer eg.Sem.Release(1)
+		if err := eg.Go(func() error {
 			pc.ObjectMetaApplyConfiguration.UID = nil
 			_, err := s.priorityclassService.Apply(ctx, &pc)
 			if err != nil {
@@ -403,19 +385,17 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.
 				klog.Errorf("failed to apply priorityClasses: %v", err)
 			}
 			return nil
-		})
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
 	}
 	return nil
 }
 
-func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForImport, eg *util.ErrGroupWithSemaphore, opts options) error {
+func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.StorageClasses {
 		sc := r.StorageClasses[i]
-		if err := eg.Sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
-		}
-		eg.Grp.Go(func() error {
-			defer eg.Sem.Release(1)
+		if err := eg.Go(func() error {
 			sc.ObjectMetaApplyConfiguration.UID = nil
 			_, err := s.storageClassService.Apply(ctx, &sc)
 			if err != nil {
@@ -425,19 +405,17 @@ func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForImport
 				klog.Errorf("failed to apply StorageClass: %v", err)
 			}
 			return nil
-		})
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
 	}
 	return nil
 }
 
-func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForImport, eg *util.ErrGroupWithSemaphore, opts options) error {
+func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Pvcs {
 		pvc := r.Pvcs[i]
-		if err := eg.Sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
-		}
-		eg.Grp.Go(func() error {
-			defer eg.Sem.Release(1)
+		if err := eg.Go(func() error {
 			pvc.ObjectMetaApplyConfiguration.UID = nil
 			_, err := s.pvcService.Apply(ctx, *pvc.Namespace, &pvc)
 			if err != nil {
@@ -447,19 +425,17 @@ func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForImport, eg *util
 				klog.Errorf("failed to apply PersistentVolumeClaims: %v", err)
 			}
 			return nil
-		})
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
 	}
 	return nil
 }
 
-func (s *Service) applyPvs(ctx context.Context, r *ResourcesForImport, eg *util.ErrGroupWithSemaphore, opts options) error {
+func (s *Service) applyPvs(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Pvs {
 		pv := r.Pvs[i]
-		if err := eg.Sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
-		}
-		eg.Grp.Go(func() error {
-			defer eg.Sem.Release(1)
+		if err := eg.Go(func() error {
 			pv.ObjectMetaApplyConfiguration.UID = nil
 			if pv.Status != nil && pv.Status.Phase != nil {
 				if *pv.Status.Phase == "Bound" {
@@ -481,19 +457,17 @@ func (s *Service) applyPvs(ctx context.Context, r *ResourcesForImport, eg *util.
 				klog.Errorf("failed to apply PersistentVolume: %v", err)
 			}
 			return nil
-		})
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
 	}
 	return nil
 }
 
-func (s *Service) applyNodes(ctx context.Context, r *ResourcesForImport, eg *util.ErrGroupWithSemaphore, opts options) error {
+func (s *Service) applyNodes(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Nodes {
 		node := r.Nodes[i]
-		if err := eg.Sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
-		}
-		eg.Grp.Go(func() error {
-			defer eg.Sem.Release(1)
+		if err := eg.Go(func() error {
 			node.ObjectMetaApplyConfiguration.UID = nil
 			_, err := s.nodeService.Apply(ctx, &node)
 			if err != nil {
@@ -503,19 +477,17 @@ func (s *Service) applyNodes(ctx context.Context, r *ResourcesForImport, eg *uti
 				klog.Errorf("failed to apply Node: %v", err)
 			}
 			return nil
-		})
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
 	}
 	return nil
 }
 
-func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util.ErrGroupWithSemaphore, opts options) error {
+func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Pods {
 		pod := r.Pods[i]
-		if err := eg.Sem.Acquire(ctx, 1); err != nil {
-			return xerrors.Errorf("acquire semaphore: %w", err)
-		}
-		eg.Grp.Go(func() error {
-			defer eg.Sem.Release(1)
+		if err := eg.Go(func() error {
 			pod.ObjectMetaApplyConfiguration.UID = nil
 			_, err := s.podService.Apply(ctx, *pod.Namespace, &pod)
 			if err != nil {
@@ -525,7 +497,9 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 				klog.Errorf("failed to apply Pod: %v", err)
 			}
 			return nil
-		})
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
 	}
 	return nil
 }
