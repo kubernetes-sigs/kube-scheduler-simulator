@@ -117,7 +117,7 @@ type ScenarioOperation struct {
 	// ID for this operation. Normally, the system sets this field for you.
 	ID string `json:"id"`
 	// MajorStep indicates when the operation should be done.
-	MajorStep int64 `json:"step"`
+	MajorStep int32 `json:"step"`
 
 	// One of the following four fields must be specified.
 	// If more than one is set or all are empty, the operation is invalid, and the scenario will fail.
@@ -271,13 +271,13 @@ const (
 type ScenarioResult struct {
 	// SimulatorVersion represents the version of the simulator that runs this scenario.
 	SimulatorVersion string `json:"simulatorVersion"`
-	// Timeline is a map of operations keyed with ScenarioStep.
+	// Timeline is a map of operations keyed with MajorStep(string).
 	// This may have many of the same operations as .spec.operations but has additional PodScheduled and Delete operations for Pods
 	// to represent a Pod is scheduled or preempted by the scheduler.
 	//
 	// +patchMergeKey=ID
 	// +patchStrategy=merge
-	Timeline map[ScenarioStep][]ScenarioTimelineEvent `json:"timeline"`
+	Timeline map[string][]ScenarioTimelineEvent `json:"timeline"`
 }
 
 type ScenarioTimelineEvent struct {
