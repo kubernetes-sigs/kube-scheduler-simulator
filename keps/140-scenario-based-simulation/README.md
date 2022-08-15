@@ -297,10 +297,6 @@ type ScenarioTimelineEvent struct {
 	Delete *DeleteOperationResult `json:"delete"`
 	// Done is the result of ScenarioSpec.Operations.DoneOperation.
 	Done *DoneOperationResult `json:"done"`
-	// PodScheduled represents the Pod is scheduled to a Node.
-	PodScheduled *PodResult `json:"podScheduled"`
-	// PodUnscheduled represents "the scheduler tried to schedule the Pod, but cannot schedule to any Node."
-	PodUnscheduled *PodResult `json:"podUnscheduled"`
 }
 
 type CreateOperationResult struct {
@@ -325,66 +321,6 @@ type DeleteOperationResult struct {
 type DoneOperationResult struct {
 	// Operation is the operation that was done.
 	Operation DoneOperation `json:"operation"`
-}
-
-// PodResult has the results related to the specific Pod.
-// Depending on the status of the Pod, some fields may be empty.
-type PodResult struct {
-	Pod v1.Pod `json:"pod"`
-	// BoundTo indicates to which Node the Pod was scheduled.
-	BoundTo *string `json:"boundTo"`
-	// PreemptedBy indicates which Pod the scheduler deleted this Pod for.
-	// This field may be nil if this Pod has not been preempted.
-	PreemptedBy *string `json:"preemptedBy"`
-	// CreatedAt indicates when the Pod was created.
-	CreatedAt ScenarioStep `json:"createdAt"`
-	// BoundAt indicates when the scheduler schedule this Pod.
-	// This field may be nil if this Pod has not been scheduled.
-	BoundAt *ScenarioStep `json:"boundAt"`
-	// PreemptedAt indicates when the scheduler preempted this Pod.
-	// This field may be nil if this Pod has not been preempted.
-	PreemptedAt *ScenarioStep `json:"preemptedAt"`
-	// ScheduleResult has the results of all scheduling for the Pod.
-	//
-	// If the scheduler working with a simulator isn't created on the scheduling framework,
-	// this field will be empty.
-	// TODO: add the link to the doc when it's empty.
-	//
-	// +patchStrategy=replace
-	// +optional
-	ScheduleResult []ScenarioPodScheduleResult `json:"scheduleResult"`
-}
-
-type ScenarioPodScheduleResult struct {
-	// Step indicates when the scheduler performs this schedule.
-	Step *ScenarioStep `json:"step"`
-	// AllCandidateNodes indicates all candidate Nodes before Filter.
-	AllCandidateNodes []string `json:"allCandidateNodes"`
-	// AllFilteredNodes indicates all candidate Nodes after Filter.
-	AllFilteredNodes []string `json:"allFilteredNodes"`
-	// PluginResults has each plugin's result.
-	PluginResults ScenarioPluginsResults `json:"pluginResults"`
-}
-
-type (
-	NodeName   string
-	PluginName string
-)
-
-type ScenarioPluginsResults struct {
-	// Filter has each filter plugin's result.
-	Filter map[NodeName]map[PluginName]string `json:"filter"`
-	// Score has each score plugin's score.
-	Score map[NodeName]map[PluginName]ScenarioPluginsScoreResult `json:"score"`
-}
-
-type ScenarioPluginsScoreResult struct {
-	// RawScore has the score from the Score method of Score plugins.
-	RawScore int64 `json:"rawScore"`
-	// NormalizedScore has the score calculated by the NormalizeScore method of Score plugins.
-	NormalizedScore int64 `json:"normalizedScore"`
-	// FinalScore has the score plugin's final score calculated by NormalizedScore and the score plugin weight.
-	FinalScore int64 `json:"finalScore"`
 }
 
 // Scenario is the Schema for the scenario API
@@ -623,14 +559,15 @@ Note: Even if multiple k8s resource operations happen in a single `runOnce`, the
 
 #### The result calculation packages
 
-ScenarioResult only has the simple data that represent what was happen during the scenario.
+ScenarioResult only has the simple data that represent what happens during the scenario.
 
 So, we will provide useful functions and data structures to analyze the result. 
 
-For example:
+Here is the example ideas:
+- the function to aggregate scheduling results from Pod's annotations.
+    - the simulator records the scheduling results in Pod's annotation.
 - the function to aggregate changes in allocation rate of the entire cluster.
 - the function to aggregate changes in resource utilization for each Node.
-- the function to aggregate data by Pod.
 - the generic iterator function that users can aggregate custom values.
 - (Do you have any other idea? Tell us!)
 
