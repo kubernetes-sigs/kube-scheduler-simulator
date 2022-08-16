@@ -1785,8 +1785,8 @@ func TestFunction_listPcs(t *testing.T) {
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
 			}
 
-			err := s.listPcs(ctx, resources, &errgrp, options{})
-			if err := errgrp.Grp.Wait(); err != nil {
+			err := s.listPcs(ctx, resources, errgrp, options{})
+			if err := errgrp.Wait(); err != nil {
 				t.Fatalf("listPcs: %v", err)
 			}
 			diffResponse := cmp.Diff(resources, tt.wantResourcesForExport())
@@ -1865,8 +1865,8 @@ func TestFunction_applyPcs(t *testing.T) {
 			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPriorityClassService)
 
-			err := s.applyPcs(ctx, tt.applyConfiguration(), &errgrp, options{})
-			if err := errgrp.Grp.Wait(); err != nil {
+			err := s.applyPcs(ctx, tt.applyConfiguration(), errgrp, options{})
+			if err := errgrp.Wait(); err != nil {
 				t.Fatalf("applyPcs: %v", err)
 			}
 
