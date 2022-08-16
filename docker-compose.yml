@@ -6,7 +6,7 @@ services:
     environment:
       - PORT=1212
       - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-etcd:2379
-      - CORS_ALLOWED_ORIGIN_LIST=http://localhost:3000
+      - CORS_ALLOWED_ORIGIN_LIST=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3000
       - KUBE_API_HOST=0.0.0.0
       - KUBE_API_PORT=3131
     ports:
@@ -22,8 +22,8 @@ services:
     container_name: simulator-frontend
     environment:
       - HOST=0.0.0.0
-      - BASE_URL=http://localhost:1212
-      - KUBE_API_SERVER_URL=http://localhost:3131
+      - BASE_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1212
+      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3131
     ports:
     - "3000:3000"
     tty: true

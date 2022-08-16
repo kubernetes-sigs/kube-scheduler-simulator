@@ -84,7 +84,7 @@ You can use the following command.
 make docker_build_and_up
 ```
 
-Then, you can access the simulator with http://localhost:3000
+Then, you can access the simulator with http://localhost:3000. If you want to deploy the simulator on a remote server and access it via a specific IP (e.g: like http://10.0.0.1:3000/), please make sure that you have executed `export SIMULATOR_EXTERNAL_IP=your.server.ip` before running `docker-compose up -d`.
 
 Note: Insufficient memory allocation may cause problems in building the image.
 Please allocate enough memory in that case.
