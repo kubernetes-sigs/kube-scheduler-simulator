@@ -5,6 +5,8 @@ import (
 
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/events"
@@ -63,29 +65,32 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 	ctx, cancel := context.WithCancel(context.Background())
 
 	informerFactory := scheduler.NewInformerFactory(clientSet, 0)
+	var dynInformerFactory dynamicinformer.DynamicSharedInformerFactory
+	if restConfig != nil {
+		dynClient := dynamic.NewForConfigOrDie(restConfig)
+		dynInformerFactory = dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynClient, 0, v1.NamespaceAll, nil)
+	}
 	evtBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{
 		Interface: clientSet.EventsV1(),
 	})
-
 	evtBroadcaster.StartRecordingToSink(ctx.Done())
 
 	s.currentSchedulerCfg = versionedcfg.DeepCopy()
 
 	cfg, err := convertConfigurationForSimulator(versionedcfg)
 	if err != nil {
-		cancel()
-		return xerrors.Errorf("convert scheduler config to apply: %w", err)
+		return cancelAndErrorf(cancel, "convert scheduler config to apply: %w", err)
 	}
 
 	registry, err := plugin.NewRegistry(informerFactory, clientSet)
 	if err != nil {
-		cancel()
-		return xerrors.Errorf("plugin registry: %w", err)
+		return cancelAndErrorf(cancel, "plugin registry: %w", err)
 	}
 
 	sched, err := scheduler.New(
 		clientSet,
 		informerFactory,
+		dynInformerFactory,
 		profile.NewRecorderFactory(evtBroadcaster),
 		ctx.Done(),
 		scheduler.WithKubeConfig(restConfig),
@@ -98,18 +103,28 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 		scheduler.WithFrameworkOutOfTreeRegistry(registry),
 	)
 	if err != nil {
-		cancel()
-		return xerrors.Errorf("create scheduler: %w", err)
+		return cancelAndErrorf(cancel, "create scheduler: %w", err)
 	}
 
 	informerFactory.Start(ctx.Done())
+	if dynInformerFactory != nil {
+		dynInformerFactory.Start(ctx.Done())
+	}
 	informerFactory.WaitForCacheSync(ctx.Done())
+	if dynInformerFactory != nil {
+		dynInformerFactory.WaitForCacheSync(ctx.Done())
+	}
 
 	go sched.Run(ctx)
 
 	s.shutdownfn = cancel
 
 	return nil
+}
+
+func cancelAndErrorf(cancel context.CancelFunc, format string, err error) error {
+	cancel()
+	return xerrors.Errorf(format, err)
 }
 
 func (s *Service) ShutdownScheduler() {
