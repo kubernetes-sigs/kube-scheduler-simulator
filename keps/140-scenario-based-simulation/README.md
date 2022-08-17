@@ -90,7 +90,7 @@ type Controllers struct {
 	// So, you need to configure it only when you want to disable some controllers enabled by default.
 	//
 	// +optional
-	PreparingControllers    *ControllerSet `json:"preparingControllers`
+	PreparingControllers	*ControllerSet `json:"preparingControllers`
 	// SimulatedControllers is a list of controllers that are the target of this simulation.
 	// These are run one by one in the same order specified in Enabled field.
 	// 
@@ -140,20 +140,6 @@ type ScenarioOperation struct {
 	// +optional
 	Done *DoneOperation `json:"doneOperation,omitempty"`
 }
-
-// OperationType describes Operation.
-// Please see the following defined OperationType; all operation types not listed below are invalid.
-type OperationType string
-
-const (
-	CreateOperationType         OperationType = "Create"
-	PatchOperationType          OperationType = "Patch"
-	DeleteOperationType         OperationType = "Delete"
-	DoneOperationType           OperationType = "Done"
-	PodScheduledOperationType   OperationType = "PodScheduled"
-	PodUnscheduledOperationType OperationType = "PodUnscheduled"
-	PodPreemptedOperationType   OperationType = "PodPreempted"
-)
 
 type CreateOperation struct {
 	// Object is the Object to be created.
@@ -215,10 +201,10 @@ type ScenarioStatus struct {
 }
 
 type ScenarioStepStatus struct {
-    // Step indicates the current ScenarioStep.
-    //
-    // +optional
-    Step ScenarioStep `json:"step,omitempty"`
+	// Step indicates the current ScenarioStep.
+	//
+	// +optional
+	Step ScenarioStep `json:"step,omitempty"`
 	// Phase indicates the current phase in a single step.
 	// 
 	// +optional
@@ -234,12 +220,12 @@ const (
 	Operating StepPhase = "Operating"
 	// OperatingCompleted means the preparing controllers have finished operating operation defined for the step.
 	OperatingCompleted StepPhase = "OperatingCompleted"
-    // ControllerRunning means the simulated controller is working.
-    ControllerRunning StepPhase = "ControllerRunning"
-    // ControllerPaused means the simulated controller is paused(or will be paused).
-    ControllerPaused    StepPhase = "ControllerPaused"
+	// ControllerRunning means the simulated controller is working.
+	ControllerRunning StepPhase = "ControllerRunning"
+	// ControllerPaused means the simulated controller is paused(or will be paused).
+	ControllerPaused	StepPhase = "ControllerPaused"
 	// ControllerCompleted means the current running simulated controller no longer do anything with the current cluster state.
-    ControllerCompleted StepPhase = "ControllerCompleted"
+	ControllerCompleted StepPhase = "ControllerCompleted"
 	// StepCompleted means the controller is preparing to move to the next step.
 	StepCompleted StepPhase = "Finished"
 )
@@ -285,7 +271,7 @@ type ScenarioTimelineEvent struct {
 	// Otherwise, it'll be newly generated.
 	ID string
 	// Step indicates the ScenarioStep at which the operation has been done.
-	Step    ScenarioStep `json:"step"`
+	Step	ScenarioStep `json:"step"`
 
 	// Only one of the following fields must be non-empty.
 
@@ -565,7 +551,7 @@ So, we will provide useful functions and data structures to analyze the result.
 
 Here is the example ideas:
 - the function to aggregate scheduling results from Pod's annotations.
-    - the simulator records the scheduling results in Pod's annotation.
+	- the simulator records the scheduling results in Pod's annotation.
 - the function to aggregate changes in allocation rate of the entire cluster.
 - the function to aggregate changes in resource utilization for each Node.
 - the generic iterator function that users can aggregate custom values.
