@@ -1,3 +1,4 @@
+//go:build !providerless
 // +build !providerless
 
 /*
@@ -30,10 +31,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
+	cloudprovider "k8s.io/cloud-provider"
 	servicehelpers "k8s.io/cloud-provider/service/helpers"
 	utilnet "k8s.io/utils/net"
 
-	compute "google.golang.org/api/compute/v1"
+	"google.golang.org/api/compute/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -50,6 +52,11 @@ const (
 // new load balancers and updating existing load balancers, recognizing when
 // each is needed.
 func (g *Cloud) ensureExternalLoadBalancer(clusterName string, clusterID string, apiService *v1.Service, existingFwdRule *compute.ForwardingRule, nodes []*v1.Node) (*v1.LoadBalancerStatus, error) {
+	// Skip service handling if it uses Regional Backend Services and handled by other controllers
+	if usesL4RBS(apiService, existingFwdRule) {
+		return nil, cloudprovider.ImplementedElsewhere
+	}
+
 	if len(nodes) == 0 {
 		return nil, fmt.Errorf(errStrLbNoHosts)
 	}
@@ -284,6 +291,11 @@ func (g *Cloud) ensureExternalLoadBalancer(clusterName string, clusterID string,
 
 // updateExternalLoadBalancer is the external implementation of LoadBalancer.UpdateLoadBalancer.
 func (g *Cloud) updateExternalLoadBalancer(clusterName string, service *v1.Service, nodes []*v1.Node) error {
+	// Skip service update if it uses Regional Backend Services and handled by other controllers
+	if usesL4RBS(service, nil) {
+		return cloudprovider.ImplementedElsewhere
+	}
+
 	hosts, err := g.getInstancesByNames(nodeNames(nodes))
 	if err != nil {
 		return err
@@ -295,6 +307,11 @@ func (g *Cloud) updateExternalLoadBalancer(clusterName string, service *v1.Servi
 
 // ensureExternalLoadBalancerDeleted is the external implementation of LoadBalancer.EnsureLoadBalancerDeleted
 func (g *Cloud) ensureExternalLoadBalancerDeleted(clusterName, clusterID string, service *v1.Service) error {
+	// Skip service deletion if it uses Regional Backend Services and handled by other controllers
+	if usesL4RBS(service, nil) {
+		return cloudprovider.ImplementedElsewhere
+	}
+
 	loadBalancerName := g.GetLoadBalancerName(context.TODO(), clusterName, service)
 	serviceName := types.NamespacedName{Namespace: service.Namespace, Name: service.Name}
 	lbRefStr := fmt.Sprintf("%v(%v)", loadBalancerName, serviceName)
@@ -637,7 +654,7 @@ func (g *Cloud) updateTargetPool(loadBalancerName string, hosts []*gceInstance) 
 }
 
 func (g *Cloud) targetPoolURL(name string) string {
-	return g.service.BasePath + strings.Join([]string{g.projectID, "regions", g.region, "targetPools", name}, "/")
+	return g.projectsBasePath + strings.Join([]string{g.projectID, "regions", g.region, "targetPools", name}, "/")
 }
 
 func makeHTTPHealthCheck(name, path string, port int32) *compute.HttpHealthCheck {

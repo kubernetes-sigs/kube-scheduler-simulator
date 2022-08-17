@@ -173,8 +173,6 @@ type JobSpec struct {
 	// guarantees (e.g. finalizers) will be honored. If this field is unset,
 	// the Job won't be automatically deleted. If this field is set to zero,
 	// the Job becomes eligible to be deleted immediately after it finishes.
-	// This field is alpha-level and is only honored by servers that enable the
-	// TTLAfterFinished feature.
 	// +optional
 	TTLSecondsAfterFinished *int32
 
@@ -196,9 +194,10 @@ type JobSpec struct {
 	// `$(job-name)-$(index)-$(random-string)`,
 	// the Pod hostname takes the form `$(job-name)-$(index)`.
 	//
-	// This field is beta-level. More completion modes can be added in the future.
-	// If the Job controller observes a mode that it doesn't recognize, the
-	// controller skips updates for the Job.
+	// More completion modes can be added in the future.
+	// If the Job controller observes a mode that it doesn't recognize, which
+	// is possible during upgrades due to version skew, the controller
+	// skips updates for the Job.
 	// +optional
 	CompletionMode *CompletionMode
 
@@ -209,9 +208,6 @@ type JobSpec struct {
 	// with this Job. Users must design their workload to gracefully handle this.
 	// Suspending a Job will reset the StartTime field of the Job, effectively
 	// resetting the ActiveDeadlineSeconds timer too. Defaults to false.
-	//
-	// This field is beta-level, gated by SuspendJob feature flag (enabled by
-	// default).
 	//
 	// +optional
 	Suspend *bool
@@ -243,9 +239,16 @@ type JobStatus struct {
 	// +optional
 	CompletionTime *metav1.Time
 
-	// The number of actively running pods.
+	// The number of pending and running pods.
 	// +optional
 	Active int32
+
+	// The number of active pods which have a Ready condition.
+	//
+	// This field is beta-level. The job controller populates the field when
+	// the feature gate JobReadyPods is enabled (enabled by default).
+	// +optional
+	Ready *int32
 
 	// The number of pods which reached phase Succeeded.
 	// +optional
@@ -276,8 +279,9 @@ type JobStatus struct {
 	// (3) Remove the pod UID from the array while increasing the corresponding
 	//     counter.
 	//
-	// This field is alpha-level. The job controller only makes use of this field
-	// when the feature gate PodTrackingWithFinalizers is enabled.
+	// This field is beta-level. The job controller only makes use of this field
+	// when the feature gate JobTrackingWithFinalizers is enabled (enabled
+	// by default).
 	// Old jobs might not be tracked using this field, in which case the field
 	// remains null.
 	// +optional
@@ -371,6 +375,12 @@ type CronJobSpec struct {
 
 	// The schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
 	Schedule string
+
+	// The time zone for the given schedule, see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones.
+	// If not specified, this will rely on the time zone of the kube-controller-manager process.
+	// ALPHA: This field is in alpha and must be enabled via the `CronJobTimeZone` feature gate.
+	// +optional
+	TimeZone *string
 
 	// Optional deadline in seconds for starting the job if it misses scheduled
 	// time for any reason.  Missed jobs executions will be counted as failed ones.
