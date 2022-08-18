@@ -269,9 +269,6 @@ func TestService_DeleteCollection(t *testing.T) {
 				m.EXPECT().DeleteCollection(gomock.Any(), "default2", metav1.ListOptions{
 					FieldSelector: "spec.nodeName=node1",
 				}).Return(nil)
-				m.EXPECT().DeleteCollection(gomock.Any(), "default3", metav1.ListOptions{
-					FieldSelector: "spec.nodeName=node1",
-				}).Return(errors.New("error"))
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
