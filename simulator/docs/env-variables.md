@@ -22,9 +22,10 @@ Importing". This variable is used to find Kubeconfig required to
 access your cluster for importing resources to scheduler simulator.
 
 `KUBE_API_HOST`: This is the host of kube-apiserver which the
-simulator starts internally. It's default value is `3131`.
+simulator starts internally. It's default value is `127.0.0.1`.
 
-`KUBE_API_PORT`: This is the port of kube-apiserver.
+`KUBE_API_PORT`: This is the port of kube-apiserver. It's default
+value is `3131`.
 
 `KUBE_SCHEDULER_CONFIG_PATH`: The path to a KubeSchedulerConfiguration
 file.  If passed, the simulator will start the scheduler with that
