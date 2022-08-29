@@ -10,7 +10,7 @@ import (
 	"k8s.io/kubernetes/pkg/volume/local"
 )
 
-func StartPersistentVolumeController(ctx ControllerContext) error {
+func startPersistentVolumeController(ctx controllerContext) error {
 	params := persistentvolume.ControllerParameters{
 		KubeClient:                ctx.ClientBuilder.ClientOrDie("persistent-volume"),
 		SyncPeriod:                1 * time.Second,
@@ -26,7 +26,6 @@ func StartPersistentVolumeController(ctx ControllerContext) error {
 	if err != nil {
 		return fmt.Errorf("construct persistentvolume controller: %w", err)
 	}
-
 	go volumeController.Run(ctx.Stop)
 
 	return nil

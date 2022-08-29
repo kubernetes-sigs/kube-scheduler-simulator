@@ -1,161 +1,161 @@
 package controller
 
 import (
-  "context"
-  "math/rand"
-  "time"
+	"context"
+	"math/rand"
+	"time"
 
-  "golang.org/x/xerrors"
-  "k8s.io/apimachinery/pkg/util/wait"
-  "k8s.io/client-go/informers"
-  clientset "k8s.io/client-go/kubernetes"
-  "k8s.io/client-go/metadata"
-  "k8s.io/client-go/metadata/metadatainformer"
-  restclient "k8s.io/client-go/rest"
-  "k8s.io/controller-manager/pkg/clientbuilder"
-  "k8s.io/controller-manager/pkg/informerfactory"
-  "k8s.io/klog/v2"
-  controllermanageroptions "k8s.io/kubernetes/cmd/kube-controller-manager/app/options"
-  kubectrlmgrconfig "k8s.io/kubernetes/pkg/controller/apis/config"
+	"golang.org/x/xerrors"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/informers"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/metadata"
+	"k8s.io/client-go/metadata/metadatainformer"
+	restclient "k8s.io/client-go/rest"
+	"k8s.io/controller-manager/pkg/clientbuilder"
+	"k8s.io/controller-manager/pkg/informerfactory"
+	"k8s.io/klog/v2"
+	controllermanageroptions "k8s.io/kubernetes/cmd/kube-controller-manager/app/options"
+	kubectrlmgrconfig "k8s.io/kubernetes/pkg/controller/apis/config"
 )
 
 const (
-  // ControllerStartJitter is the Jitter used when starting controller.
-  ControllerStartJitter = 1.0
+	// controllerStartJitter is the Jitter used when starting controller.
+	controllerStartJitter = 1.0
 )
 
-type InitFunc func(controllerCtx ControllerContext) error
+type initFunc func(controllerCtx controllerContext) error
 
-// ControllerInitializersFunc is used to create a collection of initializers
+// controllerInitializersFunc is used to create a collection of initializers
 // given the loopMode.
-//nolint:revive // Intentionally used the same name.
-type ControllerInitializersFunc func() (initializers map[string]InitFunc)
 
-var _ ControllerInitializersFunc = NewControllerInitializers
+type controllerInitializersFunc func() (initializers map[string]initFunc)
 
-func NewController(client clientset.Interface, c *restclient.Config) (func(), error) {
-  ctx, cancel := context.WithCancel(context.Background())
+var _ controllerInitializersFunc = newControllerInitializers
 
-  go Run(client, c, ctx.Done())
-  shutdownFunc := func() {
-    cancel()
-  }
+func RunController(client clientset.Interface, c *restclient.Config) (func(), error) {
+	ctx, cancel := context.WithCancel(context.Background())
 
-  return shutdownFunc, nil
+	go run(client, c, ctx.Done())
+	shutdownFunc := func() {
+		cancel()
+	}
+
+	return shutdownFunc, nil
 }
 
-// Run runs the KubeControllerManagerOptions.  This should never exit.
-func Run(client clientset.Interface, config *restclient.Config, stopCh <-chan struct{}) {
-  run := func(ctx context.Context, initializersFunc ControllerInitializersFunc) {
-    controllerContext, err := CreateControllerContext(client, config, ctx.Done())
-    if err != nil {
-      klog.Fatalf("error building controller context: %v", err)
-    }
-    controllerInitializers := initializersFunc()
-    if err := StartControllers(controllerContext, controllerInitializers); err != nil {
-      klog.Fatalf("error starting controllers: %v", err)
-    }
+// run runs the KubeControllerManagerOptions.  This should never exit.
+func run(client clientset.Interface, config *restclient.Config, stopCh <-chan struct{}) {
+	run := func(ctx context.Context, initializersFunc controllerInitializersFunc) {
+		controllerContext, err := createControllerContext(client, config, ctx.Done())
+		if err != nil {
+			klog.Fatalf("error building controller context: %v", err)
+		}
+		controllerInitializers := initializersFunc()
+		if err := startControllers(controllerContext, controllerInitializers); err != nil {
+			klog.Fatalf("error starting controllers: %v", err)
+		}
 
-    controllerContext.InformerFactory.Start(stopCh)
-    controllerContext.ObjectOrMetadataInformerFactory.Start(stopCh)
+		controllerContext.InformerFactory.Start(stopCh)
+		controllerContext.ObjectOrMetadataInformerFactory.Start(stopCh)
 
-    close(controllerContext.InformersStarted)
+		close(controllerContext.InformersStarted)
 
-    select {}
-  }
-  run(context.Background(), NewControllerInitializers)
-  panic("unreachable")
+		select {}
+	}
+	run(context.Background(), newControllerInitializers)
+	panic("unreachable")
 }
 
-// StartControllers starts a set of controllers with a specified ControllerContext.
-func StartControllers(ctx ControllerContext, controllers map[string]InitFunc) error {
-  for controllerName, initFn := range controllers {
-    time.Sleep(wait.Jitter(ctx.ComponentConfig.Generic.ControllerStartInterval.Duration, ControllerStartJitter))
+// startControllers starts a set of controllers with a specified controllerContext.
+func startControllers(ctx controllerContext, controllers map[string]initFunc) error {
+	for controllerName, initFn := range controllers {
+		time.Sleep(wait.Jitter(ctx.ComponentConfig.Generic.ControllerStartInterval.Duration, controllerStartJitter))
 
-    klog.Infof("Starting %q", controllerName)
-    err := initFn(ctx)
-    if err != nil {
-      klog.Errorf("Error starting %q", controllerName)
-      return xerrors.Errorf("starting %v: %w", controllerName, err)
-    }
-    klog.Infof("Started %q", controllerName)
-  }
-  return nil
+		klog.Infof("Starting %q", controllerName)
+		err := initFn(ctx)
+		if err != nil {
+			klog.Errorf("Error starting %q", controllerName)
+			return xerrors.Errorf("starting %v: %w", controllerName, err)
+		}
+		klog.Infof("Started %q", controllerName)
+	}
+	return nil
 }
 
-// NewControllerInitializers is a public map of named controller groups paired to their InitFunc.
+// newControllerInitializers is a public map of named controller groups paired to their initFunc.
 // This allows for structured downstream composition and subdivision.
-func NewControllerInitializers() map[string]InitFunc {
-  controllers := map[string]InitFunc{}
-  controllers["deployment"] = StartDeploymentController
-  controllers["replicaset"] = StartReplicaSetController
-  controllers["persistent-volume"] = StartPersistentVolumeController
-  return controllers
+func newControllerInitializers() map[string]initFunc {
+	controllers := map[string]initFunc{}
+	controllers["deployment"] = startDeploymentController
+	controllers["replicaset"] = startReplicaSetController
+	controllers["persistent-volume"] = startPersistentVolumeController
+	return controllers
 }
 
-// ControllerContext defines the context object for controller.
-//nolint:revive // Intentionally used the same name.
-type ControllerContext struct {
-  // ClientBuilder will provide a client for this controller to use
-  ClientBuilder clientbuilder.ControllerClientBuilder
+// controllerContext defines the context object for controller.
 
-  ComponentConfig kubectrlmgrconfig.KubeControllerManagerConfiguration
+type controllerContext struct {
+	// ClientBuilder will provide a client for this controller to use
+	ClientBuilder clientbuilder.ControllerClientBuilder
 
-  // InformerFactory gives access to informers for the controller.
-  InformerFactory informers.SharedInformerFactory
+	ComponentConfig kubectrlmgrconfig.KubeControllerManagerConfiguration
 
-  // ObjectOrMetadataInformerFactory gives access to informers for typed resources
-  // and dynamic resources by their metadata. All generic controllers currently use
-  // object metadata - if a future controller needs access to the full object this
-  // would become GenericInformerFactory and take a dynamic client.
-  ObjectOrMetadataInformerFactory informerfactory.InformerFactory
+	// InformerFactory gives access to informers for the controller.
+	InformerFactory informers.SharedInformerFactory
 
-  // Stop is the stop channel
-  Stop <-chan struct{}
+	// ObjectOrMetadataInformerFactory gives access to informers for typed resources
+	// and dynamic resources by their metadata. All generic controllers currently use
+	// object metadata - if a future controller needs access to the full object this
+	// would become GenericInformerFactory and take a dynamic client.
+	ObjectOrMetadataInformerFactory informerfactory.InformerFactory
 
-  // InformersStarted is closed after all of the controllers have been initialized and are running.  After this point it is safe,
-  // for an individual controller to start the shared informers. Before it is closed, they should not.
-  InformersStarted chan struct{}
+	// Stop is the stop channel
+	Stop <-chan struct{}
 
-  // ResyncPeriod generates a duration each time it is invoked; this is so that
-  // multiple controllers don't get into lock-step and all hammer the apiserver
-  // with list requests simultaneously.
-  ResyncPeriod func() time.Duration
+	// InformersStarted is closed after all of the controllers have been initialized and are running.  After this point it is safe,
+	// for an individual controller to start the shared informers. Before it is closed, they should not.
+	InformersStarted chan struct{}
+
+	// ResyncPeriod generates a duration each time it is invoked; this is so that
+	// multiple controllers don't get into lock-step and all hammer the apiserver
+	// with list requests simultaneously.
+	ResyncPeriod func() time.Duration
 }
 
-// CreateControllerContext creates a context struct containing references to resources needed by the controllers.
-func CreateControllerContext(client clientset.Interface, config *restclient.Config, stop <-chan struct{}) (ControllerContext, error) {
-  clientbuilder := clientbuilder.SimpleControllerClientBuilder{
-    ClientConfig: config,
-  }
-  componentConfig, err := controllermanageroptions.NewDefaultComponentConfig()
-  if err != nil {
-    return ControllerContext{}, xerrors.Errorf("new default component config: %w", err)
-  }
-  sharedInformers := informers.NewSharedInformerFactory(client, ResyncPeriod(componentConfig)())
+// createControllerContext creates a context struct containing references to resources needed by the controllers.
+func createControllerContext(client clientset.Interface, config *restclient.Config, stop <-chan struct{}) (controllerContext, error) {
+	clientbuilder := clientbuilder.SimpleControllerClientBuilder{
+		ClientConfig: config,
+	}
+	componentConfig, err := controllermanageroptions.NewDefaultComponentConfig()
+	if err != nil {
+		return controllerContext{}, xerrors.Errorf("new default component config: %w", err)
+	}
+	sharedInformers := informers.NewSharedInformerFactory(client, resyncPeriod(componentConfig)())
 
-  metadataClient := metadata.NewForConfigOrDie(clientbuilder.ConfigOrDie("metadata-informers"))
-  metadataInformers := metadatainformer.NewSharedInformerFactory(metadataClient, ResyncPeriod(componentConfig)())
+	metadataClient := metadata.NewForConfigOrDie(clientbuilder.ConfigOrDie("metadata-informers"))
+	metadataInformers := metadatainformer.NewSharedInformerFactory(metadataClient, resyncPeriod(componentConfig)())
 
-  ctx := ControllerContext{
-    ClientBuilder:                   clientbuilder,
-    ComponentConfig:                 componentConfig,
-    InformerFactory:                 sharedInformers,
-    ObjectOrMetadataInformerFactory: informerfactory.NewInformerFactory(sharedInformers, metadataInformers),
-    Stop:                            stop,
-    InformersStarted:                make(chan struct{}),
-    ResyncPeriod:                    ResyncPeriod(componentConfig),
-  }
-  return ctx, nil
+	ctx := controllerContext{
+		ClientBuilder:                   clientbuilder,
+		ComponentConfig:                 componentConfig,
+		InformerFactory:                 sharedInformers,
+		ObjectOrMetadataInformerFactory: informerfactory.NewInformerFactory(sharedInformers, metadataInformers),
+		Stop:                            stop,
+		InformersStarted:                make(chan struct{}),
+		ResyncPeriod:                    resyncPeriod(componentConfig),
+	}
+	return ctx, nil
 }
 
-// ResyncPeriod returns a function which generates a duration each time it is
+// resyncPeriod returns a function which generates a duration each time it is
 // invoked; this is so that multiple controllers don't get into lock-step and all
 // hammer the apiserver with list requests simultaneously.
-func ResyncPeriod(c kubectrlmgrconfig.KubeControllerManagerConfiguration) func() time.Duration {
-  return func() time.Duration {
-    //nolint:gosec // Same usage as kubernetes
-    factor := rand.Float64() + 1
-    return time.Duration(float64(c.Generic.MinResyncPeriod.Nanoseconds()) * factor)
-  }
+func resyncPeriod(c kubectrlmgrconfig.KubeControllerManagerConfiguration) func() time.Duration {
+	return func() time.Duration {
+		//nolint:gosec // Same usage as kubernetes
+		factor := rand.Float64() + 1
+		return time.Duration(float64(c.Generic.MinResyncPeriod.Nanoseconds()) * factor)
+	}
 }

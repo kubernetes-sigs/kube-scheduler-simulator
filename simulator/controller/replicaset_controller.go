@@ -4,7 +4,7 @@ import (
 	"k8s.io/kubernetes/pkg/controller/replicaset"
 )
 
-func StartReplicaSetController(ctx ControllerContext) error {
+func startReplicaSetController(ctx controllerContext) error {
 	go replicaset.NewReplicaSetController(
 		ctx.InformerFactory.Apps().V1().ReplicaSets(),
 		ctx.InformerFactory.Core().V1().Pods(),

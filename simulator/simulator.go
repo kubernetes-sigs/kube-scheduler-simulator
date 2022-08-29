@@ -39,7 +39,7 @@ func startSimulator() error {
 
 	client := clientset.NewForConfigOrDie(restclientCfg)
 
-	ctrlerShutdown, err := controller.NewController(client, restclientCfg)
+	ctrlerShutdown, err := controller.RunController(client, restclientCfg)
 	if err != nil {
 		return xerrors.Errorf("start controllers: %w", err)
 	}

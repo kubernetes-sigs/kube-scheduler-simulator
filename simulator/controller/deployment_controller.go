@@ -5,7 +5,7 @@ import (
 	"k8s.io/kubernetes/pkg/controller/deployment"
 )
 
-func StartDeploymentController(ctx ControllerContext) error {
+func startDeploymentController(ctx controllerContext) error {
 	dc, err := deployment.NewDeploymentController(
 		ctx.InformerFactory.Apps().V1().Deployments(),
 		ctx.InformerFactory.Apps().V1().ReplicaSets(),
