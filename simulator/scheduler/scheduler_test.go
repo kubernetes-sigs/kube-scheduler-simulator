@@ -209,6 +209,15 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							},
 						}
 					}
+					if cfg.Profiles[0].PluginConfig[i].Name == "DefaultPreemptionWrapped" {
+						cfg.Profiles[0].PluginConfig[i] = config.PluginConfig{
+							Name: "DefaultPreemptionWrapped",
+							Args: &config.DefaultPreemptionArgs{
+								MinCandidateNodesPercentage: minCandidateNodesPercentage,
+								MinCandidateNodesAbsolute:   minCandidateNodesAbsolute,
+							},
+						}
+					}
 				}
 
 				for i := range profile2.PluginConfig {
@@ -321,6 +330,9 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 		{Name: "PodTopologySpreadWrapped"},
 		{Name: "InterPodAffinityWrapped"},
 	}
+	cfg.Profiles[0].Plugins.PostFilter.Enabled = []v1beta2config.Plugin{
+		{Name: "DefaultPreemptionWrapped"},
+	}
 	cfg.Profiles[0].Plugins.Score.Enabled = []v1beta2config.Plugin{
 		{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 		{Name: "ImageLocalityWrapped", Weight: &weight1},
@@ -359,6 +371,10 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 	newpc = append(newpc, v1beta2config.PluginConfig{
 		Name: "VolumeBindingWrapped",
 		Args: pcMap["VolumeBinding"],
+	})
+	newpc = append(newpc, v1beta2config.PluginConfig{
+		Name: "DefaultPreemptionWrapped",
+		Args: pcMap["DefaultPreemption"],
 	})
 
 	cfg.Profiles[0].PluginConfig = append(cfg.Profiles[0].PluginConfig, newpc...)
