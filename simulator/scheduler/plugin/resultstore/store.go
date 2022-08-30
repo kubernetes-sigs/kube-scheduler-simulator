@@ -31,6 +31,10 @@ type Store struct {
 const (
 	// PassedFilterMessage is used when node pass the filter plugin.
 	PassedFilterMessage = "passed"
+	// PostFilterNominatedMessage  is used when a postFilter plugin returns success.
+	PostFilterNominatedMessage = "schedulable"
+	// PostFilterUnschedulableMessage is used when a postFilter plugin returns non-success.
+	PostFilterUnschedulableMessage = "unschedulable"
 )
 
 // result has a scheduling result of pod.
@@ -46,6 +50,9 @@ type result struct {
 	// When node pass the filter, filtering result will be PassedFilterMessage.
 	// When node blocked by the filter, filtering result is blocked reason.
 	filter map[string]map[string]string
+
+	// node name → plugin name → post filtering result
+	postFilter map[string]map[string]string
 }
 
 func New(informerFactory informers.SharedInformerFactory, client clientset.Interface, scorePluginWeight map[string]int32) *Store {
@@ -82,6 +89,7 @@ func newData() *result {
 		score:      map[string]map[string]string{},
 		finalscore: map[string]map[string]string{},
 		filter:     map[string]map[string]string{},
+		postFilter: map[string]map[string]string{},
 	}
 	return d
 }
@@ -105,6 +113,11 @@ func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
 
 	if err := s.addFilterResultToPod(pod); err != nil {
 		klog.Errorf("failed to add filtering result to pod: %+v", err)
+		return
+	}
+
+	if err := s.addPostFilterResultToPod(pod); err != nil {
+		klog.Errorf("failed to add post filtering result to pod: %+v", err)
 		return
 	}
 
@@ -146,6 +159,16 @@ func (s *Store) addFilterResultToPod(pod *v1.Pod) error {
 	return nil
 }
 
+func (s *Store) addPostFilterResultToPod(pod *v1.Pod) error {
+	k := newKey(pod.Namespace, pod.Name)
+	result, err := json.Marshal(s.results[k].postFilter)
+	if err != nil {
+		return xerrors.Errorf("encode json to record scores: %w", err)
+	}
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PostFilterResultAnnotationKey, string(result))
+	return nil
+}
+
 func (s *Store) addScoreResultToPod(pod *v1.Pod) error {
 	k := newKey(pod.Namespace, pod.Name)
 	scores, err := json.Marshal(s.results[k].score)
@@ -183,6 +206,29 @@ func (s *Store) AddFilterResult(namespace, podName, nodeName, pluginName, reason
 	}
 
 	s.results[k].filter[nodeName][pluginName] = reason
+}
+
+// AddPostFilterResult adds post filtering result ot the pod annotaiton.
+// - nominatedNodeName represents the node name which nominated by the postFilter plugin.
+//   Otherwise, the string "unschedulable" would be stored in this arg.
+func (s *Store) AddPostFilterResult(namespace, podName, nominatedNodeName, pluginName string, nodeNames []string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+	for _, nodeName := range nodeNames {
+		if _, ok := s.results[k].postFilter[nodeName]; !ok {
+			s.results[k].postFilter[nodeName] = map[string]string{}
+		}
+		if nodeName == nominatedNodeName {
+			s.results[k].postFilter[nodeName][pluginName] = PostFilterNominatedMessage
+		} else {
+			s.results[k].postFilter[nodeName][pluginName] = PostFilterUnschedulableMessage
+		}
+	}
 }
 
 // AddScoreResult adds scoring result to pod annotation.

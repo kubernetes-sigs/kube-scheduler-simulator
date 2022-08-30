@@ -31,7 +31,7 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 		}
 	}
 
-	registeredpls, err := registeredFilterScorePlugins()
+	registeredpls, err := registeredFilterPostFilterScorePlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
 	}
@@ -142,7 +142,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 		})
 	}
 
-	defaultpls, err := registeredFilterScorePlugins()
+	defaultpls, err := registeredFilterPostFilterScorePlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
 	}
@@ -209,6 +209,23 @@ func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
 		},
 	}
 
+	defaultPostFilterPls, err := config.InTreePostFilterPluginSet()
+	if err != nil {
+		return nil, xerrors.Errorf("get default postFilter plugins: %w", err)
+	}
+	merged = mergePluginSet(defaultPostFilterPls, pls.PostFilter)
+	retPostFilterPls := make([]v1beta2.Plugin, 0, len(merged.Enabled))
+	for _, p := range merged.Enabled {
+		retPostFilterPls = append(retPostFilterPls, v1beta2.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
+	}
+	newpls.PostFilter.Enabled = retPostFilterPls
+	// disable default plugins whatever scheduler configuration value is
+	newpls.PostFilter.Disabled = []v1beta2.Plugin{
+		{
+			Name: "*",
+		},
+	}
+
 	return newpls, nil
 }
 
@@ -258,16 +275,29 @@ func mergePluginSet(inTreePluginSet, outOfTreePluginSet v1beta2.PluginSet) v1bet
 	return v1beta2.PluginSet{Enabled: enabledPlugins}
 }
 
-// registeredFilterScorePlugins returns all registered score plugin and filter plugin.
-func registeredFilterScorePlugins() ([]v1beta2.Plugin, error) {
+// registeredFilterPostFilterScorePlugins returns all registered score plugin and filter plugin.
+func registeredFilterPostFilterScorePlugins() ([]v1beta2.Plugin, error) {
 	registeredfilterpls, err := config.RegisteredFilterPlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get registered filter plugins: %w", err)
+	}
+	registerdpostfilterpls, err := config.RegisteredPostFilterPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered postFilter plugins: %w", err)
 	}
 	registeredscorepls, err := config.RegisteredScorePlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get registered score plugins: %w", err)
 	}
+	plgs := [][]v1beta2.Plugin{
+		registeredscorepls,
+		registerdpostfilterpls,
+		registeredfilterpls,
+	}
+	result := make([]v1beta2.Plugin, 0, len(plgs))
+	for _, p := range plgs {
+		result = append(result, p...)
+	}
 
-	return append(registeredscorepls, registeredfilterpls...), nil
+	return result, nil
 }

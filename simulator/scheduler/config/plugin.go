@@ -33,6 +33,29 @@ func OutOfTreeFilterPlugins() []v1beta2.Plugin {
 	}
 }
 
+func RegisteredPostFilterPlugins() ([]v1beta2.Plugin, error) {
+	def, err := InTreePostFilterPluginSet()
+	if err != nil {
+		return nil, xerrors.Errorf("get default post filter plugins: %w", err)
+	}
+	return append(def.Enabled, OutOfTreePostFilterPlugins()...), nil
+}
+
+func InTreePostFilterPluginSet() (v1beta2.PluginSet, error) {
+	defaultConfig, err := DefaultSchedulerConfig()
+	if err != nil || len(defaultConfig.Profiles) != 1 {
+		// default Config should only have default-scheduler configuration.
+		return v1beta2.PluginSet{}, xerrors.Errorf("get default scheduler configuration: %w", err)
+	}
+	return defaultConfig.Profiles[0].Plugins.PostFilter, nil
+}
+
+func OutOfTreePostFilterPlugins() []v1beta2.Plugin {
+	return []v1beta2.Plugin{
+		// Note: add your post filter plugins here.
+	}
+}
+
 // RegisteredScorePlugins returns all registered plugins.
 // in-tree plugins and your original plugins listed in OutOfTreeScorePlugins.
 func RegisteredScorePlugins() ([]v1beta2.Plugin, error) {
