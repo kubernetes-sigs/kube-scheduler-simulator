@@ -11,7 +11,7 @@ import (
 )
 
 //go:generate mockgen --build_flags=--mod=mod -destination=./mock/$GOFILE -package=plugin . Store,FilterPluginExtender,PostFilterPluginExtender,ScorePluginExtender,NormalizeScorePluginExtender
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock/framework.go -package=plugin k8s.io/kubernetes/pkg/scheduler/framework FilterPlugin,ScorePlugin,ScoreExtensions
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock/framework.go -package=plugin k8s.io/kubernetes/pkg/scheduler/framework FilterPlugin,PostFilterPlugin,ScorePlugin,ScoreExtensions
 type Store interface {
 	AddNormalizedScoreResult(namespace, podName, nodeName, pluginName string, normalizedscore int64)
 	AddFilterResult(namespace, podName, nodeName, pluginName, reason string)

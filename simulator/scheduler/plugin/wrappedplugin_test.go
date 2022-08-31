@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"errors"
+	"sort"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -46,6 +47,21 @@ func Test_NewWrappedPlugin(t *testing.T) {
 			},
 		},
 		{
+			name: "success with postFilter plugin & default weight is set to 0",
+			args: args{
+				s: store,
+				p: fakePostFilterPlugin{},
+			},
+			want: &wrappedPlugin{
+				name:                     "fakePostFilterPluginWrapped",
+				originalFilterPlugin:     nil,
+				originalPostFilterPlugin: fakePostFilterPlugin{},
+				originalScorePlugin:      nil,
+				weight:                   0,
+				store:                    store,
+			},
+		},
+		{
 			name: "success with score plugin & default weight is set to 0",
 			args: args{
 				s: store,
@@ -60,17 +76,18 @@ func Test_NewWrappedPlugin(t *testing.T) {
 			},
 		},
 		{
-			name: "success with score/filter plugin & default weight is set to 0",
+			name: "success with score/filter/postFilter plugin & default weight is set to 0",
 			args: args{
 				s: store,
-				p: fakeFilterScorePlugin{},
+				p: fakeWrappedPlugin{},
 			},
 			want: &wrappedPlugin{
-				name:                 "fakeFilterScorePluginWrapped",
-				originalFilterPlugin: fakeFilterScorePlugin{},
-				originalScorePlugin:  fakeFilterScorePlugin{},
-				weight:               0,
-				store:                store,
+				name:                     "fakeWrappedPluginWrapped",
+				originalFilterPlugin:     fakeWrappedPlugin{},
+				originalScorePlugin:      fakeWrappedPlugin{},
+				originalPostFilterPlugin: fakeWrappedPlugin{},
+				weight:                   0,
+				store:                    store,
 			},
 		},
 	}
@@ -252,9 +269,9 @@ func Test_wrappedPlugin_Filter(t *testing.T) {
 		{
 			name: "fail when original plugin return non-success",
 			prepareStoreFn: func(m *mock_plugin.MockStore) {
-				m.EXPECT().AddFilterResult("default", "pod1", "node1", "fakeMustFailFilterScorePlugin", "filter failed")
+				m.EXPECT().AddFilterResult("default", "pod1", "node1", "fakeMustFailWrappedPlugin", "filter failed")
 			},
-			originalFilterPlugin: fakeMustFailFilterScorePlugin{},
+			originalFilterPlugin: fakeMustFailWrappedPlugin{},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
 				nodeInfo: func() *framework.NodeInfo {
@@ -406,6 +423,255 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 	}
 }
 
+func Test_wrappedPlugin_PostFilter(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		pod                   *v1.Pod
+		filteredNodeStatusMap framework.NodeToStatusMap
+	}
+	tests := []struct {
+		name                     string
+		prepareStoreFn           func(m *mock_plugin.MockStore)
+		originalPostFilterPlugin framework.PostFilterPlugin
+		args                     args
+		wantResult               *framework.PostFilterResult
+		wantStatus               *framework.Status
+	}{
+		{
+			name: "success",
+			prepareStoreFn: func(m *mock_plugin.MockStore) {
+				m.EXPECT().AddPostFilterResult("default", "pod1", "node1", "fakePostFilterPlugin", gomock.Any()).Do(func(_, _, _, _ string, nodeNames []string) {
+					sort.SliceStable(nodeNames, func(i, j int) bool {
+						return nodeNames[i] < nodeNames[j]
+					})
+					assert.Equal(t, []string{"node1", "node2"}, nodeNames)
+				})
+			},
+			originalPostFilterPlugin: fakePostFilterPlugin{},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				filteredNodeStatusMap: framework.NodeToStatusMap{
+					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+				},
+			},
+			wantResult: &framework.PostFilterResult{
+				NominatedNodeName: "node1",
+			},
+			wantStatus: framework.NewStatus(framework.Success, "postfilter success"),
+		},
+		{
+			name:                     "success when it is not post filter plugin",
+			prepareStoreFn:           func(m *mock_plugin.MockStore) {},
+			originalPostFilterPlugin: nil, // don't have post filter plugin
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1"}},
+				filteredNodeStatusMap: framework.NodeToStatusMap{
+					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+				},
+			},
+			wantResult: nil,
+			wantStatus: nil,
+		},
+		{
+			name: "fail when original plugin return non-success",
+			prepareStoreFn: func(m *mock_plugin.MockStore) {
+				m.EXPECT().AddPostFilterResult("default", "pod1", "", "fakeMustFailWrappedPlugin", gomock.Any()).Do(func(_, _, _, _ string, nodeNames []string) {
+					sort.SliceStable(nodeNames, func(i, j int) bool {
+						return nodeNames[i] < nodeNames[j]
+					})
+					assert.Equal(t, []string{"node1", "node2"}, nodeNames)
+				})
+			},
+			originalPostFilterPlugin: fakeMustFailWrappedPlugin{},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				filteredNodeStatusMap: framework.NodeToStatusMap{
+					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+				},
+			},
+			wantResult: nil,
+			wantStatus: framework.AsStatus(errors.New("postFilter failed")),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			s := mock_plugin.NewMockStore(ctrl)
+			tt.prepareStoreFn(s)
+			pl := &wrappedPlugin{
+				originalPostFilterPlugin: tt.originalPostFilterPlugin,
+				store:                    s,
+			}
+			gotResult, gotStatus := pl.PostFilter(context.Background(), nil, tt.args.pod, tt.args.filteredNodeStatusMap)
+			assert.Equal(t, tt.wantResult, gotResult)
+			assert.Equal(t, tt.wantStatus, gotStatus)
+		})
+	}
+}
+
+func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		pod                   *v1.Pod
+		filteredNodeStatusMap framework.NodeToStatusMap
+	}
+	tests := []struct {
+		name              string
+		prepareEachMockFn func(ctx context.Context, s *mock_plugin.MockStore, p *mock_plugin.MockPostFilterPlugin, fe *mock_plugin.MockPostFilterPluginExtender, as args)
+		args              args
+		wantResult        *framework.PostFilterResult
+		wantStatus        *framework.Status
+	}{
+		{
+			name: "return AfterPostFilter's results when PostFilter is successful",
+			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, p *mock_plugin.MockPostFilterPlugin, fe *mock_plugin.MockPostFilterPluginExtender, as args) {
+				success1 := framework.NewStatus(framework.Success, "BeforePostFilter returned")
+				success2 := framework.NewStatus(framework.Success, "PostFilter returned")
+				success3 := framework.NewStatus(framework.Success, "AfterPostFilter returned")
+				result1 := &framework.PostFilterResult{
+					NominatedNodeName: "node1",
+				}
+				result2 := &framework.PostFilterResult{
+					NominatedNodeName: "node2",
+				}
+				fe.EXPECT().BeforePostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, success1)
+				p.EXPECT().PostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(result1, success2)
+				fe.EXPECT().AfterPostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap, result1, success2).Return(result2, success3)
+				p.EXPECT().Name().Return("fakePostFilterPlugin").AnyTimes()
+				// PostFilter sotres resultstore.PassedFilterMessage if it is successful.
+				s.EXPECT().AddPostFilterResult("default", "pod1", "node1", "fakePostFilterPlugin", gomock.Any()).Do(func(_, _, _, _ string, nodeNames []string) {
+					sort.SliceStable(nodeNames, func(i, j int) bool {
+						return nodeNames[i] < nodeNames[j]
+					})
+					assert.Equal(t, []string{"node1", "node2"}, nodeNames)
+				})
+			},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				filteredNodeStatusMap: framework.NodeToStatusMap{
+					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+				},
+			},
+			wantResult: &framework.PostFilterResult{
+				NominatedNodeName: "node2",
+			},
+			wantStatus: framework.NewStatus(framework.Success, "AfterPostFilter returned"),
+		},
+		{
+			name: "return AfterPostFilter's results if Filter is fails",
+			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, p *mock_plugin.MockPostFilterPlugin, fe *mock_plugin.MockPostFilterPluginExtender, as args) {
+				success1 := framework.NewStatus(framework.Success, "BeforePostFilter returned")
+				failure := framework.NewStatus(framework.Error, "PostFilter returned")
+				success3 := framework.NewStatus(framework.Success, "AfterPostFilter returned")
+				result2 := &framework.PostFilterResult{
+					NominatedNodeName: "node2",
+				}
+				fe.EXPECT().BeforePostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, success1)
+				p.EXPECT().PostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, failure)
+				fe.EXPECT().AfterPostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap, nil, failure).Return(result2, success3)
+				p.EXPECT().Name().Return("fakePostFilterPlugin").AnyTimes()
+				// Filter stores own message if it is successful.
+				s.EXPECT().AddPostFilterResult("default", "pod1", "", "fakePostFilterPlugin", gomock.Any()).Do(func(_, _, _, _ string, nodeNames []string) {
+					sort.SliceStable(nodeNames, func(i, j int) bool {
+						return nodeNames[i] < nodeNames[j]
+					})
+					assert.Equal(t, []string{"node1", "node2"}, nodeNames)
+				})
+			},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				filteredNodeStatusMap: framework.NodeToStatusMap{
+					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+				},
+			},
+			wantResult: &framework.PostFilterResult{
+				NominatedNodeName: "node2",
+			},
+			wantStatus: framework.NewStatus(framework.Success, "AfterPostFilter returned"),
+		},
+		{
+			name: "return BeforeFilter's results when BeforeFilter is fails",
+			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, p *mock_plugin.MockPostFilterPlugin, fe *mock_plugin.MockPostFilterPluginExtender, as args) {
+				failure := framework.NewStatus(framework.Error, "BeforePostFilter returned")
+				fe.EXPECT().BeforePostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, failure)
+				p.EXPECT().Name().Return("fakePostFilterPlugin").AnyTimes()
+			},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				filteredNodeStatusMap: framework.NodeToStatusMap{
+					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+				},
+			},
+			wantResult: nil,
+			wantStatus: framework.NewStatus(framework.Error, "BeforePostFilter returned"),
+		},
+		{
+			name: "return AfterFilter's results when AfterFilter is fails",
+			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, p *mock_plugin.MockPostFilterPlugin, fe *mock_plugin.MockPostFilterPluginExtender, as args) {
+				success1 := framework.NewStatus(framework.Success, "BeforePostFilter returned")
+				success2 := framework.NewStatus(framework.Success, "PostFilter returned")
+				result1 := &framework.PostFilterResult{
+					NominatedNodeName: "node1",
+				}
+				failure := framework.NewStatus(framework.Error, "AfterPostFilter returned")
+				fe.EXPECT().BeforePostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, success1)
+				p.EXPECT().PostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(result1, success2)
+				fe.EXPECT().AfterPostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap, result1, success2).Return(nil, failure)
+				p.EXPECT().Name().Return("fakePostFilterPlugin").AnyTimes()
+				// PostFilter sotres resultstore.PassedFilterMessage if it is successful.
+				s.EXPECT().AddPostFilterResult("default", "pod1", "node1", "fakePostFilterPlugin", gomock.Any()).Do(func(_, _, _, _ string, nodeNames []string) {
+					sort.SliceStable(nodeNames, func(i, j int) bool {
+						return nodeNames[i] < nodeNames[j]
+					})
+					assert.Equal(t, []string{"node1", "node2"}, nodeNames)
+				})
+			},
+			args: args{
+				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
+				filteredNodeStatusMap: framework.NodeToStatusMap{
+					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+				},
+			},
+			wantResult: nil,
+			wantStatus: framework.NewStatus(framework.Error, "AfterPostFilter returned"),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			s := mock_plugin.NewMockStore(ctrl)
+			p := mock_plugin.NewMockPostFilterPlugin(ctrl)
+			fe := mock_plugin.NewMockPostFilterPluginExtender(ctrl)
+			e := &Extenders{
+				PostFilterPluginExtender: fe,
+			}
+			ctx := context.Background()
+			tt.prepareEachMockFn(ctx, s, p, fe, tt.args)
+			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(e)).(*wrappedPlugin)
+			if !ok { // should never happen
+				t.Fatalf("Assert to wrapped plugin: %v", ok)
+			}
+			gotResult, gotStatus := pl.PostFilter(context.Background(), nil, tt.args.pod, tt.args.filteredNodeStatusMap)
+			assert.Equal(t, tt.wantResult, gotResult)
+			assert.Equal(t, tt.wantStatus, gotStatus)
+		})
+	}
+}
+
 func Test_wrappedPlugin_Name(t *testing.T) {
 	t.Parallel()
 	type fields struct {
@@ -490,7 +756,7 @@ func Test_wrappedPlugin_NormalizeScore(t *testing.T) {
 		{
 			name:                "fail when original plugin return non-success",
 			prepareStoreFn:      func(m *mock_plugin.MockStore) {},
-			originalScorePlugin: fakeMustFailFilterScorePlugin{},
+			originalScorePlugin: fakeMustFailWrappedPlugin{},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
 				scores: []framework.NodeScore{
@@ -789,7 +1055,7 @@ func Test_wrappedPlugin_Score(t *testing.T) {
 		{
 			name:                "fail when original plugin return non-success",
 			prepareStoreFn:      func(m *mock_plugin.MockStore) {},
-			originalScorePlugin: fakeMustFailFilterScorePlugin{},
+			originalScorePlugin: fakeMustFailWrappedPlugin{},
 			args: args{
 				pod:      &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
 				nodename: "node1",
@@ -964,6 +1230,13 @@ func (fakeFilterPlugin) Filter(ctx context.Context, state *framework.CycleState,
 	return nil
 }
 
+type fakePostFilterPlugin struct{}
+
+func (fakePostFilterPlugin) Name() string { return "fakePostFilterPlugin" }
+func (fakePostFilterPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+	return &framework.PostFilterResult{NominatedNodeName: "node1"}, framework.NewStatus(framework.Success, "postfilter success")
+}
+
 type fakeScorePlugin struct{}
 
 func (fakeScorePlugin) Name() string { return "fakeScorePlugin" }
@@ -979,41 +1252,49 @@ func (fakeScorePlugin) Score(ctx context.Context, state *framework.CycleState, p
 	return 1, nil
 }
 
-type fakeFilterScorePlugin struct{}
+type fakeWrappedPlugin struct{}
 
-func (fakeFilterScorePlugin) Name() string { return "fakeFilterScorePlugin" }
-func (fakeFilterScorePlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
+func (fakeWrappedPlugin) Name() string { return "fakeWrappedPlugin" }
+func (fakeWrappedPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
 	return nil
 }
 
-func (pl fakeFilterScorePlugin) ScoreExtensions() framework.ScoreExtensions {
+func (fakeWrappedPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+	return new(framework.PostFilterResult), nil
+}
+
+func (pl fakeWrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
 	return pl
 }
 
-func (fakeFilterScorePlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
+func (fakeWrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
 	return nil
 }
 
-func (fakeFilterScorePlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
+func (fakeWrappedPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	return 0, nil
 }
 
 // all method on this plugin will fail.
-type fakeMustFailFilterScorePlugin struct{}
+type fakeMustFailWrappedPlugin struct{}
 
-func (fakeMustFailFilterScorePlugin) Name() string { return "fakeMustFailFilterScorePlugin" }
-func (fakeMustFailFilterScorePlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
+func (fakeMustFailWrappedPlugin) Name() string { return "fakeMustFailWrappedPlugin" }
+func (fakeMustFailWrappedPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
 	return framework.AsStatus(errors.New("filter failed"))
 }
 
-func (pl fakeMustFailFilterScorePlugin) ScoreExtensions() framework.ScoreExtensions {
+func (fakeMustFailWrappedPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+	return nil, framework.AsStatus(errors.New("postFilter failed"))
+}
+
+func (pl fakeMustFailWrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
 	return pl
 }
 
-func (fakeMustFailFilterScorePlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
+func (fakeMustFailWrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
 	return framework.AsStatus(errors.New("normalize failed"))
 }
 
-func (fakeMustFailFilterScorePlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
+func (fakeMustFailWrappedPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	return 0, framework.AsStatus(errors.New("score failed"))
 }

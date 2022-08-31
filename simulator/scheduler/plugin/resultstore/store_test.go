@@ -139,6 +139,140 @@ func TestStore_AddFilterResult(t *testing.T) {
 	}
 }
 
+func TestStore_AddPostFilterResult(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		namespace         string
+		podName           string
+		nominatedNodeName string
+		pluginName        string
+		nodeNames         []string
+	}
+	tests := []struct {
+		name          string
+		resultbefore  map[key]*result
+		args          args
+		wantResultMap map[key]*result
+	}{
+		{
+			name:         "success with empty result",
+			resultbefore: map[key]*result{},
+			args: args{
+				namespace:         "default",
+				podName:           "pod1",
+				nominatedNodeName: "node1",
+				pluginName:        "plugin1",
+				nodeNames:         []string{"node1", "node2"},
+			},
+			wantResultMap: map[key]*result{
+				"default/pod1": {
+					score:      map[string]map[string]string{},
+					finalscore: map[string]map[string]string{},
+					filter:     map[string]map[string]string{},
+					postFilter: map[string]map[string]string{
+						"node1": {
+							"plugin1": PostFilterNominatedMessage,
+						},
+						"node2": {
+							"plugin1": PostFilterUnschedulableMessage,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "success with non-empty postFilter map for the node",
+			resultbefore: map[key]*result{
+				"default/pod1": {
+					score:      map[string]map[string]string{},
+					finalscore: map[string]map[string]string{},
+					filter:     map[string]map[string]string{},
+					postFilter: map[string]map[string]string{
+						"node1": {
+							"plugin1": PostFilterUnschedulableMessage,
+						},
+					},
+				},
+			},
+			args: args{
+				namespace:         "default",
+				podName:           "pod1",
+				nominatedNodeName: "node1",
+				pluginName:        "plugin2",
+				nodeNames:         []string{"node1", "node2"},
+			},
+			wantResultMap: map[key]*result{
+				"default/pod1": {
+					score:      map[string]map[string]string{},
+					finalscore: map[string]map[string]string{},
+					filter:     map[string]map[string]string{},
+					postFilter: map[string]map[string]string{
+						"node1": {
+							"plugin1": PostFilterUnschedulableMessage,
+							"plugin2": PostFilterNominatedMessage,
+						},
+						"node2": {
+							"plugin2": PostFilterUnschedulableMessage,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "success when no map for the node",
+			resultbefore: map[key]*result{
+				"default/pod1": {
+					score:      map[string]map[string]string{},
+					finalscore: map[string]map[string]string{},
+					filter:     map[string]map[string]string{},
+					postFilter: map[string]map[string]string{
+						"node0": {
+							"plugin1": PostFilterUnschedulableMessage,
+						},
+					},
+				},
+			},
+			args: args{
+				namespace:         "default",
+				podName:           "pod1",
+				nominatedNodeName: "node1",
+				pluginName:        "plugin2",
+				nodeNames:         []string{"node1", "node2"},
+			},
+			wantResultMap: map[key]*result{
+				"default/pod1": {
+					score:      map[string]map[string]string{},
+					finalscore: map[string]map[string]string{},
+					filter:     map[string]map[string]string{},
+					postFilter: map[string]map[string]string{
+						"node0": {
+							"plugin1": PostFilterUnschedulableMessage,
+						},
+						"node1": {
+							"plugin2": PostFilterNominatedMessage,
+						},
+						"node2": {
+							"plugin2": PostFilterUnschedulableMessage,
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{
+				mu:      new(sync.Mutex),
+				results: tt.resultbefore,
+			}
+			s.AddPostFilterResult(tt.args.namespace, tt.args.podName, tt.args.nominatedNodeName, tt.args.pluginName, tt.args.nodeNames)
+			assert.Equal(t, tt.wantResultMap, s.results)
+		})
+	}
+}
+
 func TestStore_AddScoreResult(t *testing.T) {
 	t.Parallel()
 	type args struct {
