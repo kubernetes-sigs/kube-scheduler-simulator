@@ -59,11 +59,15 @@ func (s *Service) ResetScheduler() error {
 }
 
 // StartScheduler starts scheduler.
-func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfiguration) error {
+func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfiguration) (retErr error) {
 	clientSet := s.clientset
 	restConfig := s.restclientCfg
 	ctx, cancel := context.WithCancel(context.Background())
-
+	defer func() {
+		if retErr != nil {
+			cancel()
+		}
+	}()
 	informerFactory := scheduler.NewInformerFactory(clientSet, 0)
 	var dynInformerFactory dynamicinformer.DynamicSharedInformerFactory
 	if restConfig != nil {
@@ -76,15 +80,13 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 	evtBroadcaster.StartRecordingToSink(ctx.Done())
 
 	s.currentSchedulerCfg = versionedcfg.DeepCopy()
-
 	cfg, err := convertConfigurationForSimulator(versionedcfg)
 	if err != nil {
-		return cancelAndErrorf(cancel, "convert scheduler config to apply: %w", err)
+		return xerrors.Errorf("convert scheduler config to apply: %w", err)
 	}
-
 	registry, err := plugin.NewRegistry(informerFactory, clientSet)
 	if err != nil {
-		return cancelAndErrorf(cancel, "plugin registry: %w", err)
+		return xerrors.Errorf("plugin registry: %w", err)
 	}
 
 	sched, err := scheduler.New(
@@ -103,7 +105,7 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 		scheduler.WithFrameworkOutOfTreeRegistry(registry),
 	)
 	if err != nil {
-		return cancelAndErrorf(cancel, "create scheduler: %w", err)
+		return xerrors.Errorf("create scheduler: %w", err)
 	}
 
 	informerFactory.Start(ctx.Done())
@@ -116,15 +118,8 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 	}
 
 	go sched.Run(ctx)
-
 	s.shutdownfn = cancel
-
 	return nil
-}
-
-func cancelAndErrorf(cancel context.CancelFunc, format string, err error) error {
-	cancel()
-	return xerrors.Errorf(format, err)
 }
 
 func (s *Service) ShutdownScheduler() {
