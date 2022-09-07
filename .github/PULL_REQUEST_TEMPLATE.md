@@ -11,6 +11,11 @@ https://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-k
 #### What type of PR is this?
 
 <!--
+Add related area tag(s):
+/area web
+/area simulator
+/area scenario
+
 Add one of the following kinds:
 /kind bug
 /kind cleanup
