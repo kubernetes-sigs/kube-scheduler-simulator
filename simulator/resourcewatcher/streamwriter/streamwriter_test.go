@@ -47,7 +47,6 @@ func TestStreamWriter_Writer(t *testing.T) {
 		{
 			name: "should failed when ResponseWriter's Write method returns an error",
 			prepareResponseStreamMockFn: func(ws *mock_streamwriter.MockResponseStream) {
-				ws.EXPECT().Flush()
 				ws.EXPECT().Write(gomock.Any()).Return(0, xerrors.Errorf("call write"))
 			},
 			wantErr: true,

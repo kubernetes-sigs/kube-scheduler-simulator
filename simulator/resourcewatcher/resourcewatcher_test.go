@@ -102,7 +102,6 @@ func TestService_doListAndWatch(t *testing.T) {
 				return &restfake.RESTClient{}
 			},
 			prepareeventProxyerMockFn: func(p *MockeventProxyer, getter cache.Getter) {
-				p.EXPECT().watchAndHandleEvent(gomock.Any(), gomock.Any())
 				p.EXPECT().lastResourceVersion().Return("0").Times(2)
 				p.EXPECT().restClient().Return(getter)
 				p.EXPECT().resourceKind().Return(Pods).Times(2)
@@ -123,7 +122,7 @@ func TestService_doListAndWatch(t *testing.T) {
 					p.EXPECT().lastResourceVersion().Return("1")
 				}).Return("")
 				p.EXPECT().restClient().Return(getter)
-				p.EXPECT().resourceKind().Return(Pods).Times(3)
+				p.EXPECT().resourceKind().Return(Pods).Times(1)
 				p.EXPECT().listAndHandleItems(gomock.Any()).Return(nil)
 			},
 			wantErr: false,
@@ -137,7 +136,6 @@ func TestService_doListAndWatch(t *testing.T) {
 				return &restfake.RESTClient{}
 			},
 			prepareeventProxyerMockFn: func(p *MockeventProxyer, getter cache.Getter) {
-				p.EXPECT().watchAndHandleEvent(gomock.Any(), gomock.Any())
 				p.EXPECT().lastResourceVersion().Return("")
 				p.EXPECT().restClient().Return(getter)
 				p.EXPECT().resourceKind().Return(Pods).Times(2)

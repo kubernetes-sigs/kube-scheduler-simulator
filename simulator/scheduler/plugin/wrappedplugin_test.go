@@ -349,7 +349,6 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 				failure := framework.NewStatus(framework.Error, "BeforeFilter returned")
 				fe.EXPECT().BeforeFilter(ctx, nil, as.pod, as.nodeInfo).Return(failure)
 				p.EXPECT().Name().Return("fakeFilterPlugin").AnyTimes()
-				s.EXPECT().AddFilterResult("default", "pod1", "node1", "BeforefakeFilterPlugin", failure.Message())
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
@@ -836,7 +835,7 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 			name: "return AfterScore's results when Score is successful",
 			prepareEachMockFn: func(ctx context.Context, s *mock_plugin.MockStore, p *mock_plugin.MockScorePlugin, se *mock_plugin.MockScorePluginExtender, as args) {
 				success1 := framework.NewStatus(framework.Success, "BeforeScore returned")
-				success2 := framework.NewStatus(framework.Error, "Score returned")
+				success2 := framework.NewStatus(framework.Success, "Score returned")
 				success3 := framework.NewStatus(framework.Success, "AfterScore returned")
 				se.EXPECT().BeforeScore(ctx, nil, as.pod, "node1").Return(int64(1111), success1)
 				p.EXPECT().Score(ctx, nil, as.pod, "node1").Return(int64(2222), success2)
@@ -861,7 +860,7 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 				p.EXPECT().Score(ctx, nil, as.pod, "node1").Return(int64(2222), failure)
 				se.EXPECT().AfterScore(ctx, nil, as.pod, "node1", int64(2222), failure).Return(int64(3333), success3)
 				p.EXPECT().Name().Return("fakeScorePlugin").AnyTimes()
-				s.EXPECT().AddScoreResult("default", "pod1", "node1", "BeforefakeScorePlugin", int64(1111))
+				s.EXPECT().AddScoreResult(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
 			args: args{
 				pod:      &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},

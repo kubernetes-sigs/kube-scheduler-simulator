@@ -54,9 +54,9 @@ func (pl *TaintToleration) Name() string {
 
 // EventsToRegister returns the possible events that may make a Pod
 // failed by this plugin schedulable.
-func (f *TaintToleration) EventsToRegister() []framework.ClusterEvent {
+func (pl *TaintToleration) EventsToRegister() []framework.ClusterEvent {
 	return []framework.ClusterEvent{
-		{Resource: framework.Node, ActionType: framework.Add | framework.UpdateNodeTaint},
+		{Resource: framework.Node, ActionType: framework.Add | framework.Update},
 	}
 }
 
@@ -76,8 +76,7 @@ func (pl *TaintToleration) Filter(ctx context.Context, state *framework.CycleSta
 		return nil
 	}
 
-	errReason := fmt.Sprintf("node(s) had taint {%s: %s}, that the pod didn't tolerate",
-		taint.Key, taint.Value)
+	errReason := fmt.Sprintf("node(s) had untolerated taint {%s: %s}", taint.Key, taint.Value)
 	return framework.NewStatus(framework.UnschedulableAndUnresolvable, errReason)
 }
 
