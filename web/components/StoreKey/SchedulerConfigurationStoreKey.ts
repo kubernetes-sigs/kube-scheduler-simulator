@@ -1,5 +1,5 @@
 import { InjectionKey } from "@nuxtjs/composition-api";
-import { SchedulerConfigurationStore } from "../../store/schedulerconfiguration";
+import { SchedulerConfigurationStore } from "~/store/schedulerconfiguration";
 
 const SchedulerConfigurationStoreKey: InjectionKey<SchedulerConfigurationStore> =
   Symbol("SchedulerConfigurationStore");

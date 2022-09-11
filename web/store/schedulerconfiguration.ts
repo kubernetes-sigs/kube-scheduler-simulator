@@ -3,6 +3,8 @@ import { SchedulerConfiguration } from "~/api/v1/types";
 import { SchedulerconfigurationAPIKey } from "~/api/APIProviderKeys";
 
 type stateType = {
+  // when users use an external scheduler, we disable it.
+  disabled: boolean;
   selectedConfig: selectedConfig | null;
 };
 
@@ -17,6 +19,7 @@ type selectedConfig = {
 export default function schedulerconfigurationStore() {
   const state: stateType = reactive({
     selectedConfig: null,
+    disabled: false,
     schedulerconfigurations: [],
   });
 
@@ -26,6 +29,10 @@ export default function schedulerconfigurationStore() {
   }
 
   return {
+    get disabled() {
+      return state.disabled;
+    },
+
     get selected() {
       return state.selectedConfig;
     },
@@ -38,8 +45,26 @@ export default function schedulerconfigurationStore() {
       this.fetchSelected();
     },
 
+    async initialize() {
+      await schedconfAPI.getSchedulerConfiguration().catch((e) => {
+        if (e.response.status == 400) {
+          // users use an external scheduler on backend.
+          state.disabled = true;
+          return;
+        }
+        throw new Error(`failed to apply scheduler configration: ${e}`);
+      });
+    },
+
     async fetchSelected() {
-      const c = await schedconfAPI.getSchedulerConfiguration();
+      const c = await schedconfAPI.getSchedulerConfiguration().catch((e) => {
+        if (e.response.status == 400) {
+          // users use an external scheduler on backend.
+          state.disabled = true;
+          return;
+        }
+        throw new Error(`failed to apply scheduler configration: ${e}`);
+      });
       if (c) {
         state.selectedConfig = {
           isNew: true,

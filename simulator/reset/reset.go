@@ -2,11 +2,14 @@ package reset
 
 import (
 	"context"
+	"errors"
 
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
+
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 )
 
 type DeleteService interface {
@@ -82,7 +85,7 @@ func (s *Service) Reset(ctx context.Context) error {
 	if err := eg.Wait(); err != nil {
 		return err
 	}
-	if err := s.schedService.ResetScheduler(); err != nil {
+	if err := s.schedService.ResetScheduler(); err != nil && !errors.Is(err, scheduler.ErrServiceDisabled) {
 		return xerrors.Errorf("reset scheduler: %w", err)
 	}
 	return nil

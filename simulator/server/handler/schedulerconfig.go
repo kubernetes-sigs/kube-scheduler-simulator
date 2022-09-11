@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"k8s.io/klog/v2"
 	"k8s.io/kube-scheduler/config/v1beta2"
 
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 )
 
@@ -22,7 +24,15 @@ func NewSchedulerConfigHandler(s di.SchedulerService) *SchedulerConfigHandler {
 }
 
 func (h *SchedulerConfigHandler) GetSchedulerConfig(c echo.Context) error {
-	cfg := h.service.GetSchedulerConfig()
+	cfg, err := h.service.GetSchedulerConfig()
+	if err != nil && !errors.Is(err, scheduler.ErrServiceDisabled) {
+		klog.Errorf("failed to get scheduler config: %+v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+	if errors.Is(err, scheduler.ErrServiceDisabled) {
+		return c.JSON(http.StatusBadRequest, "When using an external scheduler, you cannot see and edit the scheduler configuration.")
+	}
+
 	return c.JSON(http.StatusOK, cfg)
 }
 
@@ -33,7 +43,13 @@ func (h *SchedulerConfigHandler) ApplySchedulerConfig(c echo.Context) error {
 		klog.Errorf("failed to bind scheduler config request: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	cfg := h.service.GetSchedulerConfig().DeepCopy()
+	cfg, err := h.service.GetSchedulerConfig()
+	if err != nil {
+		klog.Errorf("failed to get scheduler config: %+v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	cfg = cfg.DeepCopy()
 	cfg.Profiles = reqSchedulerCfg.Profiles
 	if err := h.service.RestartScheduler(cfg); err != nil {
 		klog.Errorf("failed to restart scheduler: %+v", err)

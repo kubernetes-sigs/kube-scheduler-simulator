@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"context"
+	"errors"
 
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
@@ -27,19 +28,34 @@ type Service struct {
 	// function to shutdown scheduler.
 	shutdownfn func()
 
+	// disabled represents if this Service is disabled.
+	// If externalSchedulerEnabled, it'll be true
+	// because we don't need to start scheduler, and we cannot change an external scheduler's config in that case.
+	disabled bool
+
 	clientset           clientset.Interface
 	restclientCfg       *restclient.Config
 	initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
 	currentSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
 }
 
+var ErrServiceDisabled = errors.New("scheduler service is disabled")
+
 // NewSchedulerService starts scheduler and return *Service.
-func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration) *Service {
+func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration, externalSchedulerEnabled bool) *Service {
+	if externalSchedulerEnabled {
+		return &Service{disabled: true}
+	}
+
 	initCfg := initialSchedulerCfg.DeepCopy()
 	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg}
 }
 
 func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error {
+	if s.disabled {
+		return xerrors.Errorf("an external scheduler is enabled: %w", ErrServiceDisabled)
+	}
+
 	s.ShutdownScheduler()
 
 	oldSchedulerCfg := s.currentSchedulerCfg
@@ -129,8 +145,12 @@ func (s *Service) ShutdownScheduler() {
 	}
 }
 
-func (s *Service) GetSchedulerConfig() *v1beta2config.KubeSchedulerConfiguration {
-	return s.currentSchedulerCfg
+func (s *Service) GetSchedulerConfig() (*v1beta2config.KubeSchedulerConfiguration, error) {
+	if s.disabled {
+		return nil, xerrors.Errorf("an external scheduler is enabled: %w", ErrServiceDisabled)
+	}
+
+	return s.currentSchedulerCfg, nil
 }
 
 // convertConfigurationForSimulator convert KubeSchedulerConfiguration to apply scheduler on simulator

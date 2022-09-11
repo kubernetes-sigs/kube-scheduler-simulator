@@ -17,7 +17,7 @@ import (
 )
 
 // ErrEmptyEnv represents the required environment variable don't exist.
-var ErrEmptyEnv = errors.New("env is needed, but empty")
+var ErrEmptyEnv = errors.New("env is required, but empty")
 
 // Config is configuration for simulator.
 type Config struct {
@@ -31,6 +31,8 @@ type Config struct {
 	// This field is non-empty only when ExternalImportEnabled == true.
 	ExternalKubeClientCfg *rest.Config
 	InitialSchedulerCfg   *v1beta2config.KubeSchedulerConfiguration
+	// ExternalSchedulerEnabled indicates whether an external scheduler is enabled.
+	ExternalSchedulerEnabled bool
 }
 
 // NewConfig gets some settings from environment variables.
@@ -66,14 +68,20 @@ func NewConfig() (*Config, error) {
 		return nil, xerrors.Errorf("get SchedulerCfg: %w", err)
 	}
 
+	externalSchedEnabled, err := getExternalSchedulerEnabled()
+	if err != nil {
+		return nil, xerrors.Errorf("get externalSchedulerEnabled: %w", err)
+	}
+
 	return &Config{
-		Port:                  port,
-		KubeAPIServerURL:      apiurl,
-		EtcdURL:               etcdurl,
-		CorsAllowedOriginList: corsAllowedOriginList,
-		InitialSchedulerCfg:   initialschedulerCfg,
-		ExternalImportEnabled: externalimportenabled,
-		ExternalKubeClientCfg: externalKubeClientCfg,
+		Port:                     port,
+		KubeAPIServerURL:         apiurl,
+		EtcdURL:                  etcdurl,
+		CorsAllowedOriginList:    corsAllowedOriginList,
+		InitialSchedulerCfg:      initialschedulerCfg,
+		ExternalImportEnabled:    externalimportenabled,
+		ExternalKubeClientCfg:    externalKubeClientCfg,
+		ExternalSchedulerEnabled: externalSchedEnabled,
 	}, nil
 }
 
@@ -102,6 +110,20 @@ func getKubeAPIServerURL() string {
 		h = "127.0.0.1"
 	}
 	return h + ":" + p
+}
+
+func getExternalSchedulerEnabled() (bool, error) {
+	e := os.Getenv("EXTERNAL_SCHEDULER_ENABLED")
+	if e == "" {
+		return false, nil
+	}
+
+	b, err := strconv.ParseBool(e)
+	if err != nil {
+		return false, xerrors.Errorf("EXTERNAL_SCHEDULER_ENABLED is specified, but it's not bool: %s.", e)
+	}
+
+	return b, nil
 }
 
 func getEtcdURL() (string, error) {
