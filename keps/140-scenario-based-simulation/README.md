@@ -19,7 +19,7 @@ The scenario-based simulation feature will be helpful for those who customize th
 
 ## Goals
 
-Users can simulate their controller with defined scenarios and evaluate their controller's behavior.
+Users can simulate their controller, including the scheduler, with defined scenarios and evaluate their controller's behavior.
 It's mainly designed for the scheduler, but you can use it for other controllers like a cluster autoscaler.
 
 ## Non-Goals
@@ -30,12 +30,12 @@ See the result of scenario-based simulation from Web UI. (maybe implemented in t
 
 ### Story 1
 
-The company has added many features into scheduler via some custom plugins, 
-and they want to make sure that their expansions are working as expected and has not negatively impacted the scheduling results.
+The company has added many features into the scheduler via some custom plugins,
+and they want to make sure that their expansions are working as expected and have not negatively impacted the scheduling results.
 
 #### Solution
 
-They can define appropriate scenario and analyze the .status.result with the result calculation package.
+They can define appropriate scenarios and analyze the .status.result with the result calculation package.
 
 ### Story 2
 
@@ -44,7 +44,7 @@ The users want to see how their customized scheduler behaves in the worst case s
 #### Solution
 
 Even when a scenario is running, users can add operations to that scenario. 
-So, in this case, they can add operations that are most worst case for the scheduler by looking at the simulation results and the resources status at that point.
+So, in this case, they can add operations that are worst case for the scheduler by looking at the simulation results and the resources status at that point.
 
 ## Proposal
 
@@ -53,9 +53,9 @@ So, in this case, they can add operations that are most worst case for the sched
 #### The current simulator and proposal
 
 We initially designed the simulator with a strong emphasis on Web UI. 
-Then, thanks to so many contributions from everyone, we've expanded the simulator to be able to be used from other clients like kubectl, client-go, etc.
+Then, thanks to so many contributions from everyone, we've expanded the simulator to be able to be used by other clients like kubectl, client-go, etc.
 
-Now that simulators are no longer just for WebUI, we need to think about how we can design scenario-based simulations to be easy to use from other clients as well.
+Now that simulators are no longer just for WebUI, we need to think about how we can design scenario-based simulations to be easy to use by other clients as well.
 
 Therefore, this kep proposes to define the scenario **as CRD**. All clients, including web UI, can use the scenario-based simulation feature by creating the Scenario resource.
 
@@ -81,8 +81,9 @@ type ScenarioSpec struct {
 	Controllers *Controllers `json:"controllers"`
 }
 
+// See [# SimulationControllers and PreSimulationControllers](#Simulated-controllers-and-preparing-controllers).
 type Controllers struct {
-	// PreparingControllers is a list of controllers that should be run before SimulatedControllers.
+	// PreSimulationControllers is a list of controllers that should be run before SimulationControllers.
 	// They will run in parallel.
 	// 
 	// It's an optional field. 
@@ -90,12 +91,12 @@ type Controllers struct {
 	// So, you need to configure it only when you want to disable some controllers enabled by default.
 	//
 	// +optional
-	PreparingControllers	*ControllerSet `json:"preparingControllers`
-	// SimulatedControllers is a list of controllers that are the target of this simulation.
+	PreSimulationControllers	*ControllerSet `json:"presimulationControllers`
+	// SimulationControllers is a list of controllers that are the target of this simulation.
 	// These are run one by one in the same order specified in Enabled field.
 	// 
 	// It's a required field; no controllers will be enabled automatically.
-	SimulatedControllers  *ControllerSet `json:"simulatedControllers"`
+	SimulationControllers  *ControllerSet `json:"simulationControllers"`
 }
 
 type ControllerSet struct {
@@ -171,9 +172,10 @@ type DeleteOperation struct {
 
 type DoneOperation struct{}
 
+// See [# The concept "ScenarioStep"](#The-concept-"ScenarioStep").
 // ScenarioStep is the time represented by a set of numbers, MajorStep and MinorStep,
 // which are like hours and minutes in clocks in the real world.
-// ScenarioStep.Major is moved to the next ScenarioStep.Major when the simulated controller can no longer do anything with the current cluster state.
+// ScenarioStep.Major is moved to the next ScenarioStep.Major when the SimulationController can no longer do anything with the current cluster state.
 // Scenario.Minor is moved to the next Scenario.Minor when any resources operations(create/edit/delete) happens.
 type ScenarioStep struct {
 	Major int32 `json:"major"`
@@ -209,8 +211,8 @@ type ScenarioStepStatus struct {
 	// 
 	// +optional
 	Phase StepPhase `json:"phase,omitempty"`
-	// RunningSimulatedController indicates one of the simulated controllers that is currently running/paused/completed.
-	RunningSimulatedController string `json:"runningSimulatedController"`
+	// RunningSimulationController indicates one of the SimulationControllers that is currently running/paused/completed.
+	RunningSimulationController string `json:"runningSimulationController"`
 }
 
 type StepPhase string
@@ -218,13 +220,13 @@ type StepPhase string
 const (
 	// Operating means controller is currently operating operation defined for the step.
 	Operating StepPhase = "Operating"
-	// OperatingCompleted means the preparing controllers have finished operating operation defined for the step.
+	// OperatingCompleted means the PreSimulationControllers have finished operating operation defined for the step.
 	OperatingCompleted StepPhase = "OperatingCompleted"
-	// ControllerRunning means the simulated controller is working.
+	// ControllerRunning means the SimulationController is working.
 	ControllerRunning StepPhase = "ControllerRunning"
-	// ControllerPaused means the simulated controller is paused(or will be paused).
+	// ControllerPaused means the SimulationController is paused(or will be paused).
 	ControllerPaused	StepPhase = "ControllerPaused"
-	// ControllerCompleted means the current running simulated controller no longer do anything with the current cluster state.
+	// ControllerCompleted means the current running SimulationController no longer do anything with the current cluster state.
 	ControllerCompleted StepPhase = "ControllerCompleted"
 	// StepCompleted means the controller is preparing to move to the next step.
 	StepCompleted StepPhase = "Finished"
@@ -321,7 +323,7 @@ type Scenario struct {
 
 #### The detailed goal of the scenario
 
-- Users can define Scenario and see how the simulated controllers work with a scenario.
+- Users can define Scenario and see how the SimulationControllers work with a scenario.
 - Users can analyze and evaluate the controller with .status.Result.Timeline.
 	- All operations that happened while running the scenario will be recorded in Timeline and users can analyze Timeline by using our functions.
 - The result from the same Scenario won't be much changed run by run.
@@ -329,12 +331,12 @@ type Scenario struct {
 
 #### The required configuration for users
 
-- add the comment directive to all simulated controller's codes and modify the code by our code generator.
+- add the comment directive to all SimulationController's codes and modify the code by our code generator.
   - The simulator has the scheduler internally by default, and this scheduler has already been set up. 
-  - See [# How to stop the simulated controllers loop](#How-to-stop-the-simulated-controllers-loop).
+  - See [# How to stop the SimulationControllers loop](#How-to-stop-the-simulation-controllers-loop).
 - define the functions for controllers to expect when controllers start to work and when controllers finish working.
   - The simulator has some controllers internally by default, and they have already been set up. 
-  - See [# Expect when controllers start to work and when controllers finish working](#Expect-when-controllers-start-to-work-and-when-controllers-finish-working).
+  - See [# Expect when controllers finish working](#Expect-when-controllers-finish-working).
 
 #### Kubernetes controller
 
@@ -346,7 +348,8 @@ https://kubernetes.io/docs/concepts/architecture/controller/
 The Kubernetes controller has the desired state.
 For example, the ReplicaSet controller. It's working on managing the number of Pods to satisfy all replicaset's `.spec.replicas`.
 
-Some controllers in this world refer to something other than k8s resources like external metrics and real time to determine their ideal state. But, they cannot be used in our Scenario. In other words, **controllers that refer only to resources on k8s can be used in Scenario.**
+Some controllers in this world refer to something other than k8s resources like external metrics and real time to determine their ideal state. 
+But, they cannot be used in our Scenario. In other words, **controllers that refer only to resources on k8s can be used in Scenario.**
 This is because the scenario controller cannot manage something other than k8s resources, and unexpected operations based on them may happen during the Scenario, which we want to avoid.
 
 The following controllers cannot be used in Scenario, for example:
@@ -358,51 +361,55 @@ The following controllers cannot be used in Scenario, for example:
 All controllers that refer only to k8s resources won't do anything if there is no change on k8s resources state.
 In other words, all controllers may do something only when someone performs a k8s resource operation.
 
-#### Expect when controllers finish working
+#### How the simulator knows when a cluster state gets converged by the controller?
 
-In the simulator, users define the `WaitForControllerFinish` function for all controllers so that we can expect when a controller finish working.
+In the simulator, users define the `ControllerWaiter` for each controller so that we can expect when a controller finishes working.
 
 ```go
-// ControllerBehaviorDefinition has the method to define a behavior for a controllers.
-type ControllerBehaviorDefinition interface {
-	// WaitForControllerFinish detects the cluster becomes the ideal state for the controller, or the controller cannot do any more to move the cluster state closer to the ideal state.
-	WaitForControllerFinish(v1.AdmissionReview) error
+// ControllerWaiter is used to know when a cluster state gets converged by the controller.
+type ControllerWaiter interface {
+	// Name returns the controller's name.
+    Name() string
+	// WaitConditionFunc returns wait.ConditionFunc that detects when the controller cannot do anything in this cluster state.
+    WaitConditionFunc(ctx context.Context) (wait.ConditionFunc, error)
 }
 ```
 
-For example, the ReplicaSet controller. `WaitForControllerFinish` detects wait for either of the following:
-  - Become ReplicaSet.spec.replicas == {the number of Pods matching ReplicaSet.spec.selector} (the ideal state for the ReplicaSet controller)
-  - Become Replicaset.status.conditions has ReplicaFailure true (cannot do any more to move the cluster state closer to the ideal state)
+For example, the ReplicaSet controller. `WaitConditionFunc` returns the `wait.ConditionFunc` that detects 
+all replicaset satisfy .spec.replicas == .status.fullyLabeledReplicas (the ideal state for the ReplicaSet controller) or .status.conditions has ReplicaFailure true (cannot do anymore to move the cluster state closer to the ideal state).
 
-Talk about why we need to expect it in the later section.
+Talk about why we need it in the later section.
 
-#### Simulated controllers and preparing controllers
+#### SimulationControllers and PreSimulationControllers
 
-We have two types of controllers; simulated controllers and preparing controllers.
+We have two types of controllers; SimulationControllers and PreSimulationControllers.
 
-Simulated controllers are the target of this simulation,
-and Preparing controllers are the other controllers that are needed to simulate.
+SimulationControllers are the target of this simulation,
+and PreSimulationControllers are the other controllers that are needed to simulate.
 
 Let's say you want to simulate the scheduler and you are going to use ReplicaSet in the simulation. 
-In that case, you will set scheduler as Simulated controller and ReplicaSet controller as Preparing controllers.
+In that case, you will set scheduler as SimulationController and ReplicaSet controller as PreSimulationControllers.
 
 #### The concept "ScenarioStep"
 
-The Scenario has the concept "ScenarioStep" to represent the time.
-ScenarioStep is the time represented by a set of numbers, "MajorStep" and "MinorStep", which are like hours and minutes in clocks in the real world.
+The Scenario has the concept "ScenarioStep" to represent the _simulated_ time used during scenario running.
+It is not directly related to the real-time that you see in your wall-clock, but is a variable maintained by the scenario controller.
+
+ScenarioStep is represented by a set of numbers, "MajorStep" and "MinorStep", which are like hours and minutes in clocks in the real world.
+(Precisely, MajorStep and MinorStep don't have the range limitations that hours and minutes have)
 
 So, ScenarioStep.Major and ScenarioStep.Minor are similar. The difference is who performs the operations. 
-- ScenarioStep.Major is moved to the next ScenarioStep.Major before the scenario controller will perform the next resource operations defined in .spec.Operations.
-	- the scenario controller will do so when the simulated controller can no longer do anything with the current cluster state.
-- ScenarioStep.Minor is moved to the next ScenarioStep.Minor before the simulated controller will perform resource operations.
+- ScenarioStep.Major is incremented just before the scenario controller will perform the next resource operations defined in .spec.Operations.
+	- The scenario controller increments it when all SimulationController can no longer do anything with the current cluster state.
+- ScenarioStep.Minor is incremented just before the SimulationController will perform resource operations.
 
-#### what happens in a single MajorStep.
+#### What happens in a single MajorStep.
 
 The following diagram shows all what happens at a single ScenarioStep:
 
 ![diagram](images/step.png)
 
-And if a Scenario has two simulated controllers, the simulated controller will be run one by one in the same order specified in .spec.controllers.simulatedControllers.enabled field.
+And if a Scenario has two SimulationControllers, the SimulationController will be run one by one in the same order specified in .spec.controllers.SimulationControllers.enabled field.
 
 ![diagram2](images/step-two-simulated-controllers.png)
 
@@ -415,7 +422,7 @@ StepPhase: Operating
 
 First, the scenario controller operate all .spec.operations for the MajorStep X.
 
-##### 2. wait preparing controllers to handle resource changes
+##### 2. wait PreSimulationControllers to handle resource changes
 
 ScenarioStep: {X, 0}
 StepPhase: Operating
@@ -424,10 +431,10 @@ In [# Kubernetes controller](#Kubernetes-controller) section, we describe it:
 > All controllers that refer only to k8s resources won't do anything if there is no change on k8s resources state.
 In other words, all controllers may do something only when someone performs a k8s resource operation.
 
-At (1), .spec.operations is performed and preparing controllers may perform some operations to move the current cluster state closer to the desired state.
+At (1), .spec.operations is performed and PreSimulationControllers may perform some operations to move the current cluster state closer to the desired state.
 
-And **the simulated controllers need to stop working while the preparing controllers work.** (Actually, the simulated controller has been stopped since (1))
-In .status.Result.Timeline, Preparing controllers actions are treated as if they were instantaneous.
+And **the SimulationControllers need to stop working while the PreSimulationControllers work.** (Actually, the SimulationController has been stopped since (1))
+In .status.Result.Timeline, PreSimulationControllers actions are treated as if they were instantaneous.
 
 So, why..? This is because we need to ensure that the simulation results do not vary significantly from run to run. 
 
@@ -437,7 +444,7 @@ Let's say the user wants to simulate the scheduler and defines the operation in 
 And depending on how fast the NodeSet controller creates the 1000 Node, the simulation results will change.
 The scheduler needs to be stopped scheduling until the NodeSet controller creates 1000 Nodes so that the speed of the NodeSet controller doesn't affect the simulation result.
 
-##### 3. preparing controllers finish to work 
+##### 3. PreSimulationControllers finish to work 
 
 ScenarioStep: {X, 0}
 StepPhase: OperatingCompleted
@@ -446,24 +453,25 @@ See [#Expect when controllers finish working](#Expect-when-controllers-finish-wo
 
 We use `WaitForControllerFinish` to wait for all controllers to finish their work to deal with (1).
 
-##### 4. the simulated controller starts
+##### 4. the SimulationController starts
 
 ScenarioStep: {X, 0}
 StepPhase: ControllerRunning
 
-The simulated controllers have been stopped until now.
+The SimulationControllers have been stopped until now.
 
-Here, start one of the simulated controllers.
+Here, start one of the SimulationControllers. 
+SimulatedControllers is run in the same order specified in .spec.Controllers.SimulationControllers.Enabled field.
 
-##### 5. the simulated controller does operation(s) for k8s resources
+##### 5. the SimulationController does operation(s) for k8s resources
 
 ScenarioStep: {X, 0} -> {X, 1}
 StepPhase: ControllerRunning -> ControllerPaused
 
-The simulated controller may perform some operations for k8s resources.
-In admission webhook, we changes the StepPhase to ControllerStopped and increment MinorStep. (Then, the requests are accepted.)
+The SimulationController may perform some operations for k8s resources.
+In admission webhook, we change the StepPhase to ControllerStopped and increment MinorStep. (Then, the requests are accepted.)
 
-##### 6. the simulated controller stops working
+##### 6. the SimulationController stops working
 
 ScenarioStep: {X, 1}
 StepPhase: ControllerPaused
@@ -473,35 +481,35 @@ In [# Kubernetes controller](#Kubernetes-controller) section, we see the control
 > In Kubernetes, controllers are control loops that watch the state of your cluster, then make or request changes where needed. Each controller tries to move the current cluster state closer to the desired state.
 https://kubernetes.io/docs/concepts/architecture/controller/
 
-The simulated controller always checks ScenarioStep at the end of its loop. And if StepPhase is ControllerPaused, the controller stops working. 
+The SimulationController always checks ScenarioStep at the end of its loop. And if StepPhase is ControllerPaused, the controller stops working. 
 
-StepPhase was changed to ControllerStopped at (5), and the simulated controller should be stopped at the end of that loop.
+StepPhase was changed to ControllerStopped at (5), and the SimulationController should be stopped at the end of that loop.
 
-See also [# How to stop the simulated controllers loop](#How-to-stop-the-simulated-controllers-loop).
+See also [# How to stop the SimulationControllers loop](#How-to-stop-the-simulated-controllers-loop).
 
-##### 7. wait preparing controllers to handle resource changes
+##### 7. wait PreSimulationControllers to handle resource changes
 
 ScenarioStep: {X, 1}
 StepPhase: ControllerPaused
 
-The preparing controllers may work when the simulated controllers perform some operations on k8s resources. 
+The PreSimulationControllers may work when the SimulationControllers perform some operations on k8s resources. 
 
-So, every time the working simulated controller performs operations, we need to wait for the preparing controllers to handle resource changes like (2).
+So, every time the working SimulationController performs operations, we need to wait for the PreSimulationControllers to handle resource changes like (2).
 
-It will repeat from (3) to (7) until the simulated controller can no longer do anything with the current cluster state.
+It will repeat from (3) to (7) until the SimulationController can no longer do anything with the current cluster state.
 
-##### 8. the simulated controller can no longer do anything with the current cluster state
+##### 8. the SimulationController can no longer do anything with the current cluster state
 
 ScenarioStep: {X, Y} 
 StepPhase: ControllerRunning -> ControllerCompleted
 
-We use `WaitForControllerFinish` of the simulated controller to detect this (like at (3)).
-The simulated controller stops working again like at (6).
+We use `WaitForControllerFinish` of the SimulationController to detect this (like at (3)).
+The SimulationController stops working again like at (6).
 
-After ControllerCompleted, the next simulated controller is started. 
+After ControllerCompleted, the next SimulationController is started. 
 And it will repeat from (4) to (8). 
 
-##### 9. all the simulated controller can no longer do anything with the current cluster state
+##### 9. all the SimulationController can no longer do anything with the current cluster state
 
 ScenarioStep: {X, Z}
 StepPhase: ControllerCompleted -> StepCompleted
@@ -510,14 +518,14 @@ Yey! The simulation in the single MajorStep is finished!
 
 Increment ScenarioMajorStep and reset ScenarioMinorStep to 0.
 
-#### How to stop the simulated controllers loop
+#### How to stop the SimulationControllers loop
 
 In [# Kubernetes controller](#Kubernetes-controller) section, we see the controllers are working in **loops**.
 
 > In Kubernetes, controllers are control loops that watch the state of your cluster, then make or request changes where needed. Each controller tries to move the current cluster state closer to the desired state.
 https://kubernetes.io/docs/concepts/architecture/controller/
 
-It's required to add the function `CheckScenarioStepPhase()` to all simulated controllers, that stops the simulated controllers loop when a running Scenario wants.
+It's required to add the function `CheckScenarioStepPhase()` to all SimulationControllers, that stops the SimulationControllers loop when a running Scenario wants.
 
 The following is an example for super simplified implementation of controllers.
 `CheckScenarioStepPhase()` needs to be added at the end of loop.
@@ -536,10 +544,10 @@ func (h *HogeController) runOnce() {
 }
 ```
 
-The function `scenario.CheckScenarioStepPhase()` is always executed at the end of `runOnce`, and checks the running Scenario's .status.stepStatus.phase and .status.stepStatus.runningSimulatedController. 
-And when .status.stepStatus.phase is ControllerPaused and .status.stepStatus.runningSimulatedController is "hoge-controller", it is blocked at that point until .status.stepStatus.phase becomes OperatingCompleted.
+The function `scenario.CheckScenarioStepPhase()` is always executed at the end of `runOnce`, and checks the running Scenario's .status.stepStatus.phase and .status.stepStatus.runningSimulationController. 
+And when .status.stepStatus.phase is ControllerPaused and .status.stepStatus.runningSimulationController is "hoge-controller", it is blocked at that point until .status.stepStatus.phase becomes OperatingCompleted.
 
-See the diagram in [the previous section](#The-core-concept-"ScenarioStep"), when the hoge-controller performs some operation for k8s resources, the admission webhook will change .status.stepStatus.phase to ControllerPaused. Then `controllermanager.CheckScenario` will be executed at the end of `runOnce` and the hoge-controller will stop looping.
+See the diagram in [the previous section](#The-concept-"ScenarioStep"), when the hoge-controller performs some operation for k8s resources, the admission webhook will change .status.stepStatus.phase to ControllerPaused. Then `controllermanager.CheckScenario` will be executed at the end of `runOnce` and the hoge-controller will stop looping.
 
 Note: Even if multiple k8s resource operations happen in a single `runOnce`, the controller will stop at the end of `runOnce`.
 
@@ -557,7 +565,7 @@ Here is the example ideas:
 - the generic iterator function that users can aggregate custom values.
 - (Do you have any other idea? Tell us!)
 
-By putting only the minimum simple information in ScenarioResult and providing functions to change it into a user-friendly structs, we can support many data structures without any changes to Scenario API.
+By putting only the minimum simple information in ScenarioResult and providing functions to change it into a user-friendly struct, we can support many data structures without any changes to Scenario API.
 
 #### Adding operations to running Scenario 
 
@@ -596,7 +604,7 @@ That means the scenario controller will run the following Scenario after the cur
 
 In addition, the following actions are prohibited during scenario execution. The scenario result will be unstable or invalid if these actions are performed.
 - change the scheduler configuration via simulator API.
-- create/delete/edit any resources.
+- create/delete/edit any resources manually.
 
 And all resources created before starting a scenario are deleted at the start of the scenario,
 so that they don't affect the simulation results.
