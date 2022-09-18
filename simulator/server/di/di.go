@@ -4,6 +4,8 @@
 package di
 
 import (
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"golang.org/x/xerrors"
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
@@ -39,7 +41,15 @@ type Container struct {
 // NewDIContainer initializes Container.
 // It initializes all service and puts to Container.
 // If externalImportEnabled is false, the simulator will not use externalClient and will not create ReplicateExistingClusterService.
-func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration, externalImportEnabled bool, externalClient clientset.Interface, externalSchedulerEnabled bool) *Container {
+func NewDIContainer(
+	client clientset.Interface,
+	etcdclient *clientv3.Client,
+	restclientCfg *restclient.Config,
+	initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration,
+	externalImportEnabled bool,
+	externalClient clientset.Interface,
+	externalSchedulerEnabled bool,
+) (*Container, error) {
 	c := &Container{}
 
 	// initializes each service
@@ -50,18 +60,11 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	c.podService = pod.NewPodService(client)
 	c.nodeService = node.NewNodeService(client, c.podService)
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
-
-	deleteServices := map[string]reset.DeleteService{
-		"node":              c.nodeService,
-		"persistent volume": c.pvService,
-		"storage class":     c.storageClassService,
-		"priority class":    c.priorityClassService,
+	var err error
+	c.resetService, err = reset.NewResetService(etcdclient, client, c.schedulerService)
+	if err != nil {
+		return nil, xerrors.Errorf("initialize reset service: %w", err)
 	}
-	deleteForNamespacedResources := map[string]reset.DeleteServicesForNamespacedResources{
-		"pod":                     c.podService,
-		"persistent volume claim": c.pvcService,
-	}
-	c.resetService = reset.NewResetService(client, deleteServices, deleteForNamespacedResources, c.schedulerService)
 	exportService := export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
 	c.exportService = exportService
 	if externalImportEnabled {
@@ -70,7 +73,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	}
 	c.resourceWatcherService = resourcewatcher.NewService(client)
 
-	return c
+	return c, nil
 }
 
 // NodeService returns NodeService.

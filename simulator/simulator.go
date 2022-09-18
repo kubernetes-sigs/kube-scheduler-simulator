@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
@@ -26,7 +28,7 @@ func main() {
 
 // startSimulator starts simulator and needed k8s components.
 //
-//nolint:cyclop
+//nolint:funlen,cyclop
 func startSimulator() error {
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -55,8 +57,21 @@ func startSimulator() error {
 		}
 	}
 
-	dic := di.NewDIContainer(client, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, existingClusterClient, cfg.ExternalSchedulerEnabled)
+	etcdclient, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{cfg.EtcdURL},
+		DialTimeout: 2 * time.Second,
+	})
+	if err != nil {
+		return xerrors.Errorf("create an etcd client: %w", err)
+	}
 
+	// need to sleep here to make all controllers create initial resources. (like "system-" priorityclass.)
+	time.Sleep(1 * time.Second)
+
+	dic, err := di.NewDIContainer(client, etcdclient, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, existingClusterClient, cfg.ExternalSchedulerEnabled)
+	if err != nil {
+		return xerrors.Errorf("create di container: %w", err)
+	}
 	if !cfg.ExternalSchedulerEnabled {
 		if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
 			return xerrors.Errorf("start scheduler: %w", err)
