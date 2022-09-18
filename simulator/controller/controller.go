@@ -33,10 +33,14 @@ type controllerInitializersFunc func() (initializers map[string]initFunc)
 
 var _ controllerInitializersFunc = newControllerInitializers
 
-func RunController(client clientset.Interface, c *restclient.Config) (func(), error) {
-	ctx, cancel := context.WithCancel(context.Background())
+func RunController(client clientset.Interface, cfg *restclient.Config) (func(), error) {
+	controllerCtx, err := createControllerContext(client, cfg, context.Background().Done())
+	if err != nil {
+		return nil, xerrors.Errorf("error building controller context: %v", err)
+	}
 
-	go run(client, c, ctx.Done())
+	ctx, cancel := context.WithCancel(context.Background())
+	go run(controllerCtx, ctx.Done())
 	shutdownFunc := func() {
 		cancel()
 	}
@@ -45,26 +49,15 @@ func RunController(client clientset.Interface, c *restclient.Config) (func(), er
 }
 
 // run runs the KubeControllerManagerOptions.  This should never exit.
-func run(client clientset.Interface, config *restclient.Config, stopCh <-chan struct{}) {
-	run := func(ctx context.Context, initializersFunc controllerInitializersFunc) {
-		controllerContext, err := createControllerContext(client, config, ctx.Done())
-		if err != nil {
-			klog.Fatalf("error building controller context: %v", err)
-		}
-		controllerInitializers := initializersFunc()
-		if err := startControllers(controllerContext, controllerInitializers); err != nil {
-			klog.Fatalf("error starting controllers: %v", err)
-		}
-
-		controllerContext.InformerFactory.Start(stopCh)
-		controllerContext.ObjectOrMetadataInformerFactory.Start(stopCh)
-
-		close(controllerContext.InformersStarted)
-
-		select {}
+func run(controllerCtx controllerContext, stopCh <-chan struct{}) {
+	controllerInitializers := newControllerInitializers()
+	if err := startControllers(controllerCtx, controllerInitializers); err != nil {
+		klog.Fatalf("error starting controllers: %v", err)
 	}
-	run(context.Background(), newControllerInitializers)
-	panic("unreachable")
+	controllerCtx.InformerFactory.Start(stopCh)
+	controllerCtx.ObjectOrMetadataInformerFactory.Start(stopCh)
+
+	close(controllerCtx.InformersStarted)
 }
 
 // startControllers starts a set of controllers with a specified controllerContext.
