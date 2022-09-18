@@ -47,9 +47,7 @@ export default defineComponent({
     }
     const pvstore = inject(PersistentVolumeStoreKey);
     if (!pvstore) {
-      throw new Error(
-        `${PersistentVolumeStoreKey.description} is not provided`
-      );
+      throw new Error(`${PersistentVolumeStoreKey.description} is not provided`);
     }
     const priorityclassstore = inject(PriorityClassStoreKey);
     if (!priorityclassstore) {
@@ -100,9 +98,7 @@ export default defineComponent({
 
           return stream.read().then(function processText({ done, value }): any {
             if (done) {
-              snackbarstore.setServerErrorMessage(
-                "The watch stream is terminated. Please reload your browser if you don't expect this."
-              );
+              snackbarstore.setServerErrorMessage("The watch stream is terminated. Please reload this page.");
               return;
             }
             buffer += utf8Decoder.decode(value);
@@ -171,14 +167,14 @@ export default defineComponent({
                   }
                 }
               } catch (error) {
-                console.log("Error while parsing", chunk, "\n", error);
+                snackbarstore.setServerErrorMessage(`Error while parsing: ${error}`);
               }
             });
             return stream.read().then(processText);
           });
         })
         .catch(() => {
-          console.log("Error! Retrying in 5 seconds...");
+          console.log("Error during watching. Trying to reconnect to the server in 5 seconds...");
           // Call the watch API again if some error occurs.
           setTimeout(() => watchAndUpdates(), 5000);
         });

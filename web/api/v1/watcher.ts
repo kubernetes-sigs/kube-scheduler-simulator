@@ -12,7 +12,7 @@ export default function watcherAPI(instance: AxiosInstance) {
           `${instance.defaults.baseURL}/listwatchresources?${queries}`
         );
       } catch (e: any) {
-        throw new Error(`failed to watch nodes: ${e}`);
+        throw new Error(`failed to start to watch resources: ${e}`);
       }
     },
   };
