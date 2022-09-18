@@ -116,8 +116,8 @@ func getEtcdURL() (string, error) {
 // getCorsAllowedOriginList fetches CorsAllowedOriginList from the env named CORS_ALLOWED_ORIGIN_LIST.
 // This allowed list is applied to kube-apiserver and the simulator server.
 //
-// e.g. CORS_ALLOWED_ORIGIN_LIST="http://localhost:3000, http://localhost:3001, http://localhost:3002"
-//       → return []string{"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"}
+// Let's say CORS_ALLOWED_ORIGIN_LIST="http://localhost:3000, http://localhost:3001, http://localhost:3002" are given.
+// Then, getCorsAllowedOriginList returns []string{"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"}
 func getCorsAllowedOriginList() ([]string, error) {
 	e := os.Getenv("CORS_ALLOWED_ORIGIN_LIST")
 	if e == "" {

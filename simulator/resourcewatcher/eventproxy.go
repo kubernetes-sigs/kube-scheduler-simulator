@@ -121,7 +121,8 @@ func (p *eventProxy) sendListedItems(items []runtime.Object) error {
 // watchHandlerFunc watches the specified resource's event.
 // When it receives the event from watcher, it sends the event to stream
 // and updates the lastResourceVersion in the eventProxy.
-//nolint: cyclop // For readability.
+//
+//nolint:cyclop // For readability.
 func (p *eventProxy) watchHandlerFunc(watcher watch.Interface) func(stopCh <-chan struct{}) error {
 	return func(stopCh <-chan struct{}) error {
 		for {
