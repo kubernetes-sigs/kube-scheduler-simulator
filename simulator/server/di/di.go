@@ -39,14 +39,14 @@ type Container struct {
 // NewDIContainer initializes Container.
 // It initializes all service and puts to Container.
 // If externalImportEnabled is false, the simulator will not use externalClient and will not create ReplicateExistingClusterService.
-func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration, externalImportEnabled bool, externalClient clientset.Interface, externalRestClientCfg *restclient.Config) *Container {
+func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration, externalImportEnabled bool, externalClient clientset.Interface, externalSchedulerEnabled bool) *Container {
 	c := &Container{}
 
 	// initializes each service
 	c.pvService = persistentvolume.NewPersistentVolumeService(client)
 	c.pvcService = persistentvolumeclaim.NewPersistentVolumeClaimService(client)
 	c.storageClassService = storageclass.NewStorageClassService(client)
-	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg, initialSchedulerCfg)
+	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg, initialSchedulerCfg, externalSchedulerEnabled)
 	c.podService = pod.NewPodService(client)
 	c.nodeService = node.NewNodeService(client, c.podService)
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
@@ -65,7 +65,7 @@ func NewDIContainer(client clientset.Interface, restclientCfg *restclient.Config
 	exportService := export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
 	c.exportService = exportService
 	if externalImportEnabled {
-		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, externalRestClientCfg)
+		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, c.schedulerService)
 		c.replicateExistingClusterService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
 	}
 	c.resourceWatcherService = resourcewatcher.NewService(client)
@@ -131,14 +131,11 @@ func (c *Container) ResourceWatcherService() ResourceWatcherService {
 
 // createExportServiceForReplicateExistingClusterService creates each services
 // that will be used for the ExportService for an existing cluster.
-func createExportServiceForReplicateExistingClusterService(externalClient clientset.Interface, externalRestClientCfg *restclient.Config) *export.Service {
+func createExportServiceForReplicateExistingClusterService(externalClient clientset.Interface, schedulerService SchedulerService) *export.Service {
 	pvService := persistentvolume.NewPersistentVolumeService(externalClient)
 	pvcService := persistentvolumeclaim.NewPersistentVolumeClaimService(externalClient)
 	storageClassService := storageclass.NewStorageClassService(externalClient)
 
-	// ReplicateExistingClusterService will not use the SchedulerService of the existing cluster.
-	// Therefore, this is ok to pass an empty struct.
-	schedulerService := scheduler.NewSchedulerService(externalClient, externalRestClientCfg, &v1beta2config.KubeSchedulerConfiguration{})
 	podService := pod.NewPodService(externalClient)
 	nodeService := node.NewNodeService(externalClient, podService)
 	priorityClassService := priorityclass.NewPriorityClassService(externalClient)

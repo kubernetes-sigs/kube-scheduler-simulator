@@ -35,11 +35,12 @@ func (m *MockSchedulerService) EXPECT() *MockSchedulerServiceMockRecorder {
 }
 
 // GetSchedulerConfig mocks base method.
-func (m *MockSchedulerService) GetSchedulerConfig() *v1beta2.KubeSchedulerConfiguration {
+func (m *MockSchedulerService) GetSchedulerConfig() (*v1beta2.KubeSchedulerConfiguration, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSchedulerConfig")
 	ret0, _ := ret[0].(*v1beta2.KubeSchedulerConfiguration)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetSchedulerConfig indicates an expected call of GetSchedulerConfig.
