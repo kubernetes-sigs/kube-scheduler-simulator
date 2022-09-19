@@ -24,7 +24,7 @@ const (
 	controllerStartJitter = 1.0
 )
 
-type initFunc func(controllerCtx controllerContext) error
+type initFunc func(ctx context.Context, controllerCtx controllerContext) error
 
 // controllerInitializersFunc is used to create a collection of initializers
 // given the loopMode.
@@ -51,7 +51,7 @@ func RunController(client clientset.Interface, cfg *restclient.Config) (func(), 
 // run runs the KubeControllerManagerOptions.  This should never exit.
 func run(controllerCtx controllerContext, stopCh <-chan struct{}) {
 	controllerInitializers := newControllerInitializers()
-	if err := startControllers(controllerCtx, controllerInitializers); err != nil {
+	if err := startControllers(context.Background(), controllerCtx, controllerInitializers); err != nil {
 		klog.Fatalf("error starting controllers: %v", err)
 	}
 	controllerCtx.InformerFactory.Start(stopCh)
@@ -61,12 +61,12 @@ func run(controllerCtx controllerContext, stopCh <-chan struct{}) {
 }
 
 // startControllers starts a set of controllers with a specified controllerContext.
-func startControllers(ctx controllerContext, controllers map[string]initFunc) error {
+func startControllers(ctx context.Context, contrllerCtx controllerContext, controllers map[string]initFunc) error {
 	for controllerName, initFn := range controllers {
-		time.Sleep(wait.Jitter(ctx.ComponentConfig.Generic.ControllerStartInterval.Duration, controllerStartJitter))
+		time.Sleep(wait.Jitter(contrllerCtx.ComponentConfig.Generic.ControllerStartInterval.Duration, controllerStartJitter))
 
 		klog.Infof("Starting %q", controllerName)
-		err := initFn(ctx)
+		err := initFn(ctx, contrllerCtx)
 		if err != nil {
 			klog.Errorf("Error starting %q", controllerName)
 			return xerrors.Errorf("starting %v: %w", controllerName, err)

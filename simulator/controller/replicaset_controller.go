@@ -1,15 +1,17 @@
 package controller
 
 import (
+	"context"
+
 	"k8s.io/kubernetes/pkg/controller/replicaset"
 )
 
-func startReplicaSetController(ctx controllerContext) error {
+func startReplicaSetController(ctx context.Context, controllerCtx controllerContext) error {
 	go replicaset.NewReplicaSetController(
-		ctx.InformerFactory.Apps().V1().ReplicaSets(),
-		ctx.InformerFactory.Core().V1().Pods(),
-		ctx.ClientBuilder.ClientOrDie("replicaset-controller"),
+		controllerCtx.InformerFactory.Apps().V1().ReplicaSets(),
+		controllerCtx.InformerFactory.Core().V1().Pods(),
+		controllerCtx.ClientBuilder.ClientOrDie("replicaset-controller"),
 		replicaset.BurstReplicas,
-	).Run(int(ctx.ComponentConfig.ReplicaSetController.ConcurrentRSSyncs), ctx.Stop)
+	).Run(ctx, int(controllerCtx.ComponentConfig.ReplicaSetController.ConcurrentRSSyncs))
 	return nil
 }
