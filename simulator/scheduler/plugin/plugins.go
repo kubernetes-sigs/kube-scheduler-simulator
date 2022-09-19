@@ -17,7 +17,7 @@ import (
 	schedulingresultstore "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
 )
 
-//nolint: cyclop
+//nolint:cyclop
 func NewRegistry(informerFactory informers.SharedInformerFactory, client clientset.Interface) (map[string]schedulerRuntime.PluginFactory, error) {
 	scorePluginWeight := map[string]int32{}
 	registeredScorePlugin, err := config.RegisteredScorePlugins()
@@ -86,6 +86,7 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 // in the passed v1beta2.PluginConfig parameter.
 // If data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object, PluginConfig.Args.Raw would be ignored
 // since PluginConfig.Args.Object has higher priority.
+//
 //nolint:funlen,cyclop
 func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) {
 	defaultcfg, err := config.DefaultSchedulerConfig()

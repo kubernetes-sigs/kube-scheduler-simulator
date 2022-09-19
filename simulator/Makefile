@@ -3,18 +3,13 @@ generate:
 	go generate ./...
 	make format
 
-# re-generate openapi file for running api-server
-.PHONY: openapi
-openapi: vendor
-	./hack/openapi.sh
-
 .PHONY: lint
 lint:
 	golangci-lint run --timeout 30m ./...
 
 .PHONY: format
 format:
-	find . -name "*.go" | grep -v "vendor" | grep -v "submodule" | xargs gci write --Section Standard --Section Default --Section "Prefix(sigs.k8s.io/kube-scheduler-simulator/simulator)"
+	find . -name "*.go" | xargs gci write --section Standard --section Default --section "Prefix(sigs.k8s.io/kube-scheduler-simulator/simulator)"
 	golangci-lint run --fix ./...
 
 .PHONY: test
@@ -24,10 +19,6 @@ test:
 .PHONY: mod-download
 mod-download: ## Downloads the Go module
 	go mod download -x
-
-.PHONY: vendor
-vendor: mod-download
-	go mod vendor
 
 .PHONY: build
 build:  

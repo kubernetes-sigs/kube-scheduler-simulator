@@ -25,6 +25,8 @@ func main() {
 }
 
 // startSimulator starts simulator and needed k8s components.
+//
+//nolint:cyclop
 func startSimulator() error {
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -53,12 +55,14 @@ func startSimulator() error {
 		}
 	}
 
-	dic := di.NewDIContainer(client, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, existingClusterClient, cfg.ExternalKubeClientCfg)
+	dic := di.NewDIContainer(client, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, existingClusterClient, cfg.ExternalSchedulerEnabled)
 
-	if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
-		return xerrors.Errorf("start scheduler: %w", err)
+	if !cfg.ExternalSchedulerEnabled {
+		if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
+			return xerrors.Errorf("start scheduler: %w", err)
+		}
+		defer dic.SchedulerService().ShutdownScheduler()
 	}
-	defer dic.SchedulerService().ShutdownScheduler()
 
 	// If ExternalImportEnabled is enabled, the simulator import resources
 	// from the existing cluster that indicated by the `KUBECONFIG`.

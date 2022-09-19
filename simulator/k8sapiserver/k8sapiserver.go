@@ -2,7 +2,6 @@ package k8sapiserver
 
 import (
 	"context"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -47,6 +46,7 @@ func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []st
 
 	s := &httptest.Server{
 		Listener: l,
+		//nolint:gosec // we don't need to care about the slowloris attack here.
 		Config: &http.Server{
 			Handler: handler,
 		},
@@ -136,12 +136,12 @@ func createK8SAPIServerOpts(etcdURL string, corsAllowedOriginList []string) (*ap
 	}
 
 	// setup fake key for secure serving
-	saSigningKeyFile, err := ioutil.TempFile("/tmp", "insecure_test_key")
+	saSigningKeyFile, err := os.CreateTemp("/tmp", "insecure_test_key")
 	if err != nil {
 		return nil, nil, xerrors.Errorf("create temp file failed: %v", err)
 	}
 
-	if err = ioutil.WriteFile(saSigningKeyFile.Name(), []byte(ecdsaPrivateKey), 0o600); err != nil {
+	if err = os.WriteFile(saSigningKeyFile.Name(), []byte(ecdsaPrivateKey), 0o600); err != nil {
 		return nil, nil, xerrors.Errorf("write file %s failed: %v", saSigningKeyFile.Name(), err)
 	}
 	serverOpts.ServiceAccountSigningKeyFile = saSigningKeyFile.Name()
@@ -182,7 +182,7 @@ func createK8SAPIChainedServer(etcdURL string, corsAllowedOriginList []string) (
 		return nil, nil, xerrors.Errorf("complete k8s api server options: %w", err)
 	}
 
-	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts, nil)
+	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts)
 	if err != nil {
 		return nil, nil, err
 	}

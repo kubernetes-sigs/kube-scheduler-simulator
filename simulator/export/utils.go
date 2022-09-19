@@ -110,6 +110,7 @@ func convertPriorityClassesListToApplyConfigurationList(pcs []schedulingv1.Prior
 
 // convertToApplyConfiguration is convert some object to XXXXApplyConfiguration.
 // out should be the pointer of XXXXApplyConfiguration, otherwise, you can not get the result of conversion.
+//
 //nolint:funlen,cyclop // For readability.
 func convertToApplyConfiguration(in interface{}, out interface{}) error {
 	_in, err := json.Marshal(in)

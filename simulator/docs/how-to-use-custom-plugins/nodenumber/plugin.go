@@ -136,7 +136,8 @@ func New(arg runtime.Object, h framework.Handle) (framework.Plugin, error) {
 }
 
 // NodeNumberArgs is arguments for node number plugin.
-//nolint: revive
+//
+//nolint:revive
 type NodeNumberArgs struct {
 	metav1.TypeMeta
 

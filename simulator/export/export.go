@@ -10,6 +10,7 @@ package export
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"golang.org/x/xerrors"
@@ -24,6 +25,7 @@ import (
 	"k8s.io/klog/v2"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
 
@@ -92,7 +94,7 @@ type PriorityClassService interface {
 }
 
 type SchedulerService interface {
-	GetSchedulerConfig() *v1beta2config.KubeSchedulerConfiguration
+	GetSchedulerConfig() (*v1beta2config.KubeSchedulerConfiguration, error)
 	RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error
 }
 
@@ -167,7 +169,7 @@ func (s *Service) get(ctx context.Context, opts options) (*ResourcesForExport, e
 	if err := s.listPcs(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPcs: %w", err)
 	}
-	if err := s.getSchedulerConfig(&resources, errgrp); err != nil {
+	if err := s.getSchedulerConfig(&resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call getSchedulerConfig: %w", err)
 	}
 
@@ -227,7 +229,7 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts
 // Import imports all resources from posted data.
 // (1) Restart scheduler based on the data.
 // (2) Apply each resource.
-//     * If UID is not nil, an error will occur. (This is because the api-server will try to find that in existing resources by UID)
+//   - If UID is not nil, an error will occur. (This is because the api-server will try to find that in existing resources by UID)
 func (s *Service) Import(ctx context.Context, resources *ResourcesForImport, opts ...Option) error {
 	options := options{}
 	for _, o := range opts {
@@ -235,7 +237,10 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport, opt
 	}
 	if !options.ignoreSchedulerConfiguration {
 		if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
-			return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
+			if !errors.Is(err, scheduler.ErrServiceDisabled) {
+				return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
+			}
+			klog.Info("The scheduler configuration hasn't been imported because of an external scheduler is enabled.")
 		}
 	}
 	if err := s.apply(ctx, resources, options); err != nil {
@@ -358,9 +363,16 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.S
 	return nil
 }
 
-func (s *Service) getSchedulerConfig(r *ResourcesForExport, eg *util.SemaphoredErrGroup) error {
+func (s *Service) getSchedulerConfig(r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
-		ss := s.schedulerService.GetSchedulerConfig()
+		ss, err := s.schedulerService.GetSchedulerConfig()
+		if err != nil && !errors.Is(err, scheduler.ErrServiceDisabled) {
+			if !opts.ignoreErr {
+				return xerrors.Errorf("get scheduler config: %w", err)
+			}
+			klog.Errorf("failed to get scheduler config: %v", err)
+			return nil
+		}
 		r.SchedulerConfig = ss
 		return nil
 	}); err != nil {
