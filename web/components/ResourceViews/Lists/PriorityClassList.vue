@@ -24,15 +24,9 @@
 
 <script lang="ts">
 import { V1PriorityClass } from "@kubernetes/client-node";
-import {
-  computed,
-  inject,
-  onMounted,
-  defineComponent,
-} from "@nuxtjs/composition-api";
+import { computed, inject, defineComponent } from "@nuxtjs/composition-api";
 import {} from "../../lib/util";
 import PriorityClassStoreKey from "../../StoreKey/PriorityClassStoreKey";
-import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 export default defineComponent({
   setup() {
     const store = inject(PriorityClassStoreKey);
@@ -40,22 +34,10 @@ export default defineComponent({
       throw new Error(`${PriorityClassStoreKey} is not provided`);
     }
 
-    const snackbarstore = inject(SnackBarStoreKey);
-    if (!snackbarstore) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
-    }
-
-    const setServerErrorMessage = (error: string) => {
-      snackbarstore.setServerErrorMessage(error);
-    };
-
-    const getPriorityClassList = async () => {
-      await store.fetchlist().catch((e) => setServerErrorMessage(e));
-    };
     const onClick = (priorityclass: V1PriorityClass) => {
       store.select(priorityclass, false);
     };
-    onMounted(getPriorityClassList);
+
     const priorityclasses = computed(() => store.priorityclasses);
     return {
       priorityclasses,

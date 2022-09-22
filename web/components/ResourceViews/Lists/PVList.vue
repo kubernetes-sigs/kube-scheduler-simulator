@@ -25,15 +25,9 @@
 
 <script lang="ts">
 import { V1PersistentVolume } from "@kubernetes/client-node";
-import {
-  computed,
-  inject,
-  onMounted,
-  defineComponent,
-} from "@nuxtjs/composition-api";
+import { computed, inject, defineComponent } from "@nuxtjs/composition-api";
 import {} from "../../lib/util";
 import PersistentVolumeStoreKey from "../../StoreKey/PVStoreKey";
-import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 export default defineComponent({
   setup() {
     const store = inject(PersistentVolumeStoreKey);
@@ -41,22 +35,10 @@ export default defineComponent({
       throw new Error(`${PersistentVolumeStoreKey} is not provided`);
     }
 
-    const snackbarstore = inject(SnackBarStoreKey);
-    if (!snackbarstore) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
-    }
-
-    const setServerErrorMessage = (error: string) => {
-      snackbarstore.setServerErrorMessage(error);
-    };
-
-    const getPVList = async () => {
-      await store.fetchlist().catch((e) => setServerErrorMessage(e));
-    };
     const onClick = (pv: V1PersistentVolume) => {
       store.select(pv, false);
     };
-    onMounted(getPVList);
+
     const pvs = computed(() => store.pvs);
     return {
       pvs,

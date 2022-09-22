@@ -1,10 +1,18 @@
 import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1StorageClass } from "@kubernetes/client-node";
 import { StorageClassAPIKey } from "~/api/APIProviderKeys";
+import {
+  createResourceState,
+  addResourceToState,
+  modifyResourceInState,
+  deleteResourceInState,
+} from "./helpers/storeHelper";
+import { WatchEventType } from "@/types/resources";
 
 type stateType = {
   selectedStorageClass: selectedStorageClass | null;
   storageclasses: V1StorageClass[];
+  lastResourceVersion: string;
 };
 
 type selectedStorageClass = {
@@ -19,6 +27,7 @@ export default function storageclassStore() {
   const state: stateType = reactive({
     selectedStorageClass: null,
     storageclasses: [],
+    lastResourceVersion: "",
   });
 
   const storageClassAPI = inject(StorageClassAPIKey);
@@ -54,11 +63,6 @@ export default function storageclassStore() {
       state.selectedStorageClass = null;
     },
 
-    async fetchlist() {
-      const storageclasses = await storageClassAPI.listStorageClass();
-      state.storageclasses = storageclasses.items;
-    },
-
     async apply(n: V1StorageClass) {
       if (n.metadata?.name) {
         await storageClassAPI.applyStorageClass(n);
@@ -70,7 +74,6 @@ export default function storageclassStore() {
           "failed to apply storageclass: storageclass should have metadata.name or metadata.generateName"
         );
       }
-      await this.fetchlist();
     },
 
     async fetchSelected() {
@@ -87,7 +90,50 @@ export default function storageclassStore() {
 
     async delete(name: string) {
       await storageClassAPI.deleteStorageClass(name);
-      await this.fetchlist();
+    },
+
+    // initList calls list API, and stores current resource data and lastResourceVersion.
+    async initList() {
+      const liststorageclasses = await storageClassAPI.listStorageClass();
+      state.storageclasses = createResourceState<V1StorageClass>(
+        liststorageclasses.items
+      );
+      state.lastResourceVersion = liststorageclasses.metadata?.resourceVersion!;
+    },
+
+    // watchEventHandler handles each notified event.
+    async watchEventHandler(eventType: WatchEventType, sc: V1StorageClass) {
+      switch (eventType) {
+        case WatchEventType.ADDED: {
+          state.storageclasses = addResourceToState(state.storageclasses, sc);
+          break;
+        }
+        case WatchEventType.MODIFIED: {
+          state.storageclasses = modifyResourceInState(
+            state.storageclasses,
+            sc
+          );
+          break;
+        }
+        case WatchEventType.DELETED: {
+          state.storageclasses = deleteResourceInState(
+            state.storageclasses,
+            sc
+          );
+          break;
+        }
+        default:
+          break;
+      }
+    },
+
+    get lastResourceVersion() {
+      return state.lastResourceVersion;
+    },
+
+    async setLastResourceVersion(sc: V1StorageClass) {
+      state.lastResourceVersion =
+        sc.metadata!.resourceVersion || state.lastResourceVersion;
     },
   };
 }

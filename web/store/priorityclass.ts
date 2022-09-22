@@ -1,10 +1,18 @@
 import { reactive, inject } from "@nuxtjs/composition-api";
 import { V1PriorityClass } from "@kubernetes/client-node";
 import { PriorityClassAPIKey } from "~/api/APIProviderKeys";
+import {
+  createResourceState,
+  addResourceToState,
+  modifyResourceInState,
+  deleteResourceInState,
+} from "./helpers/storeHelper";
+import { WatchEventType } from "@/types/resources";
 
 type stateType = {
   selectedPriorityClass: selectedPriorityClass | null;
   priorityclasses: V1PriorityClass[];
+  lastResourceVersion: string;
 };
 
 type selectedPriorityClass = {
@@ -19,6 +27,7 @@ export default function priorityclassStore() {
   const state: stateType = reactive({
     selectedPriorityClass: null,
     priorityclasses: [],
+    lastResourceVersion: "",
   });
 
   const priorityClassAPI = inject(PriorityClassAPIKey);
@@ -60,11 +69,6 @@ export default function priorityclassStore() {
       state.selectedPriorityClass = null;
     },
 
-    async fetchlist() {
-      const priorityclasses = await priorityClassAPI.listPriorityClass();
-      state.priorityclasses = priorityclasses.items;
-    },
-
     async apply(n: V1PriorityClass) {
       if (n.metadata?.name) {
         await priorityClassAPI.applyPriorityClass(n);
@@ -76,7 +80,6 @@ export default function priorityclassStore() {
           "failed to apply priorityclass: priorityclass should have metadata.name or metadata.generateName"
         );
       }
-      await this.fetchlist();
     },
 
     async fetchSelected() {
@@ -93,7 +96,51 @@ export default function priorityclassStore() {
 
     async delete(name: string) {
       await priorityClassAPI.deletePriorityClass(name);
-      await this.fetchlist();
+    },
+
+    // initList calls list API, and stores current resource data and lastResourceVersion.
+    async initList() {
+      const listpriorityclasses = await priorityClassAPI.listPriorityClass();
+      state.priorityclasses = createResourceState<V1PriorityClass>(
+        listpriorityclasses.items
+      );
+      state.lastResourceVersion =
+        listpriorityclasses.metadata?.resourceVersion!;
+    },
+
+    // watchEventHandler handles each notified event.
+    async watchEventHandler(eventType: WatchEventType, pc: V1PriorityClass) {
+      switch (eventType) {
+        case WatchEventType.ADDED: {
+          state.priorityclasses = addResourceToState(state.priorityclasses, pc);
+          break;
+        }
+        case WatchEventType.MODIFIED: {
+          state.priorityclasses = modifyResourceInState(
+            state.priorityclasses,
+            pc
+          );
+          break;
+        }
+        case WatchEventType.DELETED: {
+          state.priorityclasses = deleteResourceInState(
+            state.priorityclasses,
+            pc
+          );
+          break;
+        }
+        default:
+          break;
+      }
+    },
+
+    get lastResourceVersion() {
+      return state.lastResourceVersion;
+    },
+
+    async setLastResourceVersion(pc: V1PriorityClass) {
+      state.lastResourceVersion =
+        pc.metadata!.resourceVersion || state.lastResourceVersion;
     },
   };
 }

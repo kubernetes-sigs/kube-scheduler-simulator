@@ -8,17 +8,10 @@
 </template>
 
 <script lang="ts">
-import {
-  computed,
-  inject,
-  onMounted,
-  defineComponent,
-} from "@nuxtjs/composition-api";
+import { computed, inject, defineComponent } from "@nuxtjs/composition-api";
 import DataTable from "./DataTable.vue";
 import NodeStoreKey from "../../StoreKey/NodeStoreKey";
 import { V1Node } from "@kubernetes/client-node";
-import PodStoreKey from "../../StoreKey/PodStoreKey";
-import SnackBarStoreKey from "../../StoreKey/SnackBarStoreKey";
 import {} from "../../lib/util";
 
 export default defineComponent({
@@ -26,30 +19,10 @@ export default defineComponent({
     DataTable,
   },
   setup() {
-    const pstore = inject(PodStoreKey);
-    if (!pstore) {
-      throw new Error(`${PodStoreKey} is not provided`);
-    }
-
     const nstore = inject(NodeStoreKey);
     if (!nstore) {
       throw new Error(`${NodeStoreKey} is not provided`);
     }
-
-    const snackbarstore = inject(SnackBarStoreKey);
-    if (!snackbarstore) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
-    }
-
-    const setServerErrorMessage = (error: string) => {
-      snackbarstore.setServerErrorMessage(error);
-    };
-
-    const getNodeList = async () => {
-      await nstore.fetchlist().catch((e) => setServerErrorMessage(e));
-    };
-
-    onMounted(getNodeList);
 
     const nodes = computed(() => nstore.nodes);
     const onClick = (node: V1Node) => {
