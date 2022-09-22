@@ -457,7 +457,9 @@ func Test_wrappedPlugin_PostFilter(t *testing.T) {
 				},
 			},
 			wantResult: &framework.PostFilterResult{
-				NominatedNodeName: "node1",
+				NominatingInfo: &framework.NominatingInfo{
+					NominatedNodeName: "node1",
+				},
 			},
 			wantStatus: framework.NewStatus(framework.Success, "postfilter success"),
 		},
@@ -537,10 +539,14 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 				success2 := framework.NewStatus(framework.Success, "PostFilter returned")
 				success3 := framework.NewStatus(framework.Success, "AfterPostFilter returned")
 				result1 := &framework.PostFilterResult{
-					NominatedNodeName: "node1",
+					NominatingInfo: &framework.NominatingInfo{
+						NominatedNodeName: "node1",
+					},
 				}
 				result2 := &framework.PostFilterResult{
-					NominatedNodeName: "node2",
+					NominatingInfo: &framework.NominatingInfo{
+						NominatedNodeName: "node2",
+					},
 				}
 				fe.EXPECT().BeforePostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, success1)
 				p.EXPECT().PostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(result1, success2)
@@ -562,7 +568,9 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 				},
 			},
 			wantResult: &framework.PostFilterResult{
-				NominatedNodeName: "node2",
+				NominatingInfo: &framework.NominatingInfo{
+					NominatedNodeName: "node2",
+				},
 			},
 			wantStatus: framework.NewStatus(framework.Success, "AfterPostFilter returned"),
 		},
@@ -573,7 +581,9 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 				failure := framework.NewStatus(framework.Error, "PostFilter returned")
 				success3 := framework.NewStatus(framework.Success, "AfterPostFilter returned")
 				result2 := &framework.PostFilterResult{
-					NominatedNodeName: "node2",
+					NominatingInfo: &framework.NominatingInfo{
+						NominatedNodeName: "node2",
+					},
 				}
 				fe.EXPECT().BeforePostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, success1)
 				p.EXPECT().PostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, failure)
@@ -595,7 +605,9 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 				},
 			},
 			wantResult: &framework.PostFilterResult{
-				NominatedNodeName: "node2",
+				NominatingInfo: &framework.NominatingInfo{
+					NominatedNodeName: "node2",
+				},
 			},
 			wantStatus: framework.NewStatus(framework.Success, "AfterPostFilter returned"),
 		},
@@ -622,7 +634,9 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 				success1 := framework.NewStatus(framework.Success, "BeforePostFilter returned")
 				success2 := framework.NewStatus(framework.Success, "PostFilter returned")
 				result1 := &framework.PostFilterResult{
-					NominatedNodeName: "node1",
+					NominatingInfo: &framework.NominatingInfo{
+						NominatedNodeName: "node1",
+					},
 				}
 				failure := framework.NewStatus(framework.Error, "AfterPostFilter returned")
 				fe.EXPECT().BeforePostFilter(ctx, nil, as.pod, as.filteredNodeStatusMap).Return(nil, success1)
@@ -1234,7 +1248,7 @@ type fakePostFilterPlugin struct{}
 
 func (fakePostFilterPlugin) Name() string { return "fakePostFilterPlugin" }
 func (fakePostFilterPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
-	return &framework.PostFilterResult{NominatedNodeName: "node1"}, framework.NewStatus(framework.Success, "postfilter success")
+	return &framework.PostFilterResult{NominatingInfo: &framework.NominatingInfo{NominatedNodeName: "node1"}}, framework.NewStatus(framework.Success, "postfilter success")
 }
 
 type fakeScorePlugin struct{}
