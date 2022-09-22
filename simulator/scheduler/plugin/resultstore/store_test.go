@@ -173,9 +173,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 						"node1": {
 							"plugin1": PostFilterNominatedMessage,
 						},
-						"node2": {
-							"plugin1": PostFilterUnschedulableMessage,
-						},
+						"node2": {},
 					},
 				},
 			},
@@ -188,9 +186,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 					finalscore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
-						"node1": {
-							"plugin1": PostFilterUnschedulableMessage,
-						},
+						"node1": {},
 					},
 				},
 			},
@@ -208,12 +204,9 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node1": {
-							"plugin1": PostFilterUnschedulableMessage,
 							"plugin2": PostFilterNominatedMessage,
 						},
-						"node2": {
-							"plugin2": PostFilterUnschedulableMessage,
-						},
+						"node2": {},
 					},
 				},
 			},
@@ -226,9 +219,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 					finalscore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
-						"node0": {
-							"plugin1": PostFilterUnschedulableMessage,
-						},
+						"node0": {},
 					},
 				},
 			},
@@ -245,15 +236,11 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 					finalscore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
-						"node0": {
-							"plugin1": PostFilterUnschedulableMessage,
-						},
+						"node0": {},
 						"node1": {
 							"plugin2": PostFilterNominatedMessage,
 						},
-						"node2": {
-							"plugin2": PostFilterUnschedulableMessage,
-						},
+						"node2": {},
 					},
 				},
 			},

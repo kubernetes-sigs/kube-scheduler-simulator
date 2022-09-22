@@ -163,7 +163,7 @@ func (s *Store) addPostFilterResultToPod(pod *v1.Pod) error {
 	k := newKey(pod.Namespace, pod.Name)
 	result, err := json.Marshal(s.results[k].postFilter)
 	if err != nil {
-		return xerrors.Errorf("encode json to record scores: %w", err)
+		return xerrors.Errorf("encode json to record post filter results: %w", err)
 	}
 	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PostFilterResultAnnotationKey, string(result))
 	return nil
@@ -208,9 +208,9 @@ func (s *Store) AddFilterResult(namespace, podName, nodeName, pluginName, reason
 	s.results[k].filter[nodeName][pluginName] = reason
 }
 
-// AddPostFilterResult adds post filtering result ot the pod annotaiton.
-// - nominatedNodeName represents the node name which nominated by the postFilter plugin.
-//   Otherwise, the string "" would be stored in this arg.
+// AddPostFilterResult adds post filter result to the pod annotaiton.
+//   - nominatedNodeName represents the node name which nominated by the postFilter plugin.
+//     Otherwise, the string "" would be stored in this arg.
 func (s *Store) AddPostFilterResult(namespace, podName, nominatedNodeName, pluginName string, nodeNames []string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -225,8 +225,6 @@ func (s *Store) AddPostFilterResult(namespace, podName, nominatedNodeName, plugi
 		}
 		if nodeName == nominatedNodeName {
 			s.results[k].postFilter[nodeName][pluginName] = PostFilterNominatedMessage
-		} else {
-			s.results[k].postFilter[nodeName][pluginName] = PostFilterUnschedulableMessage
 		}
 	}
 }

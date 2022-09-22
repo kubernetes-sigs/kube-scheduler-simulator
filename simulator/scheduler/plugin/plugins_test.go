@@ -534,7 +534,7 @@ func Test_NewPluginConfig(t *testing.T) {
 	}
 }
 
-func Test_defaultFilterPostFilterScorePlugins(t *testing.T) {
+func Test_defaultRegisteredPlugins(t *testing.T) {
 	t.Parallel()
 	var weight1 int32 = 1
 	var weight2 int32 = 2
@@ -577,9 +577,9 @@ func Test_defaultFilterPostFilterScorePlugins(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := registeredFilterPostFilterScorePlugins()
+			got, err := registeredPlugins()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("registeredFilterPostFilterScorePlugins() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("registeredPlugins() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			assert.Equal(t, tt.want, got)
