@@ -577,9 +577,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 						"node0": {
 							"plugin1": PostFilterNominatedMessage,
 						},
-						"node1": {
-							"plugin1": PostFilterUnschedulableMessage,
-						},
+						"node1": {},
 					},
 					score: map[string]map[string]string{
 						"node0": {
@@ -654,9 +652,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 								"node0": {
 									"plugin1": PostFilterNominatedMessage,
 								},
-								"node1": {
-									"plugin1": PostFilterUnschedulableMessage,
-								},
+								"node1": {},
 							}
 							d, _ := json.Marshal(r)
 							return string(d)

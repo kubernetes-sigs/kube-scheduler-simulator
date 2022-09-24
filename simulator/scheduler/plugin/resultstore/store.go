@@ -33,8 +33,6 @@ const (
 	PassedFilterMessage = "passed"
 	// PostFilterNominatedMessage  is used when a postFilter plugin returns success.
 	PostFilterNominatedMessage = "schedulable"
-	// PostFilterUnschedulableMessage is used when a postFilter plugin returns non-success.
-	PostFilterUnschedulableMessage = "unschedulable"
 )
 
 // result has a scheduling result of pod.
