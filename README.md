@@ -73,6 +73,8 @@ If you want to use your custom plugins as out-of-tree plugins in the simulator, 
 
 ## Getting started
 
+Read more about environment variables being used in simulator server
+[here.](./simulator/docs/env-variables.md)
 ### Run simulator with Docker
 
 We have [docker-compose.yml](docker-compose.yml) to run the simulator easily.
