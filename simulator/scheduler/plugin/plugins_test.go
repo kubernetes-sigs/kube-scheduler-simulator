@@ -25,6 +25,55 @@ func TestConvertForSimulator(t *testing.T) {
 		{
 			name: "success",
 			arg: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
 					Disabled: []v1beta2.Plugin{
 						{Name: "EBSLimits"},
@@ -58,6 +107,62 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 			},
 			want: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
 						{Name: "PodTopologySpreadWrapped"},
@@ -94,6 +199,55 @@ func TestConvertForSimulator(t *testing.T) {
 		{
 			name: "success when user disable all plugins with '*'",
 			arg: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
 					Disabled: []v1beta2.Plugin{
 						{Name: "*"},
@@ -115,6 +269,62 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 			},
 			want: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{},
 					Disabled: []v1beta2.Plugin{
@@ -148,6 +358,55 @@ func TestConvertForSimulator(t *testing.T) {
 		{
 			name: "success with non in-tree plugins",
 			arg: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
 						{Name: "CustomPlugin1"},
@@ -182,6 +441,62 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 			},
 			want: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
 						{Name: "CustomPlugin1Wrapped"},
@@ -553,22 +868,18 @@ func Test_defaultRegisteredPlugins(t *testing.T) {
 				{Name: "NodeAffinity", Weight: &weight1},
 				{Name: "PodTopologySpread", Weight: &weight2},
 				{Name: "TaintToleration", Weight: &weight1},
-				{Name: "DefaultPreemption"},
+				{Name: "DefaultBinder"},
+				{Name: "VolumeBinding"},
+				{Name: "NodePorts"},
+				{Name: "VolumeRestrictions"},
 				{Name: "NodeUnschedulable"},
 				{Name: "NodeName"},
-				{Name: "TaintToleration"},
-				{Name: "NodeAffinity"},
-				{Name: "NodePorts"},
-				{Name: "NodeResourcesFit"},
-				{Name: "VolumeRestrictions"},
 				{Name: "EBSLimits"},
 				{Name: "GCEPDLimits"},
 				{Name: "NodeVolumeLimits"},
 				{Name: "AzureDiskLimits"},
-				{Name: "VolumeBinding"},
 				{Name: "VolumeZone"},
-				{Name: "PodTopologySpread"},
-				{Name: "InterPodAffinity"},
+				{Name: "DefaultPreemption"},
 			},
 			wantErr: false,
 		},

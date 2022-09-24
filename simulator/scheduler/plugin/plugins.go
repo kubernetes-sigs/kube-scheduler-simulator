@@ -171,6 +171,34 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
 	newpls := pls.DeepCopy()
 
+	if err := applyPluingSet(&newpls.PreScore, pls.PreScore, config.InTreePreScorePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PreScore plugins: %w", err)
+	}
+
+	if err := applyPluingSet(&newpls.PreFilter, pls.PreFilter, config.InTreePreFilterPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PreFilter plugins: %w", err)
+	}
+
+	if err := applyPluingSet(&newpls.Permit, pls.Permit, config.InTreePermitPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Permit plugins: %w", err)
+	}
+
+	if err := applyPluingSet(&newpls.Reserve, pls.Reserve, config.InTreeReservePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Reserve plugins: %w", err)
+	}
+
+	if err := applyPluingSet(&newpls.Bind, pls.Bind, config.InTreeBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Bind plugins: %w", err)
+	}
+
+	if err := applyPluingSet(&newpls.PostBind, pls.PostBind, config.InTreePostBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PostBind plugins: %w", err)
+	}
+
+	if err := applyPluingSet(&newpls.PreBind, pls.PreBind, config.InTreePreBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PreBind plugins: %w", err)
+	}
+
 	if err := applyPluingSet(&newpls.Score, pls.Score, config.InTreeScorePluginSet); err != nil {
 		return nil, xerrors.Errorf("merge Score plugins: %w", err)
 	}
@@ -182,6 +210,7 @@ func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
 	if err := applyPluingSet(&newpls.PostFilter, pls.PostFilter, config.InTreePostFilterPluginSet); err != nil {
 		return nil, xerrors.Errorf("merge PostFilter plugins: %w", err)
 	}
+
 	return newpls, nil
 }
 
@@ -253,19 +282,69 @@ func mergePluginSet(inTreePluginSet, outOfTreePluginSet v1beta2.PluginSet) v1bet
 	return v1beta2.PluginSet{Enabled: enabledPlugins}
 }
 
-// registeredPlugins returns all registered score plugin and filter plugin.
+// registeredPlugins returns all registered plugins.
 func registeredPlugins() ([]v1beta2.Plugin, error) {
-	registeredfilterpls, err := config.RegisteredFilterPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered filter plugins: %w", err)
-	}
-	registerdpostfilterpls, err := config.RegisteredPostFilterPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered postFilter plugins: %w", err)
-	}
+	var pls []v1beta2.Plugin
 	registeredscorepls, err := config.RegisteredScorePlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get registered score plugins: %w", err)
 	}
-	return append(append(registeredscorepls, registerdpostfilterpls...), registeredfilterpls...), nil
+	pls = append(pls, registeredscorepls...)
+	registeredbindpls, err := config.RegisteredBindPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered bind plugins: %w", err)
+	}
+	pls = append(pls, registeredbindpls...)
+	registeredpostbindpls, err := config.RegisteredPostBindPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered postbind plugins: %w", err)
+	}
+	pls = append(pls, registeredpostbindpls...)
+	registeredperbindpls, err := config.RegisteredPreBindPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered prebind plugins: %w", err)
+	}
+	pls = append(pls, registeredperbindpls...)
+	registeredreservepls, err := config.RegisteredReservePlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered reserve plugins: %w", err)
+	}
+	pls = append(pls, registeredreservepls...)
+	registeredpermitpls, err := config.RegisteredPermitPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered permit plugins: %w", err)
+	}
+	pls = append(pls, registeredpermitpls...)
+	registeredperfilterpls, err := config.RegisteredPreFilterPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered prefilter plugins: %w", err)
+	}
+	pls = append(pls, registeredperfilterpls...)
+	registeredprescorepls, err := config.RegisteredPreScorePlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered prescore plugins: %w", err)
+	}
+	pls = append(pls, registeredprescorepls...)
+	registeredfilterpls, err := config.RegisteredFilterPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered filter plugins: %w", err)
+	}
+	pls = append(pls, registeredfilterpls...)
+	registerdpostfilterpls, err := config.RegisteredPostFilterPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered postFilter plugins: %w", err)
+	}
+	pls = append(pls, registerdpostfilterpls...)
+
+	registeredMap := sets.NewString()
+	var uniqPls []v1beta2.Plugin
+	for _, pl := range pls {
+		if registeredMap.Has(pl.Name) {
+			continue
+		}
+		registeredMap.Insert(pl.Name)
+		uniqPls = append(uniqPls, pl)
+	}
+
+	return uniqPls, nil
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"sync"
+	"time"
 
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
@@ -13,6 +14,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/scheduler/framework"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/annotation"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
@@ -29,20 +31,41 @@ type Store struct {
 }
 
 const (
-	// PassedFilterMessage is used when node pass the filter plugin.
+	// PassedFilterMessage is used when a node pass the filter plugin.
 	PassedFilterMessage = "passed"
-	// PostFilterNominatedMessage  is used when a postFilter plugin returns success.
-	PostFilterNominatedMessage = "schedulable"
+	// SuccessMessage is used when no error is retured from the plugin.
+	SuccessMessage = "success"
+	// WaitMessage is used when wait status is retured from the plugin.
+	WaitMessage = "wait"
+	// PostFilterNominatedMessage is used when a postFilter plugin returns success.
+	PostFilterNominatedMessage = "preemption victim"
 )
 
 // result has a scheduling result of pod.
 type result struct {
+	// selectedNode is the scheduling result. It'll be filled when the Pod go through Reserve phase.
+	selectedNode string
+
+	// plugin name → pre score(string)
+	// If success, SuccessMessage is shown.
+	// If non success, status.Message() is shown.
+	preScore map[string]string
+
 	// node name → plugin name → score(string)
 	score map[string]map[string]string
 
 	// node name → plugin name → finalscore(string)
 	// This score is normalized and applied weight for each plugins.
 	finalscore map[string]map[string]string
+
+	// plugin name → pre filter status.
+	// If success, SuccessMessage is shown.
+	// If non success, status.Message() is shown.
+	preFilterStatus map[string]string
+
+	// plugin name → pre filter result(framework.PreFilterResult)
+	// NodeNames in framework.PreFilterResult is shown.
+	preFilterResult map[string][]string
 
 	// node name → plugin name → filtering result
 	// When node pass the filter, filtering result will be PassedFilterMessage.
@@ -51,6 +74,21 @@ type result struct {
 
 	// node name → plugin name → post filtering result
 	postFilter map[string]map[string]string
+
+	// plugin name → permit result (framework.Status)
+	permit map[string]string
+
+	// plugin name → permit timeout(string)
+	permitTimeout map[string]string
+
+	// plugin name → reserve result(string)
+	reserve map[string]string
+
+	// plugin name → prebind result(string)
+	prebind map[string]string
+
+	// plugin name → bind result(string)
+	bind map[string]string
 }
 
 func New(informerFactory informers.SharedInformerFactory, client clientset.Interface, scorePluginWeight map[string]int32) *Store {
@@ -84,17 +122,27 @@ func newKey(namespace, podName string) key {
 
 func newData() *result {
 	d := &result{
-		score:      map[string]map[string]string{},
-		finalscore: map[string]map[string]string{},
-		filter:     map[string]map[string]string{},
-		postFilter: map[string]map[string]string{},
+		score:           map[string]map[string]string{},
+		finalscore:      map[string]map[string]string{},
+		preFilterResult: map[string][]string{},
+		preFilterStatus: map[string]string{},
+		preScore:        map[string]string{},
+		filter:          map[string]map[string]string{},
+		postFilter:      map[string]map[string]string{},
+		permit:          map[string]string{},
+		permitTimeout:   map[string]string{},
+		reserve:         map[string]string{},
+		bind:            map[string]string{},
+		prebind:         map[string]string{},
 	}
 	return d
 }
 
+//nolint:funlen,cyclop
 func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	ctx := context.Background()
 
 	pod, ok := newObj.(*v1.Pod)
@@ -109,6 +157,11 @@ func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
 		return
 	}
 
+	if err := s.addPreFilterResultToPod(pod); err != nil {
+		klog.Errorf("failed to add prefilter result to pod: %+v", err)
+		return
+	}
+
 	if err := s.addFilterResultToPod(pod); err != nil {
 		klog.Errorf("failed to add filtering result to pod: %+v", err)
 		return
@@ -116,6 +169,11 @@ func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
 
 	if err := s.addPostFilterResultToPod(pod); err != nil {
 		klog.Errorf("failed to add post filtering result to pod: %+v", err)
+		return
+	}
+
+	if err := s.addPreScoreResultToPod(pod); err != nil {
+		klog.Errorf("failed to add prescore result to pod: %+v", err)
 		return
 	}
 
@@ -128,6 +186,28 @@ func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
 		klog.Errorf("failed to add final score result to pod: %+v", err)
 		return
 	}
+
+	if err := s.addReserveResultToPod(pod); err != nil {
+		klog.Errorf("failed to add reserve result to pod: %+v", err)
+		return
+	}
+
+	if err := s.addPermitResultToPod(pod); err != nil {
+		klog.Errorf("failed to add permit result to pod: %+v", err)
+		return
+	}
+
+	if err := s.addPreBindResultToPod(pod); err != nil {
+		klog.Errorf("failed to add prebind result to pod: %+v", err)
+		return
+	}
+
+	if err := s.addBindResultToPod(pod); err != nil {
+		klog.Errorf("failed to add bind result to pod: %+v", err)
+		return
+	}
+
+	s.addSelectedNodeToPod(pod)
 
 	updateFunc := func() (bool, error) {
 		_, err := s.client.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{})
@@ -146,8 +226,166 @@ func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
 	s.deleteData(k)
 }
 
-func (s *Store) addFilterResultToPod(pod *v1.Pod) error {
+func (s *Store) addPreFilterResultToPod(pod *v1.Pod) error {
 	k := newKey(pod.Namespace, pod.Name)
+
+	_, ok := pod.GetAnnotations()[annotation.PreFilterResultAnnotationKey]
+	if !ok {
+		if s.results[k].preFilterResult == nil {
+			s.results[k].preFilterResult = map[string][]string{}
+		}
+		r, err := json.Marshal(s.results[k].preFilterResult)
+		if err != nil {
+			return xerrors.Errorf("encode json to record scores: %w", err)
+		}
+
+		metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreFilterResultAnnotationKey, string(r))
+	}
+
+	_, ok2 := pod.GetAnnotations()[annotation.PreFilterStatusResultAnnotationKey]
+	if ok2 {
+		return nil
+	}
+
+	if s.results[k].preFilterStatus == nil {
+		s.results[k].preFilterStatus = map[string]string{}
+	}
+	sta, err := json.Marshal(s.results[k].preFilterStatus)
+	if err != nil {
+		return xerrors.Errorf("encode json to record scores: %w", err)
+	}
+
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreFilterStatusResultAnnotationKey, string(sta))
+
+	return nil
+}
+
+func (s *Store) addPreScoreResultToPod(pod *v1.Pod) error {
+	_, ok := pod.GetAnnotations()[annotation.PreScoreResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
+	k := newKey(pod.Namespace, pod.Name)
+	if s.results[k].preScore == nil {
+		s.results[k].preScore = map[string]string{}
+	}
+	scores, err := json.Marshal(s.results[k].preScore)
+	if err != nil {
+		return xerrors.Errorf("encode json to record scores: %w", err)
+	}
+
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreScoreResultAnnotationKey, string(scores))
+	return nil
+}
+
+func (s *Store) addBindResultToPod(pod *v1.Pod) error {
+	_, ok := pod.GetAnnotations()[annotation.BindResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
+	k := newKey(pod.Namespace, pod.Name)
+	if s.results[k].bind == nil {
+		s.results[k].bind = map[string]string{}
+	}
+	scores, err := json.Marshal(s.results[k].bind)
+	if err != nil {
+		return xerrors.Errorf("encode json to record scores: %w", err)
+	}
+
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.BindResultAnnotationKey, string(scores))
+	return nil
+}
+
+func (s *Store) addPreBindResultToPod(pod *v1.Pod) error {
+	_, ok := pod.GetAnnotations()[annotation.PreBindResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
+	k := newKey(pod.Namespace, pod.Name)
+	if s.results[k].prebind == nil {
+		s.results[k].prebind = map[string]string{}
+	}
+	scores, err := json.Marshal(s.results[k].prebind)
+	if err != nil {
+		return xerrors.Errorf("encode json to record scores: %w", err)
+	}
+
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreBindResultAnnotationKey, string(scores))
+	return nil
+}
+
+func (s *Store) addSelectedNodeToPod(pod *v1.Pod) {
+	_, ok := pod.GetAnnotations()[annotation.SelectedNodeAnnotationKey]
+	if ok {
+		return
+	}
+
+	k := newKey(pod.Namespace, pod.Name)
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.SelectedNodeAnnotationKey, s.results[k].selectedNode)
+}
+
+func (s *Store) addReserveResultToPod(pod *v1.Pod) error {
+	_, ok := pod.GetAnnotations()[annotation.ReserveResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
+	k := newKey(pod.Namespace, pod.Name)
+	if s.results[k].reserve == nil {
+		s.results[k].reserve = map[string]string{}
+	}
+	status, err := json.Marshal(s.results[k].reserve)
+	if err != nil {
+		return xerrors.Errorf("encode json to record scores: %w", err)
+	}
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.ReserveResultAnnotationKey, string(status))
+	return nil
+}
+
+func (s *Store) addPermitResultToPod(pod *v1.Pod) error {
+	k := newKey(pod.Namespace, pod.Name)
+
+	_, ok := pod.GetAnnotations()[annotation.PermitTimeoutResultAnnotationKey]
+	if !ok {
+		if s.results[k].permitTimeout == nil {
+			s.results[k].permitTimeout = map[string]string{}
+		}
+		timeout, err := json.Marshal(s.results[k].permitTimeout)
+		if err != nil {
+			return xerrors.Errorf("encode json to record scores: %w", err)
+		}
+		metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PermitTimeoutResultAnnotationKey, string(timeout))
+	}
+
+	_, ok = pod.GetAnnotations()[annotation.PermitStatusResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
+	if s.results[k].permit == nil {
+		s.results[k].permit = map[string]string{}
+	}
+	status, err := json.Marshal(s.results[k].permit)
+	if err != nil {
+		return xerrors.Errorf("encode json to record scores: %w", err)
+	}
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PermitStatusResultAnnotationKey, string(status))
+	return nil
+}
+
+func (s *Store) addFilterResultToPod(pod *v1.Pod) error {
+	_, ok := pod.GetAnnotations()[annotation.FilterResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
+	k := newKey(pod.Namespace, pod.Name)
+	if s.results[k].filter == nil {
+		s.results[k].filter = map[string]map[string]string{}
+	}
 	scores, err := json.Marshal(s.results[k].filter)
 	if err != nil {
 		return xerrors.Errorf("encode json to record scores: %w", err)
@@ -158,7 +396,15 @@ func (s *Store) addFilterResultToPod(pod *v1.Pod) error {
 }
 
 func (s *Store) addPostFilterResultToPod(pod *v1.Pod) error {
+	_, ok := pod.GetAnnotations()[annotation.PostFilterResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
 	k := newKey(pod.Namespace, pod.Name)
+	if s.results[k].postFilter == nil {
+		s.results[k].postFilter = map[string]map[string]string{}
+	}
 	result, err := json.Marshal(s.results[k].postFilter)
 	if err != nil {
 		return xerrors.Errorf("encode json to record post filter results: %w", err)
@@ -168,7 +414,15 @@ func (s *Store) addPostFilterResultToPod(pod *v1.Pod) error {
 }
 
 func (s *Store) addScoreResultToPod(pod *v1.Pod) error {
+	_, ok := pod.GetAnnotations()[annotation.ScoreResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
 	k := newKey(pod.Namespace, pod.Name)
+	if s.results[k].score == nil {
+		s.results[k].score = map[string]map[string]string{}
+	}
 	scores, err := json.Marshal(s.results[k].score)
 	if err != nil {
 		return xerrors.Errorf("encode json to record scores: %w", err)
@@ -179,7 +433,15 @@ func (s *Store) addScoreResultToPod(pod *v1.Pod) error {
 }
 
 func (s *Store) addFinalScoreResultToPod(pod *v1.Pod) error {
+	_, ok := pod.GetAnnotations()[annotation.FinalScoreResultAnnotationKey]
+	if ok {
+		return nil
+	}
+
 	k := newKey(pod.Namespace, pod.Name)
+	if s.results[k].finalscore == nil {
+		s.results[k].finalscore = map[string]map[string]string{}
+	}
 	scores, err := json.Marshal(s.results[k].finalscore)
 	if err != nil {
 		return xerrors.Errorf("encode json to record scores: %w", err)
@@ -286,4 +548,92 @@ func (s *Store) DeleteData(k key) {
 // Note: we assume the store lock is already acquired.
 func (s *Store) deleteData(k key) {
 	delete(s.results, k)
+}
+
+func (s *Store) AddPreFilterResult(namespace, podName, pluginName, reason string, preFilterResult *framework.PreFilterResult) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+
+	s.results[k].preFilterStatus[pluginName] = reason
+	if preFilterResult != nil {
+		s.results[k].preFilterResult[pluginName] = preFilterResult.NodeNames.List()
+	}
+}
+
+func (s *Store) AddPreScoreResult(namespace, podName, pluginName, reason string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+
+	s.results[k].preScore[pluginName] = reason
+}
+
+func (s *Store) AddPermitResult(namespace, podName, pluginName, status string, timeout time.Duration) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+
+	s.results[k].permit[pluginName] = status
+	s.results[k].permitTimeout[pluginName] = timeout.String()
+}
+
+func (s *Store) AddSelectedNode(namespace, podName, nodeName string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+
+	s.results[k].selectedNode = nodeName
+}
+
+func (s *Store) AddReserveResult(namespace, podName, pluginName, status string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+
+	s.results[k].reserve[pluginName] = status
+}
+
+func (s *Store) AddBindResult(namespace, podName, pluginName, status string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+
+	s.results[k].bind[pluginName] = status
+}
+
+func (s *Store) AddPreBindResult(namespace, podName, pluginName, status string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+
+	s.results[k].prebind[pluginName] = status
 }
