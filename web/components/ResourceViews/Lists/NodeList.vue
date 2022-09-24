@@ -34,7 +34,7 @@ export default defineComponent({
   setup() {
     const nstore = inject(NodeStoreKey);
     if (!nstore) {
-      throw new Error(`${NodeStoreKey} is not provided`);
+      throw new Error(`${NodeStoreKey.description} is not provided`);
     }
 
     const nodes = computed(() => nstore.nodes);

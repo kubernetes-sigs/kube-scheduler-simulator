@@ -21,7 +21,7 @@ export default defineComponent({
   setup() {
     const store = inject(PriorityClassStoreKey);
     if (!store) {
-      throw new Error(`${PriorityClassStoreKey} is not provided`);
+      throw new Error(`${PriorityClassStoreKey.description} is not provided`);
     }
 
     const onClick = (priorityclass: V1PriorityClass) => {

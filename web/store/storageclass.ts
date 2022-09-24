@@ -32,7 +32,7 @@ export default function storageclassStore() {
 
   const storageClassAPI = inject(StorageClassAPIKey);
   if (!storageClassAPI) {
-    throw new Error(`${storageClassAPI} is not provided`);
+    throw new Error(`${StorageClassAPIKey.description} is not provided`);
   }
 
   return {

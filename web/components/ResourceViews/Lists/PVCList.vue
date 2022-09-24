@@ -37,7 +37,7 @@ export default defineComponent({
   setup() {
     const store = inject(PersistentVolumeClaimStoreKey);
     if (!store) {
-      throw new Error(`${PersistentVolumeClaimStoreKey} is not provided`);
+      throw new Error(`${PersistentVolumeClaimStoreKey.description} is not provided`);
     }
 
     const onClick = (pvc: V1PersistentVolumeClaim) => {

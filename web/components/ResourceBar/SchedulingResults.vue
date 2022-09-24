@@ -55,7 +55,7 @@ export default defineComponent({
   setup() {
     const podstore = inject(PodStoreKey);
     if (!podstore) {
-      throw new Error(`${PodStoreKey} is not provided`);
+      throw new Error(`${PodStoreKey.description} is not provided`);
     }
 
     // scheduling results

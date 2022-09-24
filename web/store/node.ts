@@ -31,7 +31,7 @@ export default function nodeStore() {
   });
   const nodeAPI = inject(NodeAPIKey);
   if (!nodeAPI) {
-    throw new Error(`${nodeAPI} is not provided`);
+    throw new Error(`${NodeAPIKey.description} is not provided`);
   }
   return {
     get nodes() {

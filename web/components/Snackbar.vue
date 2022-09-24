@@ -18,7 +18,7 @@ export default defineComponent({
   setup() {
     const store = inject(SnackBarStoreKey);
     if (!store) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
+      throw new Error(`${SnackBarStoreKey.description} is not provided`);
     }
 
     const color = () => {

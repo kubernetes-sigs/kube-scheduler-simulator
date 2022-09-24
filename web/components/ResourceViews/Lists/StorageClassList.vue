@@ -32,7 +32,7 @@ export default defineComponent({
   setup() {
     const store = inject(StorageClassStoreKey);
     if (!store) {
-      throw new Error(`${StorageClassStoreKey} is not provided`);
+      throw new Error(`${StorageClassStoreKey.description} is not provided`);
     }
     const onClick = (storageclass: V1StorageClass) => {
       store.select(storageclass, false);
