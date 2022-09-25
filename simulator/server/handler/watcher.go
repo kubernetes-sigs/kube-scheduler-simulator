@@ -24,12 +24,13 @@ func (h *ResourceWatcherHandler) ListWatchResources(c echo.Context) error {
 	ctx := c.Request().Context()
 	// If key is not present, FormValue returns the empty string.
 	versions := &resourcewatcher.LastResourceVersions{
-		Pods:  c.FormValue("podsLastResourceVersion"),
-		Nodes: c.FormValue("nodesLastResourceVersion"),
-		Pvs:   c.FormValue("pvsLastResourceVersion"),
-		Pvcs:  c.FormValue("pvcsLastResourceVersion"),
-		Scs:   c.FormValue("scsLastResourceVersion"),
-		Pcs:   c.FormValue("pcsLastResourceVersion"),
+		Pods:       c.FormValue("podsLastResourceVersion"),
+		Nodes:      c.FormValue("nodesLastResourceVersion"),
+		Pvs:        c.FormValue("pvsLastResourceVersion"),
+		Pvcs:       c.FormValue("pvcsLastResourceVersion"),
+		Scs:        c.FormValue("scsLastResourceVersion"),
+		Pcs:        c.FormValue("pcsLastResourceVersion"),
+		Namespaces: c.FormValue("namespaceLastResourceVersion"),
 	}
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
