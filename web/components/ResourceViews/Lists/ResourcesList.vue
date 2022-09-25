@@ -6,6 +6,7 @@
     <PVCList />
     <StorageClassList />
     <PriorityClassList />
+    <NamespaceList />
   </div>
 </template>
 
@@ -17,6 +18,7 @@ import PVList from "./PVList.vue";
 import PVCList from "./PVCList.vue";
 import StorageClassList from "./StorageClassList.vue";
 import PriorityClassList from "./PriorityClassList.vue";
+import NamespaceList from "./NamespaceList.vue";
 
 export default defineComponent({
   components: {
@@ -26,6 +28,7 @@ export default defineComponent({
     PVCList,
     StorageClassList,
     PriorityClassList,
-  },
+    NamespaceList,
+},
 });
 </script>

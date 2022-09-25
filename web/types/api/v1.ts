@@ -6,4 +6,5 @@ export type LastResourceVersions = {
   pvcs: string;
   storageClasses: string;
   priorityClasses: string;
+  namespaces: string;
 };

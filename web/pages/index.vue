@@ -7,15 +7,17 @@
             <SchedulerConfigurationStoreProvider>
               <StorageClassStoreProvider>
                 <PriorityClassStoreProvider>
-                  <SnackbarStoreProvider>
-                    <ResourceWatcher>
-                      <ResourceBar />
-                      <TopBar />
-                      <ResourceAddButton />
-                      <ResourceViewPanel />
-                      <Snackbar />
-                    </ResourceWatcher>
-                  </SnackbarStoreProvider>
+                  <NamespaceStoreProvider>
+                    <SnackbarStoreProvider>
+                      <ResourceWatcher>
+                        <ResourceBar />
+                        <TopBar />
+                        <ResourceAddButton />
+                        <ResourceViewPanel />
+                        <Snackbar />
+                      </ResourceWatcher>
+                    </SnackbarStoreProvider>
+                  </NamespaceStoreProvider>
                 </PriorityClassStoreProvider>
               </StorageClassStoreProvider>
             </SchedulerConfigurationStoreProvider>
@@ -36,6 +38,7 @@ import PVCStoreProvider from "~/components/StoreProvider/PVCStoreProvider.vue";
 import SchedulerConfigurationStoreProvider from "~/components/StoreProvider/SchedulerConfigurationStoreProvider.vue";
 import StorageClassStoreProvider from "~/components/StoreProvider/StorageClassStoreProvider.vue";
 import PriorityClassStoreProvider from "~/components/StoreProvider/PriorityClassStoreProvider.vue";
+import NamespaceStoreProvider from "~/components/StoreProvider/NamespaceStoreProvider.vue";
 import ResourceViewPanel from "~/components/ResourceViews/ResourcesViewPanel.vue";
 import PodStoreProvider from "~/components/StoreProvider/PodStoreProvider.vue";
 import SnackbarStoreProvider from "~/components/StoreProvider/SnackbarStoreProvider.vue";
@@ -57,6 +60,7 @@ export default defineComponent({
     StorageClassStoreProvider,
     PVStoreProvider,
     PVCStoreProvider,
+    NamespaceStoreProvider,
     TopBar,
     SchedulerConfigurationStoreProvider,
     PriorityClassStoreProvider,

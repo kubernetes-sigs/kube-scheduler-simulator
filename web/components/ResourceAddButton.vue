@@ -21,6 +21,7 @@ import {
   pvcTemplate,
   storageclassTemplate,
   priorityclassTemplate,
+  namespaceTemplate,
 } from "./lib/template";
 import {} from "./lib/util";
 import PodStoreKey from "./StoreKey/PodStoreKey";
@@ -29,6 +30,7 @@ import PersistentVolumeStoreKey from "./StoreKey/PVStoreKey";
 import PersistentVolumeClaimStoreKey from "./StoreKey/PVCStoreKey";
 import StorageClassStoreKey from "./StoreKey/StorageClassStoreKey";
 import PriorityClassStoreKey from "./StoreKey/PriorityClassStoreKey";
+import NamespaceStoreKey from "./StoreKey/NamespaceStoreKey";
 import {
   V1Node,
   V1PersistentVolumeClaim,
@@ -36,6 +38,7 @@ import {
   V1Pod,
   V1StorageClass,
   V1PriorityClass,
+  V1Namespace,
 } from "@kubernetes/client-node";
 
 type Resource =
@@ -44,7 +47,8 @@ type Resource =
   | V1PersistentVolumeClaim
   | V1PersistentVolume
   | V1StorageClass
-  | V1PriorityClass;
+  | V1PriorityClass
+  | V1Namespace;
 
 interface Store {
   readonly selected: object | null;
@@ -85,6 +89,10 @@ export default defineComponent({
     if (!priorityclassstore) {
       throw new Error(`${PriorityClassStoreKey} is not provided`);
     }
+    const namespacestore = inject(NamespaceStoreKey);
+    if (!namespacestore) {
+      throw new Error(`${namespacestore} is not provided`);
+    }
 
     const dialog = ref(false);
     const resourceNames = [
@@ -94,6 +102,7 @@ export default defineComponent({
       "Node",
       "Pod",
       "PriorityClass",
+      "Namespace",
     ];
 
     const create = (rn: string) => {
@@ -122,6 +131,10 @@ export default defineComponent({
         case "PriorityClass":
           store = priorityclassstore;
           targetTemplate = priorityclassTemplate();
+          break;
+        case "Namespace":
+          store = namespacestore;
+          targetTemplate = namespaceTemplate();
           break;
       }
 

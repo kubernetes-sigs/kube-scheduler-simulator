@@ -28,6 +28,10 @@ const getTemplateEnv = (hostEnv) => {
           "./components/lib/templates/priorityclass.yaml",
           "utf8"
         ),
+        NAMESPACE_TEMPLATE: fs.readFileSync(
+          "./components/lib/templates/namespace.yaml",
+          "utf8"
+        ),
       }
     : true;
 };

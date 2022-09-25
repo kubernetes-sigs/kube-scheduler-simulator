@@ -6,7 +6,7 @@ export default function watcherAPI(instance: AxiosInstance) {
     // watchResources is a server push API.
     watchResources: async (lrvs: LastResourceVersions) => {
       try {
-        const queries = `podsLastResourceVersion=${lrvs.pods}&nodesLastResourceVersion=${lrvs.nodes}&pvsLastResourceVersion=${lrvs.pvs}&pvcsLastResourceVersion=${lrvs.pvcs}&scsLastResourceVersion=${lrvs.storageClasses}&pcsLastResourceVersion=${lrvs.priorityClasses}`;
+        const queries = `podsLastResourceVersion=${lrvs.pods}&nodesLastResourceVersion=${lrvs.nodes}&pvsLastResourceVersion=${lrvs.pvs}&pvcsLastResourceVersion=${lrvs.pvcs}&scsLastResourceVersion=${lrvs.storageClasses}&pcsLastResourceVersion=${lrvs.priorityClasses}&namespaceLastResourceVersion=${lrvs.namespaces}`;
         // return stream of Node events.
         return await fetch(
           `${instance.defaults.baseURL}/listwatchresources?${queries}`
