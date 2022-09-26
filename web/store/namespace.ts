@@ -87,7 +87,17 @@ export default function namespaceStore() {
       }
     },
     async delete(name: string) {
-      await namespaceAPI.deleteNamespace(name);
+      namespaceAPI.deleteNamespace(name).then((res: V1Namespace)=>{
+        // When deleting a namespace then it still exists, there is the possibility that any finalizers are specified.
+        // We expect that this condition would be almost true.
+        if (res.status?.phase === "Terminating" ) {
+          res.spec!.finalizers = []
+          namespaceAPI.finalizeNamespace(res)
+        }
+      }).catch((e)=> {
+        throw new Error(`failed during the delete process`)
+      })
+
     },
     // initList calls list API, and stores current resource data and the lastResourceVersion.
     async initList() {

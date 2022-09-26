@@ -63,12 +63,25 @@ export default function namespaceAPI(k8sInstance: AxiosInstance) {
     },
     deleteNamespace: async (name: string) => {
       try {
-        const res = await k8sInstance.delete(`/namespaces/${name}`, {});
+        const res = await k8sInstance.delete<V1Namespace>(`/namespaces/${name}`, {});
         return res.data;
       } catch (e: any) {
         throw new Error(`failed to delete namespace: ${e}`);
       }
     },
+    // finalizeNamespace finalizes the specified namespace.
+    // This expected to be called when after the deleteNamespace method is called and the namespace's Status remains "Terminating".
+    finalizeNamespace: async (req: V1Namespace) => {
+      try {
+        const res = await k8sInstance.put(`/namespaces/${req.metadata?.name}/finalize`,
+        req,
+        { headers: { "Content-Type": "application/json" }}
+      );
+        return res.data;
+      } catch (e: any) {
+        throw new Error(`failed to finalize namespace: ${e}`);
+      }
+    }
   };
 }
 export type NamespaceAPI = ReturnType<typeof namespaceAPI>;
