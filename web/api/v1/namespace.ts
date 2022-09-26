@@ -36,9 +36,9 @@ export default function namespaceAPI(k8sInstance: AxiosInstance) {
           delete req.metadata.managedFields;
         }
         const res = await k8sInstance.patch<V1Namespace>(
-          `/namespaces/${req.metadata.name}?/fieldManager=simulator&force=true`,
+          `/namespaces/${req.metadata.name}?fieldManager=simulator&force=true`,
           req,
-          { headers: { "Content-Type": "application/yaml" }}
+          { headers: { "Content-Type": "application/apply-patch+yaml" }}
         );
         return res.data;
       } catch (e: any) {
