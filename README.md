@@ -63,7 +63,7 @@ You can configure the scheduler on the simulator through KubeSchedulerConfigurat
 
 [Scheduler Configuration | Kubernetes](https://kubernetes.io/docs/reference/scheduling/config/)
 
-You can pass a KubeSchedulerConfiguration file via the environment variable `KUBE_SCHEDULER_CONFIG_PATH` and the simulator will start kube-scheduler with that configuration.
+You can pass a path to KubeSchedulerConfiguration via the environment variable `KUBE_SCHEDULER_CONFIG_PATH` and the simulator will start kube-scheduler with that configuration.
 
 Note: changes to any fields other than `.profiles` are disabled on simulator, since they do not affect the results of the scheduling.
 
@@ -73,7 +73,7 @@ If you want to use your custom plugins as out-of-tree plugins in the simulator, 
 
 ## Getting started
 
-Read more about environment variables being used in simulator server
+You can find more information about environment variables available in the simulator server
 [here.](./simulator/docs/env-variables.md)
 ### Run simulator with Docker
 
@@ -118,13 +118,13 @@ The simulator can import existing clusters.
 This allows for batch inclusion of resources from external clusters.
 It is enabled by an `EXTERNAL_IMPORT_ENABLED` environment variables is `1`.
 
-Currently, the simulator tries to import ALL resources related to scheduling from your cluster,
-so, please be careful (or avoid) using it in clusters with large amounts of resources.
+Please be careful (or avoid) using it in clusters with large amounts of resources.
+The simulator tries to import ALL resources related to scheduling from your cluster. 
 
 You can import resources on your cluster to the simulator by using the environment variable `KUBECONFIG`.
 (And if you would like to use your cluster's scheduler configuration, you may want to use `KUBE_SCHEDULER_CONFIG_PATH`.)
 
-For more information about those variables, please see [docs/env-variables.md](docs/env-variables.md).
+For more information about those variables, please see [simulator/docs/env-variables.md](simulator/docs/env-variables.md).
 
 ## Contributing
 

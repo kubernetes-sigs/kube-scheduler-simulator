@@ -32,7 +32,7 @@ file.  If passed, the simulator will start the scheduler with that
 configuration.  Or, if you use web UI, you can change the
 configuration from the web UI as well.
 
-`ExternalImportEnabled`: This variable indicates whether the simulator
+`EXTERNAL_IMPORT_ENABLED`: This variable indicates whether the simulator
 will import resources from an existing cluster or not. Note, this is
 still a beta feature.
 
