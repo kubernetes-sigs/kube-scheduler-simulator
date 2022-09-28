@@ -1,4 +1,4 @@
-import { V1Pod } from "@kubernetes/client-node";
+import { V1Namespace, V1Pod } from "@kubernetes/client-node";
 import { V1Node } from "@kubernetes/client-node";
 import { V1PersistentVolume } from "@kubernetes/client-node";
 import { V1PersistentVolumeClaim } from "@kubernetes/client-node";
@@ -33,6 +33,7 @@ export declare class ResourcesForImport {
   "storageClasses": V1StorageClass[];
   "priorityClasses": V1PriorityClass[];
   "schedulerConfig": SchedulerConfiguration;
+  "namespaces": V1Namespace[];
 }
 
 export type ExportAPI = ReturnType<typeof exportAPI>;
