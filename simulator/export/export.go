@@ -551,6 +551,9 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 func (s *Service) applyNamespaces(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Namespaces {
 		ns := r.Namespaces[i]
+		if isIgnoreNamespace(*ns.Name) {
+			continue
+		}
 		if err := eg.Go(func() error {
 			ns.ObjectMetaApplyConfiguration.UID = nil
 			ns.WithAPIVersion("v1").WithKind("Namespace")
