@@ -199,6 +199,13 @@ func (s *Service) Export(ctx context.Context, opts ...Option) (*ResourcesForExpo
 // Apply applies all resources from each service.
 func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts options) error {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
+	// `applyNamespaces` must be called before calling namespaced resources  applying.
+	if err := s.applyNamespaces(ctx, resources, errgrp, opts); err != nil {
+		return xerrors.Errorf("call applyNamespaces: %w", err)
+	}
+	if err := errgrp.Wait(); err != nil {
+		return xerrors.Errorf("apply resources: %w", err)
+	}
 
 	if err := s.applyPcs(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPcs: %w", err)
@@ -212,17 +219,13 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts
 	if err := s.applyNodes(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyNodes: %w", err)
 	}
-	if err := s.applyNamespaces(ctx, resources, errgrp, opts); err != nil {
-		return xerrors.Errorf("call applyNamespaces: %w", err)
-	}
-
-	if err := errgrp.Wait(); err != nil {
-		return xerrors.Errorf("apply resources: %w", err)
-	}
-	// `applyPods` should be called after `applyNamespaces` finished.
 	if err := s.applyPods(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPods: %w", err)
 	}
+	if err := errgrp.Wait(); err != nil {
+		return xerrors.Errorf("apply resources: %w", err)
+	}
+
 	// `applyPvs` should be called after `applyPvcs` finished,
 	// because `applyPvs` look up PersistentVolumeClaim for `Spec.ClaimRef.UID` field.
 	if err := s.applyPvs(ctx, resources, errgrp, opts); err != nil {
