@@ -222,6 +222,7 @@ func TestService_Export(t *testing.T) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
+				//nolint:forcetypeassert
 				c.CoreV1().(*fakecorev1.FakeCoreV1).PrependReactor("list", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 					return true, nil, xerrors.New("Error listing namespaces")
 				})
@@ -649,6 +650,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
+				//nolint:forcetypeassert
 				c.CoreV1().(*fakecorev1.FakeCoreV1).PrependReactor("list", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 					return true, nil, xerrors.New("Error listing namespaces")
 				})

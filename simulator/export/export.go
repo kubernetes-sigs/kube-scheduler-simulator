@@ -197,6 +197,8 @@ func (s *Service) Export(ctx context.Context, opts ...Option) (*ResourcesForExpo
 }
 
 // Apply applies all resources from each service.
+//
+//nolint:cyclop // For readability.
 func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts options) error {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
 	// `applyNamespaces` must be called before calling namespaced resources  applying.

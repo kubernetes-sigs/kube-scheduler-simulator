@@ -69,7 +69,6 @@ func Test_convertPodListToApplyConfigurationList(t *testing.T) {
 
 func Test_convertNodeListToApplyConfigurationList(t *testing.T) {
 	t.Parallel()
-	const defaultNamespaceName = "default"
 	tests := []struct {
 		name       string
 		input      func() []corev1.Node
