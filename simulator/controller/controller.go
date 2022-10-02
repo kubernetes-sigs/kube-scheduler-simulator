@@ -24,31 +24,27 @@ const (
 	controllerStartJitter = 1.0
 )
 
+// initFunc is the func to start a controller.
 type initFunc func(ctx context.Context, controllerCtx controllerContext) error
 
-// controllerInitializersFunc is used to create a collection of initializers
-// given the loopMode.
-
-type controllerInitializersFunc func() (initializers map[string]initFunc)
-
-var _ controllerInitializersFunc = newControllerInitializers
-
+// RunControllers runs all controllers.
 func RunController(client clientset.Interface, cfg *restclient.Config) (func(), error) {
-	controllerCtx, err := createControllerContext(client, cfg, context.Background().Done())
+	controllerCtx, err := createControllerContext(client, cfg)
 	if err != nil {
-		return nil, xerrors.Errorf("error building controller context: %v", err)
+		return nil, xerrors.Errorf("building controller context: %v", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go run(controllerCtx, ctx.Done())
 	shutdownFunc := func() {
+		klog.Info("shutdown controllers...")
 		cancel()
 	}
 
 	return shutdownFunc, nil
 }
 
-// run runs the KubeControllerManagerOptions.  This should never exit.
+// run runs the KubeControllerManagerOptions.
 func run(controllerCtx controllerContext, stopCh <-chan struct{}) {
 	controllerInitializers := newControllerInitializers()
 	if err := startControllers(context.Background(), controllerCtx, controllerInitializers); err != nil {
@@ -87,7 +83,6 @@ func newControllerInitializers() map[string]initFunc {
 }
 
 // controllerContext defines the context object for controller.
-
 type controllerContext struct {
 	// ClientBuilder will provide a client for this controller to use
 	ClientBuilder clientbuilder.ControllerClientBuilder
@@ -103,9 +98,6 @@ type controllerContext struct {
 	// would become GenericInformerFactory and take a dynamic client.
 	ObjectOrMetadataInformerFactory informerfactory.InformerFactory
 
-	// Stop is the stop channel
-	Stop <-chan struct{}
-
 	// InformersStarted is closed after all of the controllers have been initialized and are running.  After this point it is safe,
 	// for an individual controller to start the shared informers. Before it is closed, they should not.
 	InformersStarted chan struct{}
@@ -117,7 +109,7 @@ type controllerContext struct {
 }
 
 // createControllerContext creates a context struct containing references to resources needed by the controllers.
-func createControllerContext(client clientset.Interface, config *restclient.Config, stop <-chan struct{}) (controllerContext, error) {
+func createControllerContext(client clientset.Interface, config *restclient.Config) (controllerContext, error) {
 	clientbuilder := clientbuilder.SimpleControllerClientBuilder{
 		ClientConfig: config,
 	}
@@ -135,7 +127,6 @@ func createControllerContext(client clientset.Interface, config *restclient.Conf
 		ComponentConfig:                 componentConfig,
 		InformerFactory:                 sharedInformers,
 		ObjectOrMetadataInformerFactory: informerfactory.NewInformerFactory(sharedInformers, metadataInformers),
-		Stop:                            stop,
 		InformersStarted:                make(chan struct{}),
 		ResyncPeriod:                    resyncPeriod(componentConfig),
 	}

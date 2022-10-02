@@ -2,14 +2,16 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"golang.org/x/xerrors"
 	"k8s.io/kubernetes/pkg/controller/volume/persistentvolume"
 	"k8s.io/kubernetes/pkg/volume"
 	"k8s.io/kubernetes/pkg/volume/hostpath"
 	"k8s.io/kubernetes/pkg/volume/local"
 )
+
+var _ initFunc = startPersistentVolumeController
 
 func startPersistentVolumeController(ctx context.Context, controllerCtx controllerContext) error {
 	params := persistentvolume.ControllerParameters{
@@ -25,7 +27,7 @@ func startPersistentVolumeController(ctx context.Context, controllerCtx controll
 	}
 	volumeController, err := persistentvolume.NewController(params)
 	if err != nil {
-		return fmt.Errorf("construct persistentvolume controller: %w", err)
+		return xerrors.Errorf("construct persistentvolume controller: %w", err)
 	}
 	go volumeController.Run(ctx)
 
