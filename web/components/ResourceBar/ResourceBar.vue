@@ -30,7 +30,7 @@
     </template>
 
     <template v-if="!editmode">
-      <SchedulingResults />
+      <SchedulingResults v-if="selectedResourceKind() == 'Pod'" :selected="selectedPod" />
       <ResourceDefinitionTree :items="treeData" />
       <!-- This is required to work around the vuetify's bug, refer more details in #10 -->
       <div style="height: 80%"></div>
@@ -149,10 +149,14 @@ export default defineComponent({
 
     // watch each selected resource
     const selected = ref(null as SelectedItem | null);
+    const selectedPod = ref(null as V1Pod | null)
     const pod = computed(() => podstore.selected);
     watch(pod, () => {
       store = podstore;
       selected.value = pod.value;
+      if (pod.value?.item) {
+        selectedPod.value = pod.value.item
+      }
     });
 
     const node = computed(() => nodestore.selected);
@@ -238,7 +242,7 @@ export default defineComponent({
     };
 
     const deleteOnClick = () => {
-      if (selected.value?.resourceKind === "Node") {
+      if (selectedResourceKind() === "Node") {
         // when the Node is deleted, all Pods on the Node should be deleted as well.
         //@ts-ignore
         if (podstore.pods[selected.value?.item.metadata?.name]) {
@@ -254,7 +258,7 @@ export default defineComponent({
           });
         }
       }
-      if (selected.value?.resourceKind != "SchedulerConfiguration") {
+      if (selectedResourceKind() != "SchedulerConfiguration") {
         //@ts-ignore // Only SchedulerConfiguration don't have the metadata field.
         if (selected.value?.item.metadata?.name && store) {
           store
@@ -267,6 +271,9 @@ export default defineComponent({
       }
       drawer.value = false;
     };
+    const selectedResourceKind = () :String | undefined => {
+      return selected.value?.resourceKind
+    }
 
     return {
       drawer,
@@ -276,6 +283,8 @@ export default defineComponent({
       treeData,
       applyOnClick,
       deleteOnClick,
+      selectedResourceKind,
+      selectedPod,
     };
   },
 });
