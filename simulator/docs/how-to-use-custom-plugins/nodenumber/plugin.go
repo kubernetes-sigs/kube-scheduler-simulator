@@ -84,8 +84,9 @@ var ErrNotExpectedPreScoreState = errors.New("unexpected pre score state")
 func (pl *NodeNumber) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	data, err := state.Read(preScoreStateKey)
 	if err != nil {
-		err = xerrors.Errorf("fetch pre score state: %w", err)
-		return 0, framework.AsStatus(err)
+		// return success even if there is no value in preScoreStateKey, since the
+		// suffix of pod name maybe non-number.
+		return 0, nil
 	}
 
 	s, ok := data.(*preScoreState)
