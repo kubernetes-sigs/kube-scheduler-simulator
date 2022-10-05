@@ -86,8 +86,13 @@ export default function namespaceStore() {
         );
       }
     },
-    async delete(name: string) {
-      namespaceAPI.deleteNamespace(name).then((res: V1Namespace)=>{
+    async delete(ns: V1Namespace) {
+      if (!ns.metadata?.name) {
+        throw new Error(
+          "failed to delete namespace: node should have metadata.name"
+        )
+      }
+      namespaceAPI.deleteNamespace(ns.metadata.name).then((res: V1Namespace)=>{
         // When deleting a namespace then it still exists, there is the possibility that any finalizers are specified.
         // We expect that this condition would be almost true.
         if (res.status?.phase === "Terminating" ) {

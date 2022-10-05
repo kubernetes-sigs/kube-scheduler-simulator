@@ -1,5 +1,6 @@
 metadata:
   generateName: pvc-
+  namespace: default
 spec:
   accessModes:
     - ReadWriteOnce

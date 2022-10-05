@@ -37,8 +37,8 @@ export default function priorityclassStore() {
 
   // `CheckIsDeletable` returns whether the given PriorityClass can be deleted or not.
   // The PriorityClasses that have the name prefixed with `system-` are reserved by the system so can't be deleted.
-  const checkIsDeletable = (n: V1PriorityClass) => {
-    return !!n.metadata?.name && !n.metadata?.name?.startsWith("system-");
+  const checkIsDeletable = (p: V1PriorityClass) => {
+    return !!p.metadata?.name && !p.metadata?.name?.startsWith("system-");
   };
 
   return {
@@ -54,13 +54,13 @@ export default function priorityclassStore() {
       return state.selectedPriorityClass;
     },
 
-    select(n: V1PriorityClass | null, isNew: boolean) {
-      if (n !== null) {
+    select(pc: V1PriorityClass | null, isNew: boolean) {
+      if (pc !== null) {
         state.selectedPriorityClass = {
           isNew: isNew,
-          item: n,
+          item: pc,
           resourceKind: "PC",
-          isDeletable: checkIsDeletable(n),
+          isDeletable: checkIsDeletable(pc),
         };
       }
     },
@@ -69,12 +69,12 @@ export default function priorityclassStore() {
       state.selectedPriorityClass = null;
     },
 
-    async apply(n: V1PriorityClass) {
-      if (n.metadata?.name) {
-        await priorityClassAPI.applyPriorityClass(n);
-      } else if (n.metadata?.generateName) {
+    async apply(pc: V1PriorityClass) {
+      if (pc.metadata?.name) {
+        await priorityClassAPI.applyPriorityClass(pc);
+      } else if (pc.metadata?.generateName) {
         // This PriorityClass can be expected to be a newly created PriorityClass. So, use `createPriorityClass` instead.
-        await priorityClassAPI.createPriorityClass(n);
+        await priorityClassAPI.createPriorityClass(pc);
       } else {
         throw new Error(
           "failed to apply priorityclass: priorityclass should have metadata.name or metadata.generateName"
@@ -94,8 +94,15 @@ export default function priorityclassStore() {
       }
     },
 
-    async delete(name: string) {
-      await priorityClassAPI.deletePriorityClass(name);
+    async delete(p: V1PriorityClass) {
+      if (p.metadata?.name) {
+        await priorityClassAPI.deletePriorityClass(p.metadata.name);
+      } else {
+        throw new Error(
+          "failed to delete priorityclass: priorityclass should have metadata.name"
+        );
+      }
+
     },
 
     // initList calls list API, and stores current resource data and lastResourceVersion.

@@ -2,7 +2,6 @@ import {
   V1PersistentVolumeClaim,
   V1PersistentVolumeClaimList,
 } from "@kubernetes/client-node";
-import { namespaceURL } from "~/api/v1/index";
 import { AxiosInstance } from "axios";
 
 export default function pvcAPI(k8sInstance: AxiosInstance) {
@@ -14,14 +13,16 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
         if (!req.metadata?.generateName) {
           throw new Error("metadata.generateName is not provided");
         }
+        if (!req.metadata?.namespace) {
+          throw new Error("metadata.namespace is not provided");
+        }
         req.kind = "PersistentVolumeClaim";
         req.apiVersion = "v1";
         if (req.metadata.managedFields) {
           delete req.metadata.managedFields;
         }
         const res = await k8sInstance.post<V1PersistentVolumeClaim>(
-          namespaceURL +
-            "/persistentvolumeclaims?fieldManager=simulator&force=true",
+            `namespaces/${req.metadata.namespace}/persistentvolumeclaims?fieldManager=simulator&force=true`,
           req,
           { headers: { "Content-Type": "application/yaml" } }
         );
@@ -35,14 +36,16 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
         if (!req.metadata?.name) {
           throw new Error("metadata.name is not provided");
         }
+        if (!req.metadata?.namespace) {
+          throw new Error("metadata.namespace is not provided");
+        }
         req.kind = "PersistentVolumeClaim";
         req.apiVersion = "v1";
         if (req.metadata.managedFields) {
           delete req.metadata.managedFields;
         }
         const res = await k8sInstance.patch<V1PersistentVolumeClaim>(
-          namespaceURL +
-            `/persistentvolumeclaims/${req.metadata.name}?fieldManager=simulator&force=true`,
+            `namespaces/${req.metadata.namespace}/persistentvolumeclaims/${req.metadata.name}?fieldManager=simulator&force=true`,
           req,
           { headers: { "Content-Type": "application/apply-patch+yaml" } }
         );
@@ -54,8 +57,9 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
 
     listPersistentVolumeClaim: async () => {
       try {
+        // This URL path could list all pods on each namespace.
         const res = await k8sInstance.get<V1PersistentVolumeClaimList>(
-          namespaceURL + "/persistentvolumeclaims",
+          "namespaces//persistentvolumeclaims",
           {}
         );
         return res.data;
@@ -64,10 +68,10 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
       }
     },
 
-    getPersistentVolumeClaim: async (name: string) => {
+    getPersistentVolumeClaim: async (namespace: string, name: string) => {
       try {
         const res = await k8sInstance.get<V1PersistentVolumeClaim>(
-          namespaceURL + `/persistentvolumeclaims/${name}`,
+          `namespaces/${namespace}/persistentvolumeclaims/${name}`,
           {}
         );
         return res.data;
@@ -76,10 +80,10 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
       }
     },
 
-    deletePersistentVolumeClaim: async (name: string) => {
+    deletePersistentVolumeClaim: async (namespace: string, name: string) => {
       try {
         const res = await k8sInstance.delete(
-          namespaceURL + `/persistentvolumeclaims/${name}`,
+          `namespaces/${namespace}/persistentvolumeclaims/${name}`,
           {}
         );
         return res.data;

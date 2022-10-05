@@ -81,8 +81,14 @@ export default function nodeStore() {
       }
     },
 
-    async delete(name: string) {
-      await nodeAPI.deleteNode(name);
+    async delete(n: V1Node) {
+      if (n.metadata?.name) {
+        await nodeAPI.deleteNode(n.metadata.name);
+      } else {
+        throw new Error(
+          "failed to delete node: node should have metadata.name"
+        )
+      }
     },
 
     // initList calls list API, and stores current resource data and lastResourceVersion.

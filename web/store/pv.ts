@@ -88,8 +88,14 @@ export default function pvStore() {
       }
     },
 
-    async delete(name: string) {
-      await pvAPI.deletePersistentVolume(name);
+    async delete(pv: V1PersistentVolume) {
+      if (pv.metadata?.name) {
+        await pvAPI.deletePersistentVolume(pv.metadata.name);
+      } else {
+        throw new Error(
+          "failed to delete persistentvolume: persistentvolume should have metadata.name"
+        );
+      }
     },
 
     // initList calls list API, and stores current resource data and lastResourceVersion.

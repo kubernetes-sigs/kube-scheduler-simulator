@@ -85,7 +85,7 @@ interface Store {
   readonly selected: object | null;
   resetSelected(): void;
   apply(_: Resource): Promise<void>;
-  delete(_: string): Promise<void>;
+  delete(_: Resource): Promise<void>;
   fetchSelected(): Promise<void>;
 }
 
@@ -261,7 +261,7 @@ export default defineComponent({
             if (p.spec?.nodeName === selected.value?.item.metadata?.name) {
               podstore
                 //@ts-ignore
-                .delete(p.metadata?.name)
+                .delete(p)
                 .catch((e) => setServerErrorMessage(e));
             }
           });
@@ -273,7 +273,7 @@ export default defineComponent({
           store
             .delete(
               //@ts-ignore
-              selected.value.item.metadata.name
+              selected.value.item
             )
             .catch((e) => setServerErrorMessage(e));
         }

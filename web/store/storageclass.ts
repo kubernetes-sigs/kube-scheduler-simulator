@@ -48,11 +48,11 @@ export default function storageclassStore() {
       return state.selectedStorageClass;
     },
 
-    select(n: V1StorageClass | null, isNew: boolean) {
-      if (n !== null) {
+    select(sc: V1StorageClass | null, isNew: boolean) {
+      if (sc !== null) {
         state.selectedStorageClass = {
           isNew: isNew,
-          item: n,
+          item: sc,
           resourceKind: "SC",
           isDeletable: true,
         };
@@ -63,12 +63,12 @@ export default function storageclassStore() {
       state.selectedStorageClass = null;
     },
 
-    async apply(n: V1StorageClass) {
-      if (n.metadata?.name) {
-        await storageClassAPI.applyStorageClass(n);
-      } else if (n.metadata?.generateName) {
+    async apply(sc: V1StorageClass) {
+      if (sc.metadata?.name) {
+        await storageClassAPI.applyStorageClass(sc);
+      } else if (sc.metadata?.generateName) {
         // This StorageClass can be expected to be a newly created StorageClass. So, use `createStorageClass` instead.
-        await storageClassAPI.createStorageClass(n);
+        await storageClassAPI.createStorageClass(sc);
       } else {
         throw new Error(
           "failed to apply storageclass: storageclass should have metadata.name or metadata.generateName"
@@ -88,8 +88,14 @@ export default function storageclassStore() {
       }
     },
 
-    async delete(name: string) {
-      await storageClassAPI.deleteStorageClass(name);
+    async delete(sc: V1StorageClass) {
+      if (sc.metadata?.name) {
+        await storageClassAPI.deleteStorageClass(sc.metadata.name);
+      } else {
+        throw new Error(
+          "failed to delete storageclass: storageclass should have metadata.name"
+        );
+      }
     },
 
     // initList calls list API, and stores current resource data and lastResourceVersion.

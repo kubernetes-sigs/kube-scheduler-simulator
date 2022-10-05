@@ -1,8 +1,8 @@
 import { V1Pod, V1PodList } from "@kubernetes/client-node";
-import { namespaceURL } from "~/api/v1/index";
 import { AxiosInstance } from "axios";
 
 export default function podAPI(k8sInstance: AxiosInstance) {
+  const defaultNamespace = "default"
   return {
     // createPod accepts only Pod that has .metadata.GeneratedName.
     // If you want to create a Pod that has .metadata.Name, use applyPod instead.
@@ -11,13 +11,16 @@ export default function podAPI(k8sInstance: AxiosInstance) {
         if (!req.metadata?.generateName) {
           throw new Error("metadata.generateName is not provided");
         }
+        if (!req.metadata.namespace) {
+          throw new Error("metadata.namespace is not provided");
+        }
         req.kind = "Pod";
-        req.apiVersion = "v1";
+        req.apiVersion = "v1"; 
         if (req.metadata.managedFields) {
           delete req.metadata.managedFields;
         }
         const res = await k8sInstance.post<V1Pod>(
-          namespaceURL + "/pods?fieldManager=simulator&force=true",
+          `namespaces/${req.metadata.namespace}/pods?fieldManager=simulator&force=true`,
           req,
           { headers: { "Content-Type": "application/yaml" } }
         );
@@ -31,14 +34,16 @@ export default function podAPI(k8sInstance: AxiosInstance) {
         if (!req.metadata?.name) {
           throw new Error("metadata.name is not provided");
         }
+        if (!req.metadata.namespace) {
+          throw new Error("metadata.namespace is not provided");
+        }
         req.kind = "Pod";
         req.apiVersion = "v1";
         if (req.metadata.managedFields) {
           delete req.metadata.managedFields;
         }
         const res = await k8sInstance.patch<V1Pod>(
-          namespaceURL +
-            `/pods/${req.metadata.name}?fieldManager=simulator&force=true`,
+            `namespaces/${req.metadata.namespace}/pods/${req.metadata.name}?fieldManager=simulator&force=true`,
           req,
           { headers: { "Content-Type": "application/apply-patch+yaml" } }
         );
@@ -49,8 +54,9 @@ export default function podAPI(k8sInstance: AxiosInstance) {
     },
     listPod: async () => {
       try {
+        // This URL path could list all pods on each namespace.
         const res = await k8sInstance.get<V1PodList>(
-          namespaceURL + "/pods",
+          "namespaces//pods",
           {}
         );
         return res.data;
@@ -58,10 +64,10 @@ export default function podAPI(k8sInstance: AxiosInstance) {
         throw new Error(`failed to list pods: ${e}`);
       }
     },
-    getPod: async (name: string) => {
+    getPod: async (namespace: string, name: string) => {
       try {
         const res = await k8sInstance.get<V1Pod>(
-          namespaceURL + `/pods/${name}`,
+          `namespaces/${namespace}/pods/${name}`,
           {}
         );
         return res.data;
@@ -69,10 +75,10 @@ export default function podAPI(k8sInstance: AxiosInstance) {
         throw new Error(`failed to get pod: ${e}`);
       }
     },
-    deletePod: async (name: string) => {
+    deletePod: async (namespace: string, name: string) => {
       try {
         const res = await k8sInstance.delete(
-          namespaceURL + `/pods/${name}?gracePeriodSeconds=0`,
+          `namespaces/${namespace}/pods/${name}?gracePeriodSeconds=0`,
           {}
         );
         return res.data;
