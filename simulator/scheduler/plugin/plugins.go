@@ -2,12 +2,14 @@ package plugin
 
 import (
 	"encoding/json"
+	"strings"
 
 	"golang.org/x/xerrors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 	"k8s.io/kube-scheduler/config/v1beta2"
+	schedulerConfig "k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 	schedulerRuntime "k8s.io/kubernetes/pkg/scheduler/framework/runtime"
 
@@ -19,18 +21,8 @@ import (
 // ResultStoreKey represents key name of plugins results on sharedstore.
 const ResultStoreKey = "PluginResultStoreKey"
 
-func NewRegistry(sharedStore storereflector.Reflector) (map[string]schedulerRuntime.PluginFactory, error) {
-	scorePluginWeight := map[string]int32{}
-	registeredScorePlugin, err := config.RegisteredScorePlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered score plugins: %w", err)
-	}
-	for _, p := range registeredScorePlugin {
-		scorePluginWeight[p.Name] = 0
-		if p.Weight != nil {
-			scorePluginWeight[p.Name] = *p.Weight
-		}
-	}
+func NewRegistry(sharedStore storereflector.Reflector, cfg *schedulerConfig.KubeSchedulerConfiguration) (map[string]schedulerRuntime.PluginFactory, error) {
+	scorePluginWeight := getScorePluginWeight(cfg)
 	store := schedulingresultstore.New(scorePluginWeight)
 	// Add the resultStore to the sharedStore to store the results and share it.
 	sharedStore.AddResultStore(store, ResultStoreKey)
@@ -354,4 +346,22 @@ func registeredPlugins() ([]v1beta2.Plugin, error) {
 	}
 
 	return uniqPls, nil
+}
+
+// getScorePluginWeight get weights of enabled score plugins in the scheduler configuration.
+func getScorePluginWeight(cfg *schedulerConfig.KubeSchedulerConfiguration) map[string]int32 {
+	scorePluginWeight := make(map[string]int32)
+	// TODO: support multi-scheduler
+	enabledScorePlugins := cfg.Profiles[0].Plugins.Score.Enabled
+	for _, p := range enabledScorePlugins {
+		if p.Weight != 0 {
+			scorePluginWeight[strings.TrimSuffix(p.Name, pluginSuffix)] = p.Weight
+		} else {
+			// a weight of zero is not permitted, plugins can be disabled explicitly
+			// when configured.
+			scorePluginWeight[strings.TrimSuffix(p.Name, pluginSuffix)] = 1
+		}
+	}
+
+	return scorePluginWeight
 }

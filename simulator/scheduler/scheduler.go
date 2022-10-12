@@ -126,7 +126,7 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 	if err != nil {
 		return xerrors.Errorf("convert scheduler config to apply: %w", err)
 	}
-	registry, err := plugin.NewRegistry(s.sharedStore)
+	registry, err := plugin.NewRegistry(s.sharedStore, cfg)
 	if err != nil {
 		return xerrors.Errorf("plugin registry: %w", err)
 	}
