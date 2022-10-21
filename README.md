@@ -9,10 +9,10 @@ Nowadays, the scheduler is configurable/extendable in the multiple ways:
 - etc...
 
 But, unfortunately, not all configurations/expansions yield good results.
-Those who customize the scheduler need to make sure their scheduler is working as expected, and doesn't have an unacceptably negative impact on the scheduling. 
+Those who customize the scheduler need to make sure their scheduler is working as expected, and doesn't have an unacceptably negative impact on the scheduling.
 
-In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually require privileged access to the control plane.
-That's way we are developing a simulator for kube-scheduler -- you can try out the behavior of the scheduler with web UI while checking which plugin made what decision for which Node.
+In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually requires privileged access to the control plane.
+That's why we are developing a simulator for kube-scheduler -- you can try out the behavior of the scheduler with web UI while checking which plugin made what decision for which Node.
 
 ## Simulator's architecture
 
@@ -29,7 +29,7 @@ You can create any resources by communicating with kube-apiserver via kubectl, k
 
 See the following docs to know more about simulator:
 - [how-it-works.md](simulator/docs/how-it-works.md): describes about how the simulator works.
-- [kube-apiserver.md](simulator/docs/kube-apiserver.md): describe about kube-apiserver in simulator. (how you can configure and access) 
+- [kube-apiserver.md](simulator/docs/kube-apiserver.md): describe about kube-apiserver in simulator. (how you can configure and access)
 - [api.md](simulator/docs/api.md): describes about HTTP server the simulator has.
 
 ### Web UI
@@ -75,6 +75,7 @@ If you want to use your custom plugins as out-of-tree plugins in the simulator, 
 
 Read more about environment variables being used in simulator server
 [here.](./simulator/docs/env-variables.md)
+
 ### Run simulator with Docker
 
 We have [docker-compose.yml](docker-compose.yml) to run the simulator easily.
