@@ -78,7 +78,7 @@ Read more about environment variables being used in simulator server
 
 ### Run simulator with Docker
 
-We have [docker-compose.yml](docker-compose.yml) to run the simulator easily.
+We have [docker-compose.yml](docker-compose.yml) to run the simulator easily. You should install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docker-docs.netlify.app/compose/install/) firstly.
 
 You can use the following command.
 
