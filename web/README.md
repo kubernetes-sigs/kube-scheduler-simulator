@@ -8,6 +8,7 @@ You have to install node.js and yarn.
 
 - for yarn, see: [Installation | Yarn](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
 - for node.js, see: [Downloads | Node.js](https://nodejs.org/en/download/)
+  Note: Nodejs 16 is suggested, other version may cause problems.
 
 ### Build Setup
 
