@@ -31,7 +31,7 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 		}
 	}
 
-	registeredpls, err := registeredFilterScorePlugins()
+	registeredpls, err := registeredPlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
 	}
@@ -142,7 +142,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 		})
 	}
 
-	defaultpls, err := registeredFilterScorePlugins()
+	defaultpls, err := registeredPlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
 	}
@@ -171,45 +171,40 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
 	newpls := pls.DeepCopy()
 
-	defaultScorePls, err := config.InTreeScorePluginSet()
-	if err != nil {
-		return nil, xerrors.Errorf("get default score plugins: %w", err)
-	}
-	merged := mergePluginSet(defaultScorePls, pls.Score)
-
-	retscorepls := make([]v1beta2.Plugin, 0, len(merged.Enabled))
-	for _, p := range merged.Enabled {
-		retscorepls = append(retscorepls, v1beta2.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
-	}
-	newpls.Score.Enabled = retscorepls
-
-	// disable default plugins whatever scheduler configuration value is
-	newpls.Score.Disabled = []v1beta2.Plugin{
-		{
-			Name: "*",
-		},
+	if err := applyPluingSet(&newpls.Score, pls.Score, config.InTreeScorePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Score plugins: %w", err)
 	}
 
-	defaultFilterPls, err := config.InTreeFilterPluginSet()
-	if err != nil {
-		return nil, xerrors.Errorf("get default score plugins: %w", err)
-	}
-	merged = mergePluginSet(defaultFilterPls, pls.Filter)
-
-	retfilterpls := make([]v1beta2.Plugin, 0, len(merged.Enabled))
-	for _, p := range merged.Enabled {
-		retfilterpls = append(retfilterpls, v1beta2.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
-	}
-	newpls.Filter.Enabled = retfilterpls
-
-	// disable default plugins whatever scheduler configuration value is
-	newpls.Filter.Disabled = []v1beta2.Plugin{
-		{
-			Name: "*",
-		},
+	if err := applyPluingSet(&newpls.Filter, pls.Filter, config.InTreeFilterPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Filter plugins: %w", err)
 	}
 
+	if err := applyPluingSet(&newpls.PostFilter, pls.PostFilter, config.InTreePostFilterPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PostFilter plugins: %w", err)
+	}
 	return newpls, nil
+}
+
+// applyPluingSet merges inTree and outOfTree PluginSet and enables it.
+func applyPluingSet(targetPlsSet *v1beta2.PluginSet, plsSet v1beta2.PluginSet, inTreePluginSet func() (v1beta2.PluginSet, error)) error {
+	inTreePls, err := inTreePluginSet()
+	if err != nil {
+		return xerrors.Errorf("get inTree plugins: %w", err)
+	}
+	merged := mergePluginSet(inTreePls, plsSet)
+
+	retpls := make([]v1beta2.Plugin, 0, len(merged.Enabled))
+	for _, p := range merged.Enabled {
+		retpls = append(retpls, v1beta2.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
+	}
+	targetPlsSet.Enabled = retpls
+	// disable default plugins whatever scheduler configuration value is
+	targetPlsSet.Disabled = []v1beta2.Plugin{
+		{
+			Name: "*",
+		},
+	}
+	return nil
 }
 
 // mergePluginsSet merges two plugin sets.
@@ -258,16 +253,19 @@ func mergePluginSet(inTreePluginSet, outOfTreePluginSet v1beta2.PluginSet) v1bet
 	return v1beta2.PluginSet{Enabled: enabledPlugins}
 }
 
-// registeredFilterScorePlugins returns all registered score plugin and filter plugin.
-func registeredFilterScorePlugins() ([]v1beta2.Plugin, error) {
+// registeredPlugins returns all registered score plugin and filter plugin.
+func registeredPlugins() ([]v1beta2.Plugin, error) {
 	registeredfilterpls, err := config.RegisteredFilterPlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get registered filter plugins: %w", err)
+	}
+	registerdpostfilterpls, err := config.RegisteredPostFilterPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered postFilter plugins: %w", err)
 	}
 	registeredscorepls, err := config.RegisteredScorePlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get registered score plugins: %w", err)
 	}
-
-	return append(registeredscorepls, registeredfilterpls...), nil
+	return append(append(registeredscorepls, registerdpostfilterpls...), registeredfilterpls...), nil
 }

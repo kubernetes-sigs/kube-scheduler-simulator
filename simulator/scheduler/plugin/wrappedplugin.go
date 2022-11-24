@@ -10,12 +10,13 @@ import (
 	schedulingresultstore "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
 )
 
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock/$GOFILE -package=plugin . Store,FilterPluginExtender,ScorePluginExtender,NormalizeScorePluginExtender
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock/framework.go -package=plugin k8s.io/kubernetes/pkg/scheduler/framework FilterPlugin,ScorePlugin,ScoreExtensions
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock/$GOFILE -package=plugin . Store,FilterPluginExtender,PostFilterPluginExtender,ScorePluginExtender,NormalizeScorePluginExtender
+//go:generate mockgen --build_flags=--mod=mod -destination=./mock/framework.go -package=plugin k8s.io/kubernetes/pkg/scheduler/framework FilterPlugin,PostFilterPlugin,ScorePlugin,ScoreExtensions
 type Store interface {
 	AddNormalizedScoreResult(namespace, podName, nodeName, pluginName string, normalizedscore int64)
 	AddFilterResult(namespace, podName, nodeName, pluginName, reason string)
 	AddScoreResult(namespace, podName, nodeName, pluginName string, score int64)
+	AddPostFilterResult(namespace, podName, nominatedNodeName, pluginName string, nodeNames []string)
 }
 
 // FilterPluginExtender is the extender for Filter plugin.
@@ -26,6 +27,15 @@ type FilterPluginExtender interface {
 	// AfterFilter is a function that is run after the Filter method of the original plugin.
 	// A Filter of the simulator plugin finally returns the status returned from AfterFilter.
 	AfterFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo, filterResult *framework.Status) *framework.Status
+}
+
+type PostFilterPluginExtender interface {
+	// BeforePostFilter is a function that is run before the PostFilter method of the original plugin.
+	// If BeforePostFilter return non-success status, the simulator plugin doesn't run the PostFilter method of the original plugin and return that status.
+	BeforePostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status)
+	// AfterPostFilter is a function that is run after the PostFilter method of the original plugin.
+	// A PostFilter of the simulator plugin finally returns the status returned from PostFilter.
+	AfterPostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap, postFilterResult *framework.PostFilterResult, status *framework.Status) (*framework.PostFilterResult, *framework.Status)
 }
 
 // ScorePluginExtender is the extender for Score plugin.
@@ -53,6 +63,7 @@ type NormalizeScorePluginExtender interface {
 // and you can check/modify requests and/or results.
 type Extenders struct {
 	FilterPluginExtender         FilterPluginExtender
+	PostFilterPluginExtender     PostFilterPluginExtender
 	ScorePluginExtender          ScorePluginExtender
 	NormalizeScorePluginExtender NormalizeScorePluginExtender
 }
@@ -108,8 +119,10 @@ type wrappedPlugin struct {
 	// You can change this name by WithPluginNameOption.
 	name                         string
 	originalFilterPlugin         framework.FilterPlugin
+	originalPostFilterPlugin     framework.PostFilterPlugin
 	originalScorePlugin          framework.ScorePlugin
 	filterPluginExtender         FilterPluginExtender
+	postFilterPluginExtender     PostFilterPluginExtender
 	scorePluginExtender          ScorePluginExtender
 	normalizeScorePluginExtender NormalizeScorePluginExtender
 	weight                       int32
@@ -143,6 +156,9 @@ func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plu
 	if options.extenderOption.FilterPluginExtender != nil {
 		plg.filterPluginExtender = options.extenderOption.FilterPluginExtender
 	}
+	if options.extenderOption.PostFilterPluginExtender != nil {
+		plg.postFilterPluginExtender = options.extenderOption.PostFilterPluginExtender
+	}
 	if options.extenderOption.ScorePluginExtender != nil {
 		plg.scorePluginExtender = options.extenderOption.ScorePluginExtender
 	}
@@ -154,7 +170,10 @@ func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plu
 	if ok {
 		plg.originalFilterPlugin = fp
 	}
-
+	pfp, ok := p.(framework.PostFilterPlugin)
+	if ok {
+		plg.originalPostFilterPlugin = pfp
+	}
 	sp, ok := p.(framework.ScorePlugin)
 	if ok {
 		plg.originalScorePlugin = sp
@@ -262,4 +281,32 @@ func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState,
 		return w.filterPluginExtender.AfterFilter(ctx, state, pod, nodeInfo, s)
 	}
 	return s
+}
+
+func (w *wrappedPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+	if w.originalPostFilterPlugin == nil {
+		// return nil not to affect post filtering.
+		return nil, nil
+	}
+	if w.postFilterPluginExtender != nil {
+		r, s := w.postFilterPluginExtender.BeforePostFilter(ctx, state, pod, filteredNodeStatusMap)
+		if !s.IsSuccess() {
+			return r, s
+		}
+	}
+	r, s := w.originalPostFilterPlugin.PostFilter(ctx, state, pod, filteredNodeStatusMap)
+	var nominatedNodeName string
+	if s.IsSuccess() {
+		nominatedNodeName = r.NominatedNodeName
+	}
+	nodeNames := make([]string, 0, len(filteredNodeStatusMap))
+	for k := range filteredNodeStatusMap {
+		nodeNames = append(nodeNames, k)
+	}
+	w.store.AddPostFilterResult(pod.Namespace, pod.Name, nominatedNodeName, w.originalPostFilterPlugin.Name(), nodeNames)
+
+	if w.postFilterPluginExtender != nil {
+		return w.postFilterPluginExtender.AfterPostFilter(ctx, state, pod, filteredNodeStatusMap, r, s)
+	}
+	return r, s
 }
