@@ -1,4 +1,5 @@
 import fs from "fs";
+import userConfig from "./user.config.js";
 
 const getTemplateEnv = (hostEnv) => {
   return hostEnv !== "production"
@@ -93,12 +94,11 @@ export default {
   },
   // publicRuntimeConfig should hold all env variables that are public as these will be exposed on the frontend.
   publicRuntimeConfig: {
-    baseURL: process.env.BASE_URL || "http://localhost:1212",
-    kubeApiServerURL:
-      process.env.KUBE_API_SERVER_URL || "http://localhost:3131",
+    baseURL: userConfig.baseURL || "http://localhost:1212",
+    kubeApiServerURL: userConfig.kubeAPIServerURL || "http://localhost:3131",
     // alphaTableViews is a optional parameter for the datatable view. This is an alpha feature.
     // If this value is set to "1", the datatable view will be enabled.
-    alphaTableViews: process.env.ALPHA_TABLE_VIEWS || "0",
+    alphaTableViews: userConfig.alphaTableViews || "0",
   },
 
   env: getTemplateEnv(process.env.HOST_ENV),
