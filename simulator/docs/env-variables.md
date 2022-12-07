@@ -38,6 +38,8 @@ still a beta feature.
 
 ## For Web UI
 
+This part is deprecated. Please refer to the config file [user.config.js](./../../web/user.config.js).
+
 `KUBE_API_SERVER_URL`: This is the kube-apiserver URL. Its default
 value is `http://localhost:3131`.
 
