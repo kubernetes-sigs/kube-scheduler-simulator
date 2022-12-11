@@ -4,83 +4,75 @@ import (
 	"context"
 	"errors"
 
-	"golang.org/x/sync/errgroup"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/k8sapiserver"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
-
-type DeleteService interface {
-	DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error
-}
-
-type DeleteServicesForNamespacedResources interface {
-	DeleteCollection(ctx context.Context, namespace string, lopts metav1.ListOptions) error
-}
 
 type SchedulerService interface {
 	ResetScheduler() error
 }
 
-// Service cleans up resources.
+// Service cleans up resources stored in etcd.
 type Service struct {
-	client clientset.Interface
-	// deleteServices has the all services for each non-namespaced resource.
-	// key: service name.
-	deleteServices map[string]DeleteService
-	// deleteNamespacedServices has the all services for each namespaced resource.
-	// key: service name.
-	deleteServicesForNamespacedResources map[string]DeleteServicesForNamespacedResources
-	schedService                         SchedulerService
+	// initialData has the all resource data that are fetched when reset service is initialized.
+	initialData map[string]string
+
+	etcdClient   *clientv3.Client
+	k8sClient    clientset.Interface
+	schedService SchedulerService
 }
 
 // NewResetService initializes Service.
+// ResetService always tries to restore the cluster to the initial state.
 func NewResetService(
-	client clientset.Interface,
-	deleteServices map[string]DeleteService,
-	deleteServicesForNamespacedResources map[string]DeleteServicesForNamespacedResources,
+	etcdClient *clientv3.Client,
+	k8sClient clientset.Interface,
 	schedService SchedulerService,
-) *Service {
-	return &Service{
-		client:                               client,
-		deleteServices:                       deleteServices,
-		deleteServicesForNamespacedResources: deleteServicesForNamespacedResources,
-		schedService:                         schedService,
+) (*Service, error) {
+	s := &Service{
+		initialData:  map[string]string{},
+		etcdClient:   etcdClient,
+		k8sClient:    k8sClient,
+		schedService: schedService,
 	}
+
+	result, err := etcdClient.Get(context.Background(), "/"+k8sapiserver.EtcdPrefix, clientv3.WithPrefix())
+	if err != nil {
+		return nil, xerrors.Errorf("get all data in etcd: %w", err)
+	}
+
+	for _, v := range result.Kvs {
+		s.initialData[string(v.Key)] = string(v.Value)
+	}
+
+	return s, nil
 }
 
-// Reset cleans up all resources and scheduler configuration.
+// Reset resets all resources and scheduler configuration to the initial state.
 func (s *Service) Reset(ctx context.Context) error {
-	eg, ctx := errgroup.WithContext(ctx)
-	nsList, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return xerrors.Errorf("list namespaces: %w", err)
+	if _, err := s.etcdClient.Delete(ctx, "/"+k8sapiserver.EtcdPrefix, clientv3.WithPrefix()); err != nil {
+		return xerrors.Errorf("delete all data in etcd: %w", err)
 	}
-	for k, ds := range s.deleteServicesForNamespacedResources {
-		ds := ds
+
+	// restore initial data.
+	eg := util.NewErrGroupWithSemaphore(ctx)
+	for k, v := range s.initialData {
 		k := k
-		for _, ns := range nsList.Items {
-			ns := ns
-			eg.Go(func() error {
-				// this method deletes all resources on specified namespace.
-				if err := ds.DeleteCollection(ctx, ns.GetName(), metav1.ListOptions{}); err != nil {
-					return xerrors.Errorf("delete collecton of %s service: %w", k, err)
-				}
-				return nil
-			})
-		}
-	}
-	for k, ds := range s.deleteServices {
-		ds := ds
-		k := k
-		eg.Go(func() error {
-			if err := ds.DeleteCollection(ctx, metav1.ListOptions{}); err != nil {
-				return xerrors.Errorf("delete collecton of %s service: %w", k, err)
+		v := v
+		err := eg.Go(func() error {
+			if _, err := s.etcdClient.Put(ctx, k, v); err != nil {
+				return xerrors.Errorf("put initial data in etcd: key: %s, value: %s, error: %w", k, v, err)
 			}
 			return nil
 		})
+		if err != nil {
+			return err
+		}
 	}
 	if err := eg.Wait(); err != nil {
 		return err

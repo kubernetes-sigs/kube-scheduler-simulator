@@ -118,11 +118,14 @@ func setUpHandlerAndRun(aggregatorServer *apiserver.APIAggregator, s *httptest.S
 	return closeFn, nil
 }
 
+const EtcdPrefix = "kube-scheduler-simulator/"
+
 func createK8SAPIServerOpts(etcdURL string, corsAllowedOriginList []string) (*apiserverappopts.ServerRunOptions, func(), error) {
 	serverOpts := apiserverappopts.NewServerRunOptions()
 
 	// set up etcd
 	serverOpts.Etcd.StorageConfig.Transport.ServerList = []string{etcdURL}
+	serverOpts.Etcd.StorageConfig.Prefix = EtcdPrefix
 
 	// set up CORS
 	serverOpts.GenericServerRunOptions.CorsAllowedOriginList = corsAllowedOriginList

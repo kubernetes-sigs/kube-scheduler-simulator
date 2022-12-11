@@ -69,18 +69,3 @@ func (s *Service) Delete(ctx context.Context, name string, namespace string) err
 
 	return nil
 }
-
-// DeleteCollection deletes pods according to the list options and specified namespace.
-func (s *Service) DeleteCollection(ctx context.Context, namespace string, lopts metav1.ListOptions) error {
-	noGrace := int64(0)
-	if err := s.client.CoreV1().Pods(namespace).DeleteCollection(ctx, metav1.DeleteOptions{
-		// need to use noGrace to avoid waiting kubelet checking.
-		// > When a force deletion is performed, the API server does not wait for confirmation from the kubelet that
-		//   the Pod has been terminated on the node it was running on.
-		// https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination-forced
-		GracePeriodSeconds: &noGrace,
-	}, lopts); err != nil {
-		return fmt.Errorf("delete collection of pods: %w", err)
-	}
-	return nil
-}
