@@ -36,6 +36,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	exportHandler := handler.NewExportHandler(dic.ExportService())
 	resetHandler := handler.NewResetHandler(dic.ResetService())
 	resourcewatcherHandler := handler.NewResourceWatcherHandler(dic.ResourceWatcherService())
+	podHandler := handler.NewPodHandler(dic.PodService())
 
 	// register apis
 	v1 := e.Group("/api/v1")
@@ -49,6 +50,12 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 	v1.POST("/import", exportHandler.Import)
 
 	v1.GET("/listwatchresources", resourcewatcherHandler.ListWatchResources)
+
+	v1.GET("/pods", podHandler.GetPods)
+	v1.GET("/namespaces/:namespace/pods/:name/metadata/annotations/:annotation", podHandler.GetPodMetaDataAnnotations)
+	v1.GET("/namespaces/:namespace/pods/:name/metadata/annotations", podHandler.GetPodMetaDataAnnotations)
+	v1.GET("/namespaces/:namespace/pods/:name", podHandler.GetPod)
+	v1.GET("/namespaces/:namespace/pods", podHandler.GetPods)
 
 	// initialize SimulatorServer.
 	s := &SimulatorServer{e: e}
