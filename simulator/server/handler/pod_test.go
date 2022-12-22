@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,7 +12,6 @@ import (
 	"github.com/labstack/echo/v4"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/client-go/kubernetes/fake"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/pod"
@@ -38,7 +38,7 @@ type test struct {
 }
 
 func TestPodHandler_GetPods(t *testing.T) {
-
+	t.Parallel()
 	tests := []test{
 		{
 			name:   "no pods",
@@ -50,13 +50,11 @@ func TestPodHandler_GetPods(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name:   "all pods",
-			params: map[string]string{},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				return prepareFakeClientset()
-			},
-			wantCode: http.StatusOK,
-			wantErr:  false,
+			name:                   "all pods",
+			params:                 map[string]string{},
+			prepareFakeClientSetFn: prepareFakeClientset,
+			wantCode:               http.StatusOK,
+			wantErr:                false,
 			wantBody: `{ 
                 "metadata": {},
                 "items": [
@@ -101,7 +99,7 @@ func TestPodHandler_GetPods(t *testing.T) {
 }
 
 func TestPodHandler_GetPod(t *testing.T) {
-
+	t.Parallel()
 	tests := []test{
 		{
 			name:   "namespace not found",
@@ -122,13 +120,11 @@ func TestPodHandler_GetPod(t *testing.T) {
 			wantErr:  true,
 		},
 		{
-			name:   "pod found",
-			params: map[string]string{"namespace": namespace2, "name": pod2},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				return prepareFakeClientset()
-			},
-			wantCode: http.StatusOK,
-			wantErr:  false,
+			name:                   "pod found",
+			params:                 map[string]string{"namespace": namespace2, "name": pod2},
+			prepareFakeClientSetFn: prepareFakeClientset,
+			wantCode:               http.StatusOK,
+			wantErr:                false,
 			wantBody: `{ 
 			 	"metadata": {
 				 		"creationTimestamp": null,
@@ -140,13 +136,11 @@ func TestPodHandler_GetPod(t *testing.T) {
             }`,
 		},
 		{
-			name:   "pod found on node",
-			params: map[string]string{"namespace": namespace1, "name": pod1},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				return prepareFakeClientset()
-			},
-			wantCode: http.StatusOK,
-			wantErr:  false,
+			name:                   "pod found on node",
+			params:                 map[string]string{"namespace": namespace1, "name": pod1},
+			prepareFakeClientSetFn: prepareFakeClientset,
+			wantCode:               http.StatusOK,
+			wantErr:                false,
 			wantBody: `{ 
 			 	"metadata": {
 				 		"annotations": {
@@ -178,7 +172,7 @@ func TestPodHandler_GetPod(t *testing.T) {
 }
 
 func TestPodHandler_GetPodMetadataAnnotations(t *testing.T) {
-
+	t.Parallel()
 	tests := []test{
 		{
 			name:   "no pods",
@@ -190,22 +184,18 @@ func TestPodHandler_GetPodMetadataAnnotations(t *testing.T) {
 			wantErr:  true,
 		},
 		{
-			name:   "pod found but not annotation",
-			params: map[string]string{"namespace": namespace1, "name": pod1, "annotation": bogusAnnotation},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				return prepareFakeClientset()
-			},
-			wantCode: http.StatusNotFound,
-			wantErr:  true,
+			name:                   "pod found but not annotation",
+			params:                 map[string]string{"namespace": namespace1, "name": pod1, "annotation": bogusAnnotation},
+			prepareFakeClientSetFn: prepareFakeClientset,
+			wantCode:               http.StatusNotFound,
+			wantErr:                true,
 		},
 		{
-			name:   "pod found on node with specific annotation",
-			params: map[string]string{"namespace": namespace1, "name": pod1, "annotation": "scheduler-simulator/filter-result"},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				return prepareFakeClientset()
-			},
-			wantCode: http.StatusOK,
-			wantErr:  false,
+			name:                   "pod found on node with specific annotation",
+			params:                 map[string]string{"namespace": namespace1, "name": pod1, "annotation": "scheduler-simulator/filter-result"},
+			prepareFakeClientSetFn: prepareFakeClientset,
+			wantCode:               http.StatusOK,
+			wantErr:                false,
 			wantBody: `{ 
                 "node-45pvw": {
                     "AzureDiskLimits": "passed",
@@ -214,13 +204,11 @@ func TestPodHandler_GetPodMetadataAnnotations(t *testing.T) {
             }`,
 		},
 		{
-			name:   "pod found on node with scheduler-simulator annotations",
-			params: map[string]string{"namespace": namespace1, "name": pod1, "annotation": "scheduler-simulator"},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				return prepareFakeClientset()
-			},
-			wantCode: http.StatusOK,
-			wantErr:  false,
+			name:                   "pod found on node with scheduler-simulator annotations",
+			params:                 map[string]string{"namespace": namespace1, "name": pod1, "annotation": "scheduler-simulator"},
+			prepareFakeClientSetFn: prepareFakeClientset,
+			wantCode:               http.StatusOK,
+			wantErr:                false,
 			wantBody: `{ 
         	    "scheduler-simulator/filter-result": {
         		    "node-45pvw": {
@@ -238,23 +226,19 @@ func TestPodHandler_GetPodMetadataAnnotations(t *testing.T) {
             }`,
 		},
 		{
-			name:   "pod found on node with some random annotation",
-			params: map[string]string{"namespace": namespace1, "name": pod1, "annotation": "not-our-usual-annotation"},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				return prepareFakeClientset()
-			},
-			wantCode: http.StatusOK,
-			wantErr:  false,
-			wantBody: "some annotation shows up here",
+			name:                   "pod found on node with some random annotation",
+			params:                 map[string]string{"namespace": namespace1, "name": pod1, "annotation": "not-our-usual-annotation"},
+			prepareFakeClientSetFn: prepareFakeClientset,
+			wantCode:               http.StatusOK,
+			wantErr:                false,
+			wantBody:               "some annotation shows up here",
 		},
 		{
-			name:   "pod found on node, dumping all annotations",
-			params: map[string]string{"namespace": namespace1, "name": pod1, "annotation": ""},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				return prepareFakeClientset()
-			},
-			wantCode: http.StatusOK,
-			wantErr:  false,
+			name:                   "pod found on node, dumping all annotations",
+			params:                 map[string]string{"namespace": namespace1, "name": pod1, "annotation": ""},
+			prepareFakeClientSetFn: prepareFakeClientset,
+			wantCode:               http.StatusOK,
+			wantErr:                false,
 			wantBody: `{
 				"not-our-usual-annotation":          "some annotation shows up here",
 				"scheduler-simulator/filter-result": "{\"node-45pvw\": {\"AzureDiskLimits\": \"passed\", \"EBSLimits\": \"passed\"}}",
@@ -276,7 +260,7 @@ func TestPodHandler_GetPodMetadataAnnotations(t *testing.T) {
 	}
 }
 
-// checkResults logs and fails if the expected err, code, and body are not returned/recorded
+// checkResults logs and fails if the expected err, code, and body are not returned/recorded.
 func checkResults(t *testing.T, tt test, err error, rec *httptest.ResponseRecorder) {
 	t.Helper()
 	if (err != nil) != tt.wantErr {
@@ -286,8 +270,12 @@ func checkResults(t *testing.T, tt test, err error, rec *httptest.ResponseRecord
 	// HTTP status code is either recorded or it is in the error
 	code := rec.Code
 	if err != nil {
-		httpError := err.(*echo.HTTPError)
-		code = httpError.Code
+		var httpError *echo.HTTPError
+		if errors.As(err, &httpError) {
+			code = httpError.Code
+		} else {
+			t.Fatalf("%v test: error=%v, wantErr=%v failed to get HTTPError code", tt.name, err, tt.wantErr)
+		}
 	}
 	if code != tt.wantCode {
 		t.Fatalf("%v test: mismatch code=%v, wantCode=%v", tt.name, code, tt.wantCode)
@@ -318,12 +306,12 @@ func prepareRecordingContext(tt struct {
 	wantCode               int
 	wantBody               string
 	wantErr                bool
-}) (*httptest.ResponseRecorder, echo.Context) {
+},
+) (*httptest.ResponseRecorder, echo.Context) {
 	req := httptest.NewRequest(http.MethodGet, "/dummy", nil) // Just enough for context and handler
 	rec := httptest.NewRecorder()
 	recordingContext := echo.New().NewContext(req, rec)
-	n := len(tt.params)
-	if n > 0 {
+	if n := len(tt.params); n > 0 {
 		names := make([]string, 0, n)
 		values := make([]string, 0, n)
 		for k, v := range tt.params {

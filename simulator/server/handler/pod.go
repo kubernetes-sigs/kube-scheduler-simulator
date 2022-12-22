@@ -13,7 +13,7 @@ import (
 
 const indent = " "
 
-// PodHandler is handler for pod service
+// PodHandler is handler for pod service.
 type PodHandler struct {
 	service di.PodService
 }
@@ -24,7 +24,7 @@ func NewPodHandler(s di.PodService) *PodHandler {
 	}
 }
 
-// GetPods lists all pods in all namespaces
+// GetPods lists all pods in all namespaces.
 func (h *PodHandler) GetPods(c echo.Context) error {
 	ctx := c.Request().Context()
 	pods, err := h.service.List(ctx, "")
@@ -36,7 +36,7 @@ func (h *PodHandler) GetPods(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, pods, indent)
 }
 
-// GetPod gets a pod using namespace and name params
+// GetPod gets a pod using namespace and name params.
 func (h *PodHandler) GetPod(c echo.Context) error {
 	ctx := c.Request().Context()
 	name := c.Param("name")
@@ -50,7 +50,7 @@ func (h *PodHandler) GetPod(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, pod, indent)
 }
 
-// GetPodMetaDataAnnotations gets a pod annotations using namespace, name params and annotation params
+// GetPodMetaDataAnnotations gets a pod annotations using namespace, name params and annotation params.
 func (h *PodHandler) GetPodMetaDataAnnotations(c echo.Context) error {
 	ctx := c.Request().Context()
 	name := c.Param("name")
@@ -88,15 +88,14 @@ func (h *PodHandler) GetPodMetaDataAnnotations(c echo.Context) error {
 		if !ok {
 			klog.Errorf("annotation %v not found on %v/%v", annotation, namespace, name)
 			return echo.NewHTTPError(http.StatusNotFound)
+		}
+		nodeAnnotations := make(map[string]map[string]string)
+		err := json.Unmarshal([]byte(a), &nodeAnnotations)
+		if err != nil {
+			klog.Errorf("failed to unmarshal annotation %v returning unmarshalled: %+v", annotation, err)
+			ret = a
 		} else {
-			nodeAnnotations := make(map[string]map[string]string)
-			err := json.Unmarshal([]byte(a), &nodeAnnotations)
-			if err != nil {
-				klog.Errorf("failed to unmarshal annotation %v returning unmarshalled: %+v", annotation, err)
-				ret = a
-			} else {
-				ret = nodeAnnotations
-			}
+			ret = nodeAnnotations
 		}
 	}
 
