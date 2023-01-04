@@ -123,6 +123,9 @@ const EtcdPrefix = "kube-scheduler-simulator/"
 func createK8SAPIServerOpts(etcdURL string, corsAllowedOriginList []string) (*apiserverappopts.ServerRunOptions, func(), error) {
 	serverOpts := apiserverappopts.NewServerRunOptions()
 
+	// Allow privileged containers.
+	serverOpts.AllowPrivileged = true
+
 	// set up etcd
 	serverOpts.Etcd.StorageConfig.Transport.ServerList = []string{etcdURL}
 	serverOpts.Etcd.StorageConfig.Prefix = EtcdPrefix
