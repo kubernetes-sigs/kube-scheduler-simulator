@@ -114,15 +114,14 @@ To run the frontend, please see [README.md](web/README.md) on ./web dir.
 
 ## [Beta] Existing cluster importing
 
-The simulator can import existing clusters.
-This allows for batch inclusion of resources from external clusters.
-It is enabled by an `EXTERNAL_IMPORT_ENABLED` environment variables is `1`.
+**PLEASE AVOID** using it in clusters with large amounts of resources.
+The simulator will try to import ALL resources related to scheduling from your cluster and it may badly affect your cluster's api-server.
 
-Please be careful (or avoid) using it in clusters with large amounts of resources.
-The simulator tries to import ALL resources related to scheduling from your cluster. 
+The simulator can import resources from your cluster.
+You can use it by setting an `EXTERNAL_IMPORT_ENABLED` environment variable to `1`.
 
-You can import resources on your cluster to the simulator by using the environment variable `KUBECONFIG`.
-(And if you would like to use your cluster's scheduler configuration, you may want to use `KUBE_SCHEDULER_CONFIG_PATH`.)
+You need to have the kubeconfig to import resources on your cluster.
+The simulator tries to read the kubeconfig file on the environment variable `KUBECONFIG`.
 
 For more information about those variables, please see [simulator/docs/env-variables.md](simulator/docs/env-variables.md).
 
