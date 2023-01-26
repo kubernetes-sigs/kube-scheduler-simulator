@@ -26,7 +26,6 @@ We also would like to aim to make it as easy as possible to set up the collectio
 
 ### Non-Goals
 - Execute benchmarking.
-- Allow users to compare benchmark results from one scheduler to another. (The scope of this proposal is to record(collect) only.)
 - See the result from Web UI. (maybe implemented in the future, but out of the scope of this proposal.)
 
 ## User Stories
