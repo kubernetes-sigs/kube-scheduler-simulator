@@ -168,6 +168,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 
 // ConvertForSimulator convert v1beta2.Plugins for simulator.
 // It ignores non-default plugin.
+//nolint: cyclop
 func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
 	newpls := pls.DeepCopy()
 
@@ -283,6 +284,7 @@ func mergePluginSet(inTreePluginSet, outOfTreePluginSet v1beta2.PluginSet) v1bet
 }
 
 // registeredPlugins returns all registered plugins.
+//nolint: funlen,cyclop
 func registeredPlugins() ([]v1beta2.Plugin, error) {
 	var pls []v1beta2.Plugin
 	registeredscorepls, err := config.RegisteredScorePlugins()
@@ -337,7 +339,7 @@ func registeredPlugins() ([]v1beta2.Plugin, error) {
 	pls = append(pls, registerdpostfilterpls...)
 
 	registeredMap := sets.NewString()
-	var uniqPls []v1beta2.Plugin
+	uniqPls := make([]v1beta2.Plugin, 0, len(pls))
 	for _, pl := range pls {
 		if registeredMap.Has(pl.Name) {
 			continue
