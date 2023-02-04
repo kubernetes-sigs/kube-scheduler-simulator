@@ -31,7 +31,7 @@ export default defineComponent({
   setup(props) {
     const store = inject(PodStoreKey);
     if (!store) {
-      throw new Error(`${PodStoreKey} is not provided`);
+      throw new Error(`${PodStoreKey.description} is not provided`);
     }
 
     const onClick = (pod: V1Pod) => {
