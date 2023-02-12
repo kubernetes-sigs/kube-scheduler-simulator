@@ -17,7 +17,7 @@ const (
 	FinalScoreResultAnnotationKey = "scheduler-simulator/finalscore-result"
 	// ReserveResultAnnotationKey has the reserve result.
 	ReserveResultAnnotationKey = "scheduler-simulator/reserve-result"
-	// PermitResultAnnotationKey has the permit result.
+	// PermitStatusResultAnnotationKey has the permit result.
 	PermitStatusResultAnnotationKey = "scheduler-simulator/permit-result"
 	// PermitTimeoutResultAnnotationKey has the permit result.
 	PermitTimeoutResultAnnotationKey = "scheduler-simulator/permit-result-timeout"
