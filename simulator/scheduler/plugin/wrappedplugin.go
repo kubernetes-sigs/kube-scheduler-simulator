@@ -138,7 +138,8 @@ type PostBindPluginExtender interface {
 // PluginExtenders contains XXXXPluginExtenders.
 // Each extender will intercept a calling to target method call of scheduler plugins,
 // and you can check/modify requests and/or results.
-// nolint: revive // intended to name it PluginExtenders to distinguish from the scheduler's extender.
+//
+//nolint:revive // intended to name it PluginExtenders to distinguish from the scheduler's extender.
 type PluginExtenders struct {
 	PreFilterPluginExtender      PreFilterPluginExtender
 	FilterPluginExtender         FilterPluginExtender
