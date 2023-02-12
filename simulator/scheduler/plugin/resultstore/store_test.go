@@ -54,7 +54,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 					prebind:         map[string]string{},
 					bind:            map[string]string{},
 					score:           map[string]map[string]string{},
-					finalscore:      map[string]map[string]string{},
+					finalScore:      map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PassedFilterMessage,
@@ -69,7 +69,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 			resultbefore: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PassedFilterMessage,
@@ -88,7 +88,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 			wantResultMap: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PassedFilterMessage,
@@ -104,7 +104,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 			resultbefore: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,
@@ -123,7 +123,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 			wantResultMap: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,
@@ -188,7 +188,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 					prebind:         map[string]string{},
 					bind:            map[string]string{},
 					score:           map[string]map[string]string{},
-					finalscore:      map[string]map[string]string{},
+					finalScore:      map[string]map[string]string{},
 					filter:          map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node1": {
@@ -204,7 +204,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			resultbefore: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node1": {},
@@ -221,7 +221,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			wantResultMap: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node1": {
@@ -237,7 +237,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			resultbefore: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node0": {},
@@ -254,7 +254,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			wantResultMap: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node0": {},
@@ -321,7 +321,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 					bind:            map[string]string{},
 					filter:          map[string]map[string]string{},
 					postFilter:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "20",
 						},
@@ -340,7 +340,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "30",
 						},
@@ -364,7 +364,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "30",
 							"plugin2": "20",
@@ -385,7 +385,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -409,7 +409,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -485,7 +485,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 					filter:          map[string]map[string]string{},
 					postFilter:      map[string]map[string]string{},
 					score:           map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "20",
 						},
@@ -499,7 +499,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "30",
 						},
@@ -518,7 +518,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "30",
 							"plugin2": "20",
@@ -533,7 +533,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -552,7 +552,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -629,7 +629,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 							"plugin1": PassedFilterMessage,
 						},
 					},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -808,7 +808,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 			result: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,
@@ -876,7 +876,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 			result: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,

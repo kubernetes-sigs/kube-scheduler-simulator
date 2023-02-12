@@ -4,11 +4,11 @@ const (
 	// PreFilterStatusResultAnnotationKey has the prefilter result(framework.Status).
 	PreFilterStatusResultAnnotationKey = "scheduler-simulator/prefilter-result-status"
 	// PreFilterResultAnnotationKey has the prefilter result(framework.PreFilterResult).
-	PreFilterResultAnnotationKey = "scheduler-simulator/prefilter-result-prefilter-result"
+	PreFilterResultAnnotationKey = "scheduler-simulator/prefilter-result"
 	// FilterResultAnnotationKey has the filtering result.
 	FilterResultAnnotationKey = "scheduler-simulator/filter-result"
 	// PostFilterResultAnnotationKey has the post filter result.
-	PostFilterResultAnnotationKey = "scheduler-simulator/postFilter-result"
+	PostFilterResultAnnotationKey = "scheduler-simulator/postfilter-result"
 	// PreScoreResultAnnotationKey has the prescore result.
 	PreScoreResultAnnotationKey = "scheduler-simulator/prescore-result"
 	// ScoreResultAnnotationKey has the scoring result.

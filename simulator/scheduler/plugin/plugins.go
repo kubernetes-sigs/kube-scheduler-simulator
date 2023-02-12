@@ -168,48 +168,39 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 
 // ConvertForSimulator convert v1beta2.Plugins for simulator.
 // It ignores non-default plugin.
-//nolint: cyclop
+// nolint: cyclop
 func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
 	newpls := pls.DeepCopy()
-
-	if err := applyPluingSet(&newpls.PreScore, pls.PreScore, config.InTreePreScorePluginSet); err != nil {
-		return nil, xerrors.Errorf("merge PreScore plugins: %w", err)
-	}
 
 	if err := applyPluingSet(&newpls.PreFilter, pls.PreFilter, config.InTreePreFilterPluginSet); err != nil {
 		return nil, xerrors.Errorf("merge PreFilter plugins: %w", err)
 	}
-
-	if err := applyPluingSet(&newpls.Permit, pls.Permit, config.InTreePermitPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Permit plugins: %w", err)
-	}
-
-	if err := applyPluingSet(&newpls.Reserve, pls.Reserve, config.InTreeReservePluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Reserve plugins: %w", err)
-	}
-
-	if err := applyPluingSet(&newpls.Bind, pls.Bind, config.InTreeBindPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Bind plugins: %w", err)
-	}
-
-	if err := applyPluingSet(&newpls.PostBind, pls.PostBind, config.InTreePostBindPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge PostBind plugins: %w", err)
-	}
-
-	if err := applyPluingSet(&newpls.PreBind, pls.PreBind, config.InTreePreBindPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge PreBind plugins: %w", err)
-	}
-
-	if err := applyPluingSet(&newpls.Score, pls.Score, config.InTreeScorePluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Score plugins: %w", err)
-	}
-
 	if err := applyPluingSet(&newpls.Filter, pls.Filter, config.InTreeFilterPluginSet); err != nil {
 		return nil, xerrors.Errorf("merge Filter plugins: %w", err)
 	}
-
 	if err := applyPluingSet(&newpls.PostFilter, pls.PostFilter, config.InTreePostFilterPluginSet); err != nil {
 		return nil, xerrors.Errorf("merge PostFilter plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.PreScore, pls.PreScore, config.InTreePreScorePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PreScore plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.Score, pls.Score, config.InTreeScorePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Score plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.Reserve, pls.Reserve, config.InTreeReservePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Reserve plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.Permit, pls.Permit, config.InTreePermitPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Permit plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.PreBind, pls.PreBind, config.InTreePreBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PreBind plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.Bind, pls.Bind, config.InTreeBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Bind plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.PostBind, pls.PostBind, config.InTreePostBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PostBind plugins: %w", err)
 	}
 
 	return newpls, nil
@@ -284,7 +275,7 @@ func mergePluginSet(inTreePluginSet, outOfTreePluginSet v1beta2.PluginSet) v1bet
 }
 
 // registeredPlugins returns all registered plugins.
-//nolint: funlen,cyclop
+// nolint: funlen,cyclop
 func registeredPlugins() ([]v1beta2.Plugin, error) {
 	var pls []v1beta2.Plugin
 	registeredscorepls, err := config.RegisteredScorePlugins()

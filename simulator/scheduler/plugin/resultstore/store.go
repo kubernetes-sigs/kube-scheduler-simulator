@@ -54,9 +54,9 @@ type result struct {
 	// node name → plugin name → score(string)
 	score map[string]map[string]string
 
-	// node name → plugin name → finalscore(string)
+	// node name → plugin name → finalScore(string)
 	// This score is normalized and applied weight for each plugins.
-	finalscore map[string]map[string]string
+	finalScore map[string]map[string]string
 
 	// plugin name → pre filter status.
 	// If success, SuccessMessage is shown.
@@ -123,7 +123,7 @@ func newKey(namespace, podName string) key {
 func newData() *result {
 	d := &result{
 		score:           map[string]map[string]string{},
-		finalscore:      map[string]map[string]string{},
+		finalScore:      map[string]map[string]string{},
 		preFilterResult: map[string][]string{},
 		preFilterStatus: map[string]string{},
 		preScore:        map[string]string{},
@@ -236,7 +236,7 @@ func (s *Store) addPreFilterResultToPod(pod *v1.Pod) error {
 		}
 		r, err := json.Marshal(s.results[k].preFilterResult)
 		if err != nil {
-			return xerrors.Errorf("encode json to record scores: %w", err)
+			return xerrors.Errorf("encode json to record preFilter result: %w", err)
 		}
 
 		metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreFilterResultAnnotationKey, string(r))
@@ -252,7 +252,7 @@ func (s *Store) addPreFilterResultToPod(pod *v1.Pod) error {
 	}
 	sta, err := json.Marshal(s.results[k].preFilterStatus)
 	if err != nil {
-		return xerrors.Errorf("encode json to record scores: %w", err)
+		return xerrors.Errorf("encode json to record preFilter status: %w", err)
 	}
 
 	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreFilterStatusResultAnnotationKey, string(sta))
@@ -270,12 +270,12 @@ func (s *Store) addPreScoreResultToPod(pod *v1.Pod) error {
 	if s.results[k].preScore == nil {
 		s.results[k].preScore = map[string]string{}
 	}
-	scores, err := json.Marshal(s.results[k].preScore)
+	status, err := json.Marshal(s.results[k].preScore)
 	if err != nil {
-		return xerrors.Errorf("encode json to record scores: %w", err)
+		return xerrors.Errorf("encode json to record preScore status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreScoreResultAnnotationKey, string(scores))
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreScoreResultAnnotationKey, string(status))
 	return nil
 }
 
@@ -289,12 +289,12 @@ func (s *Store) addBindResultToPod(pod *v1.Pod) error {
 	if s.results[k].bind == nil {
 		s.results[k].bind = map[string]string{}
 	}
-	scores, err := json.Marshal(s.results[k].bind)
+	status, err := json.Marshal(s.results[k].bind)
 	if err != nil {
-		return xerrors.Errorf("encode json to record scores: %w", err)
+		return xerrors.Errorf("encode json to record bind status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.BindResultAnnotationKey, string(scores))
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.BindResultAnnotationKey, string(status))
 	return nil
 }
 
@@ -308,12 +308,12 @@ func (s *Store) addPreBindResultToPod(pod *v1.Pod) error {
 	if s.results[k].prebind == nil {
 		s.results[k].prebind = map[string]string{}
 	}
-	scores, err := json.Marshal(s.results[k].prebind)
+	status, err := json.Marshal(s.results[k].prebind)
 	if err != nil {
-		return xerrors.Errorf("encode json to record scores: %w", err)
+		return xerrors.Errorf("encode json to record preBind status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreBindResultAnnotationKey, string(scores))
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreBindResultAnnotationKey, string(status))
 	return nil
 }
 
@@ -339,7 +339,7 @@ func (s *Store) addReserveResultToPod(pod *v1.Pod) error {
 	}
 	status, err := json.Marshal(s.results[k].reserve)
 	if err != nil {
-		return xerrors.Errorf("encode json to record scores: %w", err)
+		return xerrors.Errorf("encode json to record reserve status: %w", err)
 	}
 	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.ReserveResultAnnotationKey, string(status))
 	return nil
@@ -355,7 +355,7 @@ func (s *Store) addPermitResultToPod(pod *v1.Pod) error {
 		}
 		timeout, err := json.Marshal(s.results[k].permitTimeout)
 		if err != nil {
-			return xerrors.Errorf("encode json to record scores: %w", err)
+			return xerrors.Errorf("encode json to record permit timeout: %w", err)
 		}
 		metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PermitTimeoutResultAnnotationKey, string(timeout))
 	}
@@ -370,7 +370,7 @@ func (s *Store) addPermitResultToPod(pod *v1.Pod) error {
 	}
 	status, err := json.Marshal(s.results[k].permit)
 	if err != nil {
-		return xerrors.Errorf("encode json to record scores: %w", err)
+		return xerrors.Errorf("encode json to record permit status: %w", err)
 	}
 	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PermitStatusResultAnnotationKey, string(status))
 	return nil
@@ -386,12 +386,12 @@ func (s *Store) addFilterResultToPod(pod *v1.Pod) error {
 	if s.results[k].filter == nil {
 		s.results[k].filter = map[string]map[string]string{}
 	}
-	scores, err := json.Marshal(s.results[k].filter)
+	status, err := json.Marshal(s.results[k].filter)
 	if err != nil {
-		return xerrors.Errorf("encode json to record scores: %w", err)
+		return xerrors.Errorf("encode json to record filter status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.FilterResultAnnotationKey, string(scores))
+	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.FilterResultAnnotationKey, string(status))
 	return nil
 }
 
@@ -439,10 +439,10 @@ func (s *Store) addFinalScoreResultToPod(pod *v1.Pod) error {
 	}
 
 	k := newKey(pod.Namespace, pod.Name)
-	if s.results[k].finalscore == nil {
-		s.results[k].finalscore = map[string]map[string]string{}
+	if s.results[k].finalScore == nil {
+		s.results[k].finalScore = map[string]map[string]string{}
 	}
-	scores, err := json.Marshal(s.results[k].finalscore)
+	scores, err := json.Marshal(s.results[k].finalScore)
 	if err != nil {
 		return xerrors.Errorf("encode json to record scores: %w", err)
 	}
@@ -523,14 +523,14 @@ func (s *Store) addNormalizedScoreResultWithoutLock(namespace, podName, nodeName
 		s.results[k] = newData()
 	}
 
-	if _, ok := s.results[k].finalscore[nodeName]; !ok {
-		s.results[k].finalscore[nodeName] = map[string]string{}
+	if _, ok := s.results[k].finalScore[nodeName]; !ok {
+		s.results[k].finalScore[nodeName] = map[string]string{}
 	}
 
 	finalscore := s.applyWeightOnScore(pluginName, normalizedscore)
 
 	// apply weight to calculate final score.
-	s.results[k].finalscore[nodeName][pluginName] = strconv.FormatInt(finalscore, 10)
+	s.results[k].finalScore[nodeName][pluginName] = strconv.FormatInt(finalscore, 10)
 }
 
 func (s *Store) applyWeightOnScore(pluginName string, score int64) int64 {

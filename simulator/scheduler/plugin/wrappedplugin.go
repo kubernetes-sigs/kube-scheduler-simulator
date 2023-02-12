@@ -148,6 +148,9 @@ type PluginExtenders struct {
 	NormalizeScorePluginExtender NormalizeScorePluginExtender
 	PermitPluginExtender         PermitPluginExtender
 	ReservePluginExtender        ReservePluginExtender
+	PreBindPluginExtender        PreBindPluginExtender
+	BindPluginExtender           BindPluginExtender
+	PostBindPluginExtender       PostBindPluginExtender
 }
 
 type options struct {
@@ -280,6 +283,15 @@ func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plu
 	}
 	if options.extenderOption.ReservePluginExtender != nil {
 		plg.reservePluginExtender = options.extenderOption.ReservePluginExtender
+	}
+	if options.extenderOption.PreBindPluginExtender != nil {
+		plg.preBindPluginExtender = options.extenderOption.PreBindPluginExtender
+	}
+	if options.extenderOption.BindPluginExtender != nil {
+		plg.bindPluginExtender = options.extenderOption.BindPluginExtender
+	}
+	if options.extenderOption.PostBindPluginExtender != nil {
+		plg.postBindPluginExtender = options.extenderOption.PostBindPluginExtender
 	}
 
 	prefp, ok := p.(framework.PreFilterPlugin)
