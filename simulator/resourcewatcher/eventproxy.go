@@ -1,8 +1,8 @@
 package resourcewatcher
 
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/watchInterface.go -package=mock_resourcewatcher -mock_names Interface=MockWatchInterface k8s.io/apimachinery/pkg/watch Interface
-//go:generate mockgen --build_flags=--mod=mod -source=eventproxy.go -destination=./mock_eventproxy_test.go -package=resourcewatcher
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/lister.go -package=mock_resourcewatcher -mock_names Interface=MockListerInterface k8s.io/client-go/tools/cache Lister
+//go:generate mockgen -destination=./mock_$GOPACKAGE/watchInterface.go -package=mock_resourcewatcher -mock_names Interface=MockWatchInterface k8s.io/apimachinery/pkg/watch Interface
+//go:generate mockgen -source=eventproxy.go -destination=./mock_eventproxy_test.go -package=resourcewatcher
+//go:generate mockgen -destination=./mock_$GOPACKAGE/lister.go -package=mock_resourcewatcher -mock_names Interface=MockListerInterface k8s.io/client-go/tools/cache Lister
 
 import (
 	"errors"

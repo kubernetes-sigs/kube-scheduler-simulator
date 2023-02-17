@@ -1,6 +1,6 @@
 package replicateexistingcluster
 
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/export.go . ExportService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/export.go . ExportService
 
 import (
 	"context"

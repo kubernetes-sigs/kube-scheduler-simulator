@@ -1,6 +1,6 @@
 package streamwriter
 
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/responseStream.go . ResponseStream
+//go:generate mockgen -destination=./mock_$GOPACKAGE/responseStream.go . ResponseStream
 import (
 	"encoding/json"
 	"io"

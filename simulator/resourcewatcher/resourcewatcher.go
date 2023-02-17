@@ -1,6 +1,6 @@
 package resourcewatcher
 
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/streamWriter.go . StreamWriter
+//go:generate mockgen -destination=./mock_$GOPACKAGE/streamWriter.go . StreamWriter
 
 import (
 	"context"

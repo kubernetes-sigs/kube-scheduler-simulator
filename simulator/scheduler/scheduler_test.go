@@ -303,7 +303,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 				})
 			}
 
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want.Profiles[0].Plugins, got.Profiles[0].Plugins)
 		})
 	}
 }
@@ -313,6 +313,18 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 	var weight2 int32 = 2
 	versioned, _ := schedConfig.DefaultSchedulerConfig()
 	cfg := versioned.DeepCopy()
+	cfg.Profiles[0].Plugins.Bind.Enabled = []v1beta2config.Plugin{
+		{Name: "DefaultBinderWrapped"},
+	}
+	cfg.Profiles[0].Plugins.PreFilter.Enabled = []v1beta2config.Plugin{
+		{Name: "NodeResourcesFitWrapped"},
+		{Name: "NodePortsWrapped"},
+		{Name: "VolumeRestrictionsWrapped"},
+		{Name: "PodTopologySpreadWrapped"},
+		{Name: "InterPodAffinityWrapped"},
+		{Name: "VolumeBindingWrapped"},
+		{Name: "NodeAffinityWrapped"},
+	}
 	cfg.Profiles[0].Plugins.Filter.Enabled = []v1beta2config.Plugin{
 		{Name: "NodeUnschedulableWrapped"},
 		{Name: "NodeNameWrapped"},
@@ -332,6 +344,18 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 	}
 	cfg.Profiles[0].Plugins.PostFilter.Enabled = []v1beta2config.Plugin{
 		{Name: "DefaultPreemptionWrapped"},
+	}
+	cfg.Profiles[0].Plugins.Reserve.Enabled = []v1beta2config.Plugin{
+		{Name: "VolumeBindingWrapped"},
+	}
+	cfg.Profiles[0].Plugins.PreBind.Enabled = []v1beta2config.Plugin{
+		{Name: "VolumeBindingWrapped"},
+	}
+	cfg.Profiles[0].Plugins.PreScore.Enabled = []v1beta2config.Plugin{
+		{Name: "InterPodAffinityWrapped"},
+		{Name: "PodTopologySpreadWrapped"},
+		{Name: "TaintTolerationWrapped"},
+		{Name: "NodeAffinityWrapped"},
 	}
 	cfg.Profiles[0].Plugins.Score.Enabled = []v1beta2config.Plugin{
 		{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},

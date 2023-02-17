@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/kubernetes/pkg/scheduler/framework"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/annotation"
 )
@@ -41,8 +44,17 @@ func TestStore_AddFilterResult(t *testing.T) {
 			},
 			wantResultMap: map[key]*result{
 				"default/pod1": {
-					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					selectedNode:    "",
+					preScore:        map[string]string{},
+					preFilterStatus: map[string]string{},
+					preFilterResult: map[string][]string{},
+					permit:          map[string]string{},
+					permitTimeout:   map[string]string{},
+					reserve:         map[string]string{},
+					prebind:         map[string]string{},
+					bind:            map[string]string{},
+					score:           map[string]map[string]string{},
+					finalScore:      map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PassedFilterMessage,
@@ -57,7 +69,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 			resultbefore: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PassedFilterMessage,
@@ -76,7 +88,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 			wantResultMap: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PassedFilterMessage,
@@ -92,7 +104,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 			resultbefore: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,
@@ -111,7 +123,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 			wantResultMap: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,
@@ -166,9 +178,18 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			},
 			wantResultMap: map[key]*result{
 				"default/pod1": {
-					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
-					filter:     map[string]map[string]string{},
+					selectedNode:    "",
+					preScore:        map[string]string{},
+					preFilterStatus: map[string]string{},
+					preFilterResult: map[string][]string{},
+					permit:          map[string]string{},
+					permitTimeout:   map[string]string{},
+					reserve:         map[string]string{},
+					prebind:         map[string]string{},
+					bind:            map[string]string{},
+					score:           map[string]map[string]string{},
+					finalScore:      map[string]map[string]string{},
+					filter:          map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PostFilterNominatedMessage,
@@ -183,7 +204,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			resultbefore: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node1": {},
@@ -200,7 +221,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			wantResultMap: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node1": {
@@ -216,7 +237,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			resultbefore: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node0": {},
@@ -233,7 +254,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 			wantResultMap: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node0": {},
@@ -289,9 +310,18 @@ func TestStore_AddScoreResult(t *testing.T) {
 			},
 			wantResultMap: map[key]*result{
 				"default/pod1": {
-					filter:     map[string]map[string]string{},
-					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					selectedNode:    "",
+					preScore:        map[string]string{},
+					preFilterStatus: map[string]string{},
+					preFilterResult: map[string][]string{},
+					permit:          map[string]string{},
+					permitTimeout:   map[string]string{},
+					reserve:         map[string]string{},
+					prebind:         map[string]string{},
+					bind:            map[string]string{},
+					filter:          map[string]map[string]string{},
+					postFilter:      map[string]map[string]string{},
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "20",
 						},
@@ -310,7 +340,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "30",
 						},
@@ -334,7 +364,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "30",
 							"plugin2": "20",
@@ -355,7 +385,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -379,7 +409,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -443,10 +473,19 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 			},
 			wantResultMap: map[key]*result{
 				"default/pod1": {
-					filter:     map[string]map[string]string{},
-					postFilter: map[string]map[string]string{},
-					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					selectedNode:    "",
+					preScore:        map[string]string{},
+					preFilterStatus: map[string]string{},
+					preFilterResult: map[string][]string{},
+					permit:          map[string]string{},
+					permitTimeout:   map[string]string{},
+					reserve:         map[string]string{},
+					prebind:         map[string]string{},
+					bind:            map[string]string{},
+					filter:          map[string]map[string]string{},
+					postFilter:      map[string]map[string]string{},
+					score:           map[string]map[string]string{},
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "20",
 						},
@@ -460,7 +499,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "30",
 						},
@@ -479,7 +518,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "30",
 							"plugin2": "20",
@@ -494,7 +533,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -513,7 +552,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 				"default/pod1": {
 					filter:     map[string]map[string]string{},
 					postFilter: map[string]map[string]string{},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -557,6 +596,31 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 			name: "success",
 			result: map[key]*result{
 				"default/pod1": {
+					selectedNode: "node",
+					preScore: map[string]string{
+						"plugin1": "preScore",
+					},
+					preFilterStatus: map[string]string{
+						"plugin1": "preFilterStatus",
+					},
+					preFilterResult: map[string][]string{
+						"plugin1": {"node1", "node2"},
+					},
+					permit: map[string]string{
+						"plugin1": "permit",
+					},
+					permitTimeout: map[string]string{
+						"plugin1": "1s",
+					},
+					reserve: map[string]string{
+						"plugin1": "reserve",
+					},
+					prebind: map[string]string{
+						"plugin1": "prebind",
+					},
+					bind: map[string]string{
+						"plugin1": "bind",
+					},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,
@@ -565,7 +629,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 							"plugin1": PassedFilterMessage,
 						},
 					},
-					finalscore: map[string]map[string]string{
+					finalScore: map[string]map[string]string{
 						"node0": {
 							"plugin1": "20",
 						},
@@ -611,6 +675,55 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 					Name:      podName,
 					Namespace: namespace,
 					Annotations: map[string]string{
+						annotation.SelectedNodeAnnotationKey: "node",
+						annotation.PreScoreResultAnnotationKey: func() string {
+							d, _ := json.Marshal(map[string]string{
+								"plugin1": "preScore",
+							})
+							return string(d)
+						}(),
+						annotation.PreFilterResultAnnotationKey: func() string {
+							d, _ := json.Marshal(map[string][]string{
+								"plugin1": {"node1", "node2"},
+							})
+							return string(d)
+						}(),
+						annotation.PreFilterStatusResultAnnotationKey: func() string {
+							d, _ := json.Marshal(map[string]string{
+								"plugin1": "preFilterStatus",
+							})
+							return string(d)
+						}(),
+						annotation.PermitStatusResultAnnotationKey: func() string {
+							d, _ := json.Marshal(map[string]string{
+								"plugin1": "permit",
+							})
+							return string(d)
+						}(),
+						annotation.PermitTimeoutResultAnnotationKey: func() string {
+							d, _ := json.Marshal(map[string]string{
+								"plugin1": "1s",
+							})
+							return string(d)
+						}(),
+						annotation.ReserveResultAnnotationKey: func() string {
+							d, _ := json.Marshal(map[string]string{
+								"plugin1": "reserve",
+							})
+							return string(d)
+						}(),
+						annotation.PreBindResultAnnotationKey: func() string {
+							d, _ := json.Marshal(map[string]string{
+								"plugin1": "prebind",
+							})
+							return string(d)
+						}(),
+						annotation.BindResultAnnotationKey: func() string {
+							d, _ := json.Marshal(map[string]string{
+								"plugin1": "bind",
+							})
+							return string(d)
+						}(),
 						annotation.FilterResultAnnotationKey: func() string {
 							r := map[string]map[string]string{
 								"node0": {
@@ -695,7 +808,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 			result: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,
@@ -741,9 +854,18 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 							d, _ := json.Marshal(r)
 							return string(d)
 						}(),
-						annotation.ScoreResultAnnotationKey:      "{}",
-						annotation.FinalScoreResultAnnotationKey: "{}",
-						annotation.PostFilterResultAnnotationKey: "{}",
+						annotation.ScoreResultAnnotationKey:           "{}",
+						annotation.FinalScoreResultAnnotationKey:      "{}",
+						annotation.PostFilterResultAnnotationKey:      "{}",
+						annotation.SelectedNodeAnnotationKey:          "",
+						annotation.PreScoreResultAnnotationKey:        "{}",
+						annotation.PreFilterResultAnnotationKey:       "{}",
+						annotation.PreFilterStatusResultAnnotationKey: "{}",
+						annotation.PermitStatusResultAnnotationKey:    "{}",
+						annotation.PermitTimeoutResultAnnotationKey:   "{}",
+						annotation.ReserveResultAnnotationKey:         "{}",
+						annotation.PreBindResultAnnotationKey:         "{}",
+						annotation.BindResultAnnotationKey:            "{}",
 					},
 				},
 			},
@@ -754,7 +876,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 			result: map[key]*result{
 				"default/pod1": {
 					score:      map[string]map[string]string{},
-					finalscore: map[string]map[string]string{},
+					finalScore: map[string]map[string]string{},
 					filter: map[string]map[string]string{
 						"node0": {
 							"plugin1": PassedFilterMessage,
@@ -815,6 +937,315 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 				}
 				t.Fatalf("result should be left")
 			}
+		})
+	}
+}
+
+func TestStore_AddPreFilterResult(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		namespace       string
+		podName         string
+		pluginName      string
+		reason          string
+		preFilterResult *framework.PreFilterResult
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantResultMap map[key]*result
+	}{
+		{
+			name: "success",
+			args: args{
+				namespace:  "namespace",
+				podName:    "pod",
+				pluginName: "plugin",
+				reason:     "reason",
+				preFilterResult: &framework.PreFilterResult{
+					NodeNames: sets.NewString("hoge"),
+				},
+			},
+			wantResultMap: func() map[key]*result {
+				d := newData()
+				d.preFilterResult = map[string][]string{
+					"plugin": {"hoge"},
+				}
+				d.preFilterStatus = map[string]string{
+					"plugin": "reason",
+				}
+				return map[key]*result{
+					"namespace/pod": d,
+				}
+			}(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{mu: &sync.Mutex{}, results: map[key]*result{}}
+			s.AddPreFilterResult(tt.args.namespace, tt.args.podName, tt.args.pluginName, tt.args.reason, tt.args.preFilterResult)
+			assert.Equal(t, tt.wantResultMap, s.results)
+		})
+	}
+}
+
+func TestStore_AddPreScoreResult(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		namespace  string
+		podName    string
+		pluginName string
+		reason     string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantResultMap map[key]*result
+	}{
+		{
+			name: "success",
+			args: args{
+				namespace:  "namespace",
+				podName:    "pod",
+				pluginName: "plugin",
+				reason:     "reason",
+			},
+			wantResultMap: func() map[key]*result {
+				d := newData()
+				d.preScore = map[string]string{
+					"plugin": "reason",
+				}
+				return map[key]*result{
+					"namespace/pod": d,
+				}
+			}(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{mu: &sync.Mutex{}, results: map[key]*result{}}
+			s.AddPreScoreResult(tt.args.namespace, tt.args.podName, tt.args.pluginName, tt.args.reason)
+			assert.Equal(t, tt.wantResultMap, s.results)
+		})
+	}
+}
+
+func TestStore_AddPermitResult(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		namespace  string
+		podName    string
+		pluginName string
+		status     string
+		timeout    time.Duration
+	}
+	tests := []struct {
+		name          string
+		wantResultMap map[key]*result
+		args          args
+	}{
+		{
+			name: "success",
+			args: args{
+				namespace:  "namespace",
+				podName:    "pod",
+				pluginName: "plugin",
+				status:     "success",
+				timeout:    time.Duration(1), // meaning 1ns
+			},
+			wantResultMap: func() map[key]*result {
+				d := newData()
+				d.permit = map[string]string{
+					"plugin": "success",
+				}
+				d.permitTimeout = map[string]string{
+					"plugin": "1ns",
+				}
+				return map[key]*result{
+					"namespace/pod": d,
+				}
+			}(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{mu: &sync.Mutex{}, results: map[key]*result{}}
+			s.AddPermitResult(tt.args.namespace, tt.args.podName, tt.args.pluginName, tt.args.status, tt.args.timeout)
+			assert.Equal(t, tt.wantResultMap, s.results)
+		})
+	}
+}
+
+func TestStore_AddSelectedNode(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		namespace string
+		podName   string
+		nodeName  string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantResultMap map[key]*result
+	}{
+		{
+			name: "success",
+			args: args{
+				namespace: "namespace",
+				podName:   "pod",
+				nodeName:  "node",
+			},
+			wantResultMap: func() map[key]*result {
+				d := newData()
+				d.selectedNode = "node"
+				return map[key]*result{
+					"namespace/pod": d,
+				}
+			}(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{mu: &sync.Mutex{}, results: map[key]*result{}}
+			s.AddSelectedNode(tt.args.namespace, tt.args.podName, tt.args.nodeName)
+			assert.Equal(t, tt.wantResultMap, s.results)
+		})
+	}
+}
+
+func TestStore_AddReserveResult(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		namespace  string
+		podName    string
+		pluginName string
+		status     string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantResultMap map[key]*result
+	}{
+		{
+			name: "success",
+			args: args{
+				namespace:  "namespace",
+				podName:    "pod",
+				pluginName: "plugin",
+				status:     "success",
+			},
+			wantResultMap: func() map[key]*result {
+				d := newData()
+				d.reserve = map[string]string{
+					"plugin": "success",
+				}
+				return map[key]*result{
+					"namespace/pod": d,
+				}
+			}(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{mu: &sync.Mutex{}, results: map[key]*result{}}
+			s.AddReserveResult(tt.args.namespace, tt.args.podName, tt.args.pluginName, tt.args.status)
+			assert.Equal(t, tt.wantResultMap, s.results)
+		})
+	}
+}
+
+func TestStore_AddBindResult(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		namespace  string
+		podName    string
+		pluginName string
+		status     string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantResultMap map[key]*result
+	}{
+		{
+			name: "success",
+			args: args{
+				namespace:  "namespace",
+				podName:    "pod",
+				pluginName: "plugin",
+				status:     "success",
+			},
+			wantResultMap: func() map[key]*result {
+				d := newData()
+				d.bind = map[string]string{
+					"plugin": "success",
+				}
+				return map[key]*result{
+					"namespace/pod": d,
+				}
+			}(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{mu: &sync.Mutex{}, results: map[key]*result{}}
+			s.AddBindResult(tt.args.namespace, tt.args.podName, tt.args.pluginName, tt.args.status)
+			assert.Equal(t, tt.wantResultMap, s.results)
+		})
+	}
+}
+
+func TestStore_AddPreBindResult(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		namespace  string
+		podName    string
+		pluginName string
+		status     string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantResultMap map[key]*result
+	}{
+		{
+			name: "success",
+			args: args{
+				namespace:  "namespace",
+				podName:    "pod",
+				pluginName: "plugin",
+				status:     "success",
+			},
+			wantResultMap: func() map[key]*result {
+				d := newData()
+				d.prebind = map[string]string{
+					"plugin": "success",
+				}
+				return map[key]*result{
+					"namespace/pod": d,
+				}
+			}(),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{mu: &sync.Mutex{}, results: map[key]*result{}}
+			s.AddPreBindResult(tt.args.namespace, tt.args.podName, tt.args.pluginName, tt.args.status)
+			assert.Equal(t, tt.wantResultMap, s.results)
 		})
 	}
 }
