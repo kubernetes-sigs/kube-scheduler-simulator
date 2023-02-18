@@ -28,6 +28,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 
 	type args struct {
 		versioned *v1beta2config.KubeSchedulerConfiguration
+		port      int
 	}
 	tests := []struct {
 		name    string
@@ -39,6 +40,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			name: "success with empty-configuration",
 			args: args{
 				versioned: &v1beta2config.KubeSchedulerConfiguration{},
+				port:      80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
@@ -55,7 +57,18 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							Plugins:       &v1beta2config.Plugins{},
 						},
 					},
+					Extenders: []v1beta2config.Extender{
+						{
+							URLPrefix:      "http://example.com/extender/",
+							PreemptVerb:    "PreemptVerb/",
+							FilterVerb:     "FilterVerb/",
+							PrioritizeVerb: "PrioritizeVerb/",
+							BindVerb:       "BindVerb/",
+							Weight:         1,
+						},
+					},
 				},
+				port: 80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
@@ -66,6 +79,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			name: "success with empty Profiles",
 			args: args{
 				versioned: &v1beta2config.KubeSchedulerConfiguration{},
+				port:      80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
@@ -73,7 +87,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			}(),
 		},
 		{
-			name: "changes of field other than Profiles does not affects result",
+			name: "changes of field other than Profiles and Extenders does not affects result",
 			args: args{
 				versioned: &v1beta2config.KubeSchedulerConfiguration{
 					Parallelism: &nondefaultParallelism,
@@ -83,7 +97,18 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							Plugins:       &v1beta2config.Plugins{},
 						},
 					},
+					Extenders: []v1beta2config.Extender{
+						{
+							URLPrefix:      "http://example.com/extender/",
+							PreemptVerb:    "PreemptVerb/",
+							FilterVerb:     "FilterVerb/",
+							PrioritizeVerb: "PrioritizeVerb/",
+							BindVerb:       "BindVerb/",
+							Weight:         1,
+						},
+					},
 				},
+				port: 80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
@@ -91,7 +116,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			}(),
 		},
 		{
-			name: "changes of field other than Profiles.Plugins does not affects result",
+			name: "changes of field other than Profiles.Plugins and Extenders does not affects result",
 			args: args{
 				versioned: &v1beta2config.KubeSchedulerConfiguration{
 					Parallelism: &nondefaultParallelism,
@@ -102,7 +127,18 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							PluginConfig:  nil,
 						},
 					},
+					Extenders: []v1beta2config.Extender{
+						{
+							URLPrefix:      "http://example.com/extender/",
+							PreemptVerb:    "PreemptVerb/",
+							FilterVerb:     "FilterVerb/",
+							PrioritizeVerb: "PrioritizeVerb/",
+							BindVerb:       "BindVerb/",
+							Weight:         1,
+						},
+					},
 				},
+				port: 80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
@@ -134,7 +170,18 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							},
 						},
 					},
+					Extenders: []v1beta2config.Extender{
+						{
+							URLPrefix:      "http://example.com/extender/",
+							PreemptVerb:    "PreemptVerb/",
+							FilterVerb:     "FilterVerb/",
+							PrioritizeVerb: "PrioritizeVerb/",
+							BindVerb:       "BindVerb/",
+							Weight:         1,
+						},
+					},
 				},
+				port: 80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
@@ -193,7 +240,18 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							},
 						},
 					},
+					Extenders: []v1beta2config.Extender{
+						{
+							URLPrefix:      "http://example.com/extender/",
+							PreemptVerb:    "PreemptVerb/",
+							FilterVerb:     "FilterVerb/",
+							PrioritizeVerb: "PrioritizeVerb/",
+							BindVerb:       "BindVerb/",
+							Weight:         1,
+						},
+					},
 				},
+				port: 80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
@@ -265,7 +323,18 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							},
 						},
 					},
+					Extenders: []v1beta2config.Extender{
+						{
+							URLPrefix:      "http://example.com/extender/",
+							PreemptVerb:    "PreemptVerb/",
+							FilterVerb:     "FilterVerb/",
+							PrioritizeVerb: "PrioritizeVerb/",
+							BindVerb:       "BindVerb/",
+							Weight:         1,
+						},
+					},
 				},
+				port: 80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
@@ -284,7 +353,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := convertConfigurationForSimulator(tt.args.versioned)
+			got, err := convertConfigurationForSimulator(tt.args.versioned, tt.args.port)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("convertConfigurationForSimulator() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -406,5 +475,16 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 	converted := config.KubeSchedulerConfiguration{}
 	scheme.Scheme.Convert(cfg, &converted, nil)
 	converted.SetGroupVersionKind(v1beta2config.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
+
+	converted.Extenders = []config.Extender{
+		{
+			URLPrefix:      "http://localhost:80/api/v1/extender/",
+			PreemptVerb:    "preempt/0",
+			FilterVerb:     "filter/0",
+			PrioritizeVerb: "prioritize/0",
+			BindVerb:       "bind/0",
+			Weight:         1,
+		},
+	}
 	return converted
 }

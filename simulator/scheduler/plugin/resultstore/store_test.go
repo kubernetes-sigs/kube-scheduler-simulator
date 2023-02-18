@@ -1,7 +1,6 @@
 package resultstore
 
 import (
-	"context"
 	"encoding/json"
 	"sync"
 	"testing"
@@ -11,7 +10,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/annotation"
@@ -579,18 +577,15 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 	}
 }
 
-func TestStore_addSchedulingResultToPod(t *testing.T) {
+func TestStore_AddStoredResultToPod(t *testing.T) {
 	t.Parallel()
 	podName := "pod1"
 	namespace := "default"
 	tests := []struct {
-		name                       string
-		result                     map[key]*result
-		prepareFakeClientSetFn     func() *fake.Clientset
-		newObj                     interface{}
-		wantpod                    *corev1.Pod
-		resultRemainsAfterExecFunc bool
-		wanterr                    bool
+		name    string
+		result  map[key]*result
+		newObj  *corev1.Pod
+		wantpod *corev1.Pod
 	}{
 		{
 			name: "success",
@@ -652,17 +647,6 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 						},
 					},
 				},
-			},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				c := fake.NewSimpleClientset()
-				c.CoreV1().Pods(namespace).Create(context.Background(), &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      podName,
-						Namespace: namespace,
-					},
-				}, metav1.CreateOptions{})
-
-				return c
 			},
 			newObj: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -773,22 +757,10 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 					},
 				},
 			},
-			resultRemainsAfterExecFunc: false,
 		},
 		{
 			name:   "do nothing if store doesn't have data",
 			result: map[key]*result{},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				c := fake.NewSimpleClientset()
-				c.CoreV1().Pods(namespace).Create(context.Background(), &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      podName,
-						Namespace: namespace,
-					},
-				}, metav1.CreateOptions{})
-
-				return c
-			},
 			newObj: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      podName,
@@ -801,7 +773,6 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 					Namespace: namespace,
 				},
 			},
-			resultRemainsAfterExecFunc: false,
 		},
 		{
 			name: "success without some data on store",
@@ -819,17 +790,6 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 					},
 					postFilter: map[string]map[string]string{},
 				},
-			},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				c := fake.NewSimpleClientset()
-				c.CoreV1().Pods(namespace).Create(context.Background(), &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      podName,
-						Namespace: namespace,
-					},
-				}, metav1.CreateOptions{})
-
-				return c
 			},
 			newObj: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -869,74 +829,20 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 					},
 				},
 			},
-			resultRemainsAfterExecFunc: false,
-		},
-		{
-			name: "fail if client failed to update the pod",
-			result: map[key]*result{
-				"default/pod1": {
-					score:      map[string]map[string]string{},
-					finalScore: map[string]map[string]string{},
-					filter: map[string]map[string]string{
-						"node0": {
-							"plugin1": PassedFilterMessage,
-						},
-						"node1": {
-							"plugin1": PassedFilterMessage,
-						},
-					},
-				},
-			},
-			prepareFakeClientSetFn: func() *fake.Clientset {
-				c := fake.NewSimpleClientset()
-				c.CoreV1().Pods(namespace).Create(context.Background(), &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      podName + "1", // To cause the update to fail.
-						Namespace: namespace,
-					},
-				}, metav1.CreateOptions{})
-
-				return c
-			},
-			newObj: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podName,
-					Namespace: namespace,
-				},
-			},
-			wantpod: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podName + "1",
-					Namespace: namespace,
-				},
-			},
-			resultRemainsAfterExecFunc: true,
-			wanterr:                    true,
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			c := tt.prepareFakeClientSetFn()
 			s := &Store{
 				mu:      new(sync.Mutex),
 				results: tt.result,
-				client:  c,
 			}
-			s.addSchedulingResultToPod(nil, tt.newObj)
+			p := tt.newObj
+			s.AddStoredResultToPod(p)
 
-			if !tt.wanterr {
-				p, _ := c.CoreV1().Pods(namespace).Get(context.Background(), podName, metav1.GetOptions{})
-				assert.Equal(t, tt.wantpod, p)
-			}
-
-			if _, ok := s.results["default/pod1"]; ok != tt.resultRemainsAfterExecFunc {
-				if ok {
-					t.Fatal("result should be deleted")
-				}
-				t.Fatalf("result should be left")
-			}
+			assert.Equal(t, tt.wantpod, p)
 		})
 	}
 }
@@ -1246,6 +1152,188 @@ func TestStore_AddPreBindResult(t *testing.T) {
 			s := &Store{mu: &sync.Mutex{}, results: map[key]*result{}}
 			s.AddPreBindResult(tt.args.namespace, tt.args.podName, tt.args.pluginName, tt.args.status)
 			assert.Equal(t, tt.wantResultMap, s.results)
+		})
+	}
+}
+
+func TestStore_DeleteData(t *testing.T) {
+	t.Parallel()
+	podName := "pod1"
+	namespace := "default"
+	tests := []struct {
+		name       string
+		target     corev1.Pod
+		result     map[key]*result
+		wantResult map[key]*result
+	}{
+		{
+			name: "success to delete the stored data which has the specified key.",
+			target: corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      podName,
+					Namespace: namespace,
+				},
+			},
+			result: map[key]*result{
+				"default/pod1": {
+					filter: map[string]map[string]string{
+						"node0": {
+							"plugin1": PassedFilterMessage,
+						},
+						"node1": {
+							"plugin1": PassedFilterMessage,
+						},
+					},
+					finalScore: map[string]map[string]string{
+						"node0": {
+							"plugin1": "20",
+						},
+						"node1": {
+							"plugin1": "20",
+						},
+					},
+					score: map[string]map[string]string{
+						"node0": {
+							"plugin1": "10",
+						},
+						"node1": {
+							"plugin1": "10",
+						},
+					},
+				},
+				"default/pod2": {
+					filter: map[string]map[string]string{
+						"node0": {
+							"plugin1": PassedFilterMessage,
+						},
+						"node1": {
+							"plugin1": PassedFilterMessage,
+						},
+					},
+					finalScore: map[string]map[string]string{
+						"node0": {
+							"plugin1": "20",
+						},
+						"node1": {
+							"plugin1": "20",
+						},
+					},
+					score: map[string]map[string]string{
+						"node0": {
+							"plugin1": "10",
+						},
+						"node1": {
+							"plugin1": "10",
+						},
+					},
+				},
+			},
+			wantResult: map[key]*result{
+				"default/pod2": {
+					filter: map[string]map[string]string{
+						"node0": {
+							"plugin1": PassedFilterMessage,
+						},
+						"node1": {
+							"plugin1": PassedFilterMessage,
+						},
+					},
+					finalScore: map[string]map[string]string{
+						"node0": {
+							"plugin1": "20",
+						},
+						"node1": {
+							"plugin1": "20",
+						},
+					},
+					score: map[string]map[string]string{
+						"node0": {
+							"plugin1": "10",
+						},
+						"node1": {
+							"plugin1": "10",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "do nothing if store doesn't have the data.",
+			target: corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      podName,
+					Namespace: namespace,
+				},
+			},
+			result: map[key]*result{
+				"default/pod2": {
+					filter: map[string]map[string]string{
+						"node0": {
+							"plugin1": PassedFilterMessage,
+						},
+						"node1": {
+							"plugin1": PassedFilterMessage,
+						},
+					},
+					finalScore: map[string]map[string]string{
+						"node0": {
+							"plugin1": "20",
+						},
+						"node1": {
+							"plugin1": "20",
+						},
+					},
+					score: map[string]map[string]string{
+						"node0": {
+							"plugin1": "10",
+						},
+						"node1": {
+							"plugin1": "10",
+						},
+					},
+				},
+			},
+			wantResult: map[key]*result{
+				"default/pod2": {
+					filter: map[string]map[string]string{
+						"node0": {
+							"plugin1": PassedFilterMessage,
+						},
+						"node1": {
+							"plugin1": PassedFilterMessage,
+						},
+					},
+					finalScore: map[string]map[string]string{
+						"node0": {
+							"plugin1": "20",
+						},
+						"node1": {
+							"plugin1": "20",
+						},
+					},
+					score: map[string]map[string]string{
+						"node0": {
+							"plugin1": "10",
+						},
+						"node1": {
+							"plugin1": "10",
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			s := &Store{
+				mu:      new(sync.Mutex),
+				results: tt.result,
+			}
+			s.DeleteData(tt.target)
+
+			assert.Equal(t, tt.wantResult, s.results)
 		})
 	}
 }

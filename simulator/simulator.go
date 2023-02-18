@@ -68,7 +68,7 @@ func startSimulator() error {
 	// need to sleep here to make all controllers create initial resources. (like "system-" priorityclass.)
 	time.Sleep(1 * time.Second)
 
-	dic, err := di.NewDIContainer(client, etcdclient, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, existingClusterClient, cfg.ExternalSchedulerEnabled)
+	dic, err := di.NewDIContainer(client, etcdclient, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, existingClusterClient, cfg.ExternalSchedulerEnabled, cfg.Port)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}

@@ -1,7 +1,6 @@
 package resultstore
 
 import (
-	"context"
 	"encoding/json"
 	"strconv"
 	"sync"
@@ -10,14 +9,10 @@ import (
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/informers"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/annotation"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
 
 // Store has results of scheduling.
@@ -25,7 +20,6 @@ import (
 type Store struct {
 	mu *sync.Mutex
 
-	client            clientset.Interface
 	results           map[key]*result
 	scorePluginWeight map[string]int32
 }
@@ -91,21 +85,12 @@ type result struct {
 	bind map[string]string
 }
 
-func New(informerFactory informers.SharedInformerFactory, client clientset.Interface, scorePluginWeight map[string]int32) *Store {
+func New(scorePluginWeight map[string]int32) *Store {
 	s := &Store{
 		mu:                new(sync.Mutex),
-		client:            client,
 		results:           map[key]*result{},
 		scorePluginWeight: scorePluginWeight,
 	}
-
-	// Store adds scheduling results when pod is updating.
-	// This is because scheduling framework doesn’t have any phase to hook scheduling finished. (both successfully and non-successfully)
-	informerFactory.Core().V1().Pods().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			UpdateFunc: s.addSchedulingResultToPod,
-		},
-	)
 
 	return s
 }
@@ -138,18 +123,12 @@ func newData() *result {
 	return d
 }
 
-//nolint:funlen,cyclop
-func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
+// AddStoredResultToPod adds all data corresponding to the specified key to the pod.
+//
+//nolint:cyclop
+func (s *Store) AddStoredResultToPod(pod *v1.Pod) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	ctx := context.Background()
-
-	pod, ok := newObj.(*v1.Pod)
-	if !ok {
-		klog.ErrorS(nil, "Cannot convert to *v1.Pod", "obj", newObj)
-		return
-	}
 
 	k := newKey(pod.Namespace, pod.Name)
 	if _, ok := s.results[k]; !ok {
@@ -208,22 +187,6 @@ func (s *Store) addSchedulingResultToPod(_, newObj interface{}) {
 	}
 
 	s.addSelectedNodeToPod(pod)
-
-	updateFunc := func() (bool, error) {
-		_, err := s.client.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{})
-		if err != nil {
-			return false, xerrors.Errorf("update pod: %v", err)
-		}
-
-		return true, nil
-	}
-	if err := util.RetryWithExponentialBackOff(updateFunc); err != nil {
-		klog.Errorf("failed to update pod with retry to record score: %+v", err)
-		return
-	}
-
-	// delete data from Store only if data is successfully added on pod's annotations.
-	s.deleteData(k)
 }
 
 func (s *Store) addPreFilterResultToPod(pod *v1.Pod) error {
@@ -538,10 +501,11 @@ func (s *Store) applyWeightOnScore(pluginName string, score int64) int64 {
 	return score * int64(weight)
 }
 
-func (s *Store) DeleteData(k key) {
+// DeleteData deletes the data corresponding to the specified Pod.
+func (s *Store) DeleteData(pod v1.Pod) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.deleteData(k)
+	s.deleteData(newKey(pod.Namespace, pod.Name))
 }
 
 // deleteData deletes the result stored with the given key.

@@ -49,6 +49,7 @@ func NewDIContainer(
 	externalImportEnabled bool,
 	externalClient clientset.Interface,
 	externalSchedulerEnabled bool,
+	simulatorPort int,
 ) (*Container, error) {
 	c := &Container{}
 
@@ -56,7 +57,7 @@ func NewDIContainer(
 	c.pvService = persistentvolume.NewPersistentVolumeService(client)
 	c.pvcService = persistentvolumeclaim.NewPersistentVolumeClaimService(client)
 	c.storageClassService = storageclass.NewStorageClassService(client)
-	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg, initialSchedulerCfg, externalSchedulerEnabled)
+	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg, initialSchedulerCfg, externalSchedulerEnabled, simulatorPort)
 	c.podService = pod.NewPodService(client)
 	c.nodeService = node.NewNodeService(client, c.podService)
 	c.priorityClassService = priorityclass.NewPriorityClassService(client)
@@ -130,6 +131,11 @@ func (c *Container) ReplicateExistingClusterService() ReplicateExistingClusterSe
 // ResourceWatcherService returns ResourceWatcherService.
 func (c *Container) ResourceWatcherService() ResourceWatcherService {
 	return c.resourceWatcherService
+}
+
+// ExtenderService returns ExtenderService.
+func (c *Container) ExtenderService() ExtenderService {
+	return c.schedulerService.ExtenderService()
 }
 
 // createExportServiceForReplicateExistingClusterService creates each services
