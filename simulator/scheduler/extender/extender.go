@@ -15,6 +15,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config"
+	"k8s.io/kubernetes/pkg/scheduler/framework"
 )
 
 const (
@@ -111,65 +112,70 @@ func newExtender(config *config.Extender) (Extender, error) {
 }
 
 // Name returns the extender URL as the server name.
-func (h *extender) Name() string {
-	return h.extenderURL
+func (e *extender) Name() string {
+	return e.extenderURL
 }
 
 // Filter sends the request to the original extender server, and returns the response as is.
-func (h *extender) Filter(args extenderv1.ExtenderArgs) (*extenderv1.ExtenderFilterResult, error) {
+func (e *extender) Filter(args extenderv1.ExtenderArgs) (*extenderv1.ExtenderFilterResult, error) {
 	var result extenderv1.ExtenderFilterResult
-	if h.filterVerb == "" {
+	if e.filterVerb == "" {
 		return nil, xerrors.Errorf("filterVerb is empty")
 	}
-	if err := h.send(h.filterVerb, args, &result); err != nil {
+	if err := e.send(e.filterVerb, args, &result); err != nil {
 		return nil, xerrors.Errorf("send filter request: %w", err)
 	}
 	return &result, nil
 }
 
 // Prioritize sends the request to the original extender server, and returns the response as is.
-func (h *extender) Prioritize(args extenderv1.ExtenderArgs) (*extenderv1.HostPriorityList, error) {
+func (e *extender) Prioritize(args extenderv1.ExtenderArgs) (*extenderv1.HostPriorityList, error) {
 	var result extenderv1.HostPriorityList
-	if h.prioritizeVerb == "" {
+	if e.prioritizeVerb == "" {
 		return nil, xerrors.Errorf("prioritizeVerb is empty")
 	}
-	if err := h.send(h.prioritizeVerb, args, &result); err != nil {
+	if err := e.send(e.prioritizeVerb, args, &result); err != nil {
 		return nil, xerrors.Errorf("send prioritize request: %w", err)
+	}
+	for i := range result {
+		// MaxExtenderPriority may diverge from the max priority used in the scheduler and defined by MaxNodeScore,
+		// therefore we need to scale the score returned by extenders to the score range used by the scheduler.
+		result[i].Score = result[i].Score * e.weight * (framework.MaxNodeScore / extenderv1.MaxExtenderPriority)
 	}
 	return &result, nil
 }
 
 // Preempt sends the request to the original extender server, and returns the response as is.
-func (h *extender) Preempt(args extenderv1.ExtenderPreemptionArgs) (*extenderv1.ExtenderPreemptionResult, error) {
+func (e *extender) Preempt(args extenderv1.ExtenderPreemptionArgs) (*extenderv1.ExtenderPreemptionResult, error) {
 	var result extenderv1.ExtenderPreemptionResult
-	if h.preemptVerb == "" {
+	if e.preemptVerb == "" {
 		return nil, xerrors.Errorf("preemptVerb is empty")
 	}
-	if err := h.send(h.preemptVerb, args, &result); err != nil {
+	if err := e.send(e.preemptVerb, args, &result); err != nil {
 		return nil, xerrors.Errorf("send preempt request: %w", err)
 	}
 	return &result, nil
 }
 
 // Bind sends the request to the original extender server, and returns the response as is.
-func (h *extender) Bind(args extenderv1.ExtenderBindingArgs) (*extenderv1.ExtenderBindingResult, error) {
+func (e *extender) Bind(args extenderv1.ExtenderBindingArgs) (*extenderv1.ExtenderBindingResult, error) {
 	var result extenderv1.ExtenderBindingResult
-	if h.bindVerb == "" {
+	if e.bindVerb == "" {
 		return nil, xerrors.Errorf("bindVerb is empty")
 	}
-	if err := h.send(h.bindVerb, args, &result); err != nil {
+	if err := e.send(e.bindVerb, args, &result); err != nil {
 		return nil, xerrors.Errorf("send bind request: %w", err)
 	}
 	return &result, nil
 }
 
 // Send is Helper function to send messages to the extender.
-func (h *extender) send(action string, args interface{}, result interface{}) error {
+func (e *extender) send(action string, args interface{}, result interface{}) error {
 	out, err := json.Marshal(args)
 	if err != nil {
 		return xerrors.Errorf("json Marshal: %w", err)
 	}
-	url := strings.TrimRight(h.extenderURL, "/") + "/" + action
+	url := strings.TrimRight(e.extenderURL, "/") + "/" + action
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(out))
 	if err != nil {
@@ -178,7 +184,7 @@ func (h *extender) send(action string, args interface{}, result interface{}) err
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := h.client.Do(req)
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return xerrors.Errorf("client Do: %w", err)
 	}
