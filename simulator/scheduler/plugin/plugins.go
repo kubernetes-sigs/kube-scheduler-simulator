@@ -18,6 +18,7 @@ import (
 
 // ResultStoreKey represents key name of plugins results on sharedstore.
 const ResultStoreKey = "PluginResultStoreKey"
+
 func NewRegistry(sharedStore storereflector.Reflector) (map[string]schedulerRuntime.PluginFactory, error) {
 	scorePluginWeight := map[string]int32{}
 	registeredScorePlugin, err := config.RegisteredScorePlugins()
