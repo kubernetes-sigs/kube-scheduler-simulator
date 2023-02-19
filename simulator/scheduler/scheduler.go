@@ -60,8 +60,11 @@ func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.C
 		return &Service{disabled: true}
 	}
 
+	// sharedStore has some resultstores which are referenced by Registry of Plugins and Extenders.
+	sharedStore := storereflector.New()
+
 	initCfg := initialSchedulerCfg.DeepCopy()
-	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg, simulatorPort: simulatorPort}
+	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg, sharedStore: sharedStore, simulatorPort: simulatorPort}
 }
 
 func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error {
@@ -119,7 +122,7 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 	if err != nil {
 		return xerrors.Errorf("plugin registry: %w", err)
 	}
-	// TODO
+
 	s.extenderService, err = extender.New(clientSet, cfg.Extenders, s.sharedStore)
 	if err != nil {
 		return xerrors.Errorf("New extender service: %w", err)
