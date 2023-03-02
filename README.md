@@ -114,8 +114,6 @@ To run the frontend, please see [README.md](web/README.md) on ./web dir.
 
 ## [Beta] Existing cluster importing
 
-**PLEASE AVOID** using it in clusters with large amounts of resources.
-The simulator will try to import ALL resources related to scheduling from your cluster and it may badly affect your cluster's api-server.
 
 The simulator can import resources from your cluster.
 You can use it by setting an `EXTERNAL_IMPORT_ENABLED` environment variable to `1`.
