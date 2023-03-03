@@ -2,7 +2,7 @@
 
 This page describes the environment variables that are used to configure the simulator.
 
-Please refer [docker-compose.yml](./../../docker-compose.yml) as an example use.
+Please refer to [docker-compose.yml](./../../docker-compose.yml) as an example use.
 
 `PORT`: (required) This is the port number on which kube-scheduler-simulator
 server is started.
