@@ -131,6 +131,11 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 		return xerrors.Errorf("plugin registry: %w", err)
 	}
 
+	if s.sharedStore != nil {
+		// Resister the event handler function to store the result stored in the sharedStore in pod.
+		s.sharedStore.ResisterResultSavingToInformer(informerFactory, clientSet)
+	}
+
 	sched, err := scheduler.New(
 		clientSet,
 		informerFactory,

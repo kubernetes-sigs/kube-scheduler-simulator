@@ -5,7 +5,6 @@ package extender
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 	"time"
