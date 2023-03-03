@@ -1,4 +1,4 @@
-# Scheduler-Simulator
+# Scheduler-Simulator Web
 
 This is the frontend of Kubernetes scheduler simulator.
 
