@@ -32,7 +32,7 @@ export default function priorityclassStore() {
 
   const priorityClassAPI = inject(PriorityClassAPIKey);
   if (!priorityClassAPI) {
-    throw new Error(`${priorityClassAPI} is not provided`);
+    throw new Error(`${PriorityClassAPIKey.description} is not provided`);
   }
 
   // `CheckIsDeletable` returns whether the given PriorityClass can be deleted or not.

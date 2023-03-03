@@ -25,7 +25,7 @@ export default function schedulerconfigurationStore() {
 
   const schedconfAPI = inject(SchedulerconfigurationAPIKey);
   if (!schedconfAPI) {
-    throw new Error(`${schedconfAPI} is not provided`);
+    throw new Error(`${SchedulerconfigurationAPIKey.description} is not provided`);
   }
 
   return {

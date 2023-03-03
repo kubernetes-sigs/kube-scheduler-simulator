@@ -32,7 +32,7 @@ export default function pvStore() {
 
   const pvAPI = inject(PVAPIKey);
   if (!pvAPI) {
-    throw new Error(`${pvAPI} is not provided`);
+    throw new Error(`${PVAPIKey.description} is not provided`);
   }
 
   return {

@@ -31,12 +31,12 @@ export default defineComponent({
   setup() {
     const resetAPI = inject(ResetAPIKey);
     if (!resetAPI) {
-      throw new Error(`${resetAPI} is not provided`);
+      throw new Error(`${ResetAPIKey.description} is not provided`);
     }
 
     const snackbarstore = inject(SnackBarStoreKey);
     if (!snackbarstore) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
+      throw new Error(`${SnackBarStoreKey.description} is not provided`);
     }
 
     const setServerErrorMessage = (error: string) => {

@@ -32,7 +32,7 @@ export default function pvcStore() {
 
   const pvcAPI = inject(PVCAPIKey);
   if (!pvcAPI) {
-    throw new Error(`${pvcAPI} is not provided`);
+    throw new Error(`${PVCAPIKey.description} is not provided`);
   }
 
   return {
