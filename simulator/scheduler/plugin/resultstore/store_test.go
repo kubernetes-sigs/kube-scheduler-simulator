@@ -587,7 +587,7 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 		name                       string
 		result                     map[key]*result
 		prepareFakeClientSetFn     func() *fake.Clientset
-		newObj                     interface{}
+		newObj                     *corev1.Pod
 		wantpod                    *corev1.Pod
 		resultRemainsAfterExecFunc bool
 		wanterr                    bool
@@ -924,7 +924,12 @@ func TestStore_addSchedulingResultToPod(t *testing.T) {
 				results: tt.result,
 				client:  c,
 			}
+			original := tt.newObj.DeepCopy()
 			s.addSchedulingResultToPod(nil, tt.newObj)
+
+			// Check that the function doesn't mutate the input object,
+			// which is shared with other event handlers.
+			assert.Equal(t, original, tt.newObj)
 
 			if !tt.wanterr {
 				p, _ := c.CoreV1().Pods(namespace).Get(context.Background(), podName, metav1.GetOptions{})
