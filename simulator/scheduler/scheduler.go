@@ -114,6 +114,14 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 	evtBroadcaster.StartRecordingToSink(ctx.Done())
 
 	s.currentSchedulerCfg = versionedcfg.DeepCopy()
+
+	var err error
+	// Extender service must be initialized using unconverted config.
+	s.extenderService, err = extender.New(clientSet, versionedcfg.Extenders, s.sharedStore)
+	if err != nil {
+		return xerrors.Errorf("New extender service: %w", err)
+	}
+
 	cfg, err := convertConfigurationForSimulator(versionedcfg, s.simulatorPort)
 	if err != nil {
 		return xerrors.Errorf("convert scheduler config to apply: %w", err)
@@ -121,11 +129,6 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 	registry, err := plugin.NewRegistry(s.sharedStore)
 	if err != nil {
 		return xerrors.Errorf("plugin registry: %w", err)
-	}
-
-	s.extenderService, err = extender.New(clientSet, cfg.Extenders, s.sharedStore)
-	if err != nil {
-		return xerrors.Errorf("New extender service: %w", err)
 	}
 
 	sched, err := scheduler.New(

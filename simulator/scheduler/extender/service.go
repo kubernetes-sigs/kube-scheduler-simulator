@@ -9,8 +9,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
-	"k8s.io/kubernetes/pkg/scheduler/apis/config"
-
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender/resultstore"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/storereflector"
 )
@@ -26,7 +24,7 @@ const ResultStoreKey = "ExtenderResultStoreKey"
 
 // New initializes Service.
 // `extenderCfgs` expect to receive an untouched config file(set by user).
-func New(client clientset.Interface, extenderCfgs []config.Extender, storeReflector storereflector.Reflector) (*Service, error) {
+func New(client clientset.Interface, extenderCfgs []v1beta2config.Extender, storeReflector storereflector.Reflector) (*Service, error) {
 	extenders, err := createExtenders(extenderCfgs)
 	if err != nil {
 		return nil, xerrors.Errorf("create HTTPExtenders: %w", err)
