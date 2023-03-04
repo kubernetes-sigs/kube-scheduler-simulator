@@ -16,7 +16,7 @@ export default defineComponent({
   setup() {
     const store = inject(PodStoreKey);
     if (!store) {
-      throw new Error(`${PodStoreKey} is not provided`);
+      throw new Error(`${PodStoreKey.description} is not provided`);
     }
 
     const pods: any = computed(function () {

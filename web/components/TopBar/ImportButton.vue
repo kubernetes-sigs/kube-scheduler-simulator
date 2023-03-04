@@ -70,12 +70,12 @@ export default defineComponent({
 
     const exportAPI = inject(ExportAPIKey);
     if (!exportAPI) {
-      throw new Error(`${exportAPI} is not provided`);
+      throw new Error(`${ExportAPIKey.description} is not provided`);
     }
 
     const snackbarstore = inject(SnackBarStoreKey);
     if (!snackbarstore) {
-      throw new Error(`${SnackBarStoreKey} is not provided`);
+      throw new Error(`${SnackBarStoreKey.description} is not provided`);
     }
     const setServerErrorMessage = (error: string) => {
       snackbarstore.setServerErrorMessage(error);

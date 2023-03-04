@@ -32,7 +32,7 @@ export default function podStore() {
 
   const podAPI = inject(PodAPIKey);
   if (!podAPI) {
-    throw new Error(`${podAPI} is not provided`);
+    throw new Error(`${PodAPIKey.description} is not provided`);
   }
 
   function createPodState(pods: V1Pod[]): void {

@@ -9,10 +9,10 @@ Nowadays, the scheduler is configurable/extendable in the multiple ways:
 - etc...
 
 But, unfortunately, not all configurations/expansions yield good results.
-Those who customize the scheduler need to make sure their scheduler is working as expected, and doesn't have an unacceptably negative impact on the scheduling. 
+Those who customize the scheduler need to make sure their scheduler is working as expected, and doesn't have an unacceptably negative impact on the scheduling.
 
-In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually require privileged access to the control plane.
-That's way we are developing a simulator for kube-scheduler -- you can try out the behavior of the scheduler with web UI while checking which plugin made what decision for which Node.
+In real Kubernetes, we cannot know the results of scheduling in detail without reading the logs, which usually requires privileged access to the control plane.
+That's why we are developing a simulator for kube-scheduler -- you can try out the behavior of the scheduler with web UI while checking which plugin made what decision for which Node.
 
 ## Simulator's architecture
 
@@ -29,7 +29,7 @@ You can create any resources by communicating with kube-apiserver via kubectl, k
 
 See the following docs to know more about simulator:
 - [how-it-works.md](simulator/docs/how-it-works.md): describes about how the simulator works.
-- [kube-apiserver.md](simulator/docs/kube-apiserver.md): describe about kube-apiserver in simulator. (how you can configure and access) 
+- [kube-apiserver.md](simulator/docs/kube-apiserver.md): describe about kube-apiserver in simulator. (how you can configure and access)
 - [api.md](simulator/docs/api.md): describes about HTTP server the simulator has.
 
 ### Web UI
@@ -63,7 +63,7 @@ You can configure the scheduler on the simulator through KubeSchedulerConfigurat
 
 [Scheduler Configuration | Kubernetes](https://kubernetes.io/docs/reference/scheduling/config/)
 
-You can pass a KubeSchedulerConfiguration file via the environment variable `KUBE_SCHEDULER_CONFIG_PATH` and the simulator will start kube-scheduler with that configuration.
+You can pass a path to KubeSchedulerConfiguration via the environment variable `KUBE_SCHEDULER_CONFIG_PATH` and the simulator will start kube-scheduler with that configuration.
 
 Note: changes to any fields other than `.profiles` are disabled on simulator, since they do not affect the results of the scheduling.
 
@@ -73,11 +73,13 @@ If you want to use your custom plugins as out-of-tree plugins in the simulator, 
 
 ## Getting started
 
-Read more about environment variables being used in simulator server
-[here.](./simulator/docs/env-variables.md)
+You can find more information about environment variables available in the simulator server
+[here.](./simulator/docs/environment-variables.md)
+
+
 ### Run simulator with Docker
 
-We have [docker-compose.yml](docker-compose.yml) to run the simulator easily.
+We have [docker-compose.yml](docker-compose.yml) to run the simulator easily. You should install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docker-docs.netlify.app/compose/install/) firstly.
 
 You can use the following command.
 
@@ -111,6 +113,17 @@ It starts etcd and simulator-server locally.
 #### Run simulator frontend
 
 To run the frontend, please see [README.md](web/README.md) on ./web dir.
+
+## [Beta] Existing cluster importing
+
+
+The simulator can import resources from your cluster.
+You can use it by setting an `EXTERNAL_IMPORT_ENABLED` environment variable to `1`.
+
+You need to have the kubeconfig to import resources on your cluster.
+The simulator tries to read the kubeconfig file on the environment variable `KUBECONFIG`.
+
+For more information about those variables, please see [simulator/docs/env-variables.md](simulator/docs/env-variables.md).
 
 ## Contributing
 

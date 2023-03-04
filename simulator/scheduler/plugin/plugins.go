@@ -31,7 +31,7 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 		}
 	}
 
-	registeredpls, err := registeredFilterScorePlugins()
+	registeredpls, err := registeredPlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
 	}
@@ -142,7 +142,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 		})
 	}
 
-	defaultpls, err := registeredFilterScorePlugins()
+	defaultpls, err := registeredPlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
 	}
@@ -168,48 +168,65 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 
 // ConvertForSimulator convert v1beta2.Plugins for simulator.
 // It ignores non-default plugin.
+//
+//nolint:cyclop
 func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
 	newpls := pls.DeepCopy()
 
-	defaultScorePls, err := config.InTreeScorePluginSet()
-	if err != nil {
-		return nil, xerrors.Errorf("get default score plugins: %w", err)
+	if err := applyPluingSet(&newpls.PreFilter, pls.PreFilter, config.InTreePreFilterPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PreFilter plugins: %w", err)
 	}
-	merged := mergePluginSet(defaultScorePls, pls.Score)
-
-	retscorepls := make([]v1beta2.Plugin, 0, len(merged.Enabled))
-	for _, p := range merged.Enabled {
-		retscorepls = append(retscorepls, v1beta2.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
+	if err := applyPluingSet(&newpls.Filter, pls.Filter, config.InTreeFilterPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Filter plugins: %w", err)
 	}
-	newpls.Score.Enabled = retscorepls
-
-	// disable default plugins whatever scheduler configuration value is
-	newpls.Score.Disabled = []v1beta2.Plugin{
-		{
-			Name: "*",
-		},
+	if err := applyPluingSet(&newpls.PostFilter, pls.PostFilter, config.InTreePostFilterPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PostFilter plugins: %w", err)
 	}
-
-	defaultFilterPls, err := config.InTreeFilterPluginSet()
-	if err != nil {
-		return nil, xerrors.Errorf("get default score plugins: %w", err)
+	if err := applyPluingSet(&newpls.PreScore, pls.PreScore, config.InTreePreScorePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PreScore plugins: %w", err)
 	}
-	merged = mergePluginSet(defaultFilterPls, pls.Filter)
-
-	retfilterpls := make([]v1beta2.Plugin, 0, len(merged.Enabled))
-	for _, p := range merged.Enabled {
-		retfilterpls = append(retfilterpls, v1beta2.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
+	if err := applyPluingSet(&newpls.Score, pls.Score, config.InTreeScorePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Score plugins: %w", err)
 	}
-	newpls.Filter.Enabled = retfilterpls
-
-	// disable default plugins whatever scheduler configuration value is
-	newpls.Filter.Disabled = []v1beta2.Plugin{
-		{
-			Name: "*",
-		},
+	if err := applyPluingSet(&newpls.Reserve, pls.Reserve, config.InTreeReservePluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Reserve plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.Permit, pls.Permit, config.InTreePermitPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Permit plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.PreBind, pls.PreBind, config.InTreePreBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PreBind plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.Bind, pls.Bind, config.InTreeBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge Bind plugins: %w", err)
+	}
+	if err := applyPluingSet(&newpls.PostBind, pls.PostBind, config.InTreePostBindPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge PostBind plugins: %w", err)
 	}
 
 	return newpls, nil
+}
+
+// applyPluingSet merges inTree and outOfTree PluginSet and enables it.
+func applyPluingSet(targetPlsSet *v1beta2.PluginSet, plsSet v1beta2.PluginSet, inTreePluginSet func() (v1beta2.PluginSet, error)) error {
+	inTreePls, err := inTreePluginSet()
+	if err != nil {
+		return xerrors.Errorf("get inTree plugins: %w", err)
+	}
+	merged := mergePluginSet(inTreePls, plsSet)
+
+	retpls := make([]v1beta2.Plugin, 0, len(merged.Enabled))
+	for _, p := range merged.Enabled {
+		retpls = append(retpls, v1beta2.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
+	}
+	targetPlsSet.Enabled = retpls
+	// disable default plugins whatever scheduler configuration value is
+	targetPlsSet.Disabled = []v1beta2.Plugin{
+		{
+			Name: "*",
+		},
+	}
+	return nil
 }
 
 // mergePluginsSet merges two plugin sets.
@@ -258,16 +275,71 @@ func mergePluginSet(inTreePluginSet, outOfTreePluginSet v1beta2.PluginSet) v1bet
 	return v1beta2.PluginSet{Enabled: enabledPlugins}
 }
 
-// registeredFilterScorePlugins returns all registered score plugin and filter plugin.
-func registeredFilterScorePlugins() ([]v1beta2.Plugin, error) {
-	registeredfilterpls, err := config.RegisteredFilterPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered filter plugins: %w", err)
-	}
+// registeredPlugins returns all registered plugins.
+//
+//nolint:funlen,cyclop
+func registeredPlugins() ([]v1beta2.Plugin, error) {
+	var pls []v1beta2.Plugin
 	registeredscorepls, err := config.RegisteredScorePlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get registered score plugins: %w", err)
 	}
+	pls = append(pls, registeredscorepls...)
+	registeredbindpls, err := config.RegisteredBindPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered bind plugins: %w", err)
+	}
+	pls = append(pls, registeredbindpls...)
+	registeredpostbindpls, err := config.RegisteredPostBindPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered postbind plugins: %w", err)
+	}
+	pls = append(pls, registeredpostbindpls...)
+	registeredperbindpls, err := config.RegisteredPreBindPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered prebind plugins: %w", err)
+	}
+	pls = append(pls, registeredperbindpls...)
+	registeredreservepls, err := config.RegisteredReservePlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered reserve plugins: %w", err)
+	}
+	pls = append(pls, registeredreservepls...)
+	registeredpermitpls, err := config.RegisteredPermitPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered permit plugins: %w", err)
+	}
+	pls = append(pls, registeredpermitpls...)
+	registeredperfilterpls, err := config.RegisteredPreFilterPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered prefilter plugins: %w", err)
+	}
+	pls = append(pls, registeredperfilterpls...)
+	registeredprescorepls, err := config.RegisteredPreScorePlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered prescore plugins: %w", err)
+	}
+	pls = append(pls, registeredprescorepls...)
+	registeredfilterpls, err := config.RegisteredFilterPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered filter plugins: %w", err)
+	}
+	pls = append(pls, registeredfilterpls...)
+	registerdpostfilterpls, err := config.RegisteredPostFilterPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered postFilter plugins: %w", err)
+	}
+	pls = append(pls, registerdpostfilterpls...)
 
-	return append(registeredscorepls, registeredfilterpls...), nil
+	registeredMap := sets.NewString()
+	uniqPls := make([]v1beta2.Plugin, 0, len(pls))
+	for _, pl := range pls {
+		if registeredMap.Has(pl.Name) {
+			continue
+		}
+		registeredMap.Insert(pl.Name)
+		uniqPls = append(uniqPls, pl)
+	}
+
+	return uniqPls, nil
 }

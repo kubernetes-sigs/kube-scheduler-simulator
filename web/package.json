@@ -11,7 +11,7 @@
     "eslint:fix": "eslint --ext \\\".js,.vue,.ts\\\" --fix ",
     "stylelint": "stylelint \"**/**.{css,scss,sass}\"",
     "lint": "yarn eslint && yarn stylelint",
-    "prettier:fix": "prettier --write ",
+    "prettier:fix": "prettier --write .",
     "format": "yarn eslint:fix && yarn prettier:fix",
     "test": "jest"
   },

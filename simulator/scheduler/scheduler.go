@@ -71,7 +71,7 @@ func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration
 }
 
 func (s *Service) ResetScheduler() error {
-	return s.RestartScheduler(s.initialSchedulerCfg)
+	return s.RestartScheduler(s.initialSchedulerCfg.DeepCopy())
 }
 
 // StartScheduler starts scheduler.

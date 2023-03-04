@@ -10,7 +10,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/core/v1"
-	v10 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // MockPodService is a mock of PodService interface.
@@ -48,20 +47,6 @@ func (m *MockPodService) Delete(arg0 context.Context, arg1, arg2 string) error {
 func (mr *MockPodServiceMockRecorder) Delete(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPodService)(nil).Delete), arg0, arg1, arg2)
-}
-
-// DeleteCollection mocks base method.
-func (m *MockPodService) DeleteCollection(arg0 context.Context, arg1 string, arg2 v10.ListOptions) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteCollection", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteCollection indicates an expected call of DeleteCollection.
-func (mr *MockPodServiceMockRecorder) DeleteCollection(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCollection", reflect.TypeOf((*MockPodService)(nil).DeleteCollection), arg0, arg1, arg2)
 }
 
 // List mocks base method.

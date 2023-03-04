@@ -1,11 +1,10 @@
 package node
 
-//go:generate mockgen --build_flags=--mod=mod -destination=./mock_$GOPACKAGE/$GOFILE . PodService
+//go:generate mockgen -destination=./mock_$GOPACKAGE/$GOFILE . PodService
 
 import (
 	"context"
 
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +22,6 @@ type Service struct {
 type PodService interface {
 	List(ctx context.Context, namespace string) (*corev1.PodList, error)
 	Delete(ctx context.Context, name string, namespace string) error
-	DeleteCollection(ctx context.Context, namespace string, lopts metav1.ListOptions) error
 }
 
 // NewNodeService initializes Service.
@@ -91,41 +89,4 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 		return xerrors.Errorf("delete node: %w", err)
 	}
 	return nil
-}
-
-// DeleteCollection deletes Nodes according to the list options.
-// And it also deletes Pods scheduled on those Nodes.
-func (s *Service) DeleteCollection(ctx context.Context, lopts metav1.ListOptions) error {
-	ns, err := s.client.CoreV1().Nodes().List(ctx, lopts)
-	if err != nil {
-		return xerrors.Errorf("list nodes: %w", err)
-	}
-	eg, ctx := errgroup.WithContext(ctx)
-	nsList, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return xerrors.Errorf("list namespaces: %w", err)
-	}
-	for _, n := range ns.Items {
-		n := n
-		eg.Go(func() error {
-			// delete pods on specific node
-			lopts := metav1.ListOptions{
-				FieldSelector: "spec.nodeName=" + n.Name,
-			}
-			// This method deletes all pods on specified namespace scheduled to the specified node.
-			for _, ns := range nsList.Items {
-				if err := s.podService.DeleteCollection(ctx, ns.GetName(), lopts); err != nil {
-					return xerrors.Errorf("failed to delete pods on node %s: %w\n", n.Name, err)
-				}
-			}
-
-			// delete specific node
-			if err := s.client.CoreV1().Nodes().Delete(ctx, n.Name, metav1.DeleteOptions{}); err != nil {
-				return xerrors.Errorf("delete node: %w\n", err)
-			}
-			return nil
-		})
-	}
-
-	return eg.Wait()
 }

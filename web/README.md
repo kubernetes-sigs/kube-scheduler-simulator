@@ -1,4 +1,4 @@
-# scheduler-simulator
+# Scheduler-Simulator Web
 
 This is the frontend of Kubernetes scheduler simulator.
 
@@ -8,6 +8,7 @@ You have to install node.js and yarn.
 
 - for yarn, see: [Installation | Yarn](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
 - for node.js, see: [Downloads | Node.js](https://nodejs.org/en/download/)
+  Note: Nodejs 16 is suggested, other version may cause problems.
 
 ### Build Setup
 
@@ -22,7 +23,10 @@ $ yarn start
 
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
 
-## for developer
+### Environment Variables
+Please see [environment-variables.md](./docs/environment-variables.md)
+
+## For developer
 
 ```bash
 # serve with hot reload at localhost:3000

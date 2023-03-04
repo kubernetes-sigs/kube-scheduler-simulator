@@ -12,7 +12,7 @@ export default defineComponent({
   setup() {
     const schedulerconfigurationstore = inject(SchedulerConfigurationStoreKey);
     if (!schedulerconfigurationstore) {
-      throw new Error(`${SchedulerConfigurationStoreKey} is not provided`);
+      throw new Error(`${SchedulerConfigurationStoreKey.description} is not provided`);
     }
 
     const initializeSchedulerConfigurationStore = () => {

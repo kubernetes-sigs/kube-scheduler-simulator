@@ -58,32 +58,32 @@ export default defineComponent({
 
     const podstore = inject(PodStoreKey);
     if (!podstore) {
-      throw new Error(`${PodStoreKey} is not provided`);
+      throw new Error(`${PodStoreKey.description} is not provided`);
     }
 
     const nodestore = inject(NodeStoreKey);
     if (!nodestore) {
-      throw new Error(`${NodeStoreKey} is not provided`);
+      throw new Error(`${NodeStoreKey.description} is not provided`);
     }
 
     const pvstore = inject(PersistentVolumeStoreKey);
     if (!pvstore) {
-      throw new Error(`${pvstore} is not provided`);
+      throw new Error(`${PersistentVolumeStoreKey.description} is not provided`);
     }
 
     const pvcstore = inject(PersistentVolumeClaimStoreKey);
     if (!pvcstore) {
-      throw new Error(`${pvcstore} is not provided`);
+      throw new Error(`${PersistentVolumeClaimStoreKey.description} is not provided`);
     }
 
     const storageclassstore = inject(StorageClassStoreKey);
     if (!storageclassstore) {
-      throw new Error(`${StorageClassStoreKey} is not provided`);
+      throw new Error(`${StorageClassStoreKey.description} is not provided`);
     }
 
     const priorityclassstore = inject(PriorityClassStoreKey);
     if (!priorityclassstore) {
-      throw new Error(`${PriorityClassStoreKey} is not provided`);
+      throw new Error(`${PriorityClassStoreKey.description} is not provided`);
     }
 
     const dialog = ref(false);

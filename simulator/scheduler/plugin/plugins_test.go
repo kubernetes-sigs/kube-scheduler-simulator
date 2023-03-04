@@ -25,6 +25,55 @@ func TestConvertForSimulator(t *testing.T) {
 		{
 			name: "success",
 			arg: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
 					Disabled: []v1beta2.Plugin{
 						{Name: "EBSLimits"},
@@ -42,6 +91,11 @@ func TestConvertForSimulator(t *testing.T) {
 						{Name: "VolumeRestrictions"},
 					},
 				},
+				PostFilter: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{Name: "DefaultPreemption"},
+					},
+				},
 				Score: v1beta2.PluginSet{
 					Disabled: []v1beta2.Plugin{
 						{Name: "NodeResourcesFit"},
@@ -53,11 +107,75 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 			},
 			want: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
 						{Name: "PodTopologySpreadWrapped"},
 						{Name: "InterPodAffinityWrapped"},
 					},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostFilter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
 					Disabled: []v1beta2.Plugin{
 						{
 							Name: "*",
@@ -81,7 +199,61 @@ func TestConvertForSimulator(t *testing.T) {
 		{
 			name: "success when user disable all plugins with '*'",
 			arg: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{Name: "*"},
+					},
+				},
+				PostFilter: v1beta2.PluginSet{
 					Disabled: []v1beta2.Plugin{
 						{Name: "*"},
 					},
@@ -97,7 +269,71 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 			},
 			want: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostFilter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{},
 					Disabled: []v1beta2.Plugin{
 						{
@@ -122,7 +358,66 @@ func TestConvertForSimulator(t *testing.T) {
 		{
 			name: "success with non in-tree plugins",
 			arg: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{
+						{Name: "CustomPlugin1"},
+					},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostFilter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
 						{Name: "CustomPlugin1"},
 					},
@@ -146,7 +441,73 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 			},
 			want: &v1beta2.Plugins{
+				PreFilter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreScore: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Reserve: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Permit: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PreBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				Bind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostBind: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
 				Filter: v1beta2.PluginSet{
+					Enabled: []v1beta2.Plugin{
+						{Name: "CustomPlugin1Wrapped"},
+					},
+					Disabled: []v1beta2.Plugin{
+						{
+							Name: "*",
+						},
+					},
+				},
+				PostFilter: v1beta2.PluginSet{
 					Enabled: []v1beta2.Plugin{
 						{Name: "CustomPlugin1Wrapped"},
 					},
@@ -207,7 +568,7 @@ func Test_NewPluginConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "success with plugin config of not filter/score",
+			name: "success with plugin config of postFilter",
 			pc: []v1beta2.PluginConfig{
 				{
 					Name: "DefaultPreemption",
@@ -226,22 +587,35 @@ func Test_NewPluginConfig(t *testing.T) {
 			want: func() []v1beta2.PluginConfig {
 				pc := defaultPluginConfig()
 				for i := range pc {
-					if pc[i].Name != "DefaultPreemption" {
-						continue
-					}
-
-					pc[i] = v1beta2.PluginConfig{
-						Name: "DefaultPreemption",
-						Args: runtime.RawExtension{
-							Object: &v1beta2.DefaultPreemptionArgs{
-								TypeMeta: metav1.TypeMeta{
-									Kind:       "DefaultPreemptionArgs",
-									APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+					if pc[i].Name == "DefaultPreemption" {
+						pc[i] = v1beta2.PluginConfig{
+							Name: "DefaultPreemption",
+							Args: runtime.RawExtension{
+								Object: &v1beta2.DefaultPreemptionArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "DefaultPreemptionArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									},
+									MinCandidateNodesPercentage: &minCandidateNodesPercentage,
+									MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
 								},
-								MinCandidateNodesPercentage: &minCandidateNodesPercentage,
-								MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
 							},
-						},
+						}
+					}
+					if pc[i].Name == "DefaultPreemptionWrapped" {
+						pc[i] = v1beta2.PluginConfig{
+							Name: "DefaultPreemptionWrapped",
+							Args: runtime.RawExtension{
+								Object: &v1beta2.DefaultPreemptionArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "DefaultPreemptionArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									},
+									MinCandidateNodesPercentage: &minCandidateNodesPercentage,
+									MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
+								},
+							},
+						}
 					}
 				}
 
@@ -267,6 +641,7 @@ func Test_NewPluginConfig(t *testing.T) {
 			},
 			want: func() []v1beta2.PluginConfig {
 				pc := defaultPluginConfig()
+				var defaultMinCandidateNodesPercentage int32 = 10
 				for i := range pc {
 					if pc[i].Name == "InterPodAffinity" {
 						pc[i] = v1beta2.PluginConfig{
@@ -292,6 +667,36 @@ func Test_NewPluginConfig(t *testing.T) {
 										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
 									},
 									HardPodAffinityWeight: &hardPodAffinityWeight,
+								},
+							},
+						}
+					}
+					if pc[i].Name == "DefaultPreemption" {
+						pc[i] = v1beta2.PluginConfig{
+							Name: "DefaultPreemption",
+							Args: runtime.RawExtension{
+								Object: &v1beta2.DefaultPreemptionArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "DefaultPreemptionArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									},
+									MinCandidateNodesPercentage: &defaultMinCandidateNodesPercentage,
+									MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
+								},
+							},
+						}
+					}
+					if pc[i].Name == "DefaultPreemptionWrapped" {
+						pc[i] = v1beta2.PluginConfig{
+							Name: "DefaultPreemptionWrapped",
+							Args: runtime.RawExtension{
+								Object: &v1beta2.DefaultPreemptionArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "DefaultPreemptionArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+									},
+									MinCandidateNodesPercentage: &defaultMinCandidateNodesPercentage,
+									MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
 								},
 							},
 						}
@@ -444,7 +849,7 @@ func Test_NewPluginConfig(t *testing.T) {
 	}
 }
 
-func Test_defaultFilterScorePlugins(t *testing.T) {
+func Test_defaultRegisteredPlugins(t *testing.T) {
 	t.Parallel()
 	var weight1 int32 = 1
 	var weight2 int32 = 2
@@ -463,21 +868,18 @@ func Test_defaultFilterScorePlugins(t *testing.T) {
 				{Name: "NodeAffinity", Weight: &weight1},
 				{Name: "PodTopologySpread", Weight: &weight2},
 				{Name: "TaintToleration", Weight: &weight1},
+				{Name: "DefaultBinder"},
+				{Name: "VolumeBinding"},
+				{Name: "NodePorts"},
+				{Name: "VolumeRestrictions"},
 				{Name: "NodeUnschedulable"},
 				{Name: "NodeName"},
-				{Name: "TaintToleration"},
-				{Name: "NodeAffinity"},
-				{Name: "NodePorts"},
-				{Name: "NodeResourcesFit"},
-				{Name: "VolumeRestrictions"},
 				{Name: "EBSLimits"},
 				{Name: "GCEPDLimits"},
 				{Name: "NodeVolumeLimits"},
 				{Name: "AzureDiskLimits"},
-				{Name: "VolumeBinding"},
 				{Name: "VolumeZone"},
-				{Name: "PodTopologySpread"},
-				{Name: "InterPodAffinity"},
+				{Name: "DefaultPreemption"},
 			},
 			wantErr: false,
 		},
@@ -486,9 +888,9 @@ func Test_defaultFilterScorePlugins(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := registeredFilterScorePlugins()
+			got, err := registeredPlugins()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("registeredFilterScorePlugins() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("registeredPlugins() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			assert.Equal(t, tt.want, got)
@@ -605,6 +1007,19 @@ func defaultPluginConfig() []v1beta2.PluginConfig {
 						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
 					},
 					BindTimeoutSeconds: &bindTimeoutSeconds,
+				},
+			},
+		},
+		{
+			Name: "DefaultPreemptionWrapped",
+			Args: runtime.RawExtension{
+				Object: &v1beta2.DefaultPreemptionArgs{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "DefaultPreemptionArgs",
+						APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+					},
+					MinCandidateNodesPercentage: &minCandidateNodesPercentage,
+					MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
 				},
 			},
 		},
