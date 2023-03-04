@@ -15,6 +15,7 @@ import pvcAPI from "./v1/pvc";
 import resetAPI from "./v1/reset";
 import schedulerconfigurationAPI from "./v1/schedulerconfiguration";
 import storageClassAPI from "./v1/storageclass";
+import namespaceAPI from "./v1/namespace";
 import watcherAPI from "./v1/watcher";
 import { PodAPIKey } from "./APIProviderKeys";
 import { NodeAPIKey } from "./APIProviderKeys";
@@ -25,6 +26,7 @@ import { PVCAPIKey } from "./APIProviderKeys";
 import { ResetAPIKey } from "./APIProviderKeys";
 import { SchedulerconfigurationAPIKey } from "./APIProviderKeys";
 import { StorageClassAPIKey } from "./APIProviderKeys";
+import { NamespaceAPIKey } from "./APIProviderKeys";
 import { WatcherAPIKey } from "./APIProviderKeys";
 
 export default defineComponent({
@@ -42,6 +44,7 @@ export default defineComponent({
       schedulerconfigurationAPI(app.$instance)
     );
     provide(StorageClassAPIKey, storageClassAPI(app.$k8sStorageInstance));
+    provide(NamespaceAPIKey, namespaceAPI(app.$k8sInstance))
     provide(WatcherAPIKey, watcherAPI(app.$instance));
     return {};
   },

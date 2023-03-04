@@ -54,6 +54,7 @@ import PersistentVolumeClaimStoreKey from "../StoreKey/PVCStoreKey";
 import StorageClassStoreKey from "../StoreKey/StorageClassStoreKey";
 import PriorityClassStoreKey from "../StoreKey/PriorityClassStoreKey";
 import SchedulerConfigurationStoreKey from "../StoreKey/SchedulerConfigurationStoreKey";
+import NamespaceStoreKey from "../StoreKey/NamespaceStoreKey";
 import YamlEditor from "./YamlEditor.vue";
 import SchedulingResults from "./SchedulingResults.vue";
 import ResourceDefinitionTree from "./DefinitionTree.vue";
@@ -65,6 +66,7 @@ import {
   V1Pod,
   V1StorageClass,
   V1PriorityClassList,
+  V1Namespace,
 } from "@kubernetes/client-node";
 import SnackBarStoreKey from "../StoreKey/SnackBarStoreKey";
 import { SchedulerConfiguration } from "~/api/v1/types";
@@ -76,13 +78,14 @@ type Resource =
   | V1PersistentVolume
   | V1StorageClass
   | V1PriorityClassList
-  | SchedulerConfiguration;
+  | SchedulerConfiguration
+  | V1Namespace;
 
 interface Store {
   readonly selected: object | null;
   resetSelected(): void;
   apply(_: Resource): Promise<void>;
-  delete(_: string): Promise<void>;
+  delete(_: Resource): Promise<void>;
   fetchSelected(): Promise<void>;
 }
 
@@ -131,6 +134,10 @@ export default defineComponent({
     const schedulerconfigurationstore = inject(SchedulerConfigurationStoreKey);
     if (!schedulerconfigurationstore) {
       throw new Error(`${SchedulerConfigurationStoreKey.description} is not provided`);
+    }
+    const namespacestore = inject(NamespaceStoreKey);
+    if (!namespacestore) {
+      throw new Error(`${NamespaceStoreKey.description} is not provided`);
     }
 
     const snackbarstore = inject(SnackBarStoreKey);
@@ -195,6 +202,12 @@ export default defineComponent({
       selected.value = config.value;
     });
 
+    const namespace = computed(() => namespacestore.selected);
+    watch(namespace, () => {
+      store = namespacestore;
+      selected.value = namespace.value
+    })
+
     watch(selected, (newVal, oldVal) => {
       if (selected.value) {
         if (!oldVal) {
@@ -252,7 +265,7 @@ export default defineComponent({
             if (p.spec?.nodeName === selected.value?.item.metadata?.name) {
               podstore
                 //@ts-ignore
-                .delete(p.metadata?.name)
+                .delete(p)
                 .catch((e) => setServerErrorMessage(e));
             }
           });
@@ -264,7 +277,7 @@ export default defineComponent({
           store
             .delete(
               //@ts-ignore
-              selected.value.item.metadata.name
+              selected.value.item
             )
             .catch((e) => setServerErrorMessage(e));
         }

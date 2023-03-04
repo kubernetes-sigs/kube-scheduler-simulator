@@ -69,7 +69,6 @@ func Test_convertPodListToApplyConfigurationList(t *testing.T) {
 
 func Test_convertNodeListToApplyConfigurationList(t *testing.T) {
 	t.Parallel()
-	const defaultNamespaceName = "default"
 	tests := []struct {
 		name       string
 		input      func() []corev1.Node
@@ -82,22 +81,20 @@ func Test_convertNodeListToApplyConfigurationList(t *testing.T) {
 				return []corev1.Node{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "node1",
-							Namespace: defaultNamespaceName,
+							Name: "node1",
 						},
 					},
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "node2",
-							Namespace: defaultNamespaceName,
+							Name: "node2",
 						},
 					},
 				}
 			},
 			wantReturn: func() []v1.NodeApplyConfiguration {
 				return []v1.NodeApplyConfiguration{
-					*new(v1.NodeApplyConfiguration).WithName("node1").WithNamespace(defaultNamespaceName),
-					*new(v1.NodeApplyConfiguration).WithName("node2").WithNamespace(defaultNamespaceName),
+					*new(v1.NodeApplyConfiguration).WithName("node1"),
+					*new(v1.NodeApplyConfiguration).WithName("node2"),
 				}
 			},
 			wantErr: false,
@@ -123,7 +120,6 @@ func Test_convertNodeListToApplyConfigurationList(t *testing.T) {
 
 func Test_convertPvListToApplyConfigurationList(t *testing.T) {
 	t.Parallel()
-	const defaultNamespaceName = "default"
 	tests := []struct {
 		name       string
 		input      func() []corev1.PersistentVolume
@@ -136,22 +132,20 @@ func Test_convertPvListToApplyConfigurationList(t *testing.T) {
 				return []corev1.PersistentVolume{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "pv1",
-							Namespace: defaultNamespaceName,
+							Name: "pv1",
 						},
 					},
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "pv2",
-							Namespace: defaultNamespaceName,
+							Name: "pv2",
 						},
 					},
 				}
 			},
 			wantReturn: func() []v1.PersistentVolumeApplyConfiguration {
 				return []v1.PersistentVolumeApplyConfiguration{
-					*new(v1.PersistentVolumeApplyConfiguration).WithName("pv1").WithNamespace(defaultNamespaceName),
-					*new(v1.PersistentVolumeApplyConfiguration).WithName("pv2").WithNamespace(defaultNamespaceName),
+					*new(v1.PersistentVolumeApplyConfiguration).WithName("pv1"),
+					*new(v1.PersistentVolumeApplyConfiguration).WithName("pv2"),
 				}
 			},
 			wantErr: false,
@@ -231,7 +225,6 @@ func Test_convertPvcListToApplyConfigurationList(t *testing.T) {
 
 func Test_convertStorageClassesListToApplyConfigurationList(t *testing.T) {
 	t.Parallel()
-	const defaultNamespaceName = "default"
 	tests := []struct {
 		name       string
 		input      func() []storagev1.StorageClass
@@ -244,22 +237,20 @@ func Test_convertStorageClassesListToApplyConfigurationList(t *testing.T) {
 				return []storagev1.StorageClass{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "sc1",
-							Namespace: defaultNamespaceName,
+							Name: "sc1",
 						},
 					},
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "sc2",
-							Namespace: defaultNamespaceName,
+							Name: "sc2",
 						},
 					},
 				}
 			},
 			wantReturn: func() []cfgstoragev1.StorageClassApplyConfiguration {
 				return []cfgstoragev1.StorageClassApplyConfiguration{
-					*new(cfgstoragev1.StorageClassApplyConfiguration).WithName("sc1").WithNamespace(defaultNamespaceName),
-					*new(cfgstoragev1.StorageClassApplyConfiguration).WithName("sc2").WithNamespace(defaultNamespaceName),
+					*new(cfgstoragev1.StorageClassApplyConfiguration).WithName("sc1"),
+					*new(cfgstoragev1.StorageClassApplyConfiguration).WithName("sc2"),
 				}
 			},
 			wantErr: false,
@@ -285,7 +276,6 @@ func Test_convertStorageClassesListToApplyConfigurationList(t *testing.T) {
 
 func Test_convertPriorityClassesListToApplyConfigurationList(t *testing.T) {
 	t.Parallel()
-	const defaultNamespaceName = "default"
 	tests := []struct {
 		name       string
 		input      func() []schedulingv1.PriorityClass
@@ -298,22 +288,20 @@ func Test_convertPriorityClassesListToApplyConfigurationList(t *testing.T) {
 				return []schedulingv1.PriorityClass{
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "pc1",
-							Namespace: defaultNamespaceName,
+							Name: "pc1",
 						},
 					},
 					{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "pc2",
-							Namespace: defaultNamespaceName,
+							Name: "pc2",
 						},
 					},
 				}
 			},
 			wantReturn: func() []schedulingcfgv1.PriorityClassApplyConfiguration {
 				return []schedulingcfgv1.PriorityClassApplyConfiguration{
-					*new(schedulingcfgv1.PriorityClassApplyConfiguration).WithName("pc1").WithNamespace(defaultNamespaceName),
-					*new(schedulingcfgv1.PriorityClassApplyConfiguration).WithName("pc2").WithNamespace(defaultNamespaceName),
+					*new(schedulingcfgv1.PriorityClassApplyConfiguration).WithName("pc1"),
+					*new(schedulingcfgv1.PriorityClassApplyConfiguration).WithName("pc2"),
 				}
 			},
 			wantErr: false,
@@ -331,6 +319,57 @@ func Test_convertPriorityClassesListToApplyConfigurationList(t *testing.T) {
 				diffResponse := cmp.Diff(o.Name, want[i].Name)
 				if diffResponse != "" || (err != nil) != tt.wantErr {
 					t.Fatalf("convertPriorityClassesListToApplyConfigurationList() %v test, \nerror = %v,\n%s", tt.name, err, diffResponse)
+				}
+			}
+		})
+	}
+}
+
+func Test_convertNamespaceListToApplyConfigurationList(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name       string
+		input      func() []corev1.Namespace
+		wantReturn func() []v1.NamespaceApplyConfiguration
+		wantErr    bool
+	}{
+		{
+			name: "convert Namespace list to NamespaceApplyConfiguration list",
+			input: func() []corev1.Namespace {
+				return []corev1.Namespace{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "ns1",
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "ns2",
+						},
+					},
+				}
+			},
+			wantReturn: func() []v1.NamespaceApplyConfiguration {
+				return []v1.NamespaceApplyConfiguration{
+					*new(v1.NamespaceApplyConfiguration).WithName("ns1"),
+					*new(v1.NamespaceApplyConfiguration).WithName("ns2"),
+				}
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			input := tt.input()
+			out, err := convertNamespaceListToApplyConfigurationList(input)
+			want := tt.wantReturn()
+			for i, o := range out {
+				diffResponse := cmp.Diff(o.Name, want[i].Name)
+				if diffResponse != "" || (err != nil) != tt.wantErr {
+					t.Fatalf("convertNamespaceListToApplyConfigurationList() %v test, \nerror = %v,\n%s", tt.name, err, diffResponse)
 				}
 			}
 		})

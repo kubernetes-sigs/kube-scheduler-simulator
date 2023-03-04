@@ -79,7 +79,7 @@ export default function schedulerconfigurationStore() {
       await schedconfAPI.applySchedulerConfiguration(cfg);
     },
 
-    async delete(_: string) {
+    async delete(_: SchedulerConfiguration) {
       // This function do nothing, but exist to satisfy interface on ResourceBar.vue.
     },
   };

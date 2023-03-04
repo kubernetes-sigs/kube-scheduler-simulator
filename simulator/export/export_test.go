@@ -15,10 +15,13 @@ import (
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
+	k8stesting "k8s.io/client-go/testing"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/export/mock_export"
@@ -55,6 +58,11 @@ func TestService_Export(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				// add test data.
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "namespace1",
+					},
+				}, metav1.CreateOptions{})
 				return c
 			},
 			wantReturn: &ResourcesForExport{
@@ -65,6 +73,13 @@ func TestService_Export(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces: []corev1.Namespace{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "namespace1",
+						},
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -195,6 +210,28 @@ func TestService_Export(t *testing.T) {
 			wantErr:    true,
 		},
 		{
+			name: "export failure on List of Namespace",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
+				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
+				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{}, nil)
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				//nolint:forcetypeassert
+				c.CoreV1().(*fakecorev1.FakeCoreV1).PrependReactor("list", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, nil, xerrors.New("Error listing namespaces")
+				})
+				return c
+			},
+			wantReturn: nil,
+			wantErr:    true,
+		},
+		{
 			name: "get ErrServiceDisabled on get scheduler config, but it's ignored.",
 			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
@@ -218,6 +255,7 @@ func TestService_Export(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: nil,
+				Namespaces:      []corev1.Namespace{},
 			},
 			wantErr: false,
 		},
@@ -243,7 +281,16 @@ func TestService_Export(t *testing.T) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
-				// add test data.
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: testDefaultNamespaceName1,
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: testDefaultNamespaceName2,
+					},
+				}, metav1.CreateOptions{})
 				return c
 			},
 			wantReturn: &ResourcesForExport{
@@ -263,6 +310,18 @@ func TestService_Export(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces: []corev1.Namespace{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: testDefaultNamespaceName1,
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: testDefaultNamespaceName2,
+						},
+					},
+				},
 			},
 		},
 		{
@@ -297,7 +356,16 @@ func TestService_Export(t *testing.T) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
-				// add test data.
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: testDefaultNamespaceName1,
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: testDefaultNamespaceName2,
+					},
+				}, metav1.CreateOptions{})
 				return c
 			},
 			wantReturn: &ResourcesForExport{
@@ -327,6 +395,18 @@ func TestService_Export(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces: []corev1.Namespace{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: testDefaultNamespaceName1,
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: testDefaultNamespaceName2,
+						},
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -391,6 +471,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
 			},
 			wantErr: false,
 		},
@@ -417,6 +498,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
 			},
 			wantErr: false,
 		},
@@ -443,6 +525,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
 			},
 			wantErr: false,
 		},
@@ -469,6 +552,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
 			},
 			wantErr: false,
 		},
@@ -495,6 +579,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
 			},
 			wantErr: false,
 		},
@@ -521,6 +606,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
 			},
 			wantErr: false,
 		},
@@ -547,6 +633,38 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 				StorageClasses:  []storagev1.StorageClass{},
 				PriorityClasses: []schedulingv1.PriorityClass{},
 				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
+			},
+			wantErr: false,
+		},
+		{
+			name: "no error if failure on List of Namespace",
+			prepareEachServiceMockFn: func(pods *mock_export.MockPodService, nodes *mock_export.MockNodeService, pvs *mock_export.MockPersistentVolumeService, pvcs *mock_export.MockPersistentVolumeClaimService, storageClasss *mock_export.MockStorageClassService, pcs *mock_export.MockPriorityClassService, schedulers *mock_export.MockSchedulerService) {
+				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
+				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
+				pvs.EXPECT().List(gomock.Any()).Return(&corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}, nil)
+				pvcs.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}, nil)
+				storageClasss.EXPECT().List(gomock.Any()).Return(&storagev1.StorageClassList{Items: []storagev1.StorageClass{}}, nil)
+				pcs.EXPECT().List(gomock.Any()).Return(&schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}, nil)
+				schedulers.EXPECT().GetSchedulerConfig().Return(&v1beta2config.KubeSchedulerConfiguration{}, nil)
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				//nolint:forcetypeassert
+				c.CoreV1().(*fakecorev1.FakeCoreV1).PrependReactor("list", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, nil, xerrors.New("Error listing namespaces")
+				})
+				return c
+			},
+			wantReturn: &ResourcesForExport{
+				Pods:            []corev1.Pod{},
+				Nodes:           []corev1.Node{},
+				Pvs:             []corev1.PersistentVolume{},
+				Pvcs:            []corev1.PersistentVolumeClaim{},
+				StorageClasses:  []storagev1.StorageClass{},
+				PriorityClasses: []schedulingv1.PriorityClass{},
+				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
 			},
 			wantErr: false,
 		},
@@ -578,6 +696,7 @@ func TestService_Export_IgnoreErrOption(t *testing.T) {
 	}
 }
 
+// TODO: Ensure that these namespaces are actually applied. Issue #139.
 func TestService_Import(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -1372,6 +1491,7 @@ func TestService_Import(t *testing.T) {
 	}
 }
 
+// TODO: Ensure that these namespaces are actually applied. Issue #139.
 func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -1932,6 +2052,177 @@ func TestFunction_applyPcs(t *testing.T) {
 	}
 }
 
+func Test_listNamespaces(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                   string
+		prepareFakeClientSetFn func() *fake.Clientset
+		wantResourcesForExport func() *ResourcesForExport
+		wantErr                bool
+	}{
+		{
+			name: "all namespace which have name prefixed with `kube-` or which is default should filter out",
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "namespace1",
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "default",
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "kube-system",
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "kube-public",
+					},
+				}, metav1.CreateOptions{})
+				c.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "kube-node-lease",
+					},
+				}, metav1.CreateOptions{})
+				return c
+			},
+			wantResourcesForExport: func() *ResourcesForExport {
+				nss := []corev1.Namespace{}
+				nonIgnoreNS := corev1.Namespace{}
+				nonIgnoreNS.Name = "namespace1"
+				nss = append(nss, nonIgnoreNS)
+				return &ResourcesForExport{
+					Pods:            []corev1.Pod{},
+					Nodes:           []corev1.Node{},
+					Pvs:             []corev1.PersistentVolume{},
+					Pvcs:            []corev1.PersistentVolumeClaim{},
+					StorageClasses:  []storagev1.StorageClass{},
+					PriorityClasses: []schedulingv1.PriorityClass{},
+					SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+					Namespaces:      nss,
+				}
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mockSchedulerService := mock_export.NewMockSchedulerService(ctrl)
+			mockPriorityClassService := mock_export.NewMockPriorityClassService(ctrl)
+			mockStorageClassService := mock_export.NewMockStorageClassService(ctrl)
+			mockPVCService := mock_export.NewMockPersistentVolumeClaimService(ctrl)
+			mockPVService := mock_export.NewMockPersistentVolumeService(ctrl)
+			mockNodeService := mock_export.NewMockNodeService(ctrl)
+			mockPodService := mock_export.NewMockPodService(ctrl)
+			fakeclientset := tt.prepareFakeClientSetFn()
+
+			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
+			ctx := context.Background()
+			errgrp := util.NewErrGroupWithSemaphore(ctx)
+			resources := &ResourcesForExport{
+				Pods:            []corev1.Pod{},
+				Nodes:           []corev1.Node{},
+				Pvs:             []corev1.PersistentVolume{},
+				Pvcs:            []corev1.PersistentVolumeClaim{},
+				StorageClasses:  []storagev1.StorageClass{},
+				PriorityClasses: []schedulingv1.PriorityClass{},
+				SchedulerConfig: &v1beta2config.KubeSchedulerConfiguration{},
+				Namespaces:      []corev1.Namespace{},
+			}
+
+			err := s.listNamespaces(ctx, resources, errgrp, options{})
+			if err := errgrp.Wait(); err != nil {
+				t.Fatalf("listNamespaces: %v", err)
+			}
+			diffResponse := cmp.Diff(resources, tt.wantResourcesForExport())
+			if diffResponse != "" || (err != nil) != tt.wantErr {
+				t.Fatalf("listNamespaces() %v test, \nerror = %v, wantErr %v\n%s", tt.name, err, tt.wantErr, diffResponse)
+			}
+		})
+	}
+}
+
+func Test_applyNamespaces(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                   string
+		prepareFakeClientSetFn func() *fake.Clientset
+		applyConfiguration     func() *ResourcesForImport
+		wantErr                bool
+	}{
+		{
+			name: "all namespace which have name prefixed with `kube-` or which is default should filter out",
+			applyConfiguration: func() *ResourcesForImport {
+				pods := []v1.PodApplyConfiguration{}
+				nodes := []v1.NodeApplyConfiguration{}
+				pvs := []v1.PersistentVolumeApplyConfiguration{}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{}
+				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				nss := []v1.NamespaceApplyConfiguration{}
+				nss = append(nss, *v1.Namespace("kube-node-lease"))
+				nss = append(nss, *v1.Namespace("kube-system"))
+				nss = append(nss, *v1.Namespace("kube-public"))
+				nss = append(nss, *v1.Namespace("default"))
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForImport{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  storageclasses,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+					Namespaces:      nss,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				return c
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			ctx := context.Background()
+			errgrp := util.NewErrGroupWithSemaphore(ctx)
+
+			mockSchedulerService := mock_export.NewMockSchedulerService(ctrl)
+			mockPriorityClassService := mock_export.NewMockPriorityClassService(ctrl)
+			mockStorageClassService := mock_export.NewMockStorageClassService(ctrl)
+			mockPVCService := mock_export.NewMockPersistentVolumeClaimService(ctrl)
+			mockPVService := mock_export.NewMockPersistentVolumeService(ctrl)
+			mockNodeService := mock_export.NewMockNodeService(ctrl)
+			mockPodService := mock_export.NewMockPodService(ctrl)
+			fakeclientset := tt.prepareFakeClientSetFn()
+
+			s := NewExportService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
+
+			err := s.applyNamespaces(ctx, tt.applyConfiguration(), errgrp, options{})
+			if err := errgrp.Wait(); err != nil {
+				t.Fatalf("applyNamespaces: %v", err)
+			}
+
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("applyNamespaces() %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -1957,6 +2248,7 @@ func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 				storageclasses := []confstoragev1.StorageClassApplyConfiguration{}
 				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
 				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				nss := []v1.NamespaceApplyConfiguration{}
 				return &ResourcesForImport{
 					Pods:            pods,
 					Nodes:           nodes,
@@ -1965,6 +2257,7 @@ func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 					StorageClasses:  storageclasses,
 					PriorityClasses: pcs,
 					SchedulerConfig: config,
+					Namespaces:      nss,
 				}
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {

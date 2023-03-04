@@ -12,11 +12,13 @@ import PersistentVolumeClaimStoreKey from "./StoreKey/PVCStoreKey";
 import PersistentVolumeStoreKey from "./StoreKey/PVStoreKey";
 import PriorityClassStoreKey from "./StoreKey/PriorityClassStoreKey";
 import StorageClassStoreKey from "./StoreKey/StorageClassStoreKey";
+import NamespaceStoreKey from "./StoreKey/NamespaceStoreKey";
 import SnackBarStoreKey from "./StoreKey/SnackBarStoreKey";
 import { WatcherAPIKey } from "~/api/APIProviderKeys";
 import { WatchEventType } from "@/types/resources";
 import { LastResourceVersions } from "@/types/api/v1";
 import {
+  V1Namespace,
   V1Node,
   V1PersistentVolume,
   V1PersistentVolumeClaim,
@@ -59,6 +61,10 @@ export default defineComponent({
     if (!storageclassstore) {
       throw new Error(`${StorageClassStoreKey.description} is not provided`);
     }
+    const namespacestore = inject(NamespaceStoreKey);
+    if (!namespacestore) {
+      throw new Error(`${NamespaceStoreKey.description} is not provided`);
+    }
     const snackbarstore = inject(SnackBarStoreKey);
     if (!snackbarstore) {
       throw new Error(`${SnackBarStoreKey.description} is not provided`);
@@ -72,6 +78,7 @@ export default defineComponent({
       await pvstore.initList();
       await priorityclassstore.initList();
       await storageclassstore.initList();
+      await namespacestore.initList();
       await watchAndUpdates();
     });
 
@@ -83,6 +90,7 @@ export default defineComponent({
         pvcs: pvcstore.lastResourceVersion,
         storageClasses: storageclassstore.lastResourceVersion,
         priorityClasses: priorityclassstore.lastResourceVersion,
+        namespaces: namespacestore.lastResourceVersion,
       } as LastResourceVersions;
     };
 
@@ -169,6 +177,16 @@ export default defineComponent({
                     );
                     break;
                   }
+                  case resourceKind.NAMESPACES: {
+                    namespacestore.watchEventHandler(
+                      event.EventType,
+                      event.Obj as V1Namespace
+                    );
+                    namespacestore.setLastResourceVersion(
+                      event.Obj as V1Namespace
+                    );
+                    break;
+                  }
                 }
               } catch (error) {
                 snackbarstore.setServerErrorMessage(
@@ -204,6 +222,7 @@ enum resourceKind {
   PVCS = "persistentvolumeclaims",
   SCS = "storageclasses",
   PCS = "priorityclasses",
+  NAMESPACES = "namespaces",
 }
 
 function onNewLine(buffer: string, fn: Function): string {

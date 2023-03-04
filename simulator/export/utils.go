@@ -37,6 +37,10 @@ func ConvertResourcesForImportToResourcesForExport(expRes *ResourcesForExport) (
 	if err != nil {
 		return nil, xerrors.Errorf("call convertPriorityClassesListToApplyConfigurationList: %w", err)
 	}
+	nss, err := convertNamespaceListToApplyConfigurationList(expRes.Namespaces)
+	if err != nil {
+		return nil, xerrors.Errorf("call convertNamespaceListToApplyConfigurationList: %w", err)
+	}
 	return &ResourcesForImport{
 		Pods:            pods,
 		Nodes:           nodes,
@@ -45,6 +49,7 @@ func ConvertResourcesForImportToResourcesForExport(expRes *ResourcesForExport) (
 		StorageClasses:  scs,
 		PriorityClasses: pcs,
 		SchedulerConfig: expRes.SchedulerConfig,
+		Namespaces:      nss,
 	}, nil
 }
 
@@ -103,6 +108,16 @@ func convertPriorityClassesListToApplyConfigurationList(pcs []schedulingv1.Prior
 	for i, p := range pcs {
 		if err := convertToApplyConfiguration(p, &rto[i]); err != nil {
 			return nil, xerrors.Errorf("convert PriorityClasses to apply configuration: %w", err)
+		}
+	}
+	return rto, nil
+}
+
+func convertNamespaceListToApplyConfigurationList(nss []corev1.Namespace) ([]v1.NamespaceApplyConfiguration, error) {
+	rto := make([]v1.NamespaceApplyConfiguration, len(nss))
+	for i, ns := range nss {
+		if err := convertToApplyConfiguration(ns, &rto[i]); err != nil {
+			return nil, xerrors.Errorf("convert Namespace to apply configuration: %w", err)
 		}
 	}
 	return rto, nil
@@ -170,6 +185,15 @@ func convertToApplyConfiguration(in interface{}, out interface{}) error {
 		}
 		if err := json.Unmarshal(_in, &typedout); err != nil {
 			return xerrors.Errorf("call Unmarshal to convert PriorityClass: %w", err)
+		}
+		return nil
+	case corev1.Namespace:
+		typedout, ok := out.(*v1.NamespaceApplyConfiguration)
+		if !ok {
+			return xerrors.New("Uhexpected type was given as out")
+		}
+		if err := json.Unmarshal(_in, &typedout); err != nil {
+			return xerrors.Errorf("call Unmarshal to convert Namespace: %w", err)
 		}
 		return nil
 	default:

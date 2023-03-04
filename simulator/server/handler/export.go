@@ -26,6 +26,7 @@ type ResourcesForImport struct {
 	StorageClasses  []confstoragev1.StorageClassApplyConfiguration    `json:"storageClasses"`
 	PriorityClasses []schedulingcfgv1.PriorityClassApplyConfiguration `json:"priorityClasses"`
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
+	Namespaces      []v1.NamespaceApplyConfiguration                  `json:"namespaces"`
 }
 
 func NewExportHandler(s di.ExportService) *ExportHandler {
@@ -70,5 +71,6 @@ func convertToResourcesApplyConfiguration(r *ResourcesForImport) *export.Resourc
 		StorageClasses:  r.StorageClasses,
 		PriorityClasses: r.PriorityClasses,
 		SchedulerConfig: r.SchedulerConfig,
+		Namespaces:      r.Namespaces,
 	}
 }

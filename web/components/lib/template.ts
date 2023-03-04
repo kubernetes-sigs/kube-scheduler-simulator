@@ -5,6 +5,7 @@ import {
   V1Pod,
   V1StorageClass,
   V1PriorityClass,
+  V1Namespace,
 } from "@kubernetes/client-node";
 import yaml from "js-yaml";
 
@@ -54,4 +55,12 @@ export const priorityclassTemplate = (): V1PriorityClass => {
     return temp;
   }
   return { value: 1000, globalDefault: true };
+};
+
+export const namespaceTemplate = (): V1Namespace => {
+  if (process.env.NAMESPACE_TEMPLATE) {
+    const temp = yaml.load(process.env.NAMESPACE_TEMPLATE);
+    return temp;
+  }
+  return {};
 };

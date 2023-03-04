@@ -48,11 +48,11 @@ export default function pvcStore() {
       return state.selectedPersistentVolumeClaim;
     },
 
-    select(n: V1PersistentVolumeClaim | null, isNew: boolean) {
-      if (n !== null) {
+    select(pvc: V1PersistentVolumeClaim | null, isNew: boolean) {
+      if (pvc !== null) {
         state.selectedPersistentVolumeClaim = {
           isNew: isNew,
-          item: n,
+          item: pvc,
           resourceKind: "PVC",
           isDeletable: true,
         };
@@ -63,12 +63,12 @@ export default function pvcStore() {
       state.selectedPersistentVolumeClaim = null;
     },
 
-    async apply(n: V1PersistentVolumeClaim) {
-      if (n.metadata?.name) {
-        await pvcAPI.applyPersistentVolumeClaim(n);
-      } else if (n.metadata?.generateName) {
+    async apply(pvc: V1PersistentVolumeClaim) {
+      if (pvc.metadata?.name) {
+        await pvcAPI.applyPersistentVolumeClaim(pvc);
+      } else if (pvc.metadata?.generateName) {
         // This PersistentVolumeClaim can be expected to be a newly created PersistentVolumeClaim. So, use `createPersistentVolumeClaim` instead.
-        await pvcAPI.createPersistentVolumeClaim(n);
+        await pvcAPI.createPersistentVolumeClaim(pvc);
       } else {
         throw new Error(
           "failed to apply persistentvolumeclaim: persistentvolumeclaim should have metadata.name or metadata.generateName"
@@ -78,18 +78,26 @@ export default function pvcStore() {
 
     async fetchSelected() {
       if (
+        state.selectedPersistentVolumeClaim?.item.metadata?.namespace &&
         state.selectedPersistentVolumeClaim?.item.metadata?.name &&
         !this.selected?.isNew
       ) {
         const p = await pvcAPI.getPersistentVolumeClaim(
-          state.selectedPersistentVolumeClaim.item.metadata.name
+          state.selectedPersistentVolumeClaim.item.metadata.namespace,
+          state.selectedPersistentVolumeClaim.item.metadata.name,
         );
         this.select(p, false);
       }
     },
 
-    async delete(name: string) {
-      await pvcAPI.deletePersistentVolumeClaim(name);
+    async delete(pvc: V1PersistentVolumeClaim) {
+      if (pvc.metadata?.name && pvc.metadata?.namespace) {
+        await pvcAPI.deletePersistentVolumeClaim(pvc.metadata.namespace, pvc.metadata.name);
+      } else {
+        throw new Error(
+          "failed to delete persistentvolumeclaim: persistentvolumeclaim should have metadata.name"
+        );
+      }
     },
 
     // initList calls list API, and stores current resource data and lastResourceVersion.

@@ -107,8 +107,8 @@ export default function podStore() {
     },
 
     async fetchSelected() {
-      if (this.selected?.item.metadata?.name && !this.selected?.isNew) {
-        const p = await podAPI.getPod(this.selected.item.metadata.name);
+      if (this.selected?.item.metadata?.name && this.selected?.item.metadata?.namespace && !this.selected?.isNew) {
+        const p = await podAPI.getPod(this.selected.item.metadata.namespace, this.selected.item.metadata.name);
         this.select(p, false);
       }
     },
@@ -126,8 +126,14 @@ export default function podStore() {
       }
     },
 
-    async delete(name: string) {
-      await podAPI.deletePod(name);
+    async delete(p: V1Pod) {
+      if (p.metadata?.name && p.metadata.namespace) {
+        await podAPI.deletePod(p.metadata.namespace, p.metadata.name);
+      } else {
+        throw new Error(
+          "failed to delete pod: pod should have metadata.name"
+        );
+      }
     },
 
     // initList calls list API, and stores current resource data and lastResourceVersion.

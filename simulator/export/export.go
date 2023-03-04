@@ -49,6 +49,7 @@ type ResourcesForExport struct {
 	StorageClasses  []storagev1.StorageClass                  `json:"storageClasses"`
 	PriorityClasses []schedulingv1.PriorityClass              `json:"priorityClasses"`
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
+	Namespaces      []corev1.Namespace                        `json:"namespaces"`
 }
 
 // ResourcesForImport denotes all resources and scheduler configuration for import.
@@ -60,6 +61,7 @@ type ResourcesForImport struct {
 	StorageClasses  []confstoragev1.StorageClassApplyConfiguration    `json:"storageClasses"`
 	PriorityClasses []schedulingcfgv1.PriorityClassApplyConfiguration `json:"priorityClasses"`
 	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
+	Namespaces      []v1.NamespaceApplyConfiguration                  `json:"namespaces"`
 }
 
 type PodService interface {
@@ -169,6 +171,9 @@ func (s *Service) get(ctx context.Context, opts options) (*ResourcesForExport, e
 	if err := s.listPcs(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPcs: %w", err)
 	}
+	if err := s.listNamespaces(ctx, &resources, errgrp, opts); err != nil {
+		return nil, xerrors.Errorf("call listNamespaces: %w", err)
+	}
 	if err := s.getSchedulerConfig(&resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call getSchedulerConfig: %w", err)
 	}
@@ -192,8 +197,17 @@ func (s *Service) Export(ctx context.Context, opts ...Option) (*ResourcesForExpo
 }
 
 // Apply applies all resources from each service.
+//
+//nolint:cyclop // For readability.
 func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts options) error {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
+	// `applyNamespaces` must be called before calling namespaced resources  applying.
+	if err := s.applyNamespaces(ctx, resources, errgrp, opts); err != nil {
+		return xerrors.Errorf("call applyNamespaces: %w", err)
+	}
+	if err := errgrp.Wait(); err != nil {
+		return xerrors.Errorf("apply resources: %w", err)
+	}
 
 	if err := s.applyPcs(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPcs: %w", err)
@@ -210,7 +224,6 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts
 	if err := s.applyPods(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPods: %w", err)
 	}
-
 	if err := errgrp.Wait(); err != nil {
 		return xerrors.Errorf("apply resources: %w", err)
 	}
@@ -356,6 +369,30 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.S
 			}
 		}
 		r.PriorityClasses = result
+		return nil
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+	if err := eg.Go(func() error {
+		nss, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+		if err != nil {
+			if !opts.ignoreErr {
+				return xerrors.Errorf("call list namespace: %w", err)
+			}
+			klog.Errorf("failed to call list namespace: %v", err)
+			nss = &corev1.NamespaceList{Items: []corev1.Namespace{}}
+		}
+		result := []corev1.Namespace{}
+		for _, i := range nss.Items {
+			if !isIgnoreNamespace(i.GetObjectMeta().GetName()) {
+				result = append(result, i)
+			}
+		}
+		r.Namespaces = result
 		return nil
 	}); err != nil {
 		return xerrors.Errorf("start error group: %w", err)
@@ -516,6 +553,30 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 	return nil
 }
 
+func (s *Service) applyNamespaces(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
+	for i := range r.Namespaces {
+		ns := r.Namespaces[i]
+		if isIgnoreNamespace(*ns.Name) {
+			continue
+		}
+		if err := eg.Go(func() error {
+			ns.ObjectMetaApplyConfiguration.UID = nil
+			ns.WithAPIVersion("v1").WithKind("Namespace")
+			_, err := s.client.CoreV1().Namespaces().Apply(ctx, &ns, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			if err != nil {
+				if !opts.ignoreErr {
+					return xerrors.Errorf("apply Namespace: %w", err)
+				}
+				klog.Errorf("failed to apply Namespace: %v", err)
+			}
+			return nil
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
+	}
+	return nil
+}
+
 // isSystemPriorityClass returns whether the given name of PriorityClass is prefixed with `system-` or not.
 // The `system-` prefix is reserved by Kubernetes, and users cannot create a PriorityClass with such a name.
 // See: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
@@ -523,4 +584,19 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 // So, we need to exclude these PriorityClasses when import/export PriorityClasses.
 func isSystemPriorityClass(name string) bool {
 	return strings.HasPrefix(name, "system-")
+}
+
+// isSystemNamespace returns whether the given name of Namespace is prefixed with `kube-` or not.
+// The `kube-` prefix is reserved by Kubernetes, and users cannot create a Namespace with such a name.
+// See: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#working-with-namespaces
+//
+// So, we need to exclude these Namespaces when importing/exporting any Namespaces.
+func isSystemNamespace(name string) bool {
+	return strings.HasPrefix(name, "kube-")
+}
+
+// isIgnoreNamespace returns whether the given name of Namespace is ignored namespace or not.
+// It's system reserved one and default namespace.
+func isIgnoreNamespace(name string) bool {
+	return isSystemNamespace(name) || name == "default"
 }
