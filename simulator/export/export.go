@@ -562,7 +562,6 @@ func (s *Service) applyNamespaces(ctx context.Context, r *ResourcesForImport, eg
 		if err := eg.Go(func() error {
 			ns.ObjectMetaApplyConfiguration.UID = nil
 			ns.WithAPIVersion("v1").WithKind("Namespace")
-			klog.Infof("%+v", ns)
 			_, err := s.client.CoreV1().Namespaces().Apply(ctx, &ns, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
