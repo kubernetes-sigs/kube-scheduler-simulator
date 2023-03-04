@@ -12,19 +12,15 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 
 	mock_plugin "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/mock"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
-	schedulingresultstore "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
 )
 
 func Test_NewWrappedPlugin(t *testing.T) {
 	t.Parallel()
-	fakeclientset := fake.NewSimpleClientset()
-	store := resultstore.New(informers.NewSharedInformerFactory(fakeclientset, 0), nil, nil)
+	store := resultstore.New(nil)
 
 	type args struct {
 		s *resultstore.Store
@@ -106,8 +102,7 @@ func Test_NewWrappedPlugin(t *testing.T) {
 
 func Test_NewWrappedPlugin_WithWeightOption(t *testing.T) {
 	t.Parallel()
-	fakeclientset := fake.NewSimpleClientset()
-	store := resultstore.New(informers.NewSharedInformerFactory(fakeclientset, 0), nil, nil)
+	store := resultstore.New(nil)
 
 	type args struct {
 		s      *resultstore.Store
@@ -162,8 +157,7 @@ func Test_NewWrappedPlugin_WithWeightOption(t *testing.T) {
 
 func Test_NewWrappedPlugin_WithPluginNameOption(t *testing.T) {
 	t.Parallel()
-	fakeclientset := fake.NewSimpleClientset()
-	store := resultstore.New(informers.NewSharedInformerFactory(fakeclientset, 0), nil, nil)
+	store := resultstore.New(nil)
 
 	type args struct {
 		s    *resultstore.Store
@@ -1256,7 +1250,7 @@ func Test_wrappedPlugin_PreScore(t *testing.T) {
 				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", resultstore.SuccessMessage)
 				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodes, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Success))
 			},
 			want: framework.NewStatus(framework.Success),
@@ -1274,7 +1268,7 @@ func Test_wrappedPlugin_PreScore(t *testing.T) {
 				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", resultstore.SuccessMessage)
 				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodes, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Unschedulable))
 			},
 			want: framework.NewStatus(framework.Unschedulable),
@@ -1306,7 +1300,7 @@ func Test_wrappedPlugin_PreScore(t *testing.T) {
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreScorePlugin, extender *mock_plugin.MockPreScorePluginExtender) {
 				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", resultstore.SuccessMessage)
 			},
 			noExtender: true,
 			want:       framework.NewStatus(framework.Success),
@@ -1351,7 +1345,7 @@ func Test_wrappedPlugin_PreFilter(t *testing.T) {
 				extender.EXPECT().BeforePreFilter(gomock.Any(), gomock.Any(), testPod).Return(nil, framework.NewStatus(framework.Success))
 				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
+				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
 				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success)).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success))
 			},
 			want:  &framework.PreFilterResult{NodeNames: sets.NewString("hoge")},
@@ -1371,7 +1365,7 @@ func Test_wrappedPlugin_PreFilter(t *testing.T) {
 				extender.EXPECT().BeforePreFilter(gomock.Any(), gomock.Any(), testPod).Return(nil, framework.NewStatus(framework.Success))
 				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
+				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
 				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success)).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Unschedulable))
 			},
 			want:  &framework.PreFilterResult{NodeNames: sets.NewString("hoge")},
@@ -1406,7 +1400,7 @@ func Test_wrappedPlugin_PreFilter(t *testing.T) {
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreFilterPlugin, extender *mock_plugin.MockPreFilterPluginExtender) {
 				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
+				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
 			},
 			noExtender: true,
 			want:       &framework.PreFilterResult{NodeNames: sets.NewString("hoge")},
@@ -1457,7 +1451,7 @@ func Test_wrappedPlugin_Permit(t *testing.T) {
 				extender.EXPECT().BeforePermit(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success), time.Duration(1))
 				se.EXPECT().Permit(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success), time.Duration(1))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPermitResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage, time.Duration(1))
+				s.EXPECT().AddPermitResult("namespace", "pod", "name", resultstore.SuccessMessage, time.Duration(1))
 				extender.EXPECT().AfterPermit(gomock.Any(), gomock.Any(), testPod, testNodeName, framework.NewStatus(framework.Success), time.Duration(1)).Return(framework.NewStatus(framework.Success), time.Duration(1))
 			},
 			want:  framework.NewStatus(framework.Success),
@@ -1477,7 +1471,7 @@ func Test_wrappedPlugin_Permit(t *testing.T) {
 				extender.EXPECT().BeforePermit(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success), time.Duration(1))
 				se.EXPECT().Permit(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success), time.Duration(1))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPermitResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage, time.Duration(1))
+				s.EXPECT().AddPermitResult("namespace", "pod", "name", resultstore.SuccessMessage, time.Duration(1))
 				extender.EXPECT().AfterPermit(gomock.Any(), gomock.Any(), testPod, testNodeName, framework.NewStatus(framework.Success), time.Duration(1)).Return(framework.NewStatus(framework.Unschedulable), time.Duration(2))
 			},
 			want:  framework.NewStatus(framework.Unschedulable),
@@ -1512,7 +1506,7 @@ func Test_wrappedPlugin_Permit(t *testing.T) {
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPermitPlugin, extender *mock_plugin.MockPermitPluginExtender) {
 				se.EXPECT().Permit(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success), time.Duration(1))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPermitResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage, time.Duration(1))
+				s.EXPECT().AddPermitResult("namespace", "pod", "name", resultstore.SuccessMessage, time.Duration(1))
 			},
 			noExtender: true,
 			want:       framework.NewStatus(framework.Success),
@@ -1561,7 +1555,7 @@ func Test_wrappedPlugin_Reserve(t *testing.T) {
 				extender.EXPECT().BeforeReserve(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Reserve(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddReserveResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddReserveResult("namespace", "pod", "name", resultstore.SuccessMessage)
 				extender.EXPECT().AfterReserve(gomock.Any(), gomock.Any(), testPod, testNodeName, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Success))
 			},
 			want: framework.NewStatus(framework.Success),
@@ -1581,7 +1575,7 @@ func Test_wrappedPlugin_Reserve(t *testing.T) {
 				extender.EXPECT().BeforeReserve(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Reserve(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddReserveResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddReserveResult("namespace", "pod", "name", resultstore.SuccessMessage)
 				extender.EXPECT().AfterReserve(gomock.Any(), gomock.Any(), testPod, testNodeName, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Unschedulable))
 			},
 			want: framework.NewStatus(framework.Unschedulable),
@@ -1616,7 +1610,7 @@ func Test_wrappedPlugin_Reserve(t *testing.T) {
 				s.EXPECT().AddSelectedNode("namespace", "pod", "node")
 				se.EXPECT().Reserve(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddReserveResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddReserveResult("namespace", "pod", "name", resultstore.SuccessMessage)
 			},
 			noExtender: true,
 			want:       framework.NewStatus(framework.Success),
@@ -1716,7 +1710,7 @@ func Test_wrappedPlugin_PreBind(t *testing.T) {
 				extender.EXPECT().BeforePreBind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().PreBind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreBindResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddPreBindResult("namespace", "pod", "name", resultstore.SuccessMessage)
 				extender.EXPECT().AfterPreBind(gomock.Any(), gomock.Any(), testPod, testNodeName, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Success))
 			},
 			want: framework.NewStatus(framework.Success),
@@ -1734,7 +1728,7 @@ func Test_wrappedPlugin_PreBind(t *testing.T) {
 				extender.EXPECT().BeforePreBind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().PreBind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreBindResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddPreBindResult("namespace", "pod", "name", resultstore.SuccessMessage)
 				extender.EXPECT().AfterPreBind(gomock.Any(), gomock.Any(), testPod, testNodeName, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Unschedulable))
 			},
 			want: framework.NewStatus(framework.Unschedulable),
@@ -1766,7 +1760,7 @@ func Test_wrappedPlugin_PreBind(t *testing.T) {
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreBindPlugin, extender *mock_plugin.MockPreBindPluginExtender) {
 				se.EXPECT().PreBind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreBindResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddPreBindResult("namespace", "pod", "name", resultstore.SuccessMessage)
 			},
 			noExtender: true,
 			want:       framework.NewStatus(framework.Success),
@@ -1811,7 +1805,7 @@ func Test_wrappedPlugin_Bind(t *testing.T) {
 				extender.EXPECT().BeforeBind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Bind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddBindResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddBindResult("namespace", "pod", "name", resultstore.SuccessMessage)
 				extender.EXPECT().AfterBind(gomock.Any(), gomock.Any(), testPod, testNodeName, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Success))
 			},
 			want: framework.NewStatus(framework.Success),
@@ -1829,7 +1823,7 @@ func Test_wrappedPlugin_Bind(t *testing.T) {
 				extender.EXPECT().BeforeBind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Bind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddBindResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddBindResult("namespace", "pod", "name", resultstore.SuccessMessage)
 				extender.EXPECT().AfterBind(gomock.Any(), gomock.Any(), testPod, testNodeName, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Unschedulable))
 			},
 			want: framework.NewStatus(framework.Unschedulable),
@@ -1861,7 +1855,7 @@ func Test_wrappedPlugin_Bind(t *testing.T) {
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockBindPlugin, extender *mock_plugin.MockBindPluginExtender) {
 				se.EXPECT().Bind(gomock.Any(), gomock.Any(), testPod, testNodeName).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddBindResult("namespace", "pod", "name", schedulingresultstore.SuccessMessage)
+				s.EXPECT().AddBindResult("namespace", "pod", "name", resultstore.SuccessMessage)
 			},
 			noExtender: true,
 			want:       framework.NewStatus(framework.Success),

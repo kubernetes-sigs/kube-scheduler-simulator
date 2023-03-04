@@ -10,10 +10,12 @@ import (
 	schedulingv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	storageconfigv1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/kube-scheduler/config/v1beta2"
+	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 )
 
 // PodService represents service for manage Pods.
@@ -63,6 +65,7 @@ type SchedulerService interface {
 	StartScheduler(cfg *v1beta2.KubeSchedulerConfiguration) error
 	ResetScheduler() error
 	ShutdownScheduler()
+	ExtenderService() scheduler.ExtenderService
 }
 
 // PriorityClassService represents service for manage scheduler.
@@ -91,4 +94,12 @@ type ReplicateExistingClusterService interface {
 // ResourceWatcherService represents service for watch k8s resources.
 type ResourceWatcherService interface {
 	ListWatch(ctx context.Context, stream streamwriter.ResponseStream, lrVersions *resourcewatcher.LastResourceVersions) error
+}
+
+// ExtenderService represents service for the extender of scheduler.
+type ExtenderService interface {
+	Filter(id int, args extenderv1.ExtenderArgs) (*extenderv1.ExtenderFilterResult, error)
+	Prioritize(id int, args extenderv1.ExtenderArgs) (*extenderv1.HostPriorityList, error)
+	Preempt(id int, args extenderv1.ExtenderPreemptionArgs) (*extenderv1.ExtenderPreemptionResult, error)
+	Bind(id int, args extenderv1.ExtenderBindingArgs) (*extenderv1.ExtenderBindingResult, error)
 }

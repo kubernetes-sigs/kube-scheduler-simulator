@@ -6,8 +6,6 @@ import (
 	"golang.org/x/xerrors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/informers"
-	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	"k8s.io/kube-scheduler/config/v1beta2"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
@@ -15,10 +13,13 @@ import (
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 	schedulingresultstore "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin/resultstore"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/storereflector"
 )
 
-//nolint:cyclop
-func NewRegistry(informerFactory informers.SharedInformerFactory, client clientset.Interface) (map[string]schedulerRuntime.PluginFactory, error) {
+// ResultStoreKey represents key name of plugins results on sharedstore.
+const ResultStoreKey = "PluginResultStoreKey"
+
+func NewRegistry(sharedStore storereflector.Reflector) (map[string]schedulerRuntime.PluginFactory, error) {
 	scorePluginWeight := map[string]int32{}
 	registeredScorePlugin, err := config.RegisteredScorePlugins()
 	if err != nil {
@@ -30,13 +31,24 @@ func NewRegistry(informerFactory informers.SharedInformerFactory, client clients
 			scorePluginWeight[p.Name] = *p.Weight
 		}
 	}
+	store := schedulingresultstore.New(scorePluginWeight)
+	// Add the resultStore to the sharedStore to store the results and share it.
+	sharedStore.AddResultStore(store, ResultStoreKey)
 
+	ret, err := newPluginFactories(store)
+	if err != nil {
+		return nil, xerrors.Errorf("New pluginFactories: %w", err)
+	}
+
+	return ret, nil
+}
+
+func newPluginFactories(store *schedulingresultstore.Store) (map[string]schedulerRuntime.PluginFactory, error) {
 	registeredpls, err := registeredPlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
 	}
 
-	store := schedulingresultstore.New(informerFactory, client, scorePluginWeight)
 	intreeRegistries := config.InTreeRegistries()
 	outoftreeRegistries := config.OutOfTreeRegistries()
 	ret := map[string]schedulerRuntime.PluginFactory{}

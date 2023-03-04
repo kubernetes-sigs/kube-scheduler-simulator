@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/tools/events"
 	"k8s.io/klog/v2"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 	"k8s.io/kubernetes/pkg/scheduler"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
@@ -20,7 +21,9 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/profile"
 
 	simulatorschedconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/storereflector"
 )
 
 // Service manages scheduler.
@@ -37,18 +40,31 @@ type Service struct {
 	restclientCfg       *restclient.Config
 	initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
 	currentSchedulerCfg *v1beta2config.KubeSchedulerConfiguration
+	extenderService     ExtenderService
+	sharedStore         storereflector.Reflector
+	simulatorPort       int
+}
+
+type ExtenderService interface {
+	Filter(id int, args extenderv1.ExtenderArgs) (*extenderv1.ExtenderFilterResult, error)
+	Prioritize(id int, args extenderv1.ExtenderArgs) (*extenderv1.HostPriorityList, error)
+	Preempt(id int, args extenderv1.ExtenderPreemptionArgs) (*extenderv1.ExtenderPreemptionResult, error)
+	Bind(id int, args extenderv1.ExtenderBindingArgs) (*extenderv1.ExtenderBindingResult, error)
 }
 
 var ErrServiceDisabled = errors.New("scheduler service is disabled")
 
 // NewSchedulerService starts scheduler and return *Service.
-func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration, externalSchedulerEnabled bool) *Service {
+func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration, externalSchedulerEnabled bool, simulatorPort int) *Service {
 	if externalSchedulerEnabled {
 		return &Service{disabled: true}
 	}
 
+	// sharedStore has some resultstores which are referenced by Registry of Plugins and Extenders.
+	sharedStore := storereflector.New()
+
 	initCfg := initialSchedulerCfg.DeepCopy()
-	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg}
+	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg, sharedStore: sharedStore, simulatorPort: simulatorPort}
 }
 
 func (s *Service) RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error {
@@ -75,6 +91,8 @@ func (s *Service) ResetScheduler() error {
 }
 
 // StartScheduler starts scheduler.
+//
+//nolint:funlen
 func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfiguration) (retErr error) {
 	clientSet := s.clientset
 	restConfig := s.restclientCfg
@@ -96,13 +114,26 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 	evtBroadcaster.StartRecordingToSink(ctx.Done())
 
 	s.currentSchedulerCfg = versionedcfg.DeepCopy()
-	cfg, err := convertConfigurationForSimulator(versionedcfg)
+
+	var err error
+	// Extender service must be initialized using unconverted config.
+	s.extenderService, err = extender.New(clientSet, versionedcfg.Extenders, s.sharedStore)
+	if err != nil {
+		return xerrors.Errorf("New extender service: %w", err)
+	}
+
+	cfg, err := convertConfigurationForSimulator(versionedcfg, s.simulatorPort)
 	if err != nil {
 		return xerrors.Errorf("convert scheduler config to apply: %w", err)
 	}
-	registry, err := plugin.NewRegistry(informerFactory, clientSet)
+	registry, err := plugin.NewRegistry(s.sharedStore)
 	if err != nil {
 		return xerrors.Errorf("plugin registry: %w", err)
+	}
+
+	if s.sharedStore != nil {
+		// Resister the event handler function to store the result stored in the sharedStore in pod.
+		s.sharedStore.ResisterResultSavingToInformer(informerFactory, clientSet)
 	}
 
 	sched, err := scheduler.New(
@@ -153,11 +184,17 @@ func (s *Service) GetSchedulerConfig() (*v1beta2config.KubeSchedulerConfiguratio
 	return s.currentSchedulerCfg, nil
 }
 
+// ExtenderService returns ExtenderService interface.
+func (s *Service) ExtenderService() ExtenderService {
+	return s.extenderService
+}
+
 // convertConfigurationForSimulator convert KubeSchedulerConfiguration to apply scheduler on simulator
 // (1) It excludes non-allowed changes. Now, we accept only changes to Profiles.Plugins field.
-// (2) It replaces filter/score default-plugins with plugins for simulator.
-// (3) It convert KubeSchedulerConfiguration from v1beta2config.KubeSchedulerConfiguration to config.KubeSchedulerConfiguration.
-func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConfiguration) (*config.KubeSchedulerConfiguration, error) {
+// (2) It replaces all default-plugins with plugins for simulator.
+// (3) It replaces Extenders config so that the connection is directed to the simulator server.
+// (4) It converts KubeSchedulerConfiguration from v1beta2config.KubeSchedulerConfiguration to config.KubeSchedulerConfiguration.
+func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConfiguration, simulatorPort int) (*config.KubeSchedulerConfiguration, error) {
 	if len(versioned.Profiles) == 0 {
 		defaultSchedulerName := v1.DefaultSchedulerName
 		versioned.Profiles = []v1beta2config.KubeSchedulerProfile{
@@ -186,13 +223,17 @@ func convertConfigurationForSimulator(versioned *v1beta2config.KubeSchedulerConf
 		versioned.Profiles[i].PluginConfig = pluginConfigForSimulatorPlugins
 	}
 
+	// Override the Extenders config so that the connection is directed to the simulator server.
+	extender.OverrideExtendersCfgToSimulator(versioned, simulatorPort)
+
 	defaultCfg, err := simulatorschedconfig.DefaultSchedulerConfig()
 	if err != nil {
 		return nil, xerrors.Errorf("get default scheduler config: %w", err)
 	}
 
-	// set default value to all field other than Profiles.
+	// set default value to all field other than Profiles and Extenders.
 	defaultCfg.Profiles = versioned.Profiles
+	defaultCfg.Extenders = versioned.Extenders
 	versioned = defaultCfg
 
 	v1beta2.SetDefaults_KubeSchedulerConfiguration(versioned)
