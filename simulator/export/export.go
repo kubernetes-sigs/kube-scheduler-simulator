@@ -568,7 +568,7 @@ func (s *Service) applyNamespaces(ctx context.Context, r *ResourcesForImport, eg
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Namespace: %w", err)
 				}
-				klog.Errorf("failed to apply Namespace: %w", err)
+				klog.Errorf("failed to apply Namespace: %v", err)
 			}
 			return nil
 		}); err != nil {
