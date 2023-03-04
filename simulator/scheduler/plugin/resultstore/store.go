@@ -136,6 +136,9 @@ func (s *Store) AddStoredResultToPod(pod *v1.Pod) {
 		return
 	}
 
+	// Make a copy so we don't mutate the object from the informer.
+	pod = pod.DeepCopy()
+
 	if err := s.addPreFilterResultToPod(pod); err != nil {
 		klog.Errorf("failed to add prefilter result to pod: %+v", err)
 		return

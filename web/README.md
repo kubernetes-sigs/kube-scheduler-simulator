@@ -1,4 +1,4 @@
-# scheduler-simulator
+# Scheduler-Simulator Web
 
 This is the frontend of Kubernetes scheduler simulator.
 
@@ -23,7 +23,10 @@ $ yarn start
 
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
 
-## for developer
+### Environment Variables
+Please see [environment-variables.md](./docs/environment-variables.md)
+
+## For developer
 
 ```bash
 # serve with hot reload at localhost:3000
