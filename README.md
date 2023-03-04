@@ -74,7 +74,8 @@ If you want to use your custom plugins as out-of-tree plugins in the simulator, 
 ## Getting started
 
 You can find more information about environment variables available in the simulator server
-[here.](./simulator/docs/env-variables.md)
+[here.](./simulator/docs/environment-variables.md)
+
 
 ### Run simulator with Docker
 
