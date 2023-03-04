@@ -64,9 +64,12 @@ func TestReflector_storeAllResultToPodFunc(t *testing.T) {
 			}
 			fn := r.storeAllResultToPodFunc(c)
 			p, _ := c.CoreV1().Pods(tt.podNamespace).Get(context.Background(), tt.podName, metav1.GetOptions{})
+			original := p.DeepCopy()
 			fn(corev1.Pod{}, p)
 
-			assert.Equal(t, tt.wantAnnotation, p.Annotations)
+			// Check that the function doesn't mutate the input object,
+			// which is shared with other event handlers.
+			assert.Equal(t, original, p)
 		})
 	}
 }

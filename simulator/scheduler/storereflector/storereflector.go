@@ -70,6 +70,9 @@ func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(int
 			klog.ErrorS(nil, "Cannot convert to *v1.Pod", "obj", newObj)
 			return
 		}
+		// Make a copy so we don't mutate the object from the informer.
+		pod = pod.DeepCopy()
+
 		// Call AddStoredResultToPod of all ResultStore which is added to the map
 		// to reflects all results on the pod annotation.
 		for k := range s.resultStores {
