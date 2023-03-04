@@ -4,9 +4,11 @@ package storereflector
 
 import (
 	"context"
+	"encoding/json"
 
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
@@ -27,7 +29,7 @@ type Reflector interface {
 // when the Pod's schedule is complete.
 type ResultStore interface {
 	// AddStoredResultToPod adds all data corresponding to the pod to the pod.
-	AddStoredResultToPod(pod *corev1.Pod)
+	AddStoredResultToPod(pod *corev1.Pod) map[string]string
 	// DeleteData deletes all data corresponding to the pod.
 	DeleteData(key corev1.Pod)
 }
@@ -87,14 +89,33 @@ func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(int
 			if newPod.UID != pod.UID {
 				return false, xerrors.Errorf("pod UID is different: %s != %s", newPod.UID, pod.UID)
 			}
+			// overwrite the Pod object so that we won't modify the copy from the shared informer.
+			pod = newPod
 
 			// Call AddStoredResultToPod of all ResultStore which is added to the map
 			// to reflects all results on the pod annotation.
+			resultSet := map[string]string{}
 			for k := range s.resultStores {
-				s.resultStores[k].AddStoredResultToPod(newPod)
+				m := s.resultStores[k].AddStoredResultToPod(pod)
+				for k, v := range m {
+					resultSet[k] = v
+					if pod.ObjectMeta.Annotations == nil {
+						pod.ObjectMeta.Annotations = map[string]string{}
+					}
+					pod.ObjectMeta.Annotations[k] = v
+				}
+			}
+			if len(resultSet) == 0 {
+				// no need to update anything on the Pod.
+				return
 			}
 
-			_, err = client.CoreV1().Pods(newPod.Namespace).Update(ctx, newPod, metav1.UpdateOptions{})
+			if err := updateResultHistory(pod, resultSet); err != nil {
+				klog.ErrorS(err, "cannot update "+ResultsHistoryAnnotation, "pod", klog.KObj(pod))
+				// just log error and update other annotation values.
+			}
+
+			_, err = client.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{})
 			if err != nil {
 				// Even though we fetched the latest Pod object, we still might get a conflict
 				// because of a concurrent update. Retrying these conflict errors will usually help
@@ -116,4 +137,25 @@ func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(int
 			s.resultStores[k].DeleteData(*pod)
 		}
 	}
+}
+
+func updateResultHistory(p *v1.Pod, m map[string]string) error {
+	a, ok := p.GetAnnotations()[ResultsHistoryAnnotation]
+	if !ok {
+		a = "[]"
+	}
+	results := []map[string]string{}
+	if err := json.Unmarshal([]byte(a), &results); err != nil {
+		return err
+	}
+
+	results = append(results, m)
+
+	r, err := json.Marshal(results)
+	if err != nil {
+		return xerrors.Errorf("encode all results: %w", err)
+	}
+	metav1.SetMetaDataAnnotation(&p.ObjectMeta, ResultsHistoryAnnotation, string(r))
+
+	return nil
 }

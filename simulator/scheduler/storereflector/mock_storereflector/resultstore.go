@@ -35,9 +35,11 @@ func (m *MockResultStore) EXPECT() *MockResultStoreMockRecorder {
 }
 
 // AddStoredResultToPod mocks base method.
-func (m *MockResultStore) AddStoredResultToPod(arg0 *v1.Pod) {
+func (m *MockResultStore) AddStoredResultToPod(arg0 *v1.Pod) map[string]string {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AddStoredResultToPod", arg0)
+	ret := m.ctrl.Call(m, "AddStoredResultToPod", arg0)
+	ret0, _ := ret[0].(map[string]string)
+	return ret0
 }
 
 // AddStoredResultToPod indicates an expected call of AddStoredResultToPod.

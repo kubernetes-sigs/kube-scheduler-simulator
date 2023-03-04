@@ -8,7 +8,6 @@ import (
 
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 
@@ -125,74 +124,75 @@ func newData() *result {
 
 // AddStoredResultToPod adds all data corresponding to the specified key to the pod.
 //
-//nolint:cyclop
-func (s *Store) AddStoredResultToPod(pod *v1.Pod) {
+//nolint:cyclop,funlen
+func (s *Store) AddStoredResultToPod(pod *v1.Pod) map[string]string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	k := newKey(pod.Namespace, pod.Name)
 	if _, ok := s.results[k]; !ok {
 		// Store doesn't have scheduling result of pod.
-		return
+		return nil
 	}
 
-	if err := s.addPreFilterResultToPod(pod); err != nil {
+	annotation := map[string]string{}
+	if err := s.addPreFilterResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add prefilter result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addFilterResultToPod(pod); err != nil {
+	if err := s.addFilterResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add filtering result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addPostFilterResultToPod(pod); err != nil {
+	if err := s.addPostFilterResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add post filtering result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addPreScoreResultToPod(pod); err != nil {
+	if err := s.addPreScoreResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add prescore result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addScoreResultToPod(pod); err != nil {
+	if err := s.addScoreResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add scoring result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addFinalScoreResultToPod(pod); err != nil {
+	if err := s.addFinalScoreResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add final score result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addReserveResultToPod(pod); err != nil {
+	if err := s.addReserveResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add reserve result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addPermitResultToPod(pod); err != nil {
+	if err := s.addPermitResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add permit result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addPreBindResultToPod(pod); err != nil {
+	if err := s.addPreBindResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add prebind result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addBindResultToPod(pod); err != nil {
+	if err := s.addBindResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add bind result to pod: %+v", err)
-		return
+		return nil
 	}
 
-	s.addSelectedNodeToPod(pod)
+	s.addSelectedNodeToPod(annotation, k)
+
+	return annotation
 }
 
-func (s *Store) addPreFilterResultToPod(pod *v1.Pod) error {
-	k := newKey(pod.Namespace, pod.Name)
-
-	_, ok := pod.GetAnnotations()[annotation.PreFilterResultAnnotationKey]
+func (s *Store) addPreFilterResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.PreFilterResultAnnotationKey]
 	if !ok {
 		if s.results[k].preFilterResult == nil {
 			s.results[k].preFilterResult = map[string][]string{}
@@ -202,10 +202,10 @@ func (s *Store) addPreFilterResultToPod(pod *v1.Pod) error {
 			return xerrors.Errorf("encode json to record preFilter result: %w", err)
 		}
 
-		metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreFilterResultAnnotationKey, string(r))
+		anno[annotation.PreFilterResultAnnotationKey] = string(r)
 	}
 
-	_, ok2 := pod.GetAnnotations()[annotation.PreFilterStatusResultAnnotationKey]
+	_, ok2 := anno[annotation.PreFilterStatusResultAnnotationKey]
 	if ok2 {
 		return nil
 	}
@@ -218,18 +218,17 @@ func (s *Store) addPreFilterResultToPod(pod *v1.Pod) error {
 		return xerrors.Errorf("encode json to record preFilter status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreFilterStatusResultAnnotationKey, string(sta))
+	anno[annotation.PreFilterStatusResultAnnotationKey] = string(sta)
 
 	return nil
 }
 
-func (s *Store) addPreScoreResultToPod(pod *v1.Pod) error {
-	_, ok := pod.GetAnnotations()[annotation.PreScoreResultAnnotationKey]
+func (s *Store) addPreScoreResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.PreScoreResultAnnotationKey]
 	if ok {
 		return nil
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
 	if s.results[k].preScore == nil {
 		s.results[k].preScore = map[string]string{}
 	}
@@ -238,17 +237,16 @@ func (s *Store) addPreScoreResultToPod(pod *v1.Pod) error {
 		return xerrors.Errorf("encode json to record preScore status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreScoreResultAnnotationKey, string(status))
+	anno[annotation.PreScoreResultAnnotationKey] = string(status)
 	return nil
 }
 
-func (s *Store) addBindResultToPod(pod *v1.Pod) error {
-	_, ok := pod.GetAnnotations()[annotation.BindResultAnnotationKey]
+func (s *Store) addBindResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.BindResultAnnotationKey]
 	if ok {
 		return nil
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
 	if s.results[k].bind == nil {
 		s.results[k].bind = map[string]string{}
 	}
@@ -257,17 +255,16 @@ func (s *Store) addBindResultToPod(pod *v1.Pod) error {
 		return xerrors.Errorf("encode json to record bind status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.BindResultAnnotationKey, string(status))
+	anno[annotation.BindResultAnnotationKey] = string(status)
 	return nil
 }
 
-func (s *Store) addPreBindResultToPod(pod *v1.Pod) error {
-	_, ok := pod.GetAnnotations()[annotation.PreBindResultAnnotationKey]
+func (s *Store) addPreBindResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.PreBindResultAnnotationKey]
 	if ok {
 		return nil
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
 	if s.results[k].prebind == nil {
 		s.results[k].prebind = map[string]string{}
 	}
@@ -276,27 +273,25 @@ func (s *Store) addPreBindResultToPod(pod *v1.Pod) error {
 		return xerrors.Errorf("encode json to record preBind status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PreBindResultAnnotationKey, string(status))
+	anno[annotation.PreBindResultAnnotationKey] = string(status)
 	return nil
 }
 
-func (s *Store) addSelectedNodeToPod(pod *v1.Pod) {
-	_, ok := pod.GetAnnotations()[annotation.SelectedNodeAnnotationKey]
+func (s *Store) addSelectedNodeToPod(anno map[string]string, k key) {
+	_, ok := anno[annotation.SelectedNodeAnnotationKey]
 	if ok {
 		return
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.SelectedNodeAnnotationKey, s.results[k].selectedNode)
+	anno[annotation.SelectedNodeAnnotationKey] = s.results[k].selectedNode
 }
 
-func (s *Store) addReserveResultToPod(pod *v1.Pod) error {
-	_, ok := pod.GetAnnotations()[annotation.ReserveResultAnnotationKey]
+func (s *Store) addReserveResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.ReserveResultAnnotationKey]
 	if ok {
 		return nil
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
 	if s.results[k].reserve == nil {
 		s.results[k].reserve = map[string]string{}
 	}
@@ -304,14 +299,12 @@ func (s *Store) addReserveResultToPod(pod *v1.Pod) error {
 	if err != nil {
 		return xerrors.Errorf("encode json to record reserve status: %w", err)
 	}
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.ReserveResultAnnotationKey, string(status))
+	anno[annotation.ReserveResultAnnotationKey] = string(status)
 	return nil
 }
 
-func (s *Store) addPermitResultToPod(pod *v1.Pod) error {
-	k := newKey(pod.Namespace, pod.Name)
-
-	_, ok := pod.GetAnnotations()[annotation.PermitTimeoutResultAnnotationKey]
+func (s *Store) addPermitResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.PermitTimeoutResultAnnotationKey]
 	if !ok {
 		if s.results[k].permitTimeout == nil {
 			s.results[k].permitTimeout = map[string]string{}
@@ -320,10 +313,10 @@ func (s *Store) addPermitResultToPod(pod *v1.Pod) error {
 		if err != nil {
 			return xerrors.Errorf("encode json to record permit timeout: %w", err)
 		}
-		metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PermitTimeoutResultAnnotationKey, string(timeout))
+		anno[annotation.PermitTimeoutResultAnnotationKey] = string(timeout)
 	}
 
-	_, ok = pod.GetAnnotations()[annotation.PermitStatusResultAnnotationKey]
+	_, ok = anno[annotation.PermitStatusResultAnnotationKey]
 	if ok {
 		return nil
 	}
@@ -335,17 +328,16 @@ func (s *Store) addPermitResultToPod(pod *v1.Pod) error {
 	if err != nil {
 		return xerrors.Errorf("encode json to record permit status: %w", err)
 	}
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PermitStatusResultAnnotationKey, string(status))
+	anno[annotation.PermitStatusResultAnnotationKey] = string(status)
 	return nil
 }
 
-func (s *Store) addFilterResultToPod(pod *v1.Pod) error {
-	_, ok := pod.GetAnnotations()[annotation.FilterResultAnnotationKey]
+func (s *Store) addFilterResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.FilterResultAnnotationKey]
 	if ok {
 		return nil
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
 	if s.results[k].filter == nil {
 		s.results[k].filter = map[string]map[string]string{}
 	}
@@ -354,17 +346,16 @@ func (s *Store) addFilterResultToPod(pod *v1.Pod) error {
 		return xerrors.Errorf("encode json to record filter status: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.FilterResultAnnotationKey, string(status))
+	anno[annotation.FilterResultAnnotationKey] = string(status)
 	return nil
 }
 
-func (s *Store) addPostFilterResultToPod(pod *v1.Pod) error {
-	_, ok := pod.GetAnnotations()[annotation.PostFilterResultAnnotationKey]
+func (s *Store) addPostFilterResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.PostFilterResultAnnotationKey]
 	if ok {
 		return nil
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
 	if s.results[k].postFilter == nil {
 		s.results[k].postFilter = map[string]map[string]string{}
 	}
@@ -372,17 +363,16 @@ func (s *Store) addPostFilterResultToPod(pod *v1.Pod) error {
 	if err != nil {
 		return xerrors.Errorf("encode json to record post filter results: %w", err)
 	}
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.PostFilterResultAnnotationKey, string(result))
+	anno[annotation.PostFilterResultAnnotationKey] = string(result)
 	return nil
 }
 
-func (s *Store) addScoreResultToPod(pod *v1.Pod) error {
-	_, ok := pod.GetAnnotations()[annotation.ScoreResultAnnotationKey]
+func (s *Store) addScoreResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.ScoreResultAnnotationKey]
 	if ok {
 		return nil
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
 	if s.results[k].score == nil {
 		s.results[k].score = map[string]map[string]string{}
 	}
@@ -391,17 +381,16 @@ func (s *Store) addScoreResultToPod(pod *v1.Pod) error {
 		return xerrors.Errorf("encode json to record scores: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.ScoreResultAnnotationKey, string(scores))
+	anno[annotation.ScoreResultAnnotationKey] = string(scores)
 	return nil
 }
 
-func (s *Store) addFinalScoreResultToPod(pod *v1.Pod) error {
-	_, ok := pod.GetAnnotations()[annotation.FinalScoreResultAnnotationKey]
+func (s *Store) addFinalScoreResultToPod(anno map[string]string, k key) error {
+	_, ok := anno[annotation.FinalScoreResultAnnotationKey]
 	if ok {
 		return nil
 	}
 
-	k := newKey(pod.Namespace, pod.Name)
 	if s.results[k].finalScore == nil {
 		s.results[k].finalScore = map[string]map[string]string{}
 	}
@@ -410,7 +399,7 @@ func (s *Store) addFinalScoreResultToPod(pod *v1.Pod) error {
 		return xerrors.Errorf("encode json to record scores: %w", err)
 	}
 
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.FinalScoreResultAnnotationKey, string(scores))
+	anno[annotation.FinalScoreResultAnnotationKey] = string(scores)
 	return nil
 }
 

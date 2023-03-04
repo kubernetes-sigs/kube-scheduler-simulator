@@ -6,7 +6,6 @@ import (
 
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 
@@ -14,7 +13,7 @@ import (
 )
 
 type Store interface {
-	AddStoredResultToPod(pod *v1.Pod)
+	AddStoredResultToPod(pod *v1.Pod) map[string]string
 	DeleteData(pod v1.Pod)
 	AddFilterResult(args extenderv1.ExtenderArgs, result extenderv1.ExtenderFilterResult, hostName string)
 	AddPrioritizeResult(args extenderv1.ExtenderArgs, result extenderv1.HostPriorityList, hostName string)
@@ -28,7 +27,6 @@ type store struct {
 	mu *sync.Mutex
 
 	results map[key]*result
-	weight  map[string]int32
 }
 
 // key is the key of result map on Store.
@@ -49,7 +47,6 @@ func New() Store {
 	s := &store{
 		mu:      new(sync.Mutex),
 		results: map[key]*result{},
-		weight:  map[string]int32{}, // TODO: Not needed?
 	}
 	return s
 }
@@ -70,74 +67,73 @@ func newData() *result {
 }
 
 // AddStoredResultToPod adds all data corresponding to the specified key to the pod.
-func (s *store) AddStoredResultToPod(pod *v1.Pod) {
+func (s *store) AddStoredResultToPod(pod *v1.Pod) map[string]string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	k := newKey(pod.Namespace, pod.Name)
 	if _, ok := s.results[k]; !ok {
 		// Store doesn't have any scheduling result of the Pod.
-		return
+		return nil
 	}
 
-	if err := s.addFilterResultToPod(pod); err != nil {
+	annotation := map[string]string{}
+	if err := s.addFilterResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add filtering result to the pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addPrioritizeResultToPod(pod); err != nil {
+	if err := s.addPrioritizeResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add prioritize result to the pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addPreemptResultToPod(pod); err != nil {
+	if err := s.addPreemptResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add preempt result to the pod: %+v", err)
-		return
+		return nil
 	}
 
-	if err := s.addBindResultToPod(pod); err != nil {
+	if err := s.addBindResultToPod(annotation, k); err != nil {
 		klog.Errorf("failed to add bind result to the pod: $+v", err)
-		return
+		return nil
 	}
+
+	return annotation
 }
 
-func (s *store) addFilterResultToPod(pod *v1.Pod) error {
-	k := newKey(pod.Namespace, pod.Name)
+func (s *store) addFilterResultToPod(anno map[string]string, k key) error {
 	results, err := json.Marshal(s.results[k].filter)
 	if err != nil {
 		return xerrors.Errorf("encode Filter results to json: %w", err)
 	}
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.ExtenderFilterResultAnnotationKey, string(results))
+	anno[annotation.ExtenderFilterResultAnnotationKey] = string(results)
 	return nil
 }
 
-func (s *store) addPrioritizeResultToPod(pod *v1.Pod) error {
-	k := newKey(pod.Namespace, pod.Name)
+func (s *store) addPrioritizeResultToPod(anno map[string]string, k key) error {
 	results, err := json.Marshal(s.results[k].prioritize)
 	if err != nil {
 		return xerrors.Errorf("encode Prioritize results to json: %w", err)
 	}
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.ExtenderPrioritizeResultAnnotationKey, string(results))
+	anno[annotation.ExtenderPrioritizeResultAnnotationKey] = string(results)
 	return nil
 }
 
-func (s *store) addPreemptResultToPod(pod *v1.Pod) error {
-	k := newKey(pod.Namespace, pod.Name)
+func (s *store) addPreemptResultToPod(anno map[string]string, k key) error {
 	results, err := json.Marshal(s.results[k].preempt)
 	if err != nil {
 		return xerrors.Errorf("encode Preempt results to json: %w", err)
 	}
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.ExtenderPreemptResultAnnotationKey, string(results))
+	anno[annotation.ExtenderPreemptResultAnnotationKey] = string(results)
 	return nil
 }
 
-func (s *store) addBindResultToPod(pod *v1.Pod) error {
-	k := newKey(pod.Namespace, pod.Name)
+func (s *store) addBindResultToPod(anno map[string]string, k key) error {
 	results, err := json.Marshal(s.results[k].bind)
 	if err != nil {
 		return xerrors.Errorf("encode Bind results to json: %w", err)
 	}
-	metav1.SetMetaDataAnnotation(&pod.ObjectMeta, annotation.ExtenderBindResultAnnotationKey, string(results))
+	anno[annotation.ExtenderBindResultAnnotationKey] = string(results)
 	return nil
 }
 

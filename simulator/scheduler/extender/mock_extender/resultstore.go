@@ -84,9 +84,11 @@ func (mr *MockStoreMockRecorder) AddPrioritizeResult(args, result, hostName inte
 }
 
 // AddStoredResultToPod mocks base method.
-func (m *MockStore) AddStoredResultToPod(pod *v1.Pod) {
+func (m *MockStore) AddStoredResultToPod(pod *v1.Pod) map[string]string {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AddStoredResultToPod", pod)
+	ret := m.ctrl.Call(m, "AddStoredResultToPod", pod)
+	ret0, _ := ret[0].(map[string]string)
+	return ret0
 }
 
 // AddStoredResultToPod indicates an expected call of AddStoredResultToPod.

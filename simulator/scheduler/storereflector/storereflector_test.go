@@ -2,11 +2,14 @@ package storereflector
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -33,9 +36,7 @@ func TestReflector_storeAllResultToPodFunc(t *testing.T) {
 			podName:      "pod1",
 			podNamespace: "default",
 			prepareMockResultStoreSetFn: func(m *mock_storereflector.MockResultStore) {
-				m.EXPECT().AddStoredResultToPod(gomock.Any()).Do(func(pod *corev1.Pod) {
-					metav1.SetMetaDataAnnotation(&pod.ObjectMeta, ExtenderFilterResultAnnotationKey, "some results")
-				})
+				m.EXPECT().AddStoredResultToPod(gomock.Any()).Return(map[string]string{ExtenderFilterResultAnnotationKey: "some results"})
 				m.EXPECT().DeleteData(gomock.Any())
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
@@ -48,7 +49,7 @@ func TestReflector_storeAllResultToPodFunc(t *testing.T) {
 				}, metav1.CreateOptions{})
 				return c
 			},
-			wantAnnotation: map[string]string{ExtenderFilterResultAnnotationKey: "some results"},
+			wantAnnotation: map[string]string{ExtenderFilterResultAnnotationKey: "some results", ResultsHistoryAnnotation: "[{\"scheduler-simulator/extender-filter-result\":\"some results\"}]"},
 		},
 	}
 	for _, tt := range tests {
@@ -70,6 +71,90 @@ func TestReflector_storeAllResultToPodFunc(t *testing.T) {
 			// Check that the function doesn't mutate the input object,
 			// which is shared with other event handlers.
 			assert.Equal(t, original, p)
+
+			updatedPod, _ := c.CoreV1().Pods(tt.podNamespace).Get(context.Background(), tt.podName, metav1.GetOptions{})
+
+			assert.Equal(t, tt.wantAnnotation, updatedPod.Annotations)
+		})
+	}
+}
+
+func Test_updateResultHistory(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		p       *v1.Pod
+		m       map[string]string
+		wantErr assert.ErrorAssertionFunc
+		wantPod *v1.Pod
+	}{
+		{
+			name: "success: Pod doesn't have annotation yet",
+			p: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: nil,
+				},
+			},
+			m: map[string]string{
+				"result1": "fuga",
+				"result2": "hoge",
+			},
+			wantPod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ResultsHistoryAnnotation: `[{"result1":"fuga","result2":"hoge"}]`,
+					},
+				},
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "success: Pod already has annotation",
+			p: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ResultsHistoryAnnotation: `[{"result1":"fuga","result2":"hoge"}]`,
+					},
+				},
+			},
+			m: map[string]string{
+				"result1": "fuga2",
+				"result2": "hoge2",
+			},
+			wantPod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ResultsHistoryAnnotation: `[{"result1":"fuga","result2":"hoge"},{"result1":"fuga2","result2":"hoge2"}]`,
+					},
+				},
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "fail: Pod has broken value on annotation",
+			p: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ResultsHistoryAnnotation: `broken`,
+					},
+				},
+			},
+			m: map[string]string{
+				"result1": "fuga2",
+				"result2": "hoge2",
+			},
+			wantErr: assert.Error,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := tt.p
+			tt.wantErr(t, updateResultHistory(p, tt.m), fmt.Sprintf("updateResultHistory(%v, %v)", p, tt.m))
+			if d := cmp.Diff(p, tt.wantPod); d != "" && tt.wantPod != nil {
+				t.Fatalf("unexpected Pod: %v", d)
+			}
 		})
 	}
 }
