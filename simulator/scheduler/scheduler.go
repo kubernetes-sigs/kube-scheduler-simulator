@@ -92,7 +92,7 @@ func (s *Service) ResetScheduler() error {
 
 // StartScheduler starts scheduler.
 //
-//nolint:funlen
+//nolint:funlen,cyclop
 func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfiguration) (retErr error) {
 	clientSet := s.clientset
 	restConfig := s.restclientCfg
@@ -133,7 +133,9 @@ func (s *Service) StartScheduler(versionedcfg *v1beta2config.KubeSchedulerConfig
 
 	if s.sharedStore != nil {
 		// Resister the event handler function to store the result stored in the sharedStore in pod.
-		s.sharedStore.ResisterResultSavingToInformer(informerFactory, clientSet)
+		if err := s.sharedStore.ResisterResultSavingToInformer(informerFactory, clientSet); err != nil {
+			return xerrors.Errorf("ResisterResultSavingToInformer of sharedStore: %w", err)
+		}
 	}
 
 	sched, err := scheduler.New(

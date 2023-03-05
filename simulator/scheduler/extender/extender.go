@@ -46,6 +46,8 @@ type extender struct {
 	weight           int64
 	client           httpClient
 	nodeCacheCapable bool
+	//nolint:staticcheck // Same as the k/k's definition.
+	// https://github.com/kubernetes/kubernetes/blob/fc04e732bb3e7198d2fa44efa5457c7c6f8c0f5b/pkg/scheduler/extender.go#L51
 	managedResources sets.String
 }
 

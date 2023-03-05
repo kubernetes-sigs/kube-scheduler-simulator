@@ -18,7 +18,7 @@ import (
 
 type Reflector interface {
 	AddResultStore(store ResultStore, key string)
-	ResisterResultSavingToInformer(informerFactory informers.SharedInformerFactory, client clientset.Interface)
+	ResisterResultSavingToInformer(informerFactory informers.SharedInformerFactory, client clientset.Interface) error
 }
 
 // ResultStore represents the store which is stores data and shared with simulator and scheduler.
@@ -50,14 +50,18 @@ func (s *reflector) AddResultStore(store ResultStore, key string) {
 
 // ResisterResultSavingToInformer registers the event handler to the informerFactory
 // to reflects all results on the pod annotation when the scheduling is finished.
-func (s *reflector) ResisterResultSavingToInformer(informerFactory informers.SharedInformerFactory, client clientset.Interface) {
+func (s *reflector) ResisterResultSavingToInformer(informerFactory informers.SharedInformerFactory, client clientset.Interface) error {
 	// Reflector adds scheduling results when pod is updating.
 	// This is because Extenders doesn't have any phase to hook scheduling finished. (both successfully and non-successfully)
-	informerFactory.Core().V1().Pods().Informer().AddEventHandler(
+	_, err := informerFactory.Core().V1().Pods().Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			UpdateFunc: s.storeAllResultToPodFunc(client),
 		},
 	)
+	if err != nil {
+		return xerrors.Errorf("failed to AddEventHandler of Informer: %w", err)
+	}
+	return nil
 }
 
 // storeAllResultToPodFunc returns the function that reflects all results on the pod annotation when the scheduling is finished.
