@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
@@ -74,17 +75,33 @@ func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(int
 			klog.ErrorS(nil, "Cannot convert to *v1.Pod", "obj", newObj)
 			return
 		}
-		// Make a copy so we don't mutate the object from the informer.
-		pod = pod.DeepCopy()
 
-		// Call AddStoredResultToPod of all ResultStore which is added to the map
-		// to reflects all results on the pod annotation.
-		for k := range s.resultStores {
-			s.resultStores[k].AddStoredResultToPod(pod)
-		}
 		updateFunc := func() (bool, error) {
-			_, err := client.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{})
+			// Fetch the latest Pod object and apply changes to it. Otherwise, our update may be
+			// rejected due to our copy being stale. This also ensures we don't modify the copy from
+			// the shared informer.
+			newPod, err := client.CoreV1().Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
 			if err != nil {
+				return false, xerrors.Errorf("get pod: %w", err)
+			}
+			if newPod.UID != pod.UID {
+				return false, xerrors.Errorf("pod UID is different: %s != %s", newPod.UID, pod.UID)
+			}
+
+			// Call AddStoredResultToPod of all ResultStore which is added to the map
+			// to reflects all results on the pod annotation.
+			for k := range s.resultStores {
+				s.resultStores[k].AddStoredResultToPod(newPod)
+			}
+
+			_, err = client.CoreV1().Pods(newPod.Namespace).Update(ctx, newPod, metav1.UpdateOptions{})
+			if err != nil {
+				// Even though we fetched the latest Pod object, we still might get a conflict
+				// because of a concurrent update. Retrying these conflict errors will usually help
+				// as long as we re-fetch the latest Pod object each time.
+				if apierrors.IsConflict(err) {
+					return false, nil
+				}
 				return false, xerrors.Errorf("update pod: %w", err)
 			}
 			return true, nil
