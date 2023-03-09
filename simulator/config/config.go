@@ -8,16 +8,22 @@ import (
 	"strings"
 
 	"golang.org/x/xerrors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog/v2"
 	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/config/v1alpha1"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 )
 
-// ErrEmptyEnv represents the required environment variable don't exist.
-var ErrEmptyEnv = errors.New("env is required, but empty")
+// ErrEmptyConfig represents the required config variable don't exist.
+var ErrEmptyConfig = errors.New("config is required, but empty")
+
+// configYaml represents the value from the config file.
+var configYaml = &v1alpha1.SimulatorConfiguration{}
 
 // Config is configuration for simulator.
 type Config struct {
@@ -35,8 +41,15 @@ type Config struct {
 	ExternalSchedulerEnabled bool
 }
 
-// NewConfig gets some settings from environment variables.
+// NewConfig gets some settings from config file or environment variables.
 func NewConfig() (*Config, error) {
+	// FilePath is the config file path.
+	// TODO: FilePath this file path by cli in main function.
+	FilePath := "./config.yaml"
+	if err := LoadYamlConfig(FilePath); err != nil {
+		return nil, err
+	}
+
 	port, err := getPort()
 	if err != nil {
 		return nil, xerrors.Errorf("get port: %w", err)
@@ -68,10 +81,7 @@ func NewConfig() (*Config, error) {
 		return nil, xerrors.Errorf("get SchedulerCfg: %w", err)
 	}
 
-	externalSchedEnabled, err := getExternalSchedulerEnabled()
-	if err != nil {
-		return nil, xerrors.Errorf("get externalSchedulerEnabled: %w", err)
-	}
+	externalSchedEnabled := getExternalSchedulerEnabled()
 
 	return &Config{
 		Port:                     port,
@@ -85,70 +95,102 @@ func NewConfig() (*Config, error) {
 	}, nil
 }
 
-// getPort gets Port from the environment variable named PORT.
-func getPort() (int, error) {
-	p := os.Getenv("PORT")
-	if p == "" {
-		return 0, xerrors.Errorf("get PORT from env: %w", ErrEmptyEnv)
+// LoadYamlConfig read the yaml file and set configYaml.
+func LoadYamlConfig(configFile string) error {
+	if configFile == "" {
+		klog.V(1).InfoS("Config file not specified")
+		return nil
 	}
 
-	port, err := strconv.Atoi(p)
+	conf, err := os.ReadFile(configFile)
 	if err != nil {
-		return 0, xerrors.Errorf("convert PORT of string to int: %w", err)
+		return xerrors.Errorf("failed to read config file: %w", err)
+	}
+
+	versionedConfig := &v1alpha1.SimulatorConfiguration{}
+
+	decoder := scheme.Codecs.UniversalDecoder(v1alpha1.SchemeGroupVersion)
+	if err := runtime.DecodeInto(decoder, conf, versionedConfig); err != nil {
+		return xerrors.Errorf("failed decoding simulator's config %w", err)
+	}
+
+	configYaml = versionedConfig
+
+	return nil
+}
+
+// getPort gets port from environment variable named PORT first, if empty from the config file.
+func getPort() (int, error) {
+	p := os.Getenv("PORT")
+	port, err := strconv.Atoi(p)
+	if p == "" || err != nil {
+		port = configYaml.Port
+		if port == 0 {
+			return 0, xerrors.Errorf("get PORT from config: %w", ErrEmptyConfig)
+		}
 	}
 	return port, nil
 }
 
+// getKubeAPIServerURL gets KubeAPIServerURL from environment variable first, if empty from the config file.
 func getKubeAPIServerURL() string {
 	p := os.Getenv("KUBE_API_PORT")
 	if p == "" {
-		p = "3131"
+		p = strconv.Itoa(configYaml.KubeAPIPort)
+		if p == "" {
+			p = "3131"
+		}
 	}
 
 	h := os.Getenv("KUBE_API_HOST")
 	if h == "" {
-		h = "127.0.0.1"
+		h = configYaml.KubeAPIHost
+		if h == "" {
+			h = "127.0.0.1"
+		}
 	}
 	return h + ":" + p
 }
 
-func getExternalSchedulerEnabled() (bool, error) {
+// getExternalSchedulerEnabled gets ExternalSchedulerEnabled from environment variable first,
+// if empty from the config file.
+func getExternalSchedulerEnabled() bool {
 	e := os.Getenv("EXTERNAL_SCHEDULER_ENABLED")
-	if e == "" {
-		return false, nil
-	}
-
 	b, err := strconv.ParseBool(e)
-	if err != nil {
-		return false, xerrors.Errorf("EXTERNAL_SCHEDULER_ENABLED is specified, but it's not bool: %s.", e)
+	if e == "" || err != nil {
+		b = configYaml.ExternalSchedulerEnabled
 	}
-
-	return b, nil
+	return b
 }
 
+// getEtcdURL gets EtcdURL from environment variable first,
+// if empty from the config file.
 func getEtcdURL() (string, error) {
 	e := os.Getenv("KUBE_SCHEDULER_SIMULATOR_ETCD_URL")
 	if e == "" {
-		return "", xerrors.Errorf("get KUBE_SCHEDULER_SIMULATOR_ETCD_URL from env: %w", ErrEmptyEnv)
+		e = configYaml.EtcdURL
+		if e == "" {
+			return "", xerrors.Errorf("get KUBE_SCHEDULER_SIMULATOR_ETCD_URL from config: %w", ErrEmptyConfig)
+		}
 	}
-
 	return e, nil
 }
 
-// getCorsAllowedOriginList fetches CorsAllowedOriginList from the env named CORS_ALLOWED_ORIGIN_LIST.
+// getCorsAllowedOriginList fetches CorsAllowedOriginList from the env named CORS_ALLOWED_ORIGIN_LIST
+// if empty from the config file.
 // This allowed list is applied to kube-apiserver and the simulator server.
 //
 // Let's say CORS_ALLOWED_ORIGIN_LIST="http://localhost:3000, http://localhost:3001, http://localhost:3002" are given.
 // Then, getCorsAllowedOriginList returns []string{"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"}
 func getCorsAllowedOriginList() ([]string, error) {
 	e := os.Getenv("CORS_ALLOWED_ORIGIN_LIST")
-	if e == "" {
-		return nil, xerrors.Errorf("get CORS_ALLOWED_ORIGIN_LIST from env: %w", ErrEmptyEnv)
-	}
-
 	urls := parseStringListEnv(e)
+
+	if err := validateURLs(urls); e == "" || err != nil {
+		urls = configYaml.CorsAllowedOriginList
+	}
 	if err := validateURLs(urls); err != nil {
-		return nil, xerrors.Errorf("validate origins in CORS_ALLOWED_ORIGIN_LIST: %w", err)
+		return nil, xerrors.Errorf("validate origins in cors-allowed-origin-list: %w", err)
 	}
 
 	return urls, nil
@@ -176,20 +218,23 @@ func parseStringListEnv(e string) []string {
 }
 
 // getSchedulerCfg reads KUBE_SCHEDULER_CONFIG_PATH which means initial kube-scheduler configuration
+// if empty from the config file.
 // and converts it into *v1beta2config.KubeSchedulerConfiguration.
 // KUBE_SCHEDULER_CONFIG_PATH is not required.
 // If KUBE_SCHEDULER_CONFIG_PATH is not set, the default configuration of kube-scheduler will be used.
 func getSchedulerCfg() (*v1beta2config.KubeSchedulerConfiguration, error) {
-	e := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
-	if e == "" {
-		dsc, err := config.DefaultSchedulerConfig()
-		if err != nil {
-			return nil, xerrors.Errorf("create default scheduler config: %w", err)
+	kubeSchedulerConfigPath := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
+	if kubeSchedulerConfigPath == "" {
+		kubeSchedulerConfigPath = configYaml.KubeSchedulerConfigPath
+		if kubeSchedulerConfigPath == "" {
+			dsc, err := config.DefaultSchedulerConfig()
+			if err != nil {
+				return nil, xerrors.Errorf("create default scheduler config: %w", err)
+			}
+			return dsc, nil
 		}
-		return dsc, nil
 	}
-
-	data, err := os.ReadFile(e)
+	data, err := os.ReadFile(kubeSchedulerConfigPath)
 	if err != nil {
 		return nil, xerrors.Errorf("read scheduler config file: %w", err)
 	}
@@ -202,11 +247,16 @@ func getSchedulerCfg() (*v1beta2config.KubeSchedulerConfiguration, error) {
 	return sc, nil
 }
 
-// getExternalImportEnabled reads EXTERNAL_IMPORT_ENABLED and convert it to bool.
+// getExternalImportEnabled reads EXTERNAL_IMPORT_ENABLED and convert it to bool
+// if empty from the config file.
 // This function will return `true` if `EXTERNAL_IMPORT_ENABLED` is "1".
 func getExternalImportEnabled() bool {
-	i := os.Getenv("EXTERNAL_IMPORT_ENABLED")
-	return i == "1"
+	isExternalImportEnabledString := os.Getenv("EXTERNAL_IMPORT_ENABLED")
+	if isExternalImportEnabledString == "" {
+		isExternalImportEnabledString = strconv.FormatBool(configYaml.ExternalImportEnabled)
+	}
+	isExternalImportEnabled, _ := strconv.ParseBool(isExternalImportEnabledString)
+	return isExternalImportEnabled
 }
 
 func decodeSchedulerCfg(buf []byte) (*v1beta2config.KubeSchedulerConfiguration, error) {
@@ -230,9 +280,9 @@ func decodeSchedulerCfg(buf []byte) (*v1beta2config.KubeSchedulerConfiguration, 
 func GetKubeClientConfig() (*rest.Config, error) {
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
-	config, err := kubeConfig.ClientConfig()
+	clientConfig, err := kubeConfig.ClientConfig()
 	if err != nil {
 		return nil, xerrors.Errorf("get client config: %w", err)
 	}
-	return config, nil
+	return clientConfig, nil
 }

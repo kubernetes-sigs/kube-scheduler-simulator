@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 
-ETCD_VERSION=${ETCD_VERSION:-3.4.13}
-ETCD_HOST=${ETCD_HOST:-127.0.0.1}
-ETCD_PORT=${ETCD_PORT:-2379}
-export KUBE_SCHEDULER_SIMULATOR_ETCD_URL="http://${ETCD_HOST}:${ETCD_PORT}"
+SRC_FILE=./config.yaml
+
+kube::etcd::load_config() {
+  while IFS= read -r line; do
+    if [[ $line == etcdURL:* ]]; then
+      KUBE_SCHEDULER_SIMULATOR_ETCD_URL="${line#*:}"
+      KUBE_SCHEDULER_SIMULATOR_ETCD_URL=${KUBE_SCHEDULER_SIMULATOR_ETCD_URL// /}
+      KUBE_SCHEDULER_SIMULATOR_ETCD_URL=${KUBE_SCHEDULER_SIMULATOR_ETCD_URL//\"/}
+    fi
+  done <$SRC_FILE
+}
 
 kube::etcd::cleanup() {
   kube::etcd::stop
@@ -31,7 +38,7 @@ kube::etcd::start() {
   else
     ETCD_LOGFILE=${ETCD_LOGFILE:-"/dev/null"}
   fi
-  echo "etcd --advertise-client-urls ${KUBE_SCHEDULER_SIMULATOR_ETCD_URL} --data-dir ${ETCD_DIR} --listen-client-urls http://${ETCD_HOST}:${ETCD_PORT} --log-level=debug > \"${ETCD_LOGFILE}\" 2>/dev/null"
+  echo "etcd --advertise-client-urls ${KUBE_SCHEDULER_SIMULATOR_ETCD_URL} --data-dir ${ETCD_DIR} --listen-client-urls ${KUBE_SCHEDULER_SIMULATOR_ETCD_URL} --log-level=debug > \"${ETCD_LOGFILE}\" 2>/dev/null"
   etcd --advertise-client-urls "${KUBE_SCHEDULER_SIMULATOR_ETCD_URL}" --data-dir "${ETCD_DIR}" --listen-client-urls "${KUBE_SCHEDULER_SIMULATOR_ETCD_URL}" --log-level=debug 2> "${ETCD_LOGFILE}" >/dev/null &
   ETCD_PID=$!
 
@@ -64,3 +71,7 @@ kube::util::wait_for_url() {
   echo "Timed out waiting for ${prefix} to answer at ${url}; tried ${times} waiting ${wait} between each"
   exit 1
 }
+
+if [ -z "${KUBE_SCHEDULER_SIMULATOR_ETCD_URL}" ]; then
+    kube::etcd::load_config
+fi
