@@ -69,6 +69,8 @@ func (s *reflector) ResisterResultSavingToInformer(informerFactory informers.Sha
 
 // storeAllResultToPodFunc returns the function that reflects all results on the pod annotation when the scheduling is finished.
 // It will be used as the even handler of resource updating.
+//
+//nolint:funlen,gocognit,cyclop
 func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(interface{}, interface{}) {
 	return func(_, newObj interface{}) {
 		ctx := context.Background()
@@ -107,7 +109,7 @@ func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(int
 			}
 			if len(resultSet) == 0 {
 				// no need to update anything on the Pod.
-				return
+				return true, nil
 			}
 
 			if err := updateResultHistory(pod, resultSet); err != nil {
