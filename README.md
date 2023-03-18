@@ -77,6 +77,9 @@ You can find more information about environment variables available in the simul
 [here.](./simulator/docs/environment-variables.md)
 
 
+The simulator server configuration can also be set through the configuration file, 
+you can refer to the [documentation](./simulator/docs/simulator-server-config.md).
+
 ### Run simulator with Docker
 
 We have [docker-compose.yml](docker-compose.yml) to run the simulator easily. You should install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docker-docs.netlify.app/compose/install/) firstly.
