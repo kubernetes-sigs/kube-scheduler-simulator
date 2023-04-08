@@ -13,7 +13,7 @@ import (
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/sets"
 	restclient "k8s.io/client-go/rest"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 )
@@ -52,7 +52,7 @@ type extender struct {
 }
 
 // makeTransport makes http.Transport from the extender config.
-func makeTransport(config *v1beta2config.Extender) (http.RoundTripper, error) {
+func makeTransport(config *configv1.Extender) (http.RoundTripper, error) {
 	var cfg restclient.Config
 	if config.TLSConfig != nil {
 		cfg.TLSClientConfig.Insecure = config.TLSConfig.Insecure
@@ -83,7 +83,7 @@ func makeTransport(config *v1beta2config.Extender) (http.RoundTripper, error) {
 }
 
 // newExtender creates an Extender object.
-func newExtender(config *v1beta2config.Extender) (Extender, error) {
+func newExtender(config *configv1.Extender) (Extender, error) {
 	if config.HTTPTimeout.Duration.Nanoseconds() == 0 {
 		config.HTTPTimeout.Duration = DefaultExtenderTimeout
 	}
@@ -199,7 +199,7 @@ func (e *extender) send(action string, args interface{}, result interface{}) err
 }
 
 // createExtenders creates Extender that represents actual extender's endpoint based on the config set by user.
-func createExtenders(configs []v1beta2config.Extender) ([]Extender, error) {
+func createExtenders(configs []configv1.Extender) ([]Extender, error) {
 	if len(configs) == 0 {
 		return nil, nil
 	}

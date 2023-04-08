@@ -8,13 +8,20 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
 	schedConfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 )
 
+var (
+	weight1 int32 = 1
+	weight2 int32 = 2
+	weight3 int32 = 3
+)
+
+//nolint:gocognit // For test case.
 func Test_convertConfigurationForSimulator(t *testing.T) {
 	t.Parallel()
 
@@ -27,7 +34,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 	var hardPodAffinityWeight int32 = 2
 
 	type args struct {
-		versioned *v1beta2config.KubeSchedulerConfiguration
+		versioned *configv1.KubeSchedulerConfiguration
 		port      int
 	}
 	tests := []struct {
@@ -39,7 +46,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		{
 			name: "success with empty-configuration",
 			args: args{
-				versioned: &v1beta2config.KubeSchedulerConfiguration{},
+				versioned: &configv1.KubeSchedulerConfiguration{},
 				port:      80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
@@ -50,21 +57,11 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		{
 			name: "success with no-disabled plugin",
 			args: args{
-				versioned: &v1beta2config.KubeSchedulerConfiguration{
-					Profiles: []v1beta2config.KubeSchedulerProfile{
+				versioned: &configv1.KubeSchedulerConfiguration{
+					Profiles: []configv1.KubeSchedulerProfile{
 						{
 							SchedulerName: &defaultschedulername,
-							Plugins:       &v1beta2config.Plugins{},
-						},
-					},
-					Extenders: []v1beta2config.Extender{
-						{
-							URLPrefix:      "http://example.com/extender/",
-							PreemptVerb:    "PreemptVerb/",
-							FilterVerb:     "FilterVerb/",
-							PrioritizeVerb: "PrioritizeVerb/",
-							BindVerb:       "BindVerb/",
-							Weight:         1,
+							Plugins:       &configv1.Plugins{},
 						},
 					},
 				},
@@ -78,7 +75,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		{
 			name: "success with empty Profiles",
 			args: args{
-				versioned: &v1beta2config.KubeSchedulerConfiguration{},
+				versioned: &configv1.KubeSchedulerConfiguration{},
 				port:      80,
 			},
 			want: func() *config.KubeSchedulerConfiguration {
@@ -89,22 +86,12 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		{
 			name: "changes of field other than Profiles and Extenders does not affects result",
 			args: args{
-				versioned: &v1beta2config.KubeSchedulerConfiguration{
+				versioned: &configv1.KubeSchedulerConfiguration{
 					Parallelism: &nondefaultParallelism,
-					Profiles: []v1beta2config.KubeSchedulerProfile{
+					Profiles: []configv1.KubeSchedulerProfile{
 						{
 							SchedulerName: &defaultschedulername,
-							Plugins:       &v1beta2config.Plugins{},
-						},
-					},
-					Extenders: []v1beta2config.Extender{
-						{
-							URLPrefix:      "http://example.com/extender/",
-							PreemptVerb:    "PreemptVerb/",
-							FilterVerb:     "FilterVerb/",
-							PrioritizeVerb: "PrioritizeVerb/",
-							BindVerb:       "BindVerb/",
-							Weight:         1,
+							Plugins:       &configv1.Plugins{},
 						},
 					},
 				},
@@ -118,23 +105,13 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		{
 			name: "changes of field other than Profiles.Plugins and Extenders does not affects result",
 			args: args{
-				versioned: &v1beta2config.KubeSchedulerConfiguration{
+				versioned: &configv1.KubeSchedulerConfiguration{
 					Parallelism: &nondefaultParallelism,
-					Profiles: []v1beta2config.KubeSchedulerProfile{
+					Profiles: []configv1.KubeSchedulerProfile{
 						{
 							SchedulerName: &defaultschedulername,
-							Plugins:       &v1beta2config.Plugins{},
+							Plugins:       &configv1.Plugins{},
 							PluginConfig:  nil,
-						},
-					},
-					Extenders: []v1beta2config.Extender{
-						{
-							URLPrefix:      "http://example.com/extender/",
-							PreemptVerb:    "PreemptVerb/",
-							FilterVerb:     "FilterVerb/",
-							PrioritizeVerb: "PrioritizeVerb/",
-							BindVerb:       "BindVerb/",
-							Weight:         1,
 						},
 					},
 				},
@@ -146,19 +123,19 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			}(),
 		},
 		{
-			name: "success with multiple profiles",
+			name: "success with multiple profiles/applied disabled setting",
 			args: args{
-				versioned: &v1beta2config.KubeSchedulerConfiguration{
+				versioned: &configv1.KubeSchedulerConfiguration{
 					Parallelism: &nondefaultParallelism,
-					Profiles: []v1beta2config.KubeSchedulerProfile{
+					Profiles: []configv1.KubeSchedulerProfile{
 						{
 							SchedulerName: &defaultschedulername,
 						},
 						{
 							SchedulerName: &nondefaultschedulername,
-							Plugins: &v1beta2config.Plugins{
-								Score: v1beta2config.PluginSet{
-									Disabled: []v1beta2config.Plugin{
+							Plugins: &configv1.Plugins{
+								MultiPoint: configv1.PluginSet{
+									Disabled: []configv1.Plugin{
 										{
 											Name: "ImageLocality",
 										},
@@ -170,7 +147,48 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 							},
 						},
 					},
-					Extenders: []v1beta2config.Extender{
+				},
+				port: 80,
+			},
+			want: func() *config.KubeSchedulerConfiguration {
+				cfg := configGeneratedFromDefault()
+				profile2 := cfg.Profiles[0].DeepCopy()
+				profile2.SchedulerName = nondefaultschedulername
+				profile2.Plugins.MultiPoint.Enabled = []config.Plugin{
+					{Name: "PrioritySortWrapped"},
+					{Name: "NodeUnschedulableWrapped"},
+					{Name: "NodeNameWrapped"},
+					{Name: "TaintTolerationWrapped", Weight: weight3},
+					{Name: "NodeAffinityWrapped", Weight: weight2},
+					{Name: "NodePortsWrapped"},
+					{Name: "VolumeRestrictionsWrapped"},
+					{Name: "EBSLimitsWrapped"},
+					{Name: "GCEPDLimitsWrapped"},
+					{Name: "NodeVolumeLimitsWrapped"},
+					{Name: "AzureDiskLimitsWrapped"},
+					{Name: "VolumeBindingWrapped"},
+					{Name: "VolumeZoneWrapped"},
+					{Name: "PodTopologySpreadWrapped", Weight: weight2},
+					{Name: "InterPodAffinityWrapped", Weight: weight2},
+					{Name: "DefaultPreemptionWrapped"},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: weight1},
+					{Name: "DefaultBinderWrapped"},
+				}
+				cfg.Profiles = append(cfg.Profiles, *profile2)
+				return &cfg
+			}(),
+		},
+		{
+			name: "success with Extender",
+			args: args{
+				versioned: &configv1.KubeSchedulerConfiguration{
+					Profiles: []configv1.KubeSchedulerProfile{
+						{
+							SchedulerName: &defaultschedulername,
+							Plugins:       &configv1.Plugins{},
+						},
+					},
+					Extenders: []configv1.Extender{
 						{
 							URLPrefix:      "http://example.com/extender/",
 							PreemptVerb:    "PreemptVerb/",
@@ -185,35 +203,35 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			},
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
-				profile2 := cfg.Profiles[0].DeepCopy()
-				profile2.SchedulerName = nondefaultschedulername
-				profile2.Plugins.Score.Enabled = []config.Plugin{
-					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: 1},
-					{Name: "InterPodAffinityWrapped", Weight: 1},
-					{Name: "NodeAffinityWrapped", Weight: 1},
-					{Name: "PodTopologySpreadWrapped", Weight: 2},
-					{Name: "TaintTolerationWrapped", Weight: 1},
+				cfg.Extenders = []config.Extender{
+					{
+						URLPrefix:      "http://localhost:80/api/v1/extender/",
+						PreemptVerb:    "preempt/0",
+						FilterVerb:     "filter/0",
+						PrioritizeVerb: "prioritize/0",
+						BindVerb:       "bind/0",
+						Weight:         1,
+					},
 				}
-				cfg.Profiles = append(cfg.Profiles, *profile2)
 				return &cfg
 			}(),
 		},
 		{
 			name: "success with multiple profiles and custom-pluginconfig",
 			args: args{
-				versioned: &v1beta2config.KubeSchedulerConfiguration{
+				versioned: &configv1.KubeSchedulerConfiguration{
 					Parallelism: &nondefaultParallelism,
-					Profiles: []v1beta2config.KubeSchedulerProfile{
+					Profiles: []configv1.KubeSchedulerProfile{
 						{
 							SchedulerName: &defaultschedulername,
-							PluginConfig: []v1beta2config.PluginConfig{
+							PluginConfig: []configv1.PluginConfig{
 								{
 									Name: "DefaultPreemption",
 									Args: runtime.RawExtension{
-										Object: &v1beta2config.DefaultPreemptionArgs{
+										Object: &configv1.DefaultPreemptionArgs{
 											TypeMeta: metav1.TypeMeta{
 												Kind:       "DefaultPreemptionArgs",
-												APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+												APIVersion: "kubescheduler.config.k8s.io/v1",
 											},
 											MinCandidateNodesPercentage: &minCandidateNodesPercentage,
 											MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
@@ -224,30 +242,20 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 						{
 							SchedulerName: &nondefaultschedulername,
-							PluginConfig: []v1beta2config.PluginConfig{
+							PluginConfig: []configv1.PluginConfig{
 								{
 									Name: "InterPodAffinity",
 									Args: runtime.RawExtension{
-										Object: &v1beta2config.InterPodAffinityArgs{
+										Object: &configv1.InterPodAffinityArgs{
 											TypeMeta: metav1.TypeMeta{
 												Kind:       "InterPodAffinityArgs",
-												APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+												APIVersion: "kubescheduler.config.k8s.io/v1",
 											},
 											HardPodAffinityWeight: &hardPodAffinityWeight,
 										},
 									},
 								},
 							},
-						},
-					},
-					Extenders: []v1beta2config.Extender{
-						{
-							URLPrefix:      "http://example.com/extender/",
-							PreemptVerb:    "PreemptVerb/",
-							FilterVerb:     "FilterVerb/",
-							PrioritizeVerb: "PrioritizeVerb/",
-							BindVerb:       "BindVerb/",
-							Weight:         1,
 						},
 					},
 				},
@@ -302,35 +310,84 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			}(),
 		},
 		{
-			name: "success with some plugin disabled",
+			name: "success with multiplugin plugin setting/manual setting weights have priority.",
 			args: args{
-				versioned: &v1beta2config.KubeSchedulerConfiguration{
+				versioned: &configv1.KubeSchedulerConfiguration{
 					Parallelism: &nondefaultParallelism,
-					Profiles: []v1beta2config.KubeSchedulerProfile{
+					Profiles: []configv1.KubeSchedulerProfile{
 						{
 							SchedulerName: &defaultschedulername,
-							Plugins: &v1beta2config.Plugins{
-								Score: v1beta2config.PluginSet{
-									Disabled: []v1beta2config.Plugin{
+							Plugins: &configv1.Plugins{
+								MultiPoint: configv1.PluginSet{
+									Enabled: []configv1.Plugin{
 										{
-											Name: "ImageLocality",
-										},
-										{
-											Name: "NodeResourcesFit",
+											Name:   "NodeResourcesFit",
+											Weight: &weight3,
 										},
 									},
 								},
 							},
 						},
 					},
-					Extenders: []v1beta2config.Extender{
+				},
+				port: 80,
+			},
+			want: func() *config.KubeSchedulerConfiguration {
+				cfg := configGeneratedFromDefault()
+				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []config.Plugin{
+					{Name: "*"},
+				}
+				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []config.Plugin{
+					{Name: "PrioritySortWrapped"},
+					{Name: "NodeUnschedulableWrapped"},
+					{Name: "NodeNameWrapped"},
+					{Name: "TaintTolerationWrapped", Weight: weight3},
+					{Name: "NodeAffinityWrapped", Weight: weight2},
+					{Name: "NodePortsWrapped"},
+					{Name: "NodeResourcesFitWrapped", Weight: weight3},
+					{Name: "VolumeRestrictionsWrapped"},
+					{Name: "EBSLimitsWrapped"},
+					{Name: "GCEPDLimitsWrapped"},
+					{Name: "NodeVolumeLimitsWrapped"},
+					{Name: "AzureDiskLimitsWrapped"},
+					{Name: "VolumeBindingWrapped"},
+					{Name: "VolumeZoneWrapped"},
+					{Name: "PodTopologySpreadWrapped", Weight: weight2},
+					{Name: "InterPodAffinityWrapped", Weight: weight2},
+					{Name: "DefaultPreemptionWrapped"},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: weight1},
+					{Name: "ImageLocalityWrapped", Weight: weight1},
+					{Name: "DefaultBinderWrapped"},
+				}
+				return &cfg
+			}(),
+		},
+		{
+			name: "success with multiplugin plugin setting/multi manual setting weights have priority.",
+			args: args{
+				versioned: &configv1.KubeSchedulerConfiguration{
+					Parallelism: &nondefaultParallelism,
+					Profiles: []configv1.KubeSchedulerProfile{
 						{
-							URLPrefix:      "http://example.com/extender/",
-							PreemptVerb:    "PreemptVerb/",
-							FilterVerb:     "FilterVerb/",
-							PrioritizeVerb: "PrioritizeVerb/",
-							BindVerb:       "BindVerb/",
-							Weight:         1,
+							SchedulerName: &defaultschedulername,
+							Plugins: &configv1.Plugins{
+								MultiPoint: configv1.PluginSet{
+									Enabled: []configv1.Plugin{
+										{
+											Name:   "NodeResourcesFit",
+											Weight: &weight2,
+										},
+									},
+								},
+								Score: configv1.PluginSet{
+									Enabled: []configv1.Plugin{
+										{
+											Name:   "NodeResourcesFit",
+											Weight: &weight3,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -339,11 +396,121 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			want: func() *config.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				cfg.Profiles[0].Plugins.Score.Enabled = []config.Plugin{
-					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: 1},
-					{Name: "InterPodAffinityWrapped", Weight: 1},
-					{Name: "NodeAffinityWrapped", Weight: 1},
-					{Name: "PodTopologySpreadWrapped", Weight: 2},
-					{Name: "TaintTolerationWrapped", Weight: 1},
+					{
+						Name:   "NodeResourcesFitWrapped",
+						Weight: weight3,
+					},
+				}
+				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []config.Plugin{
+					{Name: "*"},
+				}
+				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []config.Plugin{
+					{Name: "PrioritySortWrapped"},
+					{Name: "NodeUnschedulableWrapped"},
+					{Name: "NodeNameWrapped"},
+					{Name: "TaintTolerationWrapped", Weight: weight3},
+					{Name: "NodeAffinityWrapped", Weight: weight2},
+					{Name: "NodePortsWrapped"},
+					{Name: "NodeResourcesFitWrapped", Weight: weight2},
+					{Name: "VolumeRestrictionsWrapped"},
+					{Name: "EBSLimitsWrapped"},
+					{Name: "GCEPDLimitsWrapped"},
+					{Name: "NodeVolumeLimitsWrapped"},
+					{Name: "AzureDiskLimitsWrapped"},
+					{Name: "VolumeBindingWrapped"},
+					{Name: "VolumeZoneWrapped"},
+					{Name: "PodTopologySpreadWrapped", Weight: weight2},
+					{Name: "InterPodAffinityWrapped", Weight: weight2},
+					{Name: "DefaultPreemptionWrapped"},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: weight1},
+					{Name: "ImageLocalityWrapped", Weight: weight1},
+					{Name: "DefaultBinderWrapped"},
+				}
+				return &cfg
+			}(),
+		},
+		{
+			name: "success with multiplugin plugin setting/disable a specific default multipoint plugin on a extension point",
+			args: args{
+				versioned: &configv1.KubeSchedulerConfiguration{
+					Parallelism: &nondefaultParallelism,
+					Profiles: []configv1.KubeSchedulerProfile{
+						{
+							SchedulerName: &defaultschedulername,
+							Plugins: &configv1.Plugins{
+								Score: configv1.PluginSet{
+									Disabled: []configv1.Plugin{
+										{
+											Name: "NodeResourcesFit",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				port: 80,
+			},
+			want: func() *config.KubeSchedulerConfiguration {
+				cfg := configGeneratedFromDefault()
+				cfg.Profiles[0].Plugins.Score.Disabled = []config.Plugin{
+					{
+						Name: "NodeResourcesFitWrapped",
+					},
+				}
+				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []config.Plugin{
+					{Name: "*"},
+				}
+				return &cfg
+			}(),
+		},
+		{
+			name: "success with multiplugin plugin setting/disable a specific default multipoint plugin",
+			args: args{
+				versioned: &configv1.KubeSchedulerConfiguration{
+					Parallelism: &nondefaultParallelism,
+					Profiles: []configv1.KubeSchedulerProfile{
+						{
+							SchedulerName: &defaultschedulername,
+							Plugins: &configv1.Plugins{
+								MultiPoint: configv1.PluginSet{
+									Disabled: []configv1.Plugin{
+										{
+											Name: "NodeResourcesFit",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				port: 80,
+			},
+			want: func() *config.KubeSchedulerConfiguration {
+				cfg := configGeneratedFromDefault()
+				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []config.Plugin{
+					{Name: "*"},
+				}
+				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []config.Plugin{
+					{Name: "PrioritySortWrapped"},
+					{Name: "NodeUnschedulableWrapped"},
+					{Name: "NodeNameWrapped"},
+					{Name: "TaintTolerationWrapped", Weight: weight3},
+					{Name: "NodeAffinityWrapped", Weight: weight2},
+					{Name: "NodePortsWrapped"},
+					{Name: "VolumeRestrictionsWrapped"},
+					{Name: "EBSLimitsWrapped"},
+					{Name: "GCEPDLimitsWrapped"},
+					{Name: "NodeVolumeLimitsWrapped"},
+					{Name: "AzureDiskLimitsWrapped"},
+					{Name: "VolumeBindingWrapped"},
+					{Name: "VolumeZoneWrapped"},
+					{Name: "PodTopologySpreadWrapped", Weight: weight2},
+					{Name: "InterPodAffinityWrapped", Weight: weight2},
+					{Name: "DefaultPreemptionWrapped"},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: weight1},
+					{Name: "ImageLocalityWrapped", Weight: weight1},
+					{Name: "DefaultBinderWrapped"},
 				}
 				return &cfg
 			}(),
@@ -353,6 +520,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			got, err := convertConfigurationForSimulator(tt.args.versioned, tt.args.port)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("convertConfigurationForSimulator() error = %v, wantErr %v", err, tt.wantErr)
@@ -360,6 +528,10 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			}
 			if len(got.Profiles) != len(tt.want.Profiles) {
 				t.Errorf("unmatch length of profiles, want: %v, got: %v", len(tt.want.Profiles), len(got.Profiles))
+				return
+			}
+			if len(got.Extenders) != len(tt.want.Extenders) {
+				t.Errorf("unmatch length of extenders, want: %v, got: %v", len(tt.want.Extenders), len(got.Extenders))
 				return
 			}
 
@@ -372,35 +544,27 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 				})
 			}
 
-			assert.Equal(t, tt.want.Profiles[0].Plugins, got.Profiles[0].Plugins)
+			for i := range tt.want.Profiles {
+				assert.Equal(t, tt.want.Profiles[i].Plugins, got.Profiles[i].Plugins)
+				assert.Equal(t, tt.want.Profiles[i].PluginConfig, got.Profiles[i].PluginConfig)
+			}
+			assert.Equal(t, tt.want.Extenders, got.Extenders)
 		})
 	}
 }
 
 func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
-	var weight1 int32 = 1
-	var weight2 int32 = 2
 	versioned, _ := schedConfig.DefaultSchedulerConfig()
 	cfg := versioned.DeepCopy()
-	cfg.Profiles[0].Plugins.Bind.Enabled = []v1beta2config.Plugin{
-		{Name: "DefaultBinderWrapped"},
-	}
-	cfg.Profiles[0].Plugins.PreFilter.Enabled = []v1beta2config.Plugin{
-		{Name: "NodeResourcesFitWrapped"},
-		{Name: "NodePortsWrapped"},
-		{Name: "VolumeRestrictionsWrapped"},
-		{Name: "PodTopologySpreadWrapped"},
-		{Name: "InterPodAffinityWrapped"},
-		{Name: "VolumeBindingWrapped"},
-		{Name: "NodeAffinityWrapped"},
-	}
-	cfg.Profiles[0].Plugins.Filter.Enabled = []v1beta2config.Plugin{
+
+	cfg.Profiles[0].Plugins.MultiPoint.Enabled = []configv1.Plugin{
+		{Name: "PrioritySortWrapped"},
 		{Name: "NodeUnschedulableWrapped"},
 		{Name: "NodeNameWrapped"},
-		{Name: "TaintTolerationWrapped"},
-		{Name: "NodeAffinityWrapped"},
+		{Name: "TaintTolerationWrapped", Weight: &weight3},
+		{Name: "NodeAffinityWrapped", Weight: &weight2},
 		{Name: "NodePortsWrapped"},
-		{Name: "NodeResourcesFitWrapped"},
+		{Name: "NodeResourcesFitWrapped", Weight: &weight1},
 		{Name: "VolumeRestrictionsWrapped"},
 		{Name: "EBSLimitsWrapped"},
 		{Name: "GCEPDLimitsWrapped"},
@@ -408,64 +572,48 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 		{Name: "AzureDiskLimitsWrapped"},
 		{Name: "VolumeBindingWrapped"},
 		{Name: "VolumeZoneWrapped"},
-		{Name: "PodTopologySpreadWrapped"},
-		{Name: "InterPodAffinityWrapped"},
-	}
-	cfg.Profiles[0].Plugins.PostFilter.Enabled = []v1beta2config.Plugin{
+		{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+		{Name: "InterPodAffinityWrapped", Weight: &weight2},
 		{Name: "DefaultPreemptionWrapped"},
-	}
-	cfg.Profiles[0].Plugins.Reserve.Enabled = []v1beta2config.Plugin{
-		{Name: "VolumeBindingWrapped"},
-	}
-	cfg.Profiles[0].Plugins.PreBind.Enabled = []v1beta2config.Plugin{
-		{Name: "VolumeBindingWrapped"},
-	}
-	cfg.Profiles[0].Plugins.PreScore.Enabled = []v1beta2config.Plugin{
-		{Name: "InterPodAffinityWrapped"},
-		{Name: "PodTopologySpreadWrapped"},
-		{Name: "TaintTolerationWrapped"},
-		{Name: "NodeAffinityWrapped"},
-	}
-	cfg.Profiles[0].Plugins.Score.Enabled = []v1beta2config.Plugin{
 		{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 		{Name: "ImageLocalityWrapped", Weight: &weight1},
-		{Name: "InterPodAffinityWrapped", Weight: &weight1},
-		{Name: "NodeResourcesFitWrapped", Weight: &weight1},
-		{Name: "NodeAffinityWrapped", Weight: &weight1},
-		{Name: "PodTopologySpreadWrapped", Weight: &weight2},
-		{Name: "TaintTolerationWrapped", Weight: &weight1},
+		{Name: "DefaultBinderWrapped"},
 	}
+	cfg.Profiles[0].Plugins.MultiPoint.Disabled = []configv1.Plugin{
+		{Name: "*"},
+	}
+
 	pcMap := map[string]runtime.RawExtension{}
 	for _, c := range cfg.Profiles[0].PluginConfig {
 		pcMap[c.Name] = c.Args
 	}
 
-	var newpc []v1beta2config.PluginConfig
-	newpc = append(newpc, v1beta2config.PluginConfig{
+	var newpc []configv1.PluginConfig
+	newpc = append(newpc, configv1.PluginConfig{
 		Name: "NodeResourcesBalancedAllocationWrapped",
 		Args: pcMap["NodeResourcesBalancedAllocation"],
 	})
-	newpc = append(newpc, v1beta2config.PluginConfig{
+	newpc = append(newpc, configv1.PluginConfig{
 		Name: "InterPodAffinityWrapped",
 		Args: pcMap["InterPodAffinity"],
 	})
-	newpc = append(newpc, v1beta2config.PluginConfig{
+	newpc = append(newpc, configv1.PluginConfig{
 		Name: "NodeResourcesFitWrapped",
 		Args: pcMap["NodeResourcesFit"],
 	})
-	newpc = append(newpc, v1beta2config.PluginConfig{
+	newpc = append(newpc, configv1.PluginConfig{
 		Name: "NodeAffinityWrapped",
 		Args: pcMap["NodeAffinity"],
 	})
-	newpc = append(newpc, v1beta2config.PluginConfig{
+	newpc = append(newpc, configv1.PluginConfig{
 		Name: "PodTopologySpreadWrapped",
 		Args: pcMap["PodTopologySpread"],
 	})
-	newpc = append(newpc, v1beta2config.PluginConfig{
+	newpc = append(newpc, configv1.PluginConfig{
 		Name: "VolumeBindingWrapped",
 		Args: pcMap["VolumeBinding"],
 	})
-	newpc = append(newpc, v1beta2config.PluginConfig{
+	newpc = append(newpc, configv1.PluginConfig{
 		Name: "DefaultPreemptionWrapped",
 		Args: pcMap["DefaultPreemption"],
 	})
@@ -474,17 +622,6 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 
 	converted := config.KubeSchedulerConfiguration{}
 	scheme.Scheme.Convert(cfg, &converted, nil)
-	converted.SetGroupVersionKind(v1beta2config.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
-
-	converted.Extenders = []config.Extender{
-		{
-			URLPrefix:      "http://localhost:80/api/v1/extender/",
-			PreemptVerb:    "preempt/0",
-			FilterVerb:     "filter/0",
-			PrioritizeVerb: "prioritize/0",
-			BindVerb:       "bind/0",
-			Weight:         1,
-		},
-	}
+	converted.SetGroupVersionKind(configv1.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
 	return converted
 }

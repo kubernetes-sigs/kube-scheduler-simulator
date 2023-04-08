@@ -8,7 +8,7 @@ import (
 	"golang.org/x/xerrors"
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/node"
@@ -45,7 +45,7 @@ func NewDIContainer(
 	client clientset.Interface,
 	etcdclient *clientv3.Client,
 	restclientCfg *restclient.Config,
-	initialSchedulerCfg *v1beta2config.KubeSchedulerConfiguration,
+	initialSchedulerCfg *configv1.KubeSchedulerConfiguration,
 	externalImportEnabled bool,
 	externalClient clientset.Interface,
 	externalSchedulerEnabled bool,

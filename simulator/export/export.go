@@ -23,7 +23,7 @@ import (
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
@@ -42,14 +42,14 @@ type Service struct {
 
 // ResourcesForExport denotes all resources and scheduler configuration for export.
 type ResourcesForExport struct {
-	Pods            []corev1.Pod                              `json:"pods"`
-	Nodes           []corev1.Node                             `json:"nodes"`
-	Pvs             []corev1.PersistentVolume                 `json:"pvs"`
-	Pvcs            []corev1.PersistentVolumeClaim            `json:"pvcs"`
-	StorageClasses  []storagev1.StorageClass                  `json:"storageClasses"`
-	PriorityClasses []schedulingv1.PriorityClass              `json:"priorityClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration `json:"schedulerConfig"`
-	Namespaces      []corev1.Namespace                        `json:"namespaces"`
+	Pods            []corev1.Pod                         `json:"pods"`
+	Nodes           []corev1.Node                        `json:"nodes"`
+	Pvs             []corev1.PersistentVolume            `json:"pvs"`
+	Pvcs            []corev1.PersistentVolumeClaim       `json:"pvcs"`
+	StorageClasses  []storagev1.StorageClass             `json:"storageClasses"`
+	PriorityClasses []schedulingv1.PriorityClass         `json:"priorityClasses"`
+	SchedulerConfig *configv1.KubeSchedulerConfiguration `json:"schedulerConfig"`
+	Namespaces      []corev1.Namespace                   `json:"namespaces"`
 }
 
 // ResourcesForImport denotes all resources and scheduler configuration for import.
@@ -60,7 +60,7 @@ type ResourcesForImport struct {
 	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration      `json:"pvcs"`
 	StorageClasses  []confstoragev1.StorageClassApplyConfiguration    `json:"storageClasses"`
 	PriorityClasses []schedulingcfgv1.PriorityClassApplyConfiguration `json:"priorityClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
+	SchedulerConfig *configv1.KubeSchedulerConfiguration              `json:"schedulerConfig"`
 	Namespaces      []v1.NamespaceApplyConfiguration                  `json:"namespaces"`
 }
 
@@ -96,8 +96,8 @@ type PriorityClassService interface {
 }
 
 type SchedulerService interface {
-	GetSchedulerConfig() (*v1beta2config.KubeSchedulerConfiguration, error)
-	RestartScheduler(cfg *v1beta2config.KubeSchedulerConfiguration) error
+	GetSchedulerConfig() (*configv1.KubeSchedulerConfiguration, error)
+	RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error
 }
 
 func NewExportService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, storageClasss StorageClassService, priorityClasss PriorityClassService, schedulers SchedulerService) *Service {

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/kubernetes/fake"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender/mock_extender"
@@ -264,12 +264,12 @@ func TestService_Bind(t *testing.T) {
 
 func TestService_OverrideExtendersCfgToSimulator(t *testing.T) {
 	t.Parallel()
-	target := v1beta2config.KubeSchedulerConfiguration{}
-	es := make([]v1beta2config.Extender, 2)
+	target := configv1.KubeSchedulerConfiguration{}
+	es := make([]configv1.Extender, 2)
 	port := 80
 	for i := range es {
 		es[i].EnableHTTPS = true
-		es[i].TLSConfig = new(v1beta2config.ExtenderTLSConfig)
+		es[i].TLSConfig = new(configv1.ExtenderTLSConfig)
 		es[i].URLPrefix = "http://example.com/"
 		es[i].FilterVerb = "f"
 		es[i].PrioritizeVerb = "p"

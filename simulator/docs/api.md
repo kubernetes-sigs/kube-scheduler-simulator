@@ -12,7 +12,7 @@ get current scheduler configuration.
 
 ### Response
 
-[v1beta2.KubeSchedulerConfiguration](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/kube-scheduler/config/v1beta2/types.go#L44)
+[v1.KubeSchedulerConfiguration](https://github.com/kubernetes/kubernetes/blob/release-1.25/staging/src/k8s.io/kube-scheduler/config/v1/types.go#L43)
 
 | code  | description |
 | ----- | -------- |
@@ -29,7 +29,7 @@ update scheduler configuration and restart scheduler with new configuration.
 
 ### Request Body
 
-[v1beta2.KubeSchedulerConfiguration](https://github.com/kubernetes/kubernetes/blob/release-1.22/staging/src/k8s.io/kube-scheduler/config/v1beta2/types.go#L44)
+[v1.KubeSchedulerConfiguration](https://github.com/kubernetes/kubernetes/blob/release-1.25/staging/src/k8s.io/kube-scheduler/config/v1/types.go#L43)
 
 ### Response
 

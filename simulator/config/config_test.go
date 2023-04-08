@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 )
 
 func Test_decodeSchedulerCfg(t *testing.T) {
@@ -16,13 +16,13 @@ func Test_decodeSchedulerCfg(t *testing.T) {
 	tests := []struct {
 		name    string
 		buf     []byte
-		want    *v1beta2config.KubeSchedulerConfiguration
+		want    *configv1.KubeSchedulerConfiguration
 		wantErr bool
 	}{
 		{
 			name: "success with normal configuration",
 			buf: []byte(`
-apiVersion: kubescheduler.config.k8s.io/v1beta2
+apiVersion: kubescheduler.config.k8s.io/v1
 kind: KubeSchedulerConfiguration
 profiles:
 - pluginConfig:
@@ -34,20 +34,20 @@ profiles:
         type: MostAllocated
     name: NodeResourcesFit
 `),
-			want: &v1beta2config.KubeSchedulerConfiguration{
+			want: &configv1.KubeSchedulerConfiguration{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "KubeSchedulerConfiguration",
-					APIVersion: "kubescheduler.config.k8s.io/v1beta2",
+					APIVersion: "kubescheduler.config.k8s.io/v1",
 				},
-				Profiles: []v1beta2config.KubeSchedulerProfile{
+				Profiles: []configv1.KubeSchedulerProfile{
 					{
-						PluginConfig: []v1beta2config.PluginConfig{
+						PluginConfig: []configv1.PluginConfig{
 							{
 								Name: "NodeResourcesFit",
 								Args: runtime.RawExtension{
-									Object: &v1beta2config.NodeResourcesFitArgs{
-										ScoringStrategy: &v1beta2config.ScoringStrategy{
-											Resources: []v1beta2config.ResourceSpec{
+									Object: &configv1.NodeResourcesFitArgs{
+										ScoringStrategy: &configv1.ScoringStrategy{
+											Resources: []configv1.ResourceSpec{
 												{
 													Name:   "cpu",
 													Weight: 1,

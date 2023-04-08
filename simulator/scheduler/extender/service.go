@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/xerrors"
 	clientset "k8s.io/client-go/kubernetes"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender/resultstore"
@@ -25,7 +25,7 @@ const ResultStoreKey = "ExtenderResultStoreKey"
 
 // New initializes Service.
 // `extenderCfgs` expect to receive an untouched config file(set by user).
-func New(client clientset.Interface, extenderCfgs []v1beta2config.Extender, storeReflector storereflector.Reflector) (*Service, error) {
+func New(client clientset.Interface, extenderCfgs []configv1.Extender, storeReflector storereflector.Reflector) (*Service, error) {
 	extenders, err := createExtenders(extenderCfgs)
 	if err != nil {
 		return nil, xerrors.Errorf("create HTTPExtenders: %w", err)
@@ -85,7 +85,7 @@ func (s *Service) Bind(id int, args extenderv1.ExtenderBindingArgs) (*extenderv1
 }
 
 // OverrideExtendersCfgToSimulator rewrites the scheduler config so that the extenders requests go through the simulator server.
-func OverrideExtendersCfgToSimulator(cfg *v1beta2config.KubeSchedulerConfiguration, simulatorPort int) {
+func OverrideExtendersCfgToSimulator(cfg *configv1.KubeSchedulerConfiguration, simulatorPort int) {
 	for i := range cfg.Extenders {
 		// i will be the extender's index. That index is specified by request param as `id`.
 		cfg.Extenders[i].EnableHTTPS = false

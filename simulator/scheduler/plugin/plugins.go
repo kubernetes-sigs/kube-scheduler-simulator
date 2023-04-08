@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
-	"k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 	schedulerConfig "k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 	schedulerRuntime "k8s.io/kubernetes/pkg/scheduler/framework/runtime"
@@ -83,16 +83,16 @@ func newPluginFactories(store *schedulingresultstore.Store) (map[string]schedule
 	return ret, nil
 }
 
-// NewPluginConfig converts []v1beta2.PluginConfig for simulator.
+// NewPluginConfig converts []configv1.PluginConfig for simulator.
 // Passed []v1beta.PluginConfig overrides default config values.
 //
 // NewPluginConfig expects that either PluginConfig.Args.Raw or PluginConfig.Args.Object has data
-// in the passed v1beta2.PluginConfig parameter.
+// in the passed configv1.PluginConfig parameter.
 // If data exists in both PluginConfig.Args.Raw and PluginConfig.Args.Object, PluginConfig.Args.Raw would be ignored
 // since PluginConfig.Args.Object has higher priority.
 //
 //nolint:funlen,cyclop
-func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) {
+func NewPluginConfig(pc []configv1.PluginConfig) ([]configv1.PluginConfig, error) {
 	defaultcfg, err := config.DefaultSchedulerConfig()
 	if err != nil || len(defaultcfg.Profiles) != 1 {
 		return nil, xerrors.Errorf("get default scheduler configuration: %w", err)
@@ -119,7 +119,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 			continue
 		}
 
-		// v1beta2.PluginConfig may have data in pc[i].Args.Raw as []byte.
+		// configv1.PluginConfig may have data in pc[i].Args.Raw as []byte.
 		// We have to encoding it in this case.
 		if len(pc[i].Args.Raw) != 0 {
 			// override default configuration
@@ -137,10 +137,10 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 		pluginConfig[name] = ret
 	}
 
-	ret := make([]v1beta2.PluginConfig, 0, len(pluginConfig))
+	ret := make([]configv1.PluginConfig, 0, len(pluginConfig))
 	for name, arg := range pluginConfig {
 		// add plugin configs for default plugins.
-		ret = append(ret, v1beta2.PluginConfig{
+		ret = append(ret, configv1.PluginConfig{
 			Name: name,
 			Args: *arg,
 		})
@@ -158,7 +158,7 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 			continue
 		}
 
-		ret = append(ret, v1beta2.PluginConfig{
+		ret = append(ret, configv1.PluginConfig{
 			Name: pluginName(name),
 			Args: *pc,
 		})
@@ -170,11 +170,11 @@ func NewPluginConfig(pc []v1beta2.PluginConfig) ([]v1beta2.PluginConfig, error) 
 	return ret, nil
 }
 
-// ConvertForSimulator convert v1beta2.Plugins for simulator.
+// ConvertForSimulator convert configv1.Plugins for simulator.
 // It ignores non-default plugin.
 //
 //nolint:cyclop
-func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
+func ConvertForSimulator(pls *configv1.Plugins) (*configv1.Plugins, error) {
 	newpls := pls.DeepCopy()
 
 	if err := applyPluingSet(&newpls.PreFilter, pls.PreFilter, config.InTreePreFilterPluginSet); err != nil {
@@ -207,59 +207,92 @@ func ConvertForSimulator(pls *v1beta2.Plugins) (*v1beta2.Plugins, error) {
 	if err := applyPluingSet(&newpls.PostBind, pls.PostBind, config.InTreePostBindPluginSet); err != nil {
 		return nil, xerrors.Errorf("merge PostBind plugins: %w", err)
 	}
+	if err := applyPluingSet(&newpls.MultiPoint, pls.MultiPoint, config.InTreeMultiPointPluginSet); err != nil {
+		return nil, xerrors.Errorf("merge MultiPointt plugins: %w", err)
+	}
+	// The default MultiPoint PluginSets must be enabled manually and set disable to "*".
+	// If you don't, the scheduler will enable all default plugins on its own since the plugin names is wrapped in later processing
+	disableAllPluginSet(&newpls.MultiPoint)
 
 	return newpls, nil
 }
 
-// applyPluingSet merges inTree and outOfTree PluginSet and enables it.
-func applyPluingSet(targetPlsSet *v1beta2.PluginSet, plsSet v1beta2.PluginSet, inTreePluginSet func() (v1beta2.PluginSet, error)) error {
-	inTreePls, err := inTreePluginSet()
-	if err != nil {
-		return xerrors.Errorf("get inTree plugins: %w", err)
-	}
-	merged := mergePluginSet(inTreePls, plsSet)
-
-	retpls := make([]v1beta2.Plugin, 0, len(merged.Enabled))
-	for _, p := range merged.Enabled {
-		retpls = append(retpls, v1beta2.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
-	}
-	targetPlsSet.Enabled = retpls
-	// disable default plugins whatever scheduler configuration value is
-	targetPlsSet.Disabled = []v1beta2.Plugin{
+// disableAllPluginSet set target PluginSet to "*".
+func disableAllPluginSet(targetPlsSet *configv1.PluginSet) {
+	targetPlsSet.Disabled = []configv1.Plugin{
 		{
 			Name: "*",
 		},
 	}
+}
+
+// applyPluingSet merges inTree and outOfTree PluginSet.
+func applyPluingSet(targetPlsSet *configv1.PluginSet, plsSet configv1.PluginSet, inTreePluginSet func() (configv1.PluginSet, error)) error {
+	inTreePls, err := inTreePluginSet()
+	if err != nil {
+		return xerrors.Errorf("get inTree plugins: %w", err)
+	}
+
+	merged := mergePluginSet(inTreePls, plsSet)
+	enabledPls := make([]configv1.Plugin, 0, len(merged.Enabled))
+	for _, p := range merged.Enabled {
+		enabledPls = append(enabledPls, configv1.Plugin{Name: pluginName(p.Name), Weight: p.Weight})
+	}
+	targetPlsSet.Enabled = enabledPls
+
+	disabledPls := make([]configv1.Plugin, 0, len(merged.Disabled))
+	for _, p := range merged.Disabled {
+		wName := pluginName(p.Name)
+		if p.Name == "*" {
+			wName = p.Name
+		}
+		disabledPls = append(disabledPls, configv1.Plugin{Name: wName, Weight: p.Weight})
+	}
+	targetPlsSet.Disabled = disabledPls
+
 	return nil
 }
 
 // mergePluginsSet merges two plugin sets.
-// This function is copied from k8s.io/kubernetes/pkg/scheduler/apis/config/v1beta2/default_config.go.
-func mergePluginSet(inTreePluginSet, outOfTreePluginSet v1beta2.PluginSet) v1beta2.PluginSet {
+// This function is copied from https://github.com/kubernetes/kubernetes/blob/release-1.27/pkg/scheduler/apis/config/v1/default_plugins.go.
+func mergePluginSet(defaultPluginSet, customPluginSet configv1.PluginSet) configv1.PluginSet {
 	type pluginIndex struct {
 		index  int
-		plugin v1beta2.Plugin
+		plugin configv1.Plugin
 	}
 
 	disabledPlugins := sets.NewString()
 	enabledCustomPlugins := make(map[string]pluginIndex)
 	// replacedPluginIndex is a set of index of plugins, which have replaced the default plugins.
 	replacedPluginIndex := sets.NewInt()
-	for _, disabledPlugin := range outOfTreePluginSet.Disabled {
+	disabled := make([]configv1.Plugin, 0, len(customPluginSet.Disabled))
+	for _, disabledPlugin := range customPluginSet.Disabled {
+		// if the user is manually disabling any (or all, with "*") default plugins for an extension point,
+		// we need to track that so that the MultiPoint extension logic in the framework can know to skip
+		// inserting unspecified default plugins to this point.
+		disabled = append(disabled, configv1.Plugin{Name: disabledPlugin.Name})
 		disabledPlugins.Insert(disabledPlugin.Name)
 	}
-	for index, enabledPlugin := range outOfTreePluginSet.Enabled {
+
+	// With MultiPoint, we may now have some disabledPlugins in the default registry
+	// For example, we enable PluginX with Filter+Score through MultiPoint but disable its Score plugin by default.
+	for _, disabledPlugin := range defaultPluginSet.Disabled {
+		disabled = append(disabled, configv1.Plugin{Name: disabledPlugin.Name})
+		disabledPlugins.Insert(disabledPlugin.Name)
+	}
+
+	for index, enabledPlugin := range customPluginSet.Enabled {
 		enabledCustomPlugins[enabledPlugin.Name] = pluginIndex{index, enabledPlugin}
 	}
-	var enabledPlugins []v1beta2.Plugin
+	var enabledPlugins []configv1.Plugin
 	if !disabledPlugins.Has("*") {
-		for _, defaultEnabledPlugin := range inTreePluginSet.Enabled {
+		for _, defaultEnabledPlugin := range defaultPluginSet.Enabled {
 			if disabledPlugins.Has(defaultEnabledPlugin.Name) {
 				continue
 			}
 			// The default plugin is explicitly re-configured, update the default plugin accordingly.
 			if customPlugin, ok := enabledCustomPlugins[defaultEnabledPlugin.Name]; ok {
-				klog.InfoS("Default plugin is explicitly re-configured; overriding", "plugin", defaultEnabledPlugin.Name)
+				klog.Info("Default plugin is explicitly re-configured; overriding", "plugin", defaultEnabledPlugin.Name)
 				// Update the default plugin in place to preserve order.
 				defaultEnabledPlugin = customPlugin.plugin
 				replacedPluginIndex.Insert(customPlugin.index)
@@ -271,19 +304,24 @@ func mergePluginSet(inTreePluginSet, outOfTreePluginSet v1beta2.PluginSet) v1bet
 	// Append all the custom plugins which haven't replaced any default plugins.
 	// Note: duplicated custom plugins will still be appended here.
 	// If so, the instantiation of scheduler framework will detect it and abort.
-	for index, plugin := range outOfTreePluginSet.Enabled {
+	for index, plugin := range customPluginSet.Enabled {
 		if !replacedPluginIndex.Has(index) {
 			enabledPlugins = append(enabledPlugins, plugin)
 		}
 	}
-	return v1beta2.PluginSet{Enabled: enabledPlugins}
+	return configv1.PluginSet{Enabled: enabledPlugins, Disabled: disabled}
 }
 
 // registeredPlugins returns all registered plugins.
 //
 //nolint:funlen,cyclop
-func registeredPlugins() ([]v1beta2.Plugin, error) {
-	var pls []v1beta2.Plugin
+func registeredPlugins() ([]configv1.Plugin, error) {
+	var pls []configv1.Plugin
+	registeredmultipointpls, err := config.RegisteredMultiPointPlugins()
+	if err != nil {
+		return nil, xerrors.Errorf("get registered multi point plugins: %w", err)
+	}
+	pls = append(pls, registeredmultipointpls...)
 	registeredscorepls, err := config.RegisteredScorePlugins()
 	if err != nil {
 		return nil, xerrors.Errorf("get registered score plugins: %w", err)
@@ -336,7 +374,7 @@ func registeredPlugins() ([]v1beta2.Plugin, error) {
 	pls = append(pls, registerdpostfilterpls...)
 
 	registeredMap := sets.NewString()
-	uniqPls := make([]v1beta2.Plugin, 0, len(pls))
+	uniqPls := make([]configv1.Plugin, 0, len(pls))
 	for _, pl := range pls {
 		if registeredMap.Has(pl.Name) {
 			continue
