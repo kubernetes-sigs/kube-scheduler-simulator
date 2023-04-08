@@ -472,7 +472,7 @@ func Test_wrappedPlugin_PostFilter(t *testing.T) {
 				},
 			},
 			wantResult: nil,
-			wantStatus: nil,
+			wantStatus: framework.NewStatus(framework.Unschedulable),
 		},
 		{
 			name: "fail when original plugin return non-success",
@@ -1860,24 +1860,33 @@ func Test_wrappedPlugin_Bind(t *testing.T) {
 			noExtender: true,
 			want:       framework.NewStatus(framework.Success),
 		},
+		{
+			name:       "unhappy: it is not bind plugin",
+			noExtender: true,
+			want:       framework.NewStatus(framework.Skip, "called wrapped buind plugin is nil"),
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
-			s := mock_plugin.NewMockStore(ctrl)
-			p := mock_plugin.NewMockBindPlugin(ctrl)
-			ex := mock_plugin.NewMockBindPluginExtender(ctrl)
-			tt.prepareMocksFn(s, p, ex)
 
-			w := &wrappedPlugin{
-				store:              s,
-				originalBindPlugin: p,
+			w := &wrappedPlugin{}
+			if tt.prepareMocksFn != nil {
+				s := mock_plugin.NewMockStore(ctrl)
+				p := mock_plugin.NewMockBindPlugin(ctrl)
+				ex := mock_plugin.NewMockBindPluginExtender(ctrl)
+				tt.prepareMocksFn(s, p, ex)
+				w = &wrappedPlugin{
+					store:              s,
+					originalBindPlugin: p,
+				}
+				if !tt.noExtender {
+					w.bindPluginExtender = ex
+				}
 			}
-			if !tt.noExtender {
-				w.bindPluginExtender = ex
-			}
+
 			assert.Equalf(t, tt.want, w.Bind(context.Background(), framework.NewCycleState(), testPod, testNodeName), "Bind(ctx, cyclestate, %v, %v)", testPod, testNodeName)
 		})
 	}
