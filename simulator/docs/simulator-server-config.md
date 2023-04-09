@@ -2,7 +2,7 @@
 
 Simulator server configuration used to only support setting configurations 
 through environment variables, and now adds configurations through configuration files. 
-The specific configuration file path is [simulator/config.yaml](./../config.yaml).
+The simulator reads the configuration file in the path of [./config.yaml](./../config.yaml).
 
 ```
 # This is an example config for scheduler-simulator.
