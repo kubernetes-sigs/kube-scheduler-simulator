@@ -17,6 +17,7 @@ FROM alpine:3.14.0
 
 COPY --from=build-env /go/src/simulator/bin/simulator /simulator
 RUN chmod a+x /simulator
+COPY --from=build-env /go/src/simulator/config.yaml /config.yaml
 
 EXPOSE 1212
 CMD ["/simulator"]

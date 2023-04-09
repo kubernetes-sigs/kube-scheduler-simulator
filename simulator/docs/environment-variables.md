@@ -5,11 +5,11 @@ This page describes the environment variables that are used to configure the sim
 Please refer to [docker-compose.yml](./../../docker-compose.yml) as an example use.
 
 ## For Simulator
-We're planning to remove the configuration via environment variables.
 
-The configuration module will read the configuration in the environment variable first, 
-if the environment variable is not set, 
-it will read the configuration in the configuration file.
+**Deprecation notice**: We're planning to remove the configuration via environment variables.
+
+Until deprecation, the simulator will read the configuration in the environment variable first, 
+if the environment variable is not set, it will read the configuration in the configuration file.
 
 For config file, please refer to the simulator [config.yaml](./../config.yaml).
 

@@ -1863,7 +1863,7 @@ func Test_wrappedPlugin_Bind(t *testing.T) {
 		{
 			name:       "unhappy: it is not bind plugin",
 			noExtender: true,
-			want:       framework.NewStatus(framework.Skip, "called wrapped buind plugin is nil"),
+			want:       framework.NewStatus(framework.Skip, "called wrapped bind plugin is nil"),
 		},
 	}
 	for _, tt := range tests {
