@@ -518,6 +518,7 @@ func (w *wrappedPlugin) Filter(ctx context.Context, state *framework.CycleState,
 func (w *wrappedPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
 	if w.originalPostFilterPlugin == nil {
 		// return Unschedulable not to affect post filtering.
+		// (If return Unschedulable, the scheduler will execute next PostFilter plugin.)
 		return nil, framework.NewStatus(framework.Unschedulable)
 	}
 	if w.postFilterPluginExtender != nil {
@@ -665,8 +666,8 @@ func (w *wrappedPlugin) PreBind(ctx context.Context, state *framework.CycleState
 
 func (w *wrappedPlugin) Bind(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodename string) *framework.Status {
 	if w.originalBindPlugin == nil {
-		// return skip not to affect scoring
-		return framework.NewStatus(framework.Skip, "called wrapped buind plugin is nil")
+		// return skip not to affect other bind plugins.
+		return framework.NewStatus(framework.Skip, "called wrapped bind plugin is nil")
 	}
 
 	if w.bindPluginExtender != nil {
