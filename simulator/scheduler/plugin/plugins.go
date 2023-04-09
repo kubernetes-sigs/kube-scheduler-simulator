@@ -210,8 +210,8 @@ func ConvertForSimulator(pls *configv1.Plugins) (*configv1.Plugins, error) {
 	if err := applyPluingSet(&newpls.MultiPoint, pls.MultiPoint, config.InTreeMultiPointPluginSet); err != nil {
 		return nil, xerrors.Errorf("merge MultiPointt plugins: %w", err)
 	}
-	// The default MultiPoint PluginSets must be enabled manually and set disable to "*".
-	// If you don't, the scheduler will enable all default plugins on its own since the plugin names is wrapped in later processing
+	// The default MultiPoint PluginSets should be disable to "*" here
+	// so that the scheduler won't enable all default plugins.
 	disableAllPluginSet(&newpls.MultiPoint)
 
 	return newpls, nil

@@ -31,7 +31,7 @@ func InTreeMultiPointPluginSet() (configv1.PluginSet, error) {
 
 func OutOfTreeMultiPointPlugins() []configv1.Plugin {
 	return []configv1.Plugin{
-		// Note: add your filter plugins here.
+		// Note: add what you want to register in multi point.
 	}
 }
 
