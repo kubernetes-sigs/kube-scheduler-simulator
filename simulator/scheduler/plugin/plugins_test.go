@@ -5,10 +5,12 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	configv1 "k8s.io/kube-scheduler/config/v1"
+	schedulerConfig "k8s.io/kubernetes/pkg/scheduler/apis/config"
 )
 
 func TestConvertForSimulator(t *testing.T) {
@@ -1147,5 +1149,120 @@ func defaultPluginConfig() []configv1.PluginConfig {
 				},
 			},
 		},
+	}
+}
+
+func TestGetScorePluginWeight(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		cfg  *schedulerConfig.KubeSchedulerConfiguration
+		want map[string]int32
+	}{
+		{
+			name: "score and multipoint plugins",
+			cfg: &schedulerConfig.KubeSchedulerConfiguration{
+				Profiles: []schedulerConfig.KubeSchedulerProfile{
+					{
+						Plugins: &schedulerConfig.Plugins{
+							Score: schedulerConfig.PluginSet{
+								Enabled: []schedulerConfig.Plugin{
+									{
+										Name:   "score1",
+										Weight: 1,
+									},
+									{
+										Name:   "score2",
+										Weight: 2,
+									},
+								},
+							},
+							MultiPoint: schedulerConfig.PluginSet{
+								Enabled: []schedulerConfig.Plugin{
+									{
+										Name:   "multipoint1",
+										Weight: 1,
+									},
+									{
+										Name:   "multipoint2",
+										Weight: 2,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: map[string]int32{
+				"multipoint1": 1,
+				"multipoint2": 2,
+				"score1":      1,
+				"score2":      2,
+			},
+		},
+		{
+			name: "only score plugins",
+			cfg: &schedulerConfig.KubeSchedulerConfiguration{
+				Profiles: []schedulerConfig.KubeSchedulerProfile{
+					{
+						Plugins: &schedulerConfig.Plugins{
+							Score: schedulerConfig.PluginSet{
+								Enabled: []schedulerConfig.Plugin{
+									{
+										Name:   "score1",
+										Weight: 1,
+									},
+									{
+										Name:   "score2",
+										Weight: 2,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: map[string]int32{
+				"score1": 1,
+				"score2": 2,
+			},
+		},
+		{
+			name: "only multipoint plugins",
+			cfg: &schedulerConfig.KubeSchedulerConfiguration{
+				Profiles: []schedulerConfig.KubeSchedulerProfile{
+					{
+						Plugins: &schedulerConfig.Plugins{
+							MultiPoint: schedulerConfig.PluginSet{
+								Enabled: []schedulerConfig.Plugin{
+									{
+										Name:   "multipoint1",
+										Weight: 1,
+									},
+									{
+										Name:   "multipoint2",
+										Weight: 2,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: map[string]int32{
+				"multipoint1": 1,
+				"multipoint2": 2,
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := getScorePluginWeight(tt.cfg)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("unexpected plugins map: (-want, +got):\n%s", diff)
+			}
+		})
 	}
 }

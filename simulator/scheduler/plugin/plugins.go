@@ -391,6 +391,7 @@ func getScorePluginWeight(cfg *schedulerConfig.KubeSchedulerConfiguration) map[s
 	scorePluginWeight := make(map[string]int32)
 	// TODO: support multi-scheduler
 	enabledScorePlugins := cfg.Profiles[0].Plugins.Score.Enabled
+	enabledScorePlugins = append(enabledScorePlugins, cfg.Profiles[0].Plugins.MultiPoint.Enabled...)
 	for _, p := range enabledScorePlugins {
 		if p.Weight != 0 {
 			scorePluginWeight[strings.TrimSuffix(p.Name, pluginSuffix)] = p.Weight
