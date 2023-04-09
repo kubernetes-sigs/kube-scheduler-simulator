@@ -36,7 +36,7 @@ func TestReflector_storeAllResultToPodFunc(t *testing.T) {
 			podName:      "pod1",
 			podNamespace: "default",
 			prepareMockResultStoreSetFn: func(m *mock_storereflector.MockResultStore) {
-				m.EXPECT().AddStoredResultToPod(gomock.Any()).Return(map[string]string{ExtenderFilterResultAnnotationKey: "some results"})
+				m.EXPECT().GetStoredResult(gomock.Any()).Return(map[string]string{ExtenderFilterResultAnnotationKey: "some results"})
 				m.EXPECT().DeleteData(gomock.Any())
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {

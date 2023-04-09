@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender/annotation"
 )
 
-func TestStore_AddStoredResultToPod(t *testing.T) {
+func TestStore_GetStoredResult(t *testing.T) {
 	t.Parallel()
 	podName := "pod1"
 	namespace := "default"
@@ -171,7 +171,7 @@ func TestStore_AddStoredResultToPod(t *testing.T) {
 				results: tt.result,
 			}
 			p := tt.newObj
-			result := s.AddStoredResultToPod(p)
+			result := s.GetStoredResult(p)
 
 			assert.Equal(t, tt.wantAnnotation, result)
 		})

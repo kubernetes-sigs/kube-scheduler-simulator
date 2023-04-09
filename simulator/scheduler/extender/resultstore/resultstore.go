@@ -13,7 +13,7 @@ import (
 )
 
 type Store interface {
-	AddStoredResultToPod(pod *v1.Pod) map[string]string
+	GetStoredResult(pod *v1.Pod) map[string]string
 	DeleteData(pod v1.Pod)
 	AddFilterResult(args extenderv1.ExtenderArgs, result extenderv1.ExtenderFilterResult, hostName string)
 	AddPrioritizeResult(args extenderv1.ExtenderArgs, result extenderv1.HostPriorityList, hostName string)
@@ -66,8 +66,8 @@ func newData() *result {
 	}
 }
 
-// AddStoredResultToPod adds all data corresponding to the specified key to the pod.
-func (s *store) AddStoredResultToPod(pod *v1.Pod) map[string]string {
+// GetStoredResult get all stored result of a given Pod.
+func (s *store) GetStoredResult(pod *v1.Pod) map[string]string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -78,22 +78,22 @@ func (s *store) AddStoredResultToPod(pod *v1.Pod) map[string]string {
 	}
 
 	annotation := map[string]string{}
-	if err := s.addFilterResultToPod(annotation, k); err != nil {
+	if err := s.addFilterResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add filtering result to the pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addPrioritizeResultToPod(annotation, k); err != nil {
+	if err := s.addPrioritizeResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add prioritize result to the pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addPreemptResultToPod(annotation, k); err != nil {
+	if err := s.addPreemptResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add preempt result to the pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addBindResultToPod(annotation, k); err != nil {
+	if err := s.addBindResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add bind result to the pod: $+v", err)
 		return nil
 	}
@@ -101,7 +101,7 @@ func (s *store) AddStoredResultToPod(pod *v1.Pod) map[string]string {
 	return annotation
 }
 
-func (s *store) addFilterResultToPod(anno map[string]string, k key) error {
+func (s *store) addFilterResultToMap(anno map[string]string, k key) error {
 	results, err := json.Marshal(s.results[k].filter)
 	if err != nil {
 		return xerrors.Errorf("encode Filter results to json: %w", err)
@@ -110,7 +110,7 @@ func (s *store) addFilterResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *store) addPrioritizeResultToPod(anno map[string]string, k key) error {
+func (s *store) addPrioritizeResultToMap(anno map[string]string, k key) error {
 	results, err := json.Marshal(s.results[k].prioritize)
 	if err != nil {
 		return xerrors.Errorf("encode Prioritize results to json: %w", err)
@@ -119,7 +119,7 @@ func (s *store) addPrioritizeResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *store) addPreemptResultToPod(anno map[string]string, k key) error {
+func (s *store) addPreemptResultToMap(anno map[string]string, k key) error {
 	results, err := json.Marshal(s.results[k].preempt)
 	if err != nil {
 		return xerrors.Errorf("encode Preempt results to json: %w", err)
@@ -128,7 +128,7 @@ func (s *store) addPreemptResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *store) addBindResultToPod(anno map[string]string, k key) error {
+func (s *store) addBindResultToMap(anno map[string]string, k key) error {
 	results, err := json.Marshal(s.results[k].bind)
 	if err != nil {
 		return xerrors.Errorf("encode Bind results to json: %w", err)

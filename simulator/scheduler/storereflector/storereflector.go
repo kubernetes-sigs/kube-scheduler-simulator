@@ -28,8 +28,8 @@ type Reflector interface {
 // Fulfilling this interface will allow the stored results to be saved as data in that Pod
 // when the Pod's schedule is complete.
 type ResultStore interface {
-	// AddStoredResultToPod adds all data corresponding to the pod to the pod.
-	AddStoredResultToPod(pod *corev1.Pod) map[string]string
+	// GetStoredResult adds all data corresponding to the pod to the pod.
+	GetStoredResult(pod *corev1.Pod) map[string]string
 	// DeleteData deletes all data corresponding to the pod.
 	DeleteData(key corev1.Pod)
 }
@@ -94,11 +94,11 @@ func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(int
 			// overwrite the Pod object so that we won't modify the copy from the shared informer.
 			pod = newPod
 
-			// Call AddStoredResultToPod of all ResultStore which is added to the map
+			// Call GetStoredResult of all ResultStore which is added to the map
 			// to reflects all results on the pod annotation.
 			resultSet := map[string]string{}
 			for k := range s.resultStores {
-				m := s.resultStores[k].AddStoredResultToPod(pod)
+				m := s.resultStores[k].GetStoredResult(pod)
 				for k, v := range m {
 					resultSet[k] = v
 					if pod.ObjectMeta.Annotations == nil {

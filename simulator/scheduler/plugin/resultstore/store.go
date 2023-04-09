@@ -122,10 +122,10 @@ func newData() *result {
 	return d
 }
 
-// AddStoredResultToPod adds all data corresponding to the specified key to the pod.
+// GetStoredResult get all stored result of a given Pod.
 //
 //nolint:cyclop,funlen
-func (s *Store) AddStoredResultToPod(pod *v1.Pod) map[string]string {
+func (s *Store) GetStoredResult(pod *v1.Pod) map[string]string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -136,52 +136,52 @@ func (s *Store) AddStoredResultToPod(pod *v1.Pod) map[string]string {
 	}
 
 	annotation := map[string]string{}
-	if err := s.addPreFilterResultToPod(annotation, k); err != nil {
+	if err := s.addPreFilterResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add prefilter result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addFilterResultToPod(annotation, k); err != nil {
+	if err := s.addFilterResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add filtering result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addPostFilterResultToPod(annotation, k); err != nil {
+	if err := s.addPostFilterResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add post filtering result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addPreScoreResultToPod(annotation, k); err != nil {
+	if err := s.addPreScoreResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add prescore result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addScoreResultToPod(annotation, k); err != nil {
+	if err := s.addScoreResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add scoring result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addFinalScoreResultToPod(annotation, k); err != nil {
+	if err := s.addFinalScoreResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add final score result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addReserveResultToPod(annotation, k); err != nil {
+	if err := s.addReserveResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add reserve result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addPermitResultToPod(annotation, k); err != nil {
+	if err := s.addPermitResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add permit result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addPreBindResultToPod(annotation, k); err != nil {
+	if err := s.addPreBindResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add prebind result to pod: %+v", err)
 		return nil
 	}
 
-	if err := s.addBindResultToPod(annotation, k); err != nil {
+	if err := s.addBindResultToMap(annotation, k); err != nil {
 		klog.Errorf("failed to add bind result to pod: %+v", err)
 		return nil
 	}
@@ -191,7 +191,7 @@ func (s *Store) AddStoredResultToPod(pod *v1.Pod) map[string]string {
 	return annotation
 }
 
-func (s *Store) addPreFilterResultToPod(anno map[string]string, k key) error {
+func (s *Store) addPreFilterResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.PreFilterResultAnnotationKey]
 	if !ok {
 		if s.results[k].preFilterResult == nil {
@@ -223,7 +223,7 @@ func (s *Store) addPreFilterResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addPreScoreResultToPod(anno map[string]string, k key) error {
+func (s *Store) addPreScoreResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.PreScoreResultAnnotationKey]
 	if ok {
 		return nil
@@ -241,7 +241,7 @@ func (s *Store) addPreScoreResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addBindResultToPod(anno map[string]string, k key) error {
+func (s *Store) addBindResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.BindResultAnnotationKey]
 	if ok {
 		return nil
@@ -259,7 +259,7 @@ func (s *Store) addBindResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addPreBindResultToPod(anno map[string]string, k key) error {
+func (s *Store) addPreBindResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.PreBindResultAnnotationKey]
 	if ok {
 		return nil
@@ -286,7 +286,7 @@ func (s *Store) addSelectedNodeToPod(anno map[string]string, k key) {
 	anno[annotation.SelectedNodeAnnotationKey] = s.results[k].selectedNode
 }
 
-func (s *Store) addReserveResultToPod(anno map[string]string, k key) error {
+func (s *Store) addReserveResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.ReserveResultAnnotationKey]
 	if ok {
 		return nil
@@ -303,7 +303,7 @@ func (s *Store) addReserveResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addPermitResultToPod(anno map[string]string, k key) error {
+func (s *Store) addPermitResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.PermitTimeoutResultAnnotationKey]
 	if !ok {
 		if s.results[k].permitTimeout == nil {
@@ -332,7 +332,7 @@ func (s *Store) addPermitResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addFilterResultToPod(anno map[string]string, k key) error {
+func (s *Store) addFilterResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.FilterResultAnnotationKey]
 	if ok {
 		return nil
@@ -350,7 +350,7 @@ func (s *Store) addFilterResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addPostFilterResultToPod(anno map[string]string, k key) error {
+func (s *Store) addPostFilterResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.PostFilterResultAnnotationKey]
 	if ok {
 		return nil
@@ -367,7 +367,7 @@ func (s *Store) addPostFilterResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addScoreResultToPod(anno map[string]string, k key) error {
+func (s *Store) addScoreResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.ScoreResultAnnotationKey]
 	if ok {
 		return nil
@@ -385,7 +385,7 @@ func (s *Store) addScoreResultToPod(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addFinalScoreResultToPod(anno map[string]string, k key) error {
+func (s *Store) addFinalScoreResultToMap(anno map[string]string, k key) error {
 	_, ok := anno[annotation.FinalScoreResultAnnotationKey]
 	if ok {
 		return nil
