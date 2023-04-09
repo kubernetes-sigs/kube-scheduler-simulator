@@ -46,11 +46,13 @@ require (
 	k8s.io/apimachinery v1.26.2
 	k8s.io/apiserver v1.26.2
 	k8s.io/client-go v1.26.2
+	k8s.io/code-generator v0.26.2
 	k8s.io/controller-manager v0.26.2
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/kube-aggregator v0.0.0
 	k8s.io/kube-scheduler v1.26.2
 	k8s.io/kubernetes v1.26.2
+	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d
 )
 
 require (
@@ -153,6 +155,7 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/mod v0.6.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
 	golang.org/x/sys v0.5.0 // indirect
@@ -179,6 +182,7 @@ require (
 	k8s.io/component-helpers v0.26.2 // indirect
 	k8s.io/csi-translation-lib v0.26.2 // indirect
 	k8s.io/dynamic-resource-allocation v0.0.0 // indirect
+	k8s.io/gengo v0.0.0-20220902162205-c0856e24416d // indirect
 	k8s.io/kms v0.26.2 // indirect
 	k8s.io/kube-controller-manager v0.0.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
@@ -186,7 +190,6 @@ require (
 	k8s.io/legacy-cloud-providers v0.0.0 // indirect
 	k8s.io/mount-utils v0.0.0 // indirect
 	k8s.io/pod-security-admission v0.0.0 // indirect
-	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.35 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect

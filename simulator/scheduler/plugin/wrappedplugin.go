@@ -210,6 +210,7 @@ type wrappedPlugin struct {
 	// TODO: move store's logic to plugin extender.
 	store Store
 
+	originalPreEnqueuePlugin framework.PreEnqueuePlugin
 	originalPreFilterPlugin  framework.PreFilterPlugin
 	originalFilterPlugin     framework.FilterPlugin
 	originalPreScorePlugin   framework.PreScorePlugin
@@ -295,6 +296,10 @@ func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plu
 		plg.postBindPluginExtender = options.extenderOption.PostBindPluginExtender
 	}
 
+	peqp, ok := p.(framework.PreEnqueuePlugin)
+	if ok {
+		plg.originalPreEnqueuePlugin = peqp
+	}
 	prefp, ok := p.(framework.PreFilterPlugin)
 	if ok {
 		plg.originalPreFilterPlugin = prefp
@@ -339,6 +344,14 @@ func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plu
 		plg.originalPostBindPlugin = postbp
 	}
 
+	queuesortp, ok := p.(framework.QueueSortPlugin)
+	if ok {
+		// There must be only one in each profile for which the QueueSortPlugin interface is implemented.
+		newplug := &wrappedPluginWithQueueSort{wrappedPlugin: *plg}
+		newplug.originalQueueSortPlugin = queuesortp
+		return newplug
+	}
+
 	return plg
 }
 
@@ -348,6 +361,17 @@ func (w *wrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
 		return w
 	}
 	return nil
+}
+
+// PreEnqueue wraps original PreEnqueue plugin of Scheduler Framework.
+// TODO: Implements before/after PreEnqueue function.
+func (w *wrappedPlugin) PreEnqueue(ctx context.Context, p *v1.Pod) *framework.Status {
+	if w.originalPreEnqueuePlugin == nil {
+		// return nil not to affect queuing
+		return nil
+	}
+
+	return w.originalPreEnqueuePlugin.PreEnqueue(ctx, p)
 }
 
 // NormalizeScore wraps original NormalizeScore plugin of Scheduler Framework.
@@ -711,4 +735,23 @@ func (w *wrappedPlugin) PostBind(ctx context.Context, state *framework.CycleStat
 	if w.postBindPluginExtender != nil {
 		w.postBindPluginExtender.AfterPostBind(ctx, state, pod, nodename)
 	}
+}
+
+// wrappedPluginWithQueueSort behaves as if it is original plugin and QueueSort plugin.
+// To support MultiPoint field, we are required to separate WrappedPlugin and the implementation of QueueSort interface.
+type wrappedPluginWithQueueSort struct {
+	wrappedPlugin
+
+	originalQueueSortPlugin framework.QueueSortPlugin
+}
+
+func (w *wrappedPluginWithQueueSort) Name() string { return w.wrappedPlugin.Name() }
+
+// Less  wraps original Less plugin of Scheduler Framework.
+func (w *wrappedPluginWithQueueSort) Less(pod1 *framework.QueuedPodInfo, pod2 *framework.QueuedPodInfo) bool {
+	if w.originalQueueSortPlugin == nil {
+		return false
+	}
+
+	return w.originalQueueSortPlugin.Less(pod1, pod2)
 }

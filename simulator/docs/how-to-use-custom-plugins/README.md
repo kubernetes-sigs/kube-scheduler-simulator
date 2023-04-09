@@ -46,8 +46,8 @@ func OutOfTreeRegistries() runtime.Registry {
 Next, add nodenumber to `OutOfTreeScorePlugins` since the nodenumber plugin is a Score plugin.
 
 ```go
-func OutOfTreeScorePlugins() []v1beta2.Plugin {
-	return []v1beta2.Plugin{
+func OutOfTreeScorePlugins() []v1.Plugin {
+	return []v1.Plugin{
 		// Note: add your original score plugins here.
 		{
 			Name:   nodenumber.Name,
@@ -63,7 +63,7 @@ and see the nodenumber plugin's result like other in-tree plugins.
 
 ```yaml
 kind: KubeSchedulerConfiguration
-apiVersion: kubescheduler.config.k8s.io/v1beta2
+apiVersion: kubescheduler.config.k8s.io/v1
 profiles:
   - schedulerName: default-scheduler
     plugins:
@@ -139,22 +139,22 @@ profiles:
       - name: DefaultPreemption
         args:
           kind: DefaultPreemptionArgs
-          apiVersion: kubescheduler.config.k8s.io/v1beta2
+          apiVersion: kubescheduler.config.k8s.io/v1
           minCandidateNodesPercentage: 10
           minCandidateNodesAbsolute: 100
       - name: InterPodAffinity
         args:
           kind: InterPodAffinityArgs
-          apiVersion: kubescheduler.config.k8s.io/v1beta2
+          apiVersion: kubescheduler.config.k8s.io/v1
           hardPodAffinityWeight: 1
       - name: NodeAffinity
         args:
           kind: NodeAffinityArgs
-          apiVersion: kubescheduler.config.k8s.io/v1beta2
+          apiVersion: kubescheduler.config.k8s.io/v1
       - name: NodeResourcesBalancedAllocation
         args:
           kind: NodeResourcesBalancedAllocationArgs
-          apiVersion: kubescheduler.config.k8s.io/v1beta2
+          apiVersion: kubescheduler.config.k8s.io/v1
           resources:
             - name: cpu
               weight: 1
@@ -163,7 +163,7 @@ profiles:
       - name: NodeResourcesFit
         args:
           kind: NodeResourcesFitArgs
-          apiVersion: kubescheduler.config.k8s.io/v1beta2
+          apiVersion: kubescheduler.config.k8s.io/v1
           scoringStrategy:
             type: LeastAllocated
             resources:
@@ -174,17 +174,17 @@ profiles:
       - name: PodTopologySpread
         args:
           kind: PodTopologySpreadArgs
-          apiVersion: kubescheduler.config.k8s.io/v1beta2
+          apiVersion: kubescheduler.config.k8s.io/v1
           defaultingType: System
       - name: VolumeBinding
         args:
           kind: VolumeBindingArgs
-          apiVersion: kubescheduler.config.k8s.io/v1beta2
+          apiVersion: kubescheduler.config.k8s.io/v1
           bindTimeoutSeconds: 600
       - name: NodeNumber
         args:
           kind: NodeNumberArgs
-          apiVersion: kubescheduler.config.k8s.io/v1beta2
+          apiVersion: kubescheduler.config.k8s.io/v1
           reverse: true
 ```
 

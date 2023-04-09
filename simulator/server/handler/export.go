@@ -8,7 +8,7 @@ import (
 	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	"k8s.io/klog/v2"
-	v1beta2config "k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
@@ -25,7 +25,7 @@ type ResourcesForImport struct {
 	Pvcs            []v1.PersistentVolumeClaimApplyConfiguration      `json:"pvcs"`
 	StorageClasses  []confstoragev1.StorageClassApplyConfiguration    `json:"storageClasses"`
 	PriorityClasses []schedulingcfgv1.PriorityClassApplyConfiguration `json:"priorityClasses"`
-	SchedulerConfig *v1beta2config.KubeSchedulerConfiguration         `json:"schedulerConfig"`
+	SchedulerConfig *configv1.KubeSchedulerConfiguration              `json:"schedulerConfig"`
 	Namespaces      []v1.NamespaceApplyConfiguration                  `json:"namespaces"`
 }
 

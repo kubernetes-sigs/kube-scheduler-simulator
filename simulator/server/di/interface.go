@@ -6,10 +6,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
-	configv1 "k8s.io/client-go/applyconfigurations/core/v1"
+	configcorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	schedulingv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	storageconfigv1 "k8s.io/client-go/applyconfigurations/storage/v1"
-	"k8s.io/kube-scheduler/config/v1beta2"
+	configv1 "k8s.io/kube-scheduler/config/v1"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
@@ -22,7 +22,7 @@ import (
 type PodService interface {
 	Get(ctx context.Context, name string, namespace string) (*corev1.Pod, error)
 	List(ctx context.Context, namespace string) (*corev1.PodList, error)
-	Apply(ctx context.Context, namespace string, pod *configv1.PodApplyConfiguration) (*corev1.Pod, error)
+	Apply(ctx context.Context, namespace string, pod *configcorev1.PodApplyConfiguration) (*corev1.Pod, error)
 	Delete(ctx context.Context, name string, namespace string) error
 }
 
@@ -30,7 +30,7 @@ type PodService interface {
 type NodeService interface {
 	Get(ctx context.Context, name string) (*corev1.Node, error)
 	List(ctx context.Context) (*corev1.NodeList, error)
-	Apply(ctx context.Context, node *configv1.NodeApplyConfiguration) (*corev1.Node, error)
+	Apply(ctx context.Context, node *configcorev1.NodeApplyConfiguration) (*corev1.Node, error)
 	Delete(ctx context.Context, name string) error
 }
 
@@ -38,7 +38,7 @@ type NodeService interface {
 type PersistentVolumeService interface {
 	Get(ctx context.Context, name string) (*corev1.PersistentVolume, error)
 	List(ctx context.Context) (*corev1.PersistentVolumeList, error)
-	Apply(ctx context.Context, pv *configv1.PersistentVolumeApplyConfiguration) (*corev1.PersistentVolume, error)
+	Apply(ctx context.Context, pv *configcorev1.PersistentVolumeApplyConfiguration) (*corev1.PersistentVolume, error)
 	Delete(ctx context.Context, name string) error
 }
 
@@ -46,7 +46,7 @@ type PersistentVolumeService interface {
 type PersistentVolumeClaimService interface {
 	Get(ctx context.Context, name string, namespace string) (*corev1.PersistentVolumeClaim, error)
 	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
-	Apply(ctx context.Context, namespace string, pvc *configv1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
+	Apply(ctx context.Context, namespace string, pvc *configcorev1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
 	Delete(ctx context.Context, name string, namespace string) error
 }
 
@@ -60,9 +60,9 @@ type StorageClassService interface {
 
 // SchedulerService represents service for manage scheduler.
 type SchedulerService interface {
-	GetSchedulerConfig() (*v1beta2.KubeSchedulerConfiguration, error)
-	RestartScheduler(cfg *v1beta2.KubeSchedulerConfiguration) error
-	StartScheduler(cfg *v1beta2.KubeSchedulerConfiguration) error
+	GetSchedulerConfig() (*configv1.KubeSchedulerConfiguration, error)
+	RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error
+	StartScheduler(cfg *configv1.KubeSchedulerConfiguration) error
 	ResetScheduler() error
 	ShutdownScheduler()
 	ExtenderService() scheduler.ExtenderService
