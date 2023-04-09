@@ -1,7 +1,7 @@
 # See https://cloud.google.com/cloud-build/docs/build-config
 
 # this must be specified in seconds. If omitted, defaults to 600s (10 mins)
-timeout: 2000s
+timeout: 3000s
 steps:
   - name: gcr.io/cloud-builders/docker
     args:
