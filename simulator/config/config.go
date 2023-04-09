@@ -41,12 +41,15 @@ type Config struct {
 	ExternalSchedulerEnabled bool
 }
 
+const (
+	// defaultFilePath is the config file path.
+	// TODO: move it to somewhere configurable from outside if users want.
+	defaultFilePath = "./config.yaml"
+)
+
 // NewConfig gets some settings from config file or environment variables.
 func NewConfig() (*Config, error) {
-	// FilePath is the config file path.
-	// TODO: FilePath this file path by cli in main function.
-	FilePath := "./config.yaml"
-	if err := LoadYamlConfig(FilePath); err != nil {
+	if err := LoadYamlConfig(defaultFilePath); err != nil {
 		return nil, err
 	}
 
