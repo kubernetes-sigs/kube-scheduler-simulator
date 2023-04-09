@@ -13,15 +13,15 @@ import (
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender/annotation"
 )
 
-func TestStore_AddStoredResultToPod(t *testing.T) {
+func TestStore_GetStoredResult(t *testing.T) {
 	t.Parallel()
 	podName := "pod1"
 	namespace := "default"
 	tests := []struct {
-		name    string
-		result  map[key]*result
-		newObj  *corev1.Pod
-		wantPod *corev1.Pod
+		name           string
+		result         map[key]*result
+		newObj         *corev1.Pod
+		wantAnnotation map[string]string
 	}{
 		{
 			name: "success",
@@ -62,68 +62,56 @@ func TestStore_AddStoredResultToPod(t *testing.T) {
 					Namespace: namespace,
 				},
 			},
-			wantPod: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podName,
-					Namespace: namespace,
-					Annotations: map[string]string{
-						annotation.ExtenderFilterResultAnnotationKey: func() string {
-							r := map[string]extenderv1.ExtenderFilterResult{
-								"node0": {
-									Nodes:                      &corev1.NodeList{Items: []corev1.Node{{ObjectMeta: metav1.ObjectMeta{Name: "nodename"}}}},
-									NodeNames:                  &[]string{"node1"},
-									FailedNodes:                map[string]string{"foo": "bar"},
-									FailedAndUnresolvableNodes: map[string]string{"baz": "qux"},
-									Error:                      "myerror",
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-						annotation.ExtenderPrioritizeResultAnnotationKey: func() string {
-							r := map[string]extenderv1.HostPriorityList{
-								"node0": {
-									{
-										Host:  "node1",
-										Score: 1.0,
-									},
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-						annotation.ExtenderPreemptResultAnnotationKey: func() string {
-							r := map[string]extenderv1.ExtenderPreemptionResult{
-								"node0": {
-									NodeNameToMetaVictims: map[string]*extenderv1.MetaVictims{"foo": {Pods: []*extenderv1.MetaPod{{UID: "myuid"}}, NumPDBViolations: 1}},
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-						annotation.ExtenderBindResultAnnotationKey: func() string {
-							r := map[string]extenderv1.ExtenderBindingResult{
-								"node0": {
-									Error: "myerror",
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-					},
-				},
+			wantAnnotation: map[string]string{
+				annotation.ExtenderFilterResultAnnotationKey: func() string {
+					r := map[string]extenderv1.ExtenderFilterResult{
+						"node0": {
+							Nodes:                      &corev1.NodeList{Items: []corev1.Node{{ObjectMeta: metav1.ObjectMeta{Name: "nodename"}}}},
+							NodeNames:                  &[]string{"node1"},
+							FailedNodes:                map[string]string{"foo": "bar"},
+							FailedAndUnresolvableNodes: map[string]string{"baz": "qux"},
+							Error:                      "myerror",
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
+				annotation.ExtenderPrioritizeResultAnnotationKey: func() string {
+					r := map[string]extenderv1.HostPriorityList{
+						"node0": {
+							{
+								Host:  "node1",
+								Score: 1.0,
+							},
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
+				annotation.ExtenderPreemptResultAnnotationKey: func() string {
+					r := map[string]extenderv1.ExtenderPreemptionResult{
+						"node0": {
+							NodeNameToMetaVictims: map[string]*extenderv1.MetaVictims{"foo": {Pods: []*extenderv1.MetaPod{{UID: "myuid"}}, NumPDBViolations: 1}},
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
+				annotation.ExtenderBindResultAnnotationKey: func() string {
+					r := map[string]extenderv1.ExtenderBindingResult{
+						"node0": {
+							Error: "myerror",
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
 			},
 		},
 		{
 			name:   "do nothing if store doesn't have data",
 			result: map[key]*result{},
 			newObj: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podName,
-					Namespace: namespace,
-				},
-			},
-			wantPod: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      podName,
 					Namespace: namespace,
@@ -154,29 +142,23 @@ func TestStore_AddStoredResultToPod(t *testing.T) {
 					Namespace: namespace,
 				},
 			},
-			wantPod: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podName,
-					Namespace: namespace,
-					Annotations: map[string]string{
-						annotation.ExtenderFilterResultAnnotationKey: func() string {
-							r := map[string]extenderv1.ExtenderFilterResult{
-								"node0": {
-									Nodes:                      &corev1.NodeList{Items: []corev1.Node{{ObjectMeta: metav1.ObjectMeta{Name: "nodename"}}}},
-									NodeNames:                  &[]string{"node1"},
-									FailedNodes:                map[string]string{"foo": "bar"},
-									FailedAndUnresolvableNodes: map[string]string{"baz": "qux"},
-									Error:                      "myerror",
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-						annotation.ExtenderPrioritizeResultAnnotationKey: "{}",
-						annotation.ExtenderPreemptResultAnnotationKey:    "{}",
-						annotation.ExtenderBindResultAnnotationKey:       "{}",
-					},
-				},
+			wantAnnotation: map[string]string{
+				annotation.ExtenderFilterResultAnnotationKey: func() string {
+					r := map[string]extenderv1.ExtenderFilterResult{
+						"node0": {
+							Nodes:                      &corev1.NodeList{Items: []corev1.Node{{ObjectMeta: metav1.ObjectMeta{Name: "nodename"}}}},
+							NodeNames:                  &[]string{"node1"},
+							FailedNodes:                map[string]string{"foo": "bar"},
+							FailedAndUnresolvableNodes: map[string]string{"baz": "qux"},
+							Error:                      "myerror",
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
+				annotation.ExtenderPrioritizeResultAnnotationKey: "{}",
+				annotation.ExtenderPreemptResultAnnotationKey:    "{}",
+				annotation.ExtenderBindResultAnnotationKey:       "{}",
 			},
 		},
 	}
@@ -189,9 +171,9 @@ func TestStore_AddStoredResultToPod(t *testing.T) {
 				results: tt.result,
 			}
 			p := tt.newObj
-			s.AddStoredResultToPod(p)
+			result := s.GetStoredResult(p)
 
-			assert.Equal(t, tt.wantPod, p)
+			assert.Equal(t, tt.wantAnnotation, result)
 		})
 	}
 }

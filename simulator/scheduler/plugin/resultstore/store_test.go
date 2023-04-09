@@ -577,15 +577,15 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 	}
 }
 
-func TestStore_AddStoredResultToPod(t *testing.T) {
+func TestStore_GetStoredResult(t *testing.T) {
 	t.Parallel()
 	podName := "pod1"
 	namespace := "default"
 	tests := []struct {
-		name    string
-		result  map[key]*result
-		newObj  *corev1.Pod
-		wantpod *corev1.Pod
+		name           string
+		result         map[key]*result
+		newObj         *corev1.Pod
+		wantAnnotation map[string]string
 	}{
 		{
 			name: "success",
@@ -654,120 +654,108 @@ func TestStore_AddStoredResultToPod(t *testing.T) {
 					Namespace: namespace,
 				},
 			},
-			wantpod: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podName,
-					Namespace: namespace,
-					Annotations: map[string]string{
-						annotation.SelectedNodeAnnotationKey: "node",
-						annotation.PreScoreResultAnnotationKey: func() string {
-							d, _ := json.Marshal(map[string]string{
-								"plugin1": "preScore",
-							})
-							return string(d)
-						}(),
-						annotation.PreFilterResultAnnotationKey: func() string {
-							d, _ := json.Marshal(map[string][]string{
-								"plugin1": {"node1", "node2"},
-							})
-							return string(d)
-						}(),
-						annotation.PreFilterStatusResultAnnotationKey: func() string {
-							d, _ := json.Marshal(map[string]string{
-								"plugin1": "preFilterStatus",
-							})
-							return string(d)
-						}(),
-						annotation.PermitStatusResultAnnotationKey: func() string {
-							d, _ := json.Marshal(map[string]string{
-								"plugin1": "permit",
-							})
-							return string(d)
-						}(),
-						annotation.PermitTimeoutResultAnnotationKey: func() string {
-							d, _ := json.Marshal(map[string]string{
-								"plugin1": "1s",
-							})
-							return string(d)
-						}(),
-						annotation.ReserveResultAnnotationKey: func() string {
-							d, _ := json.Marshal(map[string]string{
-								"plugin1": "reserve",
-							})
-							return string(d)
-						}(),
-						annotation.PreBindResultAnnotationKey: func() string {
-							d, _ := json.Marshal(map[string]string{
-								"plugin1": "prebind",
-							})
-							return string(d)
-						}(),
-						annotation.BindResultAnnotationKey: func() string {
-							d, _ := json.Marshal(map[string]string{
-								"plugin1": "bind",
-							})
-							return string(d)
-						}(),
-						annotation.FilterResultAnnotationKey: func() string {
-							r := map[string]map[string]string{
-								"node0": {
-									"plugin1": PassedFilterMessage,
-								},
-								"node1": {
-									"plugin1": PassedFilterMessage,
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-						annotation.ScoreResultAnnotationKey: func() string {
-							r := map[string]map[string]string{
-								"node0": {
-									"plugin1": "10",
-								},
-								"node1": {
-									"plugin1": "10",
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-						annotation.FinalScoreResultAnnotationKey: func() string {
-							r := map[string]map[string]string{
-								"node0": {
-									"plugin1": "20",
-								},
-								"node1": {
-									"plugin1": "20",
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-						annotation.PostFilterResultAnnotationKey: func() string {
-							r := map[string]map[string]string{
-								"node0": {
-									"plugin1": PostFilterNominatedMessage,
-								},
-								"node1": {},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-					},
-				},
+			wantAnnotation: map[string]string{
+				annotation.SelectedNodeAnnotationKey: "node",
+				annotation.PreScoreResultAnnotationKey: func() string {
+					d, _ := json.Marshal(map[string]string{
+						"plugin1": "preScore",
+					})
+					return string(d)
+				}(),
+				annotation.PreFilterResultAnnotationKey: func() string {
+					d, _ := json.Marshal(map[string][]string{
+						"plugin1": {"node1", "node2"},
+					})
+					return string(d)
+				}(),
+				annotation.PreFilterStatusResultAnnotationKey: func() string {
+					d, _ := json.Marshal(map[string]string{
+						"plugin1": "preFilterStatus",
+					})
+					return string(d)
+				}(),
+				annotation.PermitStatusResultAnnotationKey: func() string {
+					d, _ := json.Marshal(map[string]string{
+						"plugin1": "permit",
+					})
+					return string(d)
+				}(),
+				annotation.PermitTimeoutResultAnnotationKey: func() string {
+					d, _ := json.Marshal(map[string]string{
+						"plugin1": "1s",
+					})
+					return string(d)
+				}(),
+				annotation.ReserveResultAnnotationKey: func() string {
+					d, _ := json.Marshal(map[string]string{
+						"plugin1": "reserve",
+					})
+					return string(d)
+				}(),
+				annotation.PreBindResultAnnotationKey: func() string {
+					d, _ := json.Marshal(map[string]string{
+						"plugin1": "prebind",
+					})
+					return string(d)
+				}(),
+				annotation.BindResultAnnotationKey: func() string {
+					d, _ := json.Marshal(map[string]string{
+						"plugin1": "bind",
+					})
+					return string(d)
+				}(),
+				annotation.FilterResultAnnotationKey: func() string {
+					r := map[string]map[string]string{
+						"node0": {
+							"plugin1": PassedFilterMessage,
+						},
+						"node1": {
+							"plugin1": PassedFilterMessage,
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
+				annotation.ScoreResultAnnotationKey: func() string {
+					r := map[string]map[string]string{
+						"node0": {
+							"plugin1": "10",
+						},
+						"node1": {
+							"plugin1": "10",
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
+				annotation.FinalScoreResultAnnotationKey: func() string {
+					r := map[string]map[string]string{
+						"node0": {
+							"plugin1": "20",
+						},
+						"node1": {
+							"plugin1": "20",
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
+				annotation.PostFilterResultAnnotationKey: func() string {
+					r := map[string]map[string]string{
+						"node0": {
+							"plugin1": PostFilterNominatedMessage,
+						},
+						"node1": {},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
 			},
 		},
 		{
 			name:   "do nothing if store doesn't have data",
 			result: map[key]*result{},
 			newObj: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podName,
-					Namespace: namespace,
-				},
-			},
-			wantpod: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      podName,
 					Namespace: namespace,
@@ -797,37 +785,31 @@ func TestStore_AddStoredResultToPod(t *testing.T) {
 					Namespace: namespace,
 				},
 			},
-			wantpod: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podName,
-					Namespace: namespace,
-					Annotations: map[string]string{
-						annotation.FilterResultAnnotationKey: func() string {
-							r := map[string]map[string]string{
-								"node0": {
-									"plugin1": PassedFilterMessage,
-								},
-								"node1": {
-									"plugin1": PassedFilterMessage,
-								},
-							}
-							d, _ := json.Marshal(r)
-							return string(d)
-						}(),
-						annotation.ScoreResultAnnotationKey:           "{}",
-						annotation.FinalScoreResultAnnotationKey:      "{}",
-						annotation.PostFilterResultAnnotationKey:      "{}",
-						annotation.SelectedNodeAnnotationKey:          "",
-						annotation.PreScoreResultAnnotationKey:        "{}",
-						annotation.PreFilterResultAnnotationKey:       "{}",
-						annotation.PreFilterStatusResultAnnotationKey: "{}",
-						annotation.PermitStatusResultAnnotationKey:    "{}",
-						annotation.PermitTimeoutResultAnnotationKey:   "{}",
-						annotation.ReserveResultAnnotationKey:         "{}",
-						annotation.PreBindResultAnnotationKey:         "{}",
-						annotation.BindResultAnnotationKey:            "{}",
-					},
-				},
+			wantAnnotation: map[string]string{
+				annotation.FilterResultAnnotationKey: func() string {
+					r := map[string]map[string]string{
+						"node0": {
+							"plugin1": PassedFilterMessage,
+						},
+						"node1": {
+							"plugin1": PassedFilterMessage,
+						},
+					}
+					d, _ := json.Marshal(r)
+					return string(d)
+				}(),
+				annotation.ScoreResultAnnotationKey:           "{}",
+				annotation.FinalScoreResultAnnotationKey:      "{}",
+				annotation.PostFilterResultAnnotationKey:      "{}",
+				annotation.SelectedNodeAnnotationKey:          "",
+				annotation.PreScoreResultAnnotationKey:        "{}",
+				annotation.PreFilterResultAnnotationKey:       "{}",
+				annotation.PreFilterStatusResultAnnotationKey: "{}",
+				annotation.PermitStatusResultAnnotationKey:    "{}",
+				annotation.PermitTimeoutResultAnnotationKey:   "{}",
+				annotation.ReserveResultAnnotationKey:         "{}",
+				annotation.PreBindResultAnnotationKey:         "{}",
+				annotation.BindResultAnnotationKey:            "{}",
 			},
 		},
 	}
@@ -840,9 +822,8 @@ func TestStore_AddStoredResultToPod(t *testing.T) {
 				results: tt.result,
 			}
 			p := tt.newObj
-			s.AddStoredResultToPod(p)
-
-			assert.Equal(t, tt.wantpod, p)
+			result := s.GetStoredResult(p)
+			assert.Equal(t, tt.wantAnnotation, result)
 		})
 	}
 }

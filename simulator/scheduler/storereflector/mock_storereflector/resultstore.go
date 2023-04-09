@@ -34,16 +34,18 @@ func (m *MockResultStore) EXPECT() *MockResultStoreMockRecorder {
 	return m.recorder
 }
 
-// AddStoredResultToPod mocks base method.
-func (m *MockResultStore) AddStoredResultToPod(arg0 *v1.Pod) {
+// GetStoredResult mocks base method.
+func (m *MockResultStore) GetStoredResult(arg0 *v1.Pod) map[string]string {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AddStoredResultToPod", arg0)
+	ret := m.ctrl.Call(m, "GetStoredResult", arg0)
+	ret0, _ := ret[0].(map[string]string)
+	return ret0
 }
 
-// AddStoredResultToPod indicates an expected call of AddStoredResultToPod.
-func (mr *MockResultStoreMockRecorder) AddStoredResultToPod(arg0 interface{}) *gomock.Call {
+// GetStoredResult indicates an expected call of GetStoredResult.
+func (mr *MockResultStoreMockRecorder) GetStoredResult(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddStoredResultToPod", reflect.TypeOf((*MockResultStore)(nil).AddStoredResultToPod), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStoredResult", reflect.TypeOf((*MockResultStore)(nil).GetStoredResult), arg0)
 }
 
 // DeleteData mocks base method.
