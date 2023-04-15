@@ -44,6 +44,7 @@ From the web, you can create/edit/delete these resources to simulate a cluster.
 - Persistent Volume Claims
 - Storage Classes
 - Priority Classes
+- Namespaces
 
 ![list resources](simulator/docs/images/resources.png)
 
@@ -82,7 +83,7 @@ you can refer to the [documentation](./simulator/docs/simulator-server-config.md
 
 ### Run simulator with Docker
 
-We have [docker-compose.yml](docker-compose.yml) to run the simulator easily. You should install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docker-docs.netlify.app/compose/install/) firstly.
+We have [docker-compose.yml](docker-compose.yml) to run the simulator easily. You should install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/) firstly.
 
 You can use the following command.
 
@@ -126,7 +127,7 @@ You can use it by setting an `EXTERNAL_IMPORT_ENABLED` environment variable to `
 You need to have the kubeconfig to import resources on your cluster.
 The simulator tries to read the kubeconfig file on the environment variable `KUBECONFIG`.
 
-For more information about those variables, please see [simulator/docs/env-variables.md](simulator/docs/env-variables.md).
+For more information about those variables, please see [simulator/docs/environment-variables.md](simulator/docs/environment-variables.md).
 
 ## Contributing
 
