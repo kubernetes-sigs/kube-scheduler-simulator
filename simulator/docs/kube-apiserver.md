@@ -10,24 +10,9 @@ The endpoint is "http://localhost:3131" by default. (can be configured by env de
 
 ### kubeconfig
 
-You can use this kubeconfig to communicate. 
+You can use this kubeconfig to communicate with kube-apiserver in the simulator. 
 
-```yaml
-apiVersion: v1
-kind: Config
-
-clusters:
-- cluster:
-    server: http://localhost:3131
-  name: simulator
-
-contexts:
-- context:
-    cluster: simulator
-  name: simulator
-
-current-context: simulator
-```
+[kubeconfig.yaml](./kubeconfig.yaml)
 
 ### kubectl
 

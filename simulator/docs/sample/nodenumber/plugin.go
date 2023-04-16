@@ -57,6 +57,8 @@ func (s *preScoreState) Clone() framework.StateData {
 }
 
 func (pl *NodeNumber) PreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*v1.Node) *framework.Status {
+	klog.Info("execute PreScore on NodeNumber plugin", "pod", klog.KObj(pod))
+
 	podNameLastChar := pod.Name[len(pod.Name)-1:]
 	podnum, err := strconv.Atoi(podNameLastChar)
 	if err != nil {
@@ -82,6 +84,7 @@ var ErrNotExpectedPreScoreState = errors.New("unexpected pre score state")
 
 // Score invoked at the score extension point.
 func (pl *NodeNumber) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
+	klog.Info("execute Score on NodeNumber plugin", "pod", klog.KObj(pod))
 	data, err := state.Read(preScoreStateKey)
 	if err != nil {
 		// return success even if there is no value in preScoreStateKey, since the
