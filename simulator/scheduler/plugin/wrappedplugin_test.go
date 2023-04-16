@@ -32,7 +32,7 @@ func Test_NewWrappedPlugin(t *testing.T) {
 		want framework.Plugin
 	}{
 		{
-			name: "success with filter plugin & default weight is set to 0",
+			name: "success with filter plugin",
 			args: args{
 				s: store,
 				p: fakeFilterPlugin{},
@@ -41,12 +41,11 @@ func Test_NewWrappedPlugin(t *testing.T) {
 				name:                 "fakeFilterPluginWrapped",
 				originalFilterPlugin: fakeFilterPlugin{},
 				originalScorePlugin:  nil,
-				weight:               0,
 				store:                store,
 			},
 		},
 		{
-			name: "success with postFilter plugin & default weight is set to 0",
+			name: "success with postFilter plugin",
 			args: args{
 				s: store,
 				p: fakePostFilterPlugin{},
@@ -56,12 +55,11 @@ func Test_NewWrappedPlugin(t *testing.T) {
 				originalFilterPlugin:     nil,
 				originalPostFilterPlugin: fakePostFilterPlugin{},
 				originalScorePlugin:      nil,
-				weight:                   0,
 				store:                    store,
 			},
 		},
 		{
-			name: "success with score plugin & default weight is set to 0",
+			name: "success with score plugin",
 			args: args{
 				s: store,
 				p: fakeScorePlugin{},
@@ -70,12 +68,11 @@ func Test_NewWrappedPlugin(t *testing.T) {
 				name:                 "fakeScorePluginWrapped",
 				originalFilterPlugin: nil,
 				originalScorePlugin:  fakeScorePlugin{},
-				weight:               0,
 				store:                store,
 			},
 		},
 		{
-			name: "success with score/filter/postFilter plugin & default weight is set to 0",
+			name: "success with score/filter/postFilter plugin",
 			args: args{
 				s: store,
 				p: fakeWrappedPlugin{},
@@ -85,7 +82,6 @@ func Test_NewWrappedPlugin(t *testing.T) {
 				originalFilterPlugin:     fakeWrappedPlugin{},
 				originalScorePlugin:      fakeWrappedPlugin{},
 				originalPostFilterPlugin: fakeWrappedPlugin{},
-				weight:                   0,
 				store:                    store,
 			},
 		},
@@ -95,61 +91,6 @@ func Test_NewWrappedPlugin(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := NewWrappedPlugin(tt.args.s, tt.args.p)
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
-func Test_NewWrappedPlugin_WithWeightOption(t *testing.T) {
-	t.Parallel()
-	store := resultstore.New(nil)
-
-	type args struct {
-		s      *resultstore.Store
-		p      framework.Plugin
-		weight int32
-	}
-	tests := []struct {
-		name string
-		args args
-		want framework.Plugin
-	}{
-		{
-			name: "success & weight is set to 0",
-			args: args{
-				s:      store,
-				p:      fakeFilterPlugin{},
-				weight: 0,
-			},
-			want: &wrappedPlugin{
-				name:                 "fakeFilterPluginWrapped",
-				originalFilterPlugin: fakeFilterPlugin{},
-				originalScorePlugin:  nil,
-				weight:               0,
-				store:                store,
-			},
-		},
-		{
-			name: "success & weight is set to 1",
-			args: args{
-				s:      store,
-				p:      fakeFilterPlugin{},
-				weight: 1,
-			},
-			want: &wrappedPlugin{
-				name:                 "fakeFilterPluginWrapped",
-				originalFilterPlugin: fakeFilterPlugin{},
-				originalScorePlugin:  nil,
-				weight:               1,
-				store:                store,
-			},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			got := NewWrappedPlugin(tt.args.s, tt.args.p, WithWeightOption(&tt.args.weight))
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -180,7 +121,6 @@ func Test_NewWrappedPlugin_WithPluginNameOption(t *testing.T) {
 				name:                 "userNamedPlugin",
 				originalFilterPlugin: fakeFilterPlugin{},
 				originalScorePlugin:  nil,
-				weight:               0,
 				store:                store,
 			},
 		},
@@ -405,12 +345,13 @@ func Test_wrappedPlugin_Filter_WithPluginExtender(t *testing.T) {
 			s := mock_plugin.NewMockStore(ctrl)
 			p := mock_plugin.NewMockFilterPlugin(ctrl)
 			fe := mock_plugin.NewMockFilterPluginExtender(ctrl)
-			e := &PluginExtenders{
-				FilterPluginExtender: fe,
-			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, p, fe, tt.args)
-			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(func(_ SimulatorHandle) PluginExtenders {
+				return PluginExtenders{
+					FilterPluginExtender: fe,
+				}
+			})).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
@@ -667,12 +608,13 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 			s := mock_plugin.NewMockStore(ctrl)
 			p := mock_plugin.NewMockPostFilterPlugin(ctrl)
 			fe := mock_plugin.NewMockPostFilterPluginExtender(ctrl)
-			e := &PluginExtenders{
-				PostFilterPluginExtender: fe,
-			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, p, fe, tt.args)
-			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(func(_ SimulatorHandle) PluginExtenders {
+				return PluginExtenders{
+					PostFilterPluginExtender: fe,
+				}
+			})).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
@@ -1008,12 +950,13 @@ func Test_wrappedPlugin_NormalizeScore_WithPluginExtender(t *testing.T) {
 			sp := mock_plugin.NewMockScorePlugin(ctrl)
 
 			spe := mock_plugin.NewMockNormalizeScorePluginExtender(ctrl)
-			e := &PluginExtenders{
-				NormalizeScorePluginExtender: spe,
-			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, se, sp, spe, tt.args)
-			pl, ok := NewWrappedPlugin(s, sp, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, sp, WithExtendersOption(func(_ SimulatorHandle) PluginExtenders {
+				return PluginExtenders{
+					NormalizeScorePluginExtender: spe,
+				}
+			})).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
@@ -1188,12 +1131,13 @@ func Test_wrappedPlugin_Score_WithPluginExtender(t *testing.T) {
 			s := mock_plugin.NewMockStore(ctrl)
 			p := mock_plugin.NewMockScorePlugin(ctrl)
 			se := mock_plugin.NewMockScorePluginExtender(ctrl)
-			e := &PluginExtenders{
-				ScorePluginExtender: se,
-			}
 			ctx := context.Background()
 			tt.prepareEachMockFn(ctx, s, p, se, tt.args)
-			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(e)).(*wrappedPlugin)
+			pl, ok := NewWrappedPlugin(s, p, WithExtendersOption(func(_ SimulatorHandle) PluginExtenders {
+				return PluginExtenders{
+					ScorePluginExtender: se,
+				}
+			})).(*wrappedPlugin)
 			if !ok { // should never happen
 				t.Fatalf("Assert to wrapped plugin: %v", ok)
 			}
@@ -1952,14 +1896,14 @@ func Test_wrappedPlugin_PostBind(t *testing.T) {
 type fakeFilterPlugin struct{}
 
 func (fakeFilterPlugin) Name() string { return "fakeFilterPlugin" }
-func (fakeFilterPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
+func (fakeFilterPlugin) Filter(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ *framework.NodeInfo) *framework.Status {
 	return nil
 }
 
 type fakePostFilterPlugin struct{}
 
 func (fakePostFilterPlugin) Name() string { return "fakePostFilterPlugin" }
-func (fakePostFilterPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+func (fakePostFilterPlugin) PostFilter(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
 	return &framework.PostFilterResult{NominatingInfo: &framework.NominatingInfo{NominatedNodeName: "node1"}}, framework.NewStatus(framework.Success, "postfilter success")
 }
 
@@ -1970,22 +1914,22 @@ func (pl fakeScorePlugin) ScoreExtensions() framework.ScoreExtensions {
 	return pl
 }
 
-func (fakeScorePlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
+func (fakeScorePlugin) NormalizeScore(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ framework.NodeScoreList) *framework.Status {
 	return nil
 }
 
-func (fakeScorePlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
+func (fakeScorePlugin) Score(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ string) (int64, *framework.Status) {
 	return 1, nil
 }
 
 type fakeWrappedPlugin struct{}
 
 func (fakeWrappedPlugin) Name() string { return "fakeWrappedPlugin" }
-func (fakeWrappedPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
+func (fakeWrappedPlugin) Filter(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ *framework.NodeInfo) *framework.Status {
 	return nil
 }
 
-func (fakeWrappedPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+func (fakeWrappedPlugin) PostFilter(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
 	return new(framework.PostFilterResult), nil
 }
 
@@ -1993,11 +1937,11 @@ func (pl fakeWrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
 	return pl
 }
 
-func (fakeWrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
+func (fakeWrappedPlugin) NormalizeScore(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ framework.NodeScoreList) *framework.Status {
 	return nil
 }
 
-func (fakeWrappedPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
+func (fakeWrappedPlugin) Score(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ string) (int64, *framework.Status) {
 	return 0, nil
 }
 
@@ -2005,11 +1949,11 @@ func (fakeWrappedPlugin) Score(ctx context.Context, state *framework.CycleState,
 type fakeMustFailWrappedPlugin struct{}
 
 func (fakeMustFailWrappedPlugin) Name() string { return "fakeMustFailWrappedPlugin" }
-func (fakeMustFailWrappedPlugin) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
+func (fakeMustFailWrappedPlugin) Filter(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ *framework.NodeInfo) *framework.Status {
 	return framework.AsStatus(errors.New("filter failed"))
 }
 
-func (fakeMustFailWrappedPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+func (fakeMustFailWrappedPlugin) PostFilter(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
 	return nil, framework.AsStatus(errors.New("postFilter failed"))
 }
 
@@ -2017,10 +1961,10 @@ func (pl fakeMustFailWrappedPlugin) ScoreExtensions() framework.ScoreExtensions 
 	return pl
 }
 
-func (fakeMustFailWrappedPlugin) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
+func (fakeMustFailWrappedPlugin) NormalizeScore(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ framework.NodeScoreList) *framework.Status {
 	return framework.AsStatus(errors.New("normalize failed"))
 }
 
-func (fakeMustFailWrappedPlugin) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
+func (fakeMustFailWrappedPlugin) Score(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ string) (int64, *framework.Status) {
 	return 0, framework.AsStatus(errors.New("score failed"))
 }

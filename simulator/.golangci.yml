@@ -1,3 +1,6 @@
+run:
+  skip-dirs:
+    - docs
 linters-settings:
   # if you fix this gci config, you should modify the gci command on `make format` as well.
   gci:

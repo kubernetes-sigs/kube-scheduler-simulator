@@ -9,8 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	configv1 "k8s.io/kube-scheduler/config/v1"
-	"k8s.io/kubernetes/pkg/scheduler/apis/config"
-	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
+	"k8s.io/utils/pointer"
 
 	schedConfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 )
@@ -35,21 +34,19 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 
 	type args struct {
 		versioned *configv1.KubeSchedulerConfiguration
-		port      int
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    *config.KubeSchedulerConfiguration
+		want    *configv1.KubeSchedulerConfiguration
 		wantErr bool
 	}{
 		{
 			name: "success with empty-configuration",
 			args: args{
 				versioned: &configv1.KubeSchedulerConfiguration{},
-				port:      80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				return &cfg
 			}(),
@@ -65,9 +62,8 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				return &cfg
 			}(),
@@ -76,9 +72,8 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			name: "success with empty Profiles",
 			args: args{
 				versioned: &configv1.KubeSchedulerConfiguration{},
-				port:      80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				return &cfg
 			}(),
@@ -95,9 +90,8 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				return &cfg
 			}(),
@@ -115,9 +109,8 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				return &cfg
 			}(),
@@ -148,18 +141,17 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				profile2 := cfg.Profiles[0].DeepCopy()
-				profile2.SchedulerName = nondefaultschedulername
-				profile2.Plugins.MultiPoint.Enabled = []config.Plugin{
+				profile2.SchedulerName = pointer.String(nondefaultschedulername)
+				profile2.Plugins.MultiPoint.Enabled = []configv1.Plugin{
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},
 					{Name: "NodeNameWrapped"},
-					{Name: "TaintTolerationWrapped", Weight: weight3},
-					{Name: "NodeAffinityWrapped", Weight: weight2},
+					{Name: "TaintTolerationWrapped", Weight: &weight3},
+					{Name: "NodeAffinityWrapped", Weight: &weight2},
 					{Name: "NodePortsWrapped"},
 					{Name: "VolumeRestrictionsWrapped"},
 					{Name: "EBSLimitsWrapped"},
@@ -168,51 +160,13 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "AzureDiskLimitsWrapped"},
 					{Name: "VolumeBindingWrapped"},
 					{Name: "VolumeZoneWrapped"},
-					{Name: "PodTopologySpreadWrapped", Weight: weight2},
-					{Name: "InterPodAffinityWrapped", Weight: weight2},
+					{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+					{Name: "InterPodAffinityWrapped", Weight: &weight2},
 					{Name: "DefaultPreemptionWrapped"},
-					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: weight1},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
 				}
 				cfg.Profiles = append(cfg.Profiles, *profile2)
-				return &cfg
-			}(),
-		},
-		{
-			name: "success with Extender",
-			args: args{
-				versioned: &configv1.KubeSchedulerConfiguration{
-					Profiles: []configv1.KubeSchedulerProfile{
-						{
-							SchedulerName: &defaultschedulername,
-							Plugins:       &configv1.Plugins{},
-						},
-					},
-					Extenders: []configv1.Extender{
-						{
-							URLPrefix:      "http://example.com/extender/",
-							PreemptVerb:    "PreemptVerb/",
-							FilterVerb:     "FilterVerb/",
-							PrioritizeVerb: "PrioritizeVerb/",
-							BindVerb:       "BindVerb/",
-							Weight:         1,
-						},
-					},
-				},
-				port: 80,
-			},
-			want: func() *config.KubeSchedulerConfiguration {
-				cfg := configGeneratedFromDefault()
-				cfg.Extenders = []config.Extender{
-					{
-						URLPrefix:      "http://localhost:80/api/v1/extender/",
-						PreemptVerb:    "preempt/0",
-						FilterVerb:     "filter/0",
-						PrioritizeVerb: "prioritize/0",
-						BindVerb:       "bind/0",
-						Weight:         1,
-					},
-				}
 				return &cfg
 			}(),
 		},
@@ -259,28 +213,39 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				profile2 := cfg.Profiles[0].DeepCopy()
-				profile2.SchedulerName = nondefaultschedulername
+				profile2.SchedulerName = &nondefaultschedulername
 				for i := range cfg.Profiles[0].PluginConfig {
 					if cfg.Profiles[0].PluginConfig[i].Name == "DefaultPreemption" {
-						cfg.Profiles[0].PluginConfig[i] = config.PluginConfig{
+						cfg.Profiles[0].PluginConfig[i] = configv1.PluginConfig{
 							Name: "DefaultPreemption",
-							Args: &config.DefaultPreemptionArgs{
-								MinCandidateNodesPercentage: minCandidateNodesPercentage,
-								MinCandidateNodesAbsolute:   minCandidateNodesAbsolute,
+							Args: runtime.RawExtension{
+								Object: &configv1.DefaultPreemptionArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "DefaultPreemptionArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1",
+									},
+									MinCandidateNodesPercentage: &minCandidateNodesPercentage,
+									MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
+								},
 							},
 						}
 					}
 					if cfg.Profiles[0].PluginConfig[i].Name == "DefaultPreemptionWrapped" {
-						cfg.Profiles[0].PluginConfig[i] = config.PluginConfig{
+						cfg.Profiles[0].PluginConfig[i] = configv1.PluginConfig{
 							Name: "DefaultPreemptionWrapped",
-							Args: &config.DefaultPreemptionArgs{
-								MinCandidateNodesPercentage: minCandidateNodesPercentage,
-								MinCandidateNodesAbsolute:   minCandidateNodesAbsolute,
+							Args: runtime.RawExtension{
+								Object: &configv1.DefaultPreemptionArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "DefaultPreemptionArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1",
+									},
+									MinCandidateNodesPercentage: &minCandidateNodesPercentage,
+									MinCandidateNodesAbsolute:   &minCandidateNodesAbsolute,
+								},
 							},
 						}
 					}
@@ -288,18 +253,30 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 
 				for i := range profile2.PluginConfig {
 					if profile2.PluginConfig[i].Name == "InterPodAffinity" {
-						profile2.PluginConfig[i] = config.PluginConfig{
+						profile2.PluginConfig[i] = configv1.PluginConfig{
 							Name: "InterPodAffinity",
-							Args: &config.InterPodAffinityArgs{
-								HardPodAffinityWeight: hardPodAffinityWeight,
+							Args: runtime.RawExtension{
+								Object: &configv1.InterPodAffinityArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "InterPodAffinityArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1",
+									},
+									HardPodAffinityWeight: &hardPodAffinityWeight,
+								},
 							},
 						}
 					}
 					if profile2.PluginConfig[i].Name == "InterPodAffinityWrapped" {
-						profile2.PluginConfig[i] = config.PluginConfig{
+						profile2.PluginConfig[i] = configv1.PluginConfig{
 							Name: "InterPodAffinityWrapped",
-							Args: &config.InterPodAffinityArgs{
-								HardPodAffinityWeight: hardPodAffinityWeight,
+							Args: runtime.RawExtension{
+								Object: &configv1.InterPodAffinityArgs{
+									TypeMeta: metav1.TypeMeta{
+										Kind:       "InterPodAffinityArgs",
+										APIVersion: "kubescheduler.config.k8s.io/v1",
+									},
+									HardPodAffinityWeight: &hardPodAffinityWeight,
+								},
 							},
 						}
 					}
@@ -330,21 +307,20 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
-				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []configv1.Plugin{
 					{Name: "*"},
 				}
-				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []configv1.Plugin{
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},
 					{Name: "NodeNameWrapped"},
-					{Name: "TaintTolerationWrapped", Weight: weight3},
-					{Name: "NodeAffinityWrapped", Weight: weight2},
+					{Name: "TaintTolerationWrapped", Weight: &weight3},
+					{Name: "NodeAffinityWrapped", Weight: &weight2},
 					{Name: "NodePortsWrapped"},
-					{Name: "NodeResourcesFitWrapped", Weight: weight3},
+					{Name: "NodeResourcesFitWrapped", Weight: &weight3},
 					{Name: "VolumeRestrictionsWrapped"},
 					{Name: "EBSLimitsWrapped"},
 					{Name: "GCEPDLimitsWrapped"},
@@ -352,11 +328,11 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "AzureDiskLimitsWrapped"},
 					{Name: "VolumeBindingWrapped"},
 					{Name: "VolumeZoneWrapped"},
-					{Name: "PodTopologySpreadWrapped", Weight: weight2},
-					{Name: "InterPodAffinityWrapped", Weight: weight2},
+					{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+					{Name: "InterPodAffinityWrapped", Weight: &weight2},
 					{Name: "DefaultPreemptionWrapped"},
-					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: weight1},
-					{Name: "ImageLocalityWrapped", Weight: weight1},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
+					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
 				}
 				return &cfg
@@ -366,7 +342,6 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			name: "success with multiplugin plugin setting/multi manual setting weights have priority.",
 			args: args{
 				versioned: &configv1.KubeSchedulerConfiguration{
-					Parallelism: &nondefaultParallelism,
 					Profiles: []configv1.KubeSchedulerProfile{
 						{
 							SchedulerName: &defaultschedulername,
@@ -391,27 +366,26 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
-				cfg.Profiles[0].Plugins.Score.Enabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.Score.Enabled = []configv1.Plugin{
 					{
 						Name:   "NodeResourcesFitWrapped",
-						Weight: weight3,
+						Weight: &weight3,
 					},
 				}
-				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []configv1.Plugin{
 					{Name: "*"},
 				}
-				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []configv1.Plugin{
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},
 					{Name: "NodeNameWrapped"},
-					{Name: "TaintTolerationWrapped", Weight: weight3},
-					{Name: "NodeAffinityWrapped", Weight: weight2},
+					{Name: "TaintTolerationWrapped", Weight: &weight3},
+					{Name: "NodeAffinityWrapped", Weight: &weight2},
 					{Name: "NodePortsWrapped"},
-					{Name: "NodeResourcesFitWrapped", Weight: weight2},
+					{Name: "NodeResourcesFitWrapped", Weight: &weight2},
 					{Name: "VolumeRestrictionsWrapped"},
 					{Name: "EBSLimitsWrapped"},
 					{Name: "GCEPDLimitsWrapped"},
@@ -419,11 +393,11 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "AzureDiskLimitsWrapped"},
 					{Name: "VolumeBindingWrapped"},
 					{Name: "VolumeZoneWrapped"},
-					{Name: "PodTopologySpreadWrapped", Weight: weight2},
-					{Name: "InterPodAffinityWrapped", Weight: weight2},
+					{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+					{Name: "InterPodAffinityWrapped", Weight: &weight2},
 					{Name: "DefaultPreemptionWrapped"},
-					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: weight1},
-					{Name: "ImageLocalityWrapped", Weight: weight1},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
+					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
 				}
 				return &cfg
@@ -433,7 +407,6 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			name: "success with multiplugin plugin setting/disable a specific default multipoint plugin on a extension point",
 			args: args{
 				versioned: &configv1.KubeSchedulerConfiguration{
-					Parallelism: &nondefaultParallelism,
 					Profiles: []configv1.KubeSchedulerProfile{
 						{
 							SchedulerName: &defaultschedulername,
@@ -449,16 +422,15 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
-				cfg.Profiles[0].Plugins.Score.Disabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.Score.Disabled = []configv1.Plugin{
 					{
 						Name: "NodeResourcesFitWrapped",
 					},
 				}
-				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []configv1.Plugin{
 					{Name: "*"},
 				}
 				return &cfg
@@ -484,19 +456,18 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 						},
 					},
 				},
-				port: 80,
 			},
-			want: func() *config.KubeSchedulerConfiguration {
+			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
-				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.MultiPoint.Disabled = []configv1.Plugin{
 					{Name: "*"},
 				}
-				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []config.Plugin{
+				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []configv1.Plugin{
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},
 					{Name: "NodeNameWrapped"},
-					{Name: "TaintTolerationWrapped", Weight: weight3},
-					{Name: "NodeAffinityWrapped", Weight: weight2},
+					{Name: "TaintTolerationWrapped", Weight: &weight3},
+					{Name: "NodeAffinityWrapped", Weight: &weight2},
 					{Name: "NodePortsWrapped"},
 					{Name: "VolumeRestrictionsWrapped"},
 					{Name: "EBSLimitsWrapped"},
@@ -505,11 +476,11 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "AzureDiskLimitsWrapped"},
 					{Name: "VolumeBindingWrapped"},
 					{Name: "VolumeZoneWrapped"},
-					{Name: "PodTopologySpreadWrapped", Weight: weight2},
-					{Name: "InterPodAffinityWrapped", Weight: weight2},
+					{Name: "PodTopologySpreadWrapped", Weight: &weight2},
+					{Name: "InterPodAffinityWrapped", Weight: &weight2},
 					{Name: "DefaultPreemptionWrapped"},
-					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: weight1},
-					{Name: "ImageLocalityWrapped", Weight: weight1},
+					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
+					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
 				}
 				return &cfg
@@ -521,9 +492,9 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := convertConfigurationForSimulator(tt.args.versioned, tt.args.port)
+			got, err := ConvertConfigurationForSimulator(tt.args.versioned)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("convertConfigurationForSimulator() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ConvertConfigurationForSimulator() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if len(got.Profiles) != len(tt.want.Profiles) {
@@ -553,7 +524,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 	}
 }
 
-func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
+func configGeneratedFromDefault() configv1.KubeSchedulerConfiguration {
 	versioned, _ := schedConfig.DefaultSchedulerConfig()
 	cfg := versioned.DeepCopy()
 
@@ -620,8 +591,5 @@ func configGeneratedFromDefault() config.KubeSchedulerConfiguration {
 
 	cfg.Profiles[0].PluginConfig = append(cfg.Profiles[0].PluginConfig, newpc...)
 
-	converted := config.KubeSchedulerConfiguration{}
-	scheme.Scheme.Convert(cfg, &converted, nil)
-	converted.SetGroupVersionKind(configv1.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
-	return converted
+	return *cfg
 }

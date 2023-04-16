@@ -11,17 +11,17 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/scheduler"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
 
 type Reflector interface {
 	AddResultStore(store ResultStore, key string)
-	ResisterResultSavingToInformer(informerFactory informers.SharedInformerFactory, client clientset.Interface) error
+	ResisterResultSavingToInformer(client clientset.Interface, stopCh <-chan struct{}) error
 }
 
 // ResultStore represents the store which is stores data and shared with simulator and scheduler.
@@ -53,7 +53,8 @@ func (s *reflector) AddResultStore(store ResultStore, key string) {
 
 // ResisterResultSavingToInformer registers the event handler to the informerFactory
 // to reflects all results on the pod annotation when the scheduling is finished.
-func (s *reflector) ResisterResultSavingToInformer(informerFactory informers.SharedInformerFactory, client clientset.Interface) error {
+func (s *reflector) ResisterResultSavingToInformer(client clientset.Interface, stopCh <-chan struct{}) error {
+	informerFactory := scheduler.NewInformerFactory(client, 0)
 	// Reflector adds scheduling results when pod is updating.
 	// This is because Extenders doesn't have any phase to hook scheduling finished. (both successfully and non-successfully)
 	_, err := informerFactory.Core().V1().Pods().Informer().AddEventHandler(
@@ -64,6 +65,10 @@ func (s *reflector) ResisterResultSavingToInformer(informerFactory informers.Sha
 	if err != nil {
 		return xerrors.Errorf("failed to AddEventHandler of Informer: %w", err)
 	}
+
+	informerFactory.Start(stopCh)
+	informerFactory.WaitForCacheSync(stopCh)
+
 	return nil
 }
 

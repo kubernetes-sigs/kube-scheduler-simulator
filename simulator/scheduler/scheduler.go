@@ -122,18 +122,32 @@ func (s *Service) StartScheduler(versionedcfg *configv1.KubeSchedulerConfigurati
 		return xerrors.Errorf("New extender service: %w", err)
 	}
 
-	cfg, err := convertConfigurationForSimulator(versionedcfg, s.simulatorPort)
+	// Override the Extenders config so that the connection is directed to the simulator server.
+	extender.OverrideExtendersCfgToSimulator(versionedcfg, s.simulatorPort)
+
+	versioned, err := ConvertConfigurationForSimulator(versionedcfg)
 	if err != nil {
 		return xerrors.Errorf("convert scheduler config to apply: %w", err)
 	}
-	registry, err := plugin.NewRegistry(s.sharedStore, cfg)
+
+	cfg, err := ConvertSchedulerConfigToInternalConfig(versioned)
+	if err != nil {
+		return xerrors.Errorf("convert scheduler config to internal one: %w", err)
+	}
+
+	cfg, err = filterOutNonAllowedChangesOnCfg(cfg)
+	if err != nil {
+		return xerrors.Errorf("filter out non allowed changes: %w", err)
+	}
+
+	registry, err := plugin.NewRegistry(s.sharedStore, cfg, nil)
 	if err != nil {
 		return xerrors.Errorf("plugin registry: %w", err)
 	}
 
 	if s.sharedStore != nil {
 		// Resister the event handler function to store the result stored in the sharedStore in pod.
-		if err := s.sharedStore.ResisterResultSavingToInformer(informerFactory, clientSet); err != nil {
+		if err := s.sharedStore.ResisterResultSavingToInformer(clientSet, ctx.Done()); err != nil {
 			return xerrors.Errorf("ResisterResultSavingToInformer of sharedStore: %w", err)
 		}
 	}
@@ -191,12 +205,11 @@ func (s *Service) ExtenderService() ExtenderService {
 	return s.extenderService
 }
 
-// convertConfigurationForSimulator convert KubeSchedulerConfiguration to apply scheduler on simulator
-// (1) It excludes non-allowed changes. Now, we accept only changes to Profiles.Plugins and Extenders fields.
-// (2) It replaces all default-plugins with plugins for simulator.
-// (3) It replaces Extenders config so that the connection is directed to the simulator server.
-// (4) It converts KubeSchedulerConfiguration from configv1.KubeSchedulerConfiguration to config.KubeSchedulerConfiguration.
-func convertConfigurationForSimulator(versioned *configv1.KubeSchedulerConfiguration, simulatorPort int) (*config.KubeSchedulerConfiguration, error) {
+// ConvertConfigurationForSimulator convert KubeSchedulerConfiguration to apply scheduler on simulator
+// (1) It replaces all default-plugins with plugins for simulator.
+// (2) It replaces Extenders config so that the connection is directed to the simulator server.
+// (3) It converts KubeSchedulerConfiguration from configv1.KubeSchedulerConfiguration to config.KubeSchedulerConfiguration.
+func ConvertConfigurationForSimulator(versioned *configv1.KubeSchedulerConfiguration) (*configv1.KubeSchedulerConfiguration, error) {
 	if len(versioned.Profiles) == 0 {
 		defaultSchedulerName := v1.DefaultSchedulerName
 		versioned.Profiles = []configv1.KubeSchedulerProfile{
@@ -225,20 +238,12 @@ func convertConfigurationForSimulator(versioned *configv1.KubeSchedulerConfigura
 		versioned.Profiles[i].PluginConfig = pluginConfigForSimulatorPlugins
 	}
 
-	// Override the Extenders config so that the connection is directed to the simulator server.
-	extender.OverrideExtendersCfgToSimulator(versioned, simulatorPort)
-
-	defaultCfg, err := simulatorschedconfig.DefaultSchedulerConfig()
-	if err != nil {
-		return nil, xerrors.Errorf("get default scheduler config: %w", err)
-	}
-
-	// set default value to all field other than Profiles and Extenders.
-	defaultCfg.Profiles = versioned.Profiles
-	defaultCfg.Extenders = versioned.Extenders
-	versioned = defaultCfg
-
 	apiconfigv1.SetDefaults_KubeSchedulerConfiguration(versioned)
+
+	return versioned, nil
+}
+
+func ConvertSchedulerConfigToInternalConfig(versioned *configv1.KubeSchedulerConfiguration) (*config.KubeSchedulerConfiguration, error) {
 	cfg := config.KubeSchedulerConfiguration{}
 	if err := scheme.Scheme.Convert(versioned, &cfg, nil); err != nil {
 		return nil, xerrors.Errorf("convert configuration: %w", err)
@@ -246,4 +251,25 @@ func convertConfigurationForSimulator(versioned *configv1.KubeSchedulerConfigura
 	cfg.SetGroupVersionKind(configv1.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
 
 	return &cfg, nil
+}
+
+// replicaFieldsWithDefault excludes non-allowed changes.
+// Now, we accept only changes to Profiles.Plugins and Extenders fields.
+func filterOutNonAllowedChangesOnCfg(originalCfg *config.KubeSchedulerConfiguration) (*config.KubeSchedulerConfiguration, error) {
+	defaultCfg, err := simulatorschedconfig.DefaultSchedulerConfig()
+	if err != nil {
+		return nil, xerrors.Errorf("get default scheduler config: %w", err)
+	}
+	apiconfigv1.SetDefaults_KubeSchedulerConfiguration(defaultCfg)
+	defaultconvertedcfg := config.KubeSchedulerConfiguration{}
+	if err := scheme.Scheme.Convert(defaultCfg, &defaultconvertedcfg, nil); err != nil {
+		return nil, xerrors.Errorf("convert configuration: %w", err)
+	}
+	originalCfg.SetGroupVersionKind(configv1.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
+
+	// set default value to all field other than Profiles and Extenders.
+	defaultconvertedcfg.Profiles = originalCfg.Profiles
+	defaultconvertedcfg.Extenders = originalCfg.Extenders
+
+	return &defaultconvertedcfg, nil
 }

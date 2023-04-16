@@ -1,0 +1,1 @@
+This directory contains the packages which is intended to be used from the outside.

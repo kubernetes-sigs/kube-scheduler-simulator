@@ -21,13 +21,13 @@ import (
 // ResultStoreKey represents key name of plugins results on sharedstore.
 const ResultStoreKey = "PluginResultStoreKey"
 
-func NewRegistry(sharedStore storereflector.Reflector, cfg *schedulerConfig.KubeSchedulerConfiguration) (map[string]schedulerRuntime.PluginFactory, error) {
+func NewRegistry(sharedStore storereflector.Reflector, cfg *schedulerConfig.KubeSchedulerConfiguration, pluginExtenders map[string]PluginExtenderInitializer) (map[string]schedulerRuntime.PluginFactory, error) {
 	scorePluginWeight := getScorePluginWeight(cfg)
 	store := schedulingresultstore.New(scorePluginWeight)
 	// Add the resultStore to the sharedStore to store the results and share it.
 	sharedStore.AddResultStore(store, ResultStoreKey)
 
-	ret, err := newPluginFactories(store)
+	ret, err := newPluginFactories(store, pluginExtenders)
 	if err != nil {
 		return nil, xerrors.Errorf("New pluginFactories: %w", err)
 	}
@@ -35,31 +35,30 @@ func NewRegistry(sharedStore storereflector.Reflector, cfg *schedulerConfig.Kube
 	return ret, nil
 }
 
-func newPluginFactories(store *schedulingresultstore.Store) (map[string]schedulerRuntime.PluginFactory, error) {
-	registeredpls, err := registeredPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
-	}
-
+func newPluginFactories(store *schedulingresultstore.Store, pluginExtenders map[string]PluginExtenderInitializer) (map[string]schedulerRuntime.PluginFactory, error) {
 	intreeRegistries := config.InTreeRegistries()
 	outoftreeRegistries := config.OutOfTreeRegistries()
+	pls, err := config.RegisteredMultiPointPluginNames()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get registered plugin names: %w", err)
+	}
 	ret := map[string]schedulerRuntime.PluginFactory{}
-	for _, pl := range registeredpls {
-		pl := pl
+	for _, pluginname := range pls {
+		pluginname := pluginname
 
-		r, ok := intreeRegistries[pl.Name]
+		r, ok := intreeRegistries[pluginname]
 		if !ok {
 			// not found in intreeRegistries. search registry in outoftreeRegistries.
-			r, ok = outoftreeRegistries[pl.Name]
+			r, ok = outoftreeRegistries[pluginname]
 			if !ok {
-				return nil, xerrors.Errorf("registry for %s is not found", pl.Name)
+				return nil, xerrors.Errorf("registry for %s is not found", pluginname)
 			}
 			// For out-of-tree plugins, we need to add original registry to registries.
 			// (For in-tree plugins, schedulers add original registry to registries internally.)
-			ret[pl.Name] = r
+			ret[pluginname] = r
 		}
 
-		if _, ok := ret[pluginName(pl.Name)]; ok {
+		if _, ok := ret[pluginName(pluginname)]; ok {
 			// already created
 			continue
 		}
@@ -70,14 +69,15 @@ func newPluginFactories(store *schedulingresultstore.Store) (map[string]schedule
 				return nil, xerrors.Errorf("create original plugin: %w", err)
 			}
 
-			var weight int32
-			if pl.Weight != nil {
-				weight = *pl.Weight
+			opts := []Option{}
+			extender, ok := pluginExtenders[pluginname]
+			if ok {
+				opts = append(opts, WithExtendersOption(extender))
 			}
 
-			return NewWrappedPlugin(store, p, WithWeightOption(&weight)), nil
+			return NewWrappedPlugin(store, p, opts...), nil
 		}
-		ret[pluginName(pl.Name)] = factory
+		ret[pluginName(pluginname)] = factory
 	}
 
 	return ret, nil
@@ -146,13 +146,12 @@ func NewPluginConfig(pc []configv1.PluginConfig) ([]configv1.PluginConfig, error
 		})
 	}
 
-	defaultpls, err := registeredPlugins()
+	defaultpls, err := config.RegisteredMultiPointPluginNames()
 	if err != nil {
 		return nil, xerrors.Errorf("get default score/filter plugins: %w", err)
 	}
 
-	for _, p := range defaultpls {
-		name := p.Name
+	for _, name := range defaultpls {
 		pc, ok := pluginConfig[name]
 		if !ok {
 			continue
@@ -171,45 +170,24 @@ func NewPluginConfig(pc []configv1.PluginConfig) ([]configv1.PluginConfig, error
 }
 
 // ConvertForSimulator convert configv1.Plugins for simulator.
-// It ignores non-default plugin.
-//
-//nolint:cyclop
 func ConvertForSimulator(pls *configv1.Plugins) (*configv1.Plugins, error) {
 	newpls := pls.DeepCopy()
 
-	if err := applyPluingSet(&newpls.PreFilter, pls.PreFilter, config.InTreePreFilterPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge PreFilter plugins: %w", err)
+	applyPluingSet(&newpls.PreFilter, pls.PreFilter, configv1.PluginSet{})
+	applyPluingSet(&newpls.Filter, pls.Filter, configv1.PluginSet{})
+	applyPluingSet(&newpls.PostFilter, pls.PostFilter, configv1.PluginSet{})
+	applyPluingSet(&newpls.PreScore, pls.PreScore, configv1.PluginSet{})
+	applyPluingSet(&newpls.Score, pls.Score, configv1.PluginSet{})
+	applyPluingSet(&newpls.Reserve, pls.Reserve, configv1.PluginSet{})
+	applyPluingSet(&newpls.Permit, pls.Permit, configv1.PluginSet{})
+	applyPluingSet(&newpls.PreBind, pls.PreBind, configv1.PluginSet{})
+	applyPluingSet(&newpls.Bind, pls.Bind, configv1.PluginSet{})
+	applyPluingSet(&newpls.PostBind, pls.PostBind, configv1.PluginSet{})
+	inTreeMultiPointPls, err := config.InTreeMultiPointPluginSet()
+	if err != nil {
+		return nil, xerrors.Errorf("get in tree multi point plugins: %w", err)
 	}
-	if err := applyPluingSet(&newpls.Filter, pls.Filter, config.InTreeFilterPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Filter plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.PostFilter, pls.PostFilter, config.InTreePostFilterPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge PostFilter plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.PreScore, pls.PreScore, config.InTreePreScorePluginSet); err != nil {
-		return nil, xerrors.Errorf("merge PreScore plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.Score, pls.Score, config.InTreeScorePluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Score plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.Reserve, pls.Reserve, config.InTreeReservePluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Reserve plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.Permit, pls.Permit, config.InTreePermitPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Permit plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.PreBind, pls.PreBind, config.InTreePreBindPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge PreBind plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.Bind, pls.Bind, config.InTreeBindPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge Bind plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.PostBind, pls.PostBind, config.InTreePostBindPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge PostBind plugins: %w", err)
-	}
-	if err := applyPluingSet(&newpls.MultiPoint, pls.MultiPoint, config.InTreeMultiPointPluginSet); err != nil {
-		return nil, xerrors.Errorf("merge MultiPointt plugins: %w", err)
-	}
+	applyPluingSet(&newpls.MultiPoint, pls.MultiPoint, inTreeMultiPointPls)
 	// The default MultiPoint PluginSets should be disable to "*" here
 	// so that the scheduler won't enable all default plugins.
 	disableAllPluginSet(&newpls.MultiPoint)
@@ -227,12 +205,7 @@ func disableAllPluginSet(targetPlsSet *configv1.PluginSet) {
 }
 
 // applyPluingSet merges inTree and outOfTree PluginSet.
-func applyPluingSet(targetPlsSet *configv1.PluginSet, plsSet configv1.PluginSet, inTreePluginSet func() (configv1.PluginSet, error)) error {
-	inTreePls, err := inTreePluginSet()
-	if err != nil {
-		return xerrors.Errorf("get inTree plugins: %w", err)
-	}
-
+func applyPluingSet(targetPlsSet *configv1.PluginSet, plsSet configv1.PluginSet, inTreePls configv1.PluginSet) {
 	merged := mergePluginSet(inTreePls, plsSet)
 	enabledPls := make([]configv1.Plugin, 0, len(merged.Enabled))
 	for _, p := range merged.Enabled {
@@ -249,8 +222,6 @@ func applyPluingSet(targetPlsSet *configv1.PluginSet, plsSet configv1.PluginSet,
 		disabledPls = append(disabledPls, configv1.Plugin{Name: wName, Weight: p.Weight})
 	}
 	targetPlsSet.Disabled = disabledPls
-
-	return nil
 }
 
 // mergePluginsSet merges two plugin sets.
@@ -312,84 +283,9 @@ func mergePluginSet(defaultPluginSet, customPluginSet configv1.PluginSet) config
 	return configv1.PluginSet{Enabled: enabledPlugins, Disabled: disabled}
 }
 
-// registeredPlugins returns all registered plugins.
-//
-//nolint:funlen,cyclop
-func registeredPlugins() ([]configv1.Plugin, error) {
-	var pls []configv1.Plugin
-	registeredmultipointpls, err := config.RegisteredMultiPointPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered multi point plugins: %w", err)
-	}
-	pls = append(pls, registeredmultipointpls...)
-	registeredscorepls, err := config.RegisteredScorePlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered score plugins: %w", err)
-	}
-	pls = append(pls, registeredscorepls...)
-	registeredbindpls, err := config.RegisteredBindPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered bind plugins: %w", err)
-	}
-	pls = append(pls, registeredbindpls...)
-	registeredpostbindpls, err := config.RegisteredPostBindPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered postbind plugins: %w", err)
-	}
-	pls = append(pls, registeredpostbindpls...)
-	registeredperbindpls, err := config.RegisteredPreBindPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered prebind plugins: %w", err)
-	}
-	pls = append(pls, registeredperbindpls...)
-	registeredreservepls, err := config.RegisteredReservePlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered reserve plugins: %w", err)
-	}
-	pls = append(pls, registeredreservepls...)
-	registeredpermitpls, err := config.RegisteredPermitPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered permit plugins: %w", err)
-	}
-	pls = append(pls, registeredpermitpls...)
-	registeredperfilterpls, err := config.RegisteredPreFilterPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered prefilter plugins: %w", err)
-	}
-	pls = append(pls, registeredperfilterpls...)
-	registeredprescorepls, err := config.RegisteredPreScorePlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered prescore plugins: %w", err)
-	}
-	pls = append(pls, registeredprescorepls...)
-	registeredfilterpls, err := config.RegisteredFilterPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered filter plugins: %w", err)
-	}
-	pls = append(pls, registeredfilterpls...)
-	registerdpostfilterpls, err := config.RegisteredPostFilterPlugins()
-	if err != nil {
-		return nil, xerrors.Errorf("get registered postFilter plugins: %w", err)
-	}
-	pls = append(pls, registerdpostfilterpls...)
-
-	registeredMap := sets.NewString()
-	uniqPls := make([]configv1.Plugin, 0, len(pls))
-	for _, pl := range pls {
-		if registeredMap.Has(pl.Name) {
-			continue
-		}
-		registeredMap.Insert(pl.Name)
-		uniqPls = append(uniqPls, pl)
-	}
-
-	return uniqPls, nil
-}
-
 // getScorePluginWeight get weights of enabled score plugins in the scheduler configuration.
 func getScorePluginWeight(cfg *schedulerConfig.KubeSchedulerConfiguration) map[string]int32 {
 	scorePluginWeight := make(map[string]int32)
-	// TODO: support multi-scheduler
 	enabledScorePlugins := cfg.Profiles[0].Plugins.Score.Enabled
 	enabledScorePlugins = append(enabledScorePlugins, cfg.Profiles[0].Plugins.MultiPoint.Enabled...)
 	for _, p := range enabledScorePlugins {

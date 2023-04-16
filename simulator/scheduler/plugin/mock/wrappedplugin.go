@@ -49,6 +49,18 @@ func (mr *MockStoreMockRecorder) AddBindResult(arg0, arg1, arg2, arg3 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBindResult", reflect.TypeOf((*MockStore)(nil).AddBindResult), arg0, arg1, arg2, arg3)
 }
 
+// AddCustomResult mocks base method.
+func (m *MockStore) AddCustomResult(arg0, arg1, arg2, arg3 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddCustomResult", arg0, arg1, arg2, arg3)
+}
+
+// AddCustomResult indicates an expected call of AddCustomResult.
+func (mr *MockStoreMockRecorder) AddCustomResult(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCustomResult", reflect.TypeOf((*MockStore)(nil).AddCustomResult), arg0, arg1, arg2, arg3)
+}
+
 // AddFilterResult mocks base method.
 func (m *MockStore) AddFilterResult(arg0, arg1, arg2, arg3, arg4 string) {
 	m.ctrl.T.Helper()

@@ -83,6 +83,18 @@ func (mr *MockStoreMockRecorder) AddPrioritizeResult(args, result, hostName inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPrioritizeResult", reflect.TypeOf((*MockStore)(nil).AddPrioritizeResult), args, result, hostName)
 }
 
+// DeleteData mocks base method.
+func (m *MockStore) DeleteData(pod v1.Pod) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "DeleteData", pod)
+}
+
+// DeleteData indicates an expected call of DeleteData.
+func (mr *MockStoreMockRecorder) DeleteData(pod interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteData", reflect.TypeOf((*MockStore)(nil).DeleteData), pod)
+}
+
 // GetStoredResult mocks base method.
 func (m *MockStore) GetStoredResult(pod *v1.Pod) map[string]string {
 	m.ctrl.T.Helper()
@@ -95,16 +107,4 @@ func (m *MockStore) GetStoredResult(pod *v1.Pod) map[string]string {
 func (mr *MockStoreMockRecorder) GetStoredResult(pod interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStoredResult", reflect.TypeOf((*MockStore)(nil).GetStoredResult), pod)
-}
-
-// DeleteData mocks base method.
-func (m *MockStore) DeleteData(pod v1.Pod) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "DeleteData", pod)
-}
-
-// DeleteData indicates an expected call of DeleteData.
-func (mr *MockStoreMockRecorder) DeleteData(pod interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteData", reflect.TypeOf((*MockStore)(nil).DeleteData), pod)
 }

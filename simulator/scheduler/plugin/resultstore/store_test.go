@@ -53,6 +53,7 @@ func TestStore_AddFilterResult(t *testing.T) {
 					bind:            map[string]string{},
 					score:           map[string]map[string]string{},
 					finalScore:      map[string]map[string]string{},
+					customResults:   map[string]string{},
 					filter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PassedFilterMessage,
@@ -188,6 +189,7 @@ func TestStore_AddPostFilterResult(t *testing.T) {
 					score:           map[string]map[string]string{},
 					finalScore:      map[string]map[string]string{},
 					filter:          map[string]map[string]string{},
+					customResults:   map[string]string{},
 					postFilter: map[string]map[string]string{
 						"node1": {
 							"plugin1": PostFilterNominatedMessage,
@@ -319,6 +321,7 @@ func TestStore_AddScoreResult(t *testing.T) {
 					bind:            map[string]string{},
 					filter:          map[string]map[string]string{},
 					postFilter:      map[string]map[string]string{},
+					customResults:   map[string]string{},
 					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "20",
@@ -483,6 +486,7 @@ func TestStore_AddNormalizedScoreResult(t *testing.T) {
 					filter:          map[string]map[string]string{},
 					postFilter:      map[string]map[string]string{},
 					score:           map[string]map[string]string{},
+					customResults:   map[string]string{},
 					finalScore: map[string]map[string]string{
 						"node1": {
 							"plugin1": "20",

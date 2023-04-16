@@ -82,6 +82,10 @@ type result struct {
 
 	// plugin name → bind result(string)
 	bind map[string]string
+
+	// customResults has the user defined custom results.
+	// annotation key -> result(string)
+	customResults map[string]string
 }
 
 func New(scorePluginWeight map[string]int32) *Store {
@@ -118,6 +122,7 @@ func newData() *result {
 		reserve:         map[string]string{},
 		bind:            map[string]string{},
 		prebind:         map[string]string{},
+		customResults:   map[string]string{},
 	}
 	return d
 }
@@ -186,6 +191,7 @@ func (s *Store) GetStoredResult(pod *v1.Pod) map[string]string {
 		return nil
 	}
 
+	s.addCustomResults(annotation, k)
 	s.addSelectedNodeToPod(annotation, k)
 
 	return annotation
@@ -403,6 +409,16 @@ func (s *Store) addFinalScoreResultToMap(anno map[string]string, k key) error {
 	return nil
 }
 
+func (s *Store) addCustomResults(anno map[string]string, k key) {
+	for annokey, r := range s.results[k].customResults {
+		_, ok := anno[annokey]
+		if ok {
+			continue
+		}
+		anno[annokey] = r
+	}
+}
+
 // AddFilterResult adds filtering result to pod annotation.
 func (s *Store) AddFilterResult(namespace, podName, nodeName, pluginName, reason string) {
 	s.mu.Lock()
@@ -589,4 +605,22 @@ func (s *Store) AddPreBindResult(namespace, podName, pluginName, status string) 
 	}
 
 	s.results[k].prebind[pluginName] = status
+}
+
+// AddCustomResult adds user defined data.
+// The results added through this func is reflected on the Pod's annotation eventually like other scheduling results.
+// This function is intended to be called from the plugin.PluginExtender; allow users to export some internal state on Pods for debugging purpose.
+// For example,
+// Calling AddCustomResult in NodeAffinity's PreFilterPluginExtender:
+// AddCustomResult("namespace", "incomingPod", "node-affinity-filter-internal-state-anno-key", "NodeAffinity", "internal-state")
+// Then, "incomingPod" Pod will get {"node-affinity-filter-internal-state-anno-key": "internal-state"} annotation after scheduling.
+func (s *Store) AddCustomResult(namespace, podName, annotationKey, result string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k := newKey(namespace, podName)
+	if _, ok := s.results[k]; !ok {
+		s.results[k] = newData()
+	}
+	s.results[k].customResults[annotationKey] = result
 }

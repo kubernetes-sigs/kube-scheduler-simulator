@@ -47,6 +47,7 @@ require (
 	k8s.io/apiserver v1.26.2
 	k8s.io/client-go v1.26.2
 	k8s.io/code-generator v0.26.2
+	k8s.io/component-base v0.26.2
 	k8s.io/controller-manager v0.26.2
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/kube-aggregator v0.0.0
@@ -88,6 +89,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-logr/zapr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect
@@ -178,7 +180,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.0.0 // indirect
 	k8s.io/cloud-provider v0.26.2 // indirect
 	k8s.io/cluster-bootstrap v0.0.0 // indirect
-	k8s.io/component-base v0.26.2 // indirect
 	k8s.io/component-helpers v0.26.2 // indirect
 	k8s.io/csi-translation-lib v0.26.2 // indirect
 	k8s.io/dynamic-resource-allocation v0.0.0 // indirect
