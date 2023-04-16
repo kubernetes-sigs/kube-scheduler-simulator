@@ -27,7 +27,7 @@ We have several components:
 
 ### Simulator
 
-Simulator is the simulated scheduler + the HTTP server which mainly for the web UI.
+Simulator is kube-apiserver + scheduler + the HTTP server which mainly for the web UI.
 
 There are several ways to integrate your scheduler into the simulator.
 See [integrate-your-scheduler.md](simulator/docs/integrate-your-scheduler.md).
