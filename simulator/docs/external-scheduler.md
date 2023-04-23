@@ -1,10 +1,18 @@
-## the external scheduler
+## External scheduler
 
 This document describes how to use the external scheduler instead of the scheduler running in the simulator.
-We use the [`externalscheduler` package](../pkg/externalscheduler).
 
-Note that the scheduler built with the [`externalscheduler` package](../pkg/externalscheduler) will work much like the normal scheduler.
-But, it does some additional effort inside to export the scheduling results. So, we'd recommend using it in the dev env only.
+We use the [`externalscheduler` package](../pkg/externalscheduler); 
+the scheduler built with the [`externalscheduler` package](../pkg/externalscheduler) will export the scheduling results on each Pod annotation.
+
+### Use cases
+
+- Running your scheduler instead of the default one in the simulator 
+  - You can still see the scheduling results in web UI as well!
+- Running your scheduler with the simulator feature in your cluster
+  - All Pods, scheduled by this scheduler, will get the scheduler results on its annotation while each scheduling is done as usual.
+  - Note that it has performance overhead in each scheduling cycle 
+since the scheduler needs to make additional effort to export the scheduling results.
 
 ### Change your scheduler
 
@@ -28,7 +36,7 @@ Then, you need to replace few lines to use the [`externalscheduler` package](../
 func main() {
 	command, cancelFn, err := externalscheduler.NewSchedulerCommand(
         externalscheduler.WithPlugin(yourcustomplugin.Name, yourcustomplugin.New),
-        externalscheduler.WithPluginExtenders(noderesources.Name, extender.New), // see plugin-extender.md about PluginExtender.
+        externalscheduler.WithPluginExtenders(noderesources.Name, extender.New), // [optional] see plugin-extender.md about PluginExtender.
     )
     if err != nil {
         klog.Info(fmt.Sprintf("failed to build the scheduler command: %+v", err))
@@ -45,10 +53,10 @@ You can register your plugins by `externalscheduler.WithPlugin` option.
 
 Via this step, all Pods scheduled by this scheduler will get the scheduling results in the annotation like in the simulator!
 
-### [Optional] Connect your scheduler to the kube-apiserver in the simulator
+### Connect your scheduler to the kube-apiserver in the simulator
 
-If you want to connect your scheduler in your cluster's kube-apiserver, skip this. 
-(But, note that it, of course, means your Pods on your cluster will be actually scheduled by the scheduler)
+If you are here to run the scheduler built with [`externalscheduler` package](../pkg/externalscheduler) in your cluster, 
+you don't need to follow this step.
 
 Let's connect your scheduler into the simulator.
 

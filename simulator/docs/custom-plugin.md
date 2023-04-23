@@ -1,14 +1,14 @@
-# How to use your custom plugins in the simulator
+## How to use your custom plugins in the simulator
 
 This doc describes how to use your custom plugins in the scheduler running in the simulator.
 
-## 1. Add your custom plugin's registry in OutOfTreeRegistries function.
+### 1. Add your custom plugin's registry in OutOfTreeRegistries function.
 
 Please add your custom plugin's registry in `outOfTreeRegistries` in config package here:
 
 [kube-scheduler-simulator/simulator/scheduler/config/plugin.go](/simulator/scheduler/config/plugin.go)
 
-## 2. Configure the scheduler to enable your custom plugin
+### 2. Configure the scheduler to enable your custom plugin
 
 You can configure the scheduler to use your custom plugins through KubeSchedulerConfiguration.
 
@@ -17,7 +17,7 @@ You can configure the scheduler to use your custom plugins through KubeScheduler
 You can change the scheduler configuration in Web UI or
 by passing a default KubeSchedulerConfiguration file via the environment variable `KUBE_SCHEDULER_CONFIG_PATH`.
 
-## Example
+### Example
 
 We will explain the case where you want to add [nodenumber](../sample/nodenumber/plugin.go) plugin as example.
 

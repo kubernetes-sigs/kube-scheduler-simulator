@@ -1,12 +1,12 @@
 ## Plugin extenders
 
 The simulator has the concept "Plugin Extenders" which allows you to:
-- export internal state more
+- export plugin's internal state more
 - change specific behaviours on particular plugin by injecting the result
 - etc...
 
-Note that it's not related to the scheduler's webhook which is also called "extender". 
-(Sorry for the confusing name 😅)
+(Note that it's not related to the scheduler's webhook which is also called "extender". 
+(Sorry for the confusing name 😅))
 
 The Plugin Extenders has `BeforeXXX` and `AfterXXX` for each extension point. (XXX = any extension points. e.g., Filter, Score..etc)
 
@@ -31,14 +31,18 @@ type FilterPluginExtender interface {
 
 Each PluginExtender can have `SimulatorHandle`, and you can export some internal state through `SimulatorHandle`.
 
+Example:
+
 ```go
 func (e *noderesourcefitPreFilterPluginExtender) AfterPreFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, preFilterResult *framework.PreFilterResult, preFilterStatus *framework.Status) (*framework.PreFilterResult, *framework.Status) {
-	// ... 
+	// see ./sample/extender/extender.go
+	//...
     e.handle.AddCustomResult(pod.Namespace, pod.Name, "noderesourcefit-prefilter-data", prefilterData)
 }
 ```
 
-If you use the above extender for example, each Pod will get `"noderesourcefit-prefilter-data": prefilterData` annotation in each scheduling like other scheduling results.
+If you use the above extender, 
+each Pod will get `"noderesourcefit-prefilter-data": prefilterData` annotation in each scheduling like other scheduling results.
 
 ### use plugin extender
 
@@ -64,7 +68,7 @@ func main() {
 
 ### The example plugin extender 
 
-We have the sample plugin extender implementation in [./sample/extender](./sample/extender).
+We have the sample plugin extender implementation in [./sample/extender](./sample/plugin-extender).
 
 Please follow [this](./external-scheduler.md#the-example-external-scheduler) 
 to see how this sample plugin extender works with the external scheduler.

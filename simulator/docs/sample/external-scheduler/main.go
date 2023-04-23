@@ -12,7 +12,6 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/noderesources"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/docs/sample/extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/docs/sample/nodenumber"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/pkg/externalscheduler"
 )

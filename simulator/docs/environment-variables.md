@@ -1,17 +1,17 @@
-# Environment Variables
+## [deprecated] Environment Variables
+
+**Deprecation notice**: We're planning to remove the configuration via environment variables.
+Until deprecation, the simulator will read the configuration in the environment variable first,
+if the environment variable is not set, it will read the configuration in the configuration file.
+For config file, please refer to the simulator [config.yaml](./../config.yaml).
+
+---
 
 This page describes the environment variables that are used to configure the simulator.
 
 Please refer to [docker-compose.yml](./../../docker-compose.yml) as an example use.
 
-## For Simulator
-
-**Deprecation notice**: We're planning to remove the configuration via environment variables.
-
-Until deprecation, the simulator will read the configuration in the environment variable first, 
-if the environment variable is not set, it will read the configuration in the configuration file.
-
-For config file, please refer to the simulator [config.yaml](./../config.yaml).
+### For Simulator
 
 `PORT`: (required) This is the port number on which kube-scheduler-simulator
 server is started.
