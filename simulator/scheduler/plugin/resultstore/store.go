@@ -191,7 +191,7 @@ func (s *Store) GetStoredResult(pod *v1.Pod) map[string]string {
 		return nil
 	}
 
-	s.addCustomResults(annotation, k)
+	s.addCustomResultsToMap(annotation, k)
 	s.addSelectedNodeToPod(annotation, k)
 
 	return annotation
@@ -409,7 +409,7 @@ func (s *Store) addFinalScoreResultToMap(anno map[string]string, k key) error {
 	return nil
 }
 
-func (s *Store) addCustomResults(anno map[string]string, k key) {
+func (s *Store) addCustomResultsToMap(anno map[string]string, k key) {
 	for annokey, r := range s.results[k].customResults {
 		_, ok := anno[annokey]
 		if ok {
@@ -612,7 +612,7 @@ func (s *Store) AddPreBindResult(namespace, podName, pluginName, status string) 
 // This function is intended to be called from the plugin.PluginExtender; allow users to export some internal state on Pods for debugging purpose.
 // For example,
 // Calling AddCustomResult in NodeAffinity's PreFilterPluginExtender:
-// AddCustomResult("namespace", "incomingPod", "node-affinity-filter-internal-state-anno-key", "NodeAffinity", "internal-state")
+// AddCustomResult("namespace", "incomingPod", "node-affinity-filter-internal-state-anno-key", "internal-state")
 // Then, "incomingPod" Pod will get {"node-affinity-filter-internal-state-anno-key": "internal-state"} annotation after scheduling.
 func (s *Store) AddCustomResult(namespace, podName, annotationKey, result string) {
 	s.mu.Lock()

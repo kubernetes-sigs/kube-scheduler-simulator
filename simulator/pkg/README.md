@@ -1,1 +1,1 @@
-This directory contains the packages which is intended to be used from the outside.
+This directory contains the packages which are intended to be used from the outside of the simulator.

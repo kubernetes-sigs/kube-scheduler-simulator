@@ -284,6 +284,7 @@ func mergePluginSet(defaultPluginSet, customPluginSet configv1.PluginSet) config
 }
 
 // getScorePluginWeight get weights of enabled score plugins in the scheduler configuration.
+// It only supports the scheduler configuration with one profile -- scheduler with multiple profiles isn't supported.
 func getScorePluginWeight(cfg *schedulerConfig.KubeSchedulerConfiguration) map[string]int32 {
 	scorePluginWeight := make(map[string]int32)
 	enabledScorePlugins := cfg.Profiles[0].Plugins.Score.Enabled

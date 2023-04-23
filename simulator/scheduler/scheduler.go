@@ -253,7 +253,7 @@ func ConvertSchedulerConfigToInternalConfig(versioned *configv1.KubeSchedulerCon
 	return &cfg, nil
 }
 
-// replicaFieldsWithDefault excludes non-allowed changes.
+// filterOutNonAllowedChangesOnCfg excludes non-allowed changes.
 // Now, we accept only changes to Profiles.Plugins and Extenders fields.
 func filterOutNonAllowedChangesOnCfg(originalCfg *config.KubeSchedulerConfiguration) (*config.KubeSchedulerConfiguration, error) {
 	defaultCfg, err := simulatorschedconfig.DefaultSchedulerConfig()

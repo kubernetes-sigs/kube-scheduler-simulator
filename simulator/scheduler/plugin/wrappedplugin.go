@@ -38,7 +38,7 @@ type SimulatorHandle interface {
 	// This function is intended to be called from the plugin.PluginExtender; allow users to export some internal state on Pods for debugging purpose.
 	// For example,
 	// Calling AddCustomResult in NodeAffinity's PreFilterPluginExtender:
-	// AddCustomResult("namespace", "incomingPod", "node-affinity-filter-internal-state-anno-key", "NodeAffinity", "internal-state")
+	// AddCustomResult("namespace", "incomingPod", "node-affinity-filter-internal-state-anno-key", "internal-state")
 	// Then, "incomingPod" Pod will get {"node-affinity-filter-internal-state-anno-key": "internal-state"} annotation after scheduling.
 	AddCustomResult(namespace, podName, annotationKey, result string)
 }
