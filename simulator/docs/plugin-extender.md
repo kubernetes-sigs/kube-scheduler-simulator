@@ -1,5 +1,7 @@
 ## Plugin extenders
 
+**The plugin extender can be used only with [the external scheduler](./external-scheduler.md).**
+
 The simulator has the concept "Plugin Extenders" which allows you to:
 - export plugin's internal state more
 - change specific behaviours on particular plugin by injecting the result
@@ -46,7 +48,7 @@ each Pod will get `"noderesourcefit-prefilter-data": prefilterData` annotation i
 
 ### use plugin extender
 
-Currently, the plugin extender can be used only in [the external scheduler](./external-scheduler.md).
+**Currently, the plugin extender can be used only in [the external scheduler](./external-scheduler.md).**
 
 You can use `externalscheduler.WithPluginExtenders` option in `externalscheduler.NewSchedulerCommand`
 to enable some PluginExtender in particular plugin.
