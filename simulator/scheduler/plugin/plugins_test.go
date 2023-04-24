@@ -875,63 +875,6 @@ func Test_NewPluginConfig(t *testing.T) {
 	}
 }
 
-func Test_defaultRegisteredPlugins(t *testing.T) {
-	t.Parallel()
-	var weight1 int32 = 1
-	var weight2 int32 = 2
-	var weight3 int32 = 3
-	tests := []struct {
-		name    string
-		want    []configv1.Plugin
-		wantErr bool
-	}{
-		{
-			name: "success",
-			want: []configv1.Plugin{
-				{Name: "PrioritySort"},
-				{Name: "NodeName"},
-				{Name: "TaintToleration", Weight: &weight3},
-				{Name: "NodeAffinity", Weight: &weight2},
-				{Name: "NodeUnschedulable"},
-				{Name: "NodeResourcesBalancedAllocation", Weight: &weight1},
-				{Name: "ImageLocality", Weight: &weight1},
-				{Name: "InterPodAffinity", Weight: &weight2},
-				{Name: "NodeResourcesFit", Weight: &weight1},
-				{Name: "PodTopologySpread", Weight: &weight2},
-				{Name: "DefaultBinder"},
-				{Name: "VolumeBinding"},
-				{Name: "NodePorts"},
-				{Name: "VolumeRestrictions"},
-				{Name: "EBSLimits"},
-				{Name: "GCEPDLimits"},
-				{Name: "NodeVolumeLimits"},
-				{Name: "AzureDiskLimits"},
-				{Name: "VolumeZone"},
-				{Name: "DefaultPreemption"},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			got, err := registeredPlugins()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("registeredPlugins() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			sort.SliceStable(got, func(i, j int) bool {
-				return got[i].Name < got[j].Name
-			})
-			sort.SliceStable(tt.want, func(i, j int) bool {
-				return tt.want[i].Name < tt.want[j].Name
-			})
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
 func defaultPluginConfig() []configv1.PluginConfig {
 	var minCandidateNodesPercentage int32 = 10
 	var minCandidateNodesAbsolute int32 = 100

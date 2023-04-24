@@ -1,9 +1,11 @@
 package config
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"k8s.io/kubernetes/pkg/scheduler/framework/runtime"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -55,4 +57,88 @@ func TestInTreeMultiPointPluginSet(t *testing.T) {
 		}
 		assert.Equal(t, len(wantDisabled), count, "check sum of default disabled plugin")
 	})
+}
+
+//nolint:paralleltest // cannot use t.Parallel because SetOutOfTreeRegistries affects other test cases.
+func TestRegisteredMultiPointPluginNames(t *testing.T) {
+	tests := []struct {
+		name              string
+		outOfTreeRegistry runtime.Registry
+		want              []string
+		wantErr           bool
+	}{
+		{
+			name: "success",
+			want: []string{
+				"PrioritySort",
+				"NodeName",
+				"TaintToleration",
+				"NodeAffinity",
+				"NodeUnschedulable",
+				"NodeResourcesBalancedAllocation",
+				"ImageLocality",
+				"InterPodAffinity",
+				"NodeResourcesFit",
+				"PodTopologySpread",
+				"DefaultBinder",
+				"VolumeBinding",
+				"NodePorts",
+				"VolumeRestrictions",
+				"EBSLimits",
+				"GCEPDLimits",
+				"NodeVolumeLimits",
+				"AzureDiskLimits",
+				"VolumeZone",
+				"DefaultPreemption",
+			},
+			wantErr: false,
+		},
+		{
+			name: "success with out of tree",
+			want: []string{
+				"PrioritySort",
+				"NodeName",
+				"TaintToleration",
+				"NodeAffinity",
+				"NodeUnschedulable",
+				"NodeResourcesBalancedAllocation",
+				"ImageLocality",
+				"InterPodAffinity",
+				"NodeResourcesFit",
+				"PodTopologySpread",
+				"DefaultBinder",
+				"VolumeBinding",
+				"NodePorts",
+				"VolumeRestrictions",
+				"EBSLimits",
+				"GCEPDLimits",
+				"NodeVolumeLimits",
+				"AzureDiskLimits",
+				"VolumeZone",
+				"DefaultPreemption",
+				"custom", // added.
+			},
+			outOfTreeRegistry: map[string]runtime.PluginFactory{
+				"custom": nil,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			SetOutOfTreeRegistries(tt.outOfTreeRegistry)
+			got, err := RegisteredMultiPointPluginNames()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RegisteredPluginNames() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			sort.SliceStable(got, func(i, j int) bool {
+				return got[i] < got[j]
+			})
+			sort.SliceStable(tt.want, func(i, j int) bool {
+				return tt.want[i] < tt.want[j]
+			})
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }

@@ -25,6 +25,22 @@ type Store interface {
 	AddSelectedNode(namespace, podName, nodeName string)
 	AddBindResult(namespace, podName, pluginName, status string)
 	AddPreBindResult(namespace, podName, pluginName, status string)
+	// AddCustomResult is intended to be used from outside of simulator.
+	AddCustomResult(namespace, podName, annotationKey, result string)
+}
+
+//nolint:revive
+type PluginExtenderInitializer func(handle SimulatorHandle) PluginExtenders
+
+type SimulatorHandle interface {
+	// AddCustomResult adds user defined data.
+	// The results added through this func is reflected on the Pod's annotation eventually like other scheduling results.
+	// This function is intended to be called from the plugin.PluginExtender; allow users to export some internal state on Pods for debugging purpose.
+	// For example,
+	// Calling AddCustomResult in NodeAffinity's PreFilterPluginExtender:
+	// AddCustomResult("namespace", "incomingPod", "node-affinity-filter-internal-state-anno-key", "internal-state")
+	// Then, "incomingPod" Pod will get {"node-affinity-filter-internal-state-anno-key": "internal-state"} annotation after scheduling.
+	AddCustomResult(namespace, podName, annotationKey, result string)
 }
 
 // PreFilterPluginExtender is the extender for PreFilter plugin.
@@ -155,15 +171,13 @@ type PluginExtenders struct {
 }
 
 type options struct {
-	extenderOption   PluginExtenders
-	pluginNameOption string
-	weightOption     int32
+	extenderInitializerOption PluginExtenderInitializer
+	pluginNameOption          string
 }
 
 type (
-	extendersOption  PluginExtenders
+	extendersOption  PluginExtenderInitializer
 	pluginNameOption string
-	weightOption     int32
 )
 
 type Option interface {
@@ -171,31 +185,22 @@ type Option interface {
 }
 
 func (e extendersOption) apply(opts *options) {
-	opts.extenderOption = PluginExtenders(e)
+	opts.extenderInitializerOption = PluginExtenderInitializer(e)
 }
 
 func (p pluginNameOption) apply(opts *options) {
 	opts.pluginNameOption = string(p)
 }
 
-func (w weightOption) apply(opts *options) {
-	opts.weightOption = int32(w)
-}
-
 // WithExtendersOption provides an easy way to extend the behavior of the plugin.
 // These containing functions in PluginExtenders should be run before and after the original plugin of Scheduler Framework.
-func WithExtendersOption(opt *PluginExtenders) Option {
-	return extendersOption(*opt)
+func WithExtendersOption(opt PluginExtenderInitializer) Option {
+	return extendersOption(opt)
 }
 
 // WithPluginNameOption contains configuration options for the name field of a wrappedPlugin.
 func WithPluginNameOption(opt *string) Option {
 	return pluginNameOption(*opt)
-}
-
-// WithWeightOption contains configuration options for the weight field of a wrappedPlugin.
-func WithWeightOption(opt *int32) Option {
-	return weightOption(*opt)
 }
 
 // wrappedPlugin behaves as if it is original plugin, but it records result of plugin.
@@ -204,8 +209,6 @@ type wrappedPlugin struct {
 	// This name is default to original plugin name + pluginSuffix.
 	// You can change this name by WithPluginNameOption.
 	name string
-	// weight is a configured score weight.
-	weight int32
 	// store records plugin's result.
 	// TODO: move store's logic to plugin extender.
 	store Store
@@ -248,7 +251,10 @@ func pluginName(pluginName string) string {
 //
 //nolint:funlen,cyclop
 func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plugin {
-	options := options{}
+	options := options{
+		// default value to create empty extenders.
+		extenderInitializerOption: func(handle SimulatorHandle) PluginExtenders { return PluginExtenders{} },
+	}
 	for _, o := range opts {
 		o.apply(&options)
 	}
@@ -258,42 +264,44 @@ func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plu
 	}
 
 	plg := &wrappedPlugin{
-		name:   pName,
-		weight: options.weightOption,
-		store:  s,
+		name:  pName,
+		store: s,
 	}
-	if options.extenderOption.PreFilterPluginExtender != nil {
-		plg.preFilterPluginExtender = options.extenderOption.PreFilterPluginExtender
+
+	extender := options.extenderInitializerOption(s)
+
+	if extender.PreFilterPluginExtender != nil {
+		plg.preFilterPluginExtender = extender.PreFilterPluginExtender
 	}
-	if options.extenderOption.FilterPluginExtender != nil {
-		plg.filterPluginExtender = options.extenderOption.FilterPluginExtender
+	if extender.FilterPluginExtender != nil {
+		plg.filterPluginExtender = extender.FilterPluginExtender
 	}
-	if options.extenderOption.PostFilterPluginExtender != nil {
-		plg.postFilterPluginExtender = options.extenderOption.PostFilterPluginExtender
+	if extender.PostFilterPluginExtender != nil {
+		plg.postFilterPluginExtender = extender.PostFilterPluginExtender
 	}
-	if options.extenderOption.ScorePluginExtender != nil {
-		plg.scorePluginExtender = options.extenderOption.ScorePluginExtender
+	if extender.ScorePluginExtender != nil {
+		plg.scorePluginExtender = extender.ScorePluginExtender
 	}
-	if options.extenderOption.PreScorePluginExtender != nil {
-		plg.preScorePluginExtender = options.extenderOption.PreScorePluginExtender
+	if extender.PreScorePluginExtender != nil {
+		plg.preScorePluginExtender = extender.PreScorePluginExtender
 	}
-	if options.extenderOption.NormalizeScorePluginExtender != nil {
-		plg.normalizeScorePluginExtender = options.extenderOption.NormalizeScorePluginExtender
+	if extender.NormalizeScorePluginExtender != nil {
+		plg.normalizeScorePluginExtender = extender.NormalizeScorePluginExtender
 	}
-	if options.extenderOption.PermitPluginExtender != nil {
-		plg.permitPluginExtender = options.extenderOption.PermitPluginExtender
+	if extender.PermitPluginExtender != nil {
+		plg.permitPluginExtender = extender.PermitPluginExtender
 	}
-	if options.extenderOption.ReservePluginExtender != nil {
-		plg.reservePluginExtender = options.extenderOption.ReservePluginExtender
+	if extender.ReservePluginExtender != nil {
+		plg.reservePluginExtender = extender.ReservePluginExtender
 	}
-	if options.extenderOption.PreBindPluginExtender != nil {
-		plg.preBindPluginExtender = options.extenderOption.PreBindPluginExtender
+	if extender.PreBindPluginExtender != nil {
+		plg.preBindPluginExtender = extender.PreBindPluginExtender
 	}
-	if options.extenderOption.BindPluginExtender != nil {
-		plg.bindPluginExtender = options.extenderOption.BindPluginExtender
+	if extender.BindPluginExtender != nil {
+		plg.bindPluginExtender = extender.BindPluginExtender
 	}
-	if options.extenderOption.PostBindPluginExtender != nil {
-		plg.postBindPluginExtender = options.extenderOption.PostBindPluginExtender
+	if extender.PostBindPluginExtender != nil {
+		plg.postBindPluginExtender = extender.PostBindPluginExtender
 	}
 
 	peqp, ok := p.(framework.PreEnqueuePlugin)

@@ -34,6 +34,18 @@ func (m *MockResultStore) EXPECT() *MockResultStoreMockRecorder {
 	return m.recorder
 }
 
+// DeleteData mocks base method.
+func (m *MockResultStore) DeleteData(arg0 v1.Pod) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "DeleteData", arg0)
+}
+
+// DeleteData indicates an expected call of DeleteData.
+func (mr *MockResultStoreMockRecorder) DeleteData(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteData", reflect.TypeOf((*MockResultStore)(nil).DeleteData), arg0)
+}
+
 // GetStoredResult mocks base method.
 func (m *MockResultStore) GetStoredResult(arg0 *v1.Pod) map[string]string {
 	m.ctrl.T.Helper()
@@ -46,16 +58,4 @@ func (m *MockResultStore) GetStoredResult(arg0 *v1.Pod) map[string]string {
 func (mr *MockResultStoreMockRecorder) GetStoredResult(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStoredResult", reflect.TypeOf((*MockResultStore)(nil).GetStoredResult), arg0)
-}
-
-// DeleteData mocks base method.
-func (m *MockResultStore) DeleteData(arg0 v1.Pod) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "DeleteData", arg0)
-}
-
-// DeleteData indicates an expected call of DeleteData.
-func (mr *MockResultStoreMockRecorder) DeleteData(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteData", reflect.TypeOf((*MockResultStore)(nil).DeleteData), arg0)
 }
