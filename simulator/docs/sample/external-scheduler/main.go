@@ -13,6 +13,7 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/noderesources"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/docs/sample/nodenumber"
+	extender "sigs.k8s.io/kube-scheduler-simulator/simulator/docs/sample/plugin-extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/pkg/externalscheduler"
 )
 
