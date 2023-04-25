@@ -1,35 +1,20 @@
-# Kube-apiserver
+## Kube-apiserver
 
 This page describes about kube-apiserver run in simulator.
 
-## How to communicate with this kube-apiserver
+### How to communicate with this kube-apiserver
 
 You can use any ways like kubectl, k8s client library, or our Web UI.
 
 The endpoint is "http://localhost:3131" by default. (can be configured by env described in the below section.)
 
-### kubeconfig
+#### kubeconfig
 
-You can use this kubeconfig to communicate. 
+You can use this kubeconfig to communicate with kube-apiserver in the simulator. 
 
-```yaml
-apiVersion: v1
-kind: Config
+[kubeconfig.yaml](./kubeconfig.yaml)
 
-clusters:
-- cluster:
-    server: http://localhost:3131
-  name: simulator
-
-contexts:
-- context:
-    cluster: simulator
-  name: simulator
-
-current-context: simulator
-```
-
-### kubectl
+#### kubectl
 
 You can use the `--server` option. 
 
@@ -39,14 +24,14 @@ kubectl get pods --server=localhost:3131
 
 Of course, you can also use the above kubeconfig.
 
-## How it is configured
+### How it is configured
 
-### Environment Variable
+#### Environment Variable
 The kube-apiserver is configured to expose on the port `KUBE_API_PORT` and on the network interface `KUBE_API_HOST`.
 
 If the two variables are not specified, port `3131` will be used with the localhost `127.0.0.1` address.
 
-### Server Creation
+#### Server Creation
 
 We create a kube-apiserver instance by utilising the code path in `Kubernetes/cmd/kube-apiserver`, meaning we do not have to maintain any apiserver code.
 
