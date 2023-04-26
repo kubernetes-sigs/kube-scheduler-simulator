@@ -38,20 +38,21 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/labstack/echo/v4 v4.5.0
 	github.com/labstack/gommon v0.3.0
+	github.com/spf13/cobra v1.6.0
 	github.com/stretchr/testify v1.8.0
 	go.etcd.io/etcd/client/v3 v3.5.5
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-	k8s.io/api v1.26.2
-	k8s.io/apimachinery v1.26.2
-	k8s.io/apiserver v1.26.2
-	k8s.io/client-go v1.26.2
+	k8s.io/api v0.26.2
+	k8s.io/apimachinery v0.26.2
+	k8s.io/apiserver v0.26.2
+	k8s.io/client-go v0.26.2
 	k8s.io/code-generator v0.26.2
 	k8s.io/component-base v0.26.2
 	k8s.io/controller-manager v0.26.2
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/kube-aggregator v0.0.0
-	k8s.io/kube-scheduler v1.26.2
+	k8s.io/kube-scheduler v0.26.2
 	k8s.io/kubernetes v1.26.2
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d
 )
@@ -133,7 +134,6 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rubiojr/go-vhd v0.0.0-20200706105327-02e210299021 // indirect
-	github.com/spf13/cobra v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
