@@ -1,15 +1,21 @@
 # See the OWNERS docs at https://go.k8s.io/owners
 
 approvers:
-- adtac
 - alculquicondor
 - Huang-Wei
 - sanposhiho
+
+# emeritus:
+# - adtac
+
 reviewers:
-- adtac
 - alculquicondor
 - Huang-Wei
 - sanposhiho
 - 196Ikuchil
+
+# emeritus:
+# - adtac
+
 labels:
 - sig/scheduling
