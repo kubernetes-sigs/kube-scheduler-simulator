@@ -40,7 +40,7 @@ type Container struct {
 
 // NewDIContainer initializes Container.
 // It initializes all service and puts to Container.
-// If externalImportEnabled is false, the simulator will not use externalClient and will not create ImportClusterResourceService.
+// Only when externalImportEnabled is true, the simulator uses externalClient and creates ImportClusterResourceService.
 func NewDIContainer(
 	client clientset.Interface,
 	etcdclient *clientv3.Client,

@@ -52,7 +52,7 @@ type ResourcesForSave struct {
 	Namespaces      []corev1.Namespace                   `json:"namespaces"`
 }
 
-// ResourcesForLoad denotes indicates all resources and scheduler configuration to be loaded.
+// ResourcesForLoad indicates all resources and scheduler configuration to be loaded.
 type ResourcesForLoad struct {
 	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
 	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
