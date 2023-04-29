@@ -19,10 +19,10 @@ func TestService_ImportClusterResources(t *testing.T) {
 		wantErr                  bool
 	}{
 		{
-			name: "no error when Load and Save are successful",
+			name: "no error when Load and Snap are successful",
 			prepareEachServiceMockFn: func(simulatorExport *m.MockReplicateService, clusterExport *m.MockReplicateService) {
 				dummyOption := new(snapshot.Option)
-				clusterExport.EXPECT().Save(gomock.Any()).Return(&snapshot.ResourcesForSave{}, nil)
+				clusterExport.EXPECT().Snap(gomock.Any()).Return(&snapshot.ResourcesForSnap{}, nil)
 				simulatorExport.EXPECT().Load(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(1)
 				simulatorExport.EXPECT().IgnoreSchedulerConfiguration().Return(*dummyOption).Times(1)
@@ -33,7 +33,7 @@ func TestService_ImportClusterResources(t *testing.T) {
 			name: "should return error if Load raise an error",
 			prepareEachServiceMockFn: func(simulatorExport *m.MockReplicateService, clusterExport *m.MockReplicateService) {
 				dummyOption := new(snapshot.Option)
-				clusterExport.EXPECT().Save(gomock.Any()).Return(&snapshot.ResourcesForSave{}, nil)
+				clusterExport.EXPECT().Snap(gomock.Any()).Return(&snapshot.ResourcesForSnap{}, nil)
 				simulatorExport.EXPECT().Load(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(xerrors.Errorf("failed to Import"))
 				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(1)
 				simulatorExport.EXPECT().IgnoreSchedulerConfiguration().Return(*dummyOption).Times(1)
@@ -41,10 +41,10 @@ func TestService_ImportClusterResources(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "should return error if Save raise an error",
+			name: "should return error if Snap raise an error",
 			prepareEachServiceMockFn: func(simulatorExport *m.MockReplicateService, clusterExport *m.MockReplicateService) {
 				dummyOption := new(snapshot.Option)
-				clusterExport.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("failed to Import"))
+				clusterExport.EXPECT().Snap(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("failed to Import"))
 				simulatorExport.EXPECT().Load(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(0)
 				simulatorExport.EXPECT().IgnoreSchedulerConfiguration().Return(*dummyOption).Times(0)
 			},

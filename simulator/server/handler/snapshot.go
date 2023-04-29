@@ -33,10 +33,10 @@ func NewSnapshotHandler(s di.SnapshotService) *SnapshotHandler {
 	return &SnapshotHandler{service: s}
 }
 
-func (h *SnapshotHandler) Save(c echo.Context) error {
+func (h *SnapshotHandler) Snap(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	rs, err := h.service.Save(ctx)
+	rs, err := h.service.Snap(ctx)
 	if err != nil {
 		klog.Errorf("failed to save all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)

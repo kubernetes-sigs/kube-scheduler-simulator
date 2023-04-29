@@ -41,7 +41,7 @@ func TestService_Save(t *testing.T) {
 		name                     string
 		prepareEachServiceMockFn func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService)
 		prepareFakeClientSetFn   func() *fake.Clientset
-		wantReturn               *ResourcesForSave
+		wantReturn               *ResourcesForSnap
 		wantErr                  bool
 	}{
 		{
@@ -65,7 +65,7 @@ func TestService_Save(t *testing.T) {
 				}, metav1.CreateOptions{})
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -247,7 +247,7 @@ func TestService_Save(t *testing.T) {
 				// add test data.
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -293,7 +293,7 @@ func TestService_Save(t *testing.T) {
 				}, metav1.CreateOptions{})
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods: []corev1.Pod{
 					{
 						ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: testDefaultNamespaceName1},
@@ -368,7 +368,7 @@ func TestService_Save(t *testing.T) {
 				}, metav1.CreateOptions{})
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:  []corev1.Pod{},
 				Nodes: []corev1.Node{},
 				Pvs:   []corev1.PersistentVolume{},
@@ -428,11 +428,11 @@ func TestService_Save(t *testing.T) {
 
 			s := NewService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
-			r, err := s.Save(context.Background())
+			r, err := s.Snap(context.Background())
 
 			diffResponse := cmp.Diff(r, tt.wantReturn)
 			if diffResponse != "" || (err != nil) != tt.wantErr {
-				t.Fatalf("Save() %v test, \nerror = %v,\n%s", tt.name, err, diffResponse)
+				t.Fatalf("Snap() %v test, \nerror = %v,\n%s", tt.name, err, diffResponse)
 			}
 		})
 	}
@@ -444,7 +444,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 		name                     string
 		prepareEachServiceMockFn func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService)
 		prepareFakeClientSetFn   func() *fake.Clientset
-		wantReturn               *ResourcesForSave
+		wantReturn               *ResourcesForSnap
 		wantErr                  bool
 	}{
 		{
@@ -463,7 +463,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 				// add test data.
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -490,7 +490,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 				c := fake.NewSimpleClientset()
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -517,7 +517,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 				c := fake.NewSimpleClientset()
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -544,7 +544,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 				c := fake.NewSimpleClientset()
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -571,7 +571,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 				c := fake.NewSimpleClientset()
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -598,7 +598,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 				c := fake.NewSimpleClientset()
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -625,7 +625,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 				c := fake.NewSimpleClientset()
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -656,7 +656,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 				})
 				return c
 			},
-			wantReturn: &ResourcesForSave{
+			wantReturn: &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -686,7 +686,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 
 			s := NewService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
-			r, err := s.Save(context.Background(), s.IgnoreErr())
+			r, err := s.Snap(context.Background(), s.IgnoreErr())
 
 			diffResponse := cmp.Diff(r, tt.wantReturn)
 			if diffResponse != "" || (err != nil) != tt.wantErr {
@@ -1892,7 +1892,7 @@ func TestFunction_listPcs(t *testing.T) {
 		name                   string
 		preparePcServiceMockFn func(pcs *mock_snapshot.MockPriorityClassService)
 		prepareFakeClientSetFn func() *fake.Clientset
-		wantResourcesForSave   func() *ResourcesForSave
+		wantResourcesForSnap   func() *ResourcesForSnap
 		wantErr                bool
 	}{
 		{
@@ -1913,12 +1913,12 @@ func TestFunction_listPcs(t *testing.T) {
 				c := fake.NewSimpleClientset()
 				return c
 			},
-			wantResourcesForSave: func() *ResourcesForSave {
+			wantResourcesForSnap: func() *ResourcesForSnap {
 				_pcs := []schedulingv1.PriorityClass{}
 				nonSysPc := schedulingv1.PriorityClass{}
 				nonSysPc.Name = "priority-class1"
 				_pcs = append(_pcs, nonSysPc)
-				return &ResourcesForSave{
+				return &ResourcesForSnap{
 					Pods:            []corev1.Pod{},
 					Nodes:           []corev1.Node{},
 					Pvs:             []corev1.PersistentVolume{},
@@ -1950,7 +1950,7 @@ func TestFunction_listPcs(t *testing.T) {
 			tt.preparePcServiceMockFn(mockPriorityClassService)
 			ctx := context.Background()
 			errgrp := util.NewErrGroupWithSemaphore(ctx)
-			resources := &ResourcesForSave{
+			resources := &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -1964,7 +1964,7 @@ func TestFunction_listPcs(t *testing.T) {
 			if err := errgrp.Wait(); err != nil {
 				t.Fatalf("listPcs: %v", err)
 			}
-			diffResponse := cmp.Diff(resources, tt.wantResourcesForSave())
+			diffResponse := cmp.Diff(resources, tt.wantResourcesForSnap())
 			if diffResponse != "" || (err != nil) != tt.wantErr {
 				t.Fatalf("listPcs() %v test, \nerror = %v, wantErr %v\n%s", tt.name, err, tt.wantErr, diffResponse)
 			}
@@ -2057,7 +2057,7 @@ func Test_listNamespaces(t *testing.T) {
 	tests := []struct {
 		name                   string
 		prepareFakeClientSetFn func() *fake.Clientset
-		wantResourcesForSave   func() *ResourcesForSave
+		wantResourcesForSnap   func() *ResourcesForSnap
 		wantErr                bool
 	}{
 		{
@@ -2091,12 +2091,12 @@ func Test_listNamespaces(t *testing.T) {
 				}, metav1.CreateOptions{})
 				return c
 			},
-			wantResourcesForSave: func() *ResourcesForSave {
+			wantResourcesForSnap: func() *ResourcesForSnap {
 				nss := []corev1.Namespace{}
 				nonIgnoreNS := corev1.Namespace{}
 				nonIgnoreNS.Name = "namespace1"
 				nss = append(nss, nonIgnoreNS)
-				return &ResourcesForSave{
+				return &ResourcesForSnap{
 					Pods:            []corev1.Pod{},
 					Nodes:           []corev1.Node{},
 					Pvs:             []corev1.PersistentVolume{},
@@ -2128,7 +2128,7 @@ func Test_listNamespaces(t *testing.T) {
 			s := NewService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			ctx := context.Background()
 			errgrp := util.NewErrGroupWithSemaphore(ctx)
-			resources := &ResourcesForSave{
+			resources := &ResourcesForSnap{
 				Pods:            []corev1.Pod{},
 				Nodes:           []corev1.Node{},
 				Pvs:             []corev1.PersistentVolume{},
@@ -2143,7 +2143,7 @@ func Test_listNamespaces(t *testing.T) {
 			if err := errgrp.Wait(); err != nil {
 				t.Fatalf("listNamespaces: %v", err)
 			}
-			diffResponse := cmp.Diff(resources, tt.wantResourcesForSave())
+			diffResponse := cmp.Diff(resources, tt.wantResourcesForSnap())
 			if diffResponse != "" || (err != nil) != tt.wantErr {
 				t.Fatalf("listNamespaces() %v test, \nerror = %v, wantErr %v\n%s", tt.name, err, tt.wantErr, diffResponse)
 			}

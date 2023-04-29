@@ -46,7 +46,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 
 	v1.PUT("/reset", resetHandler.Reset)
 
-	v1.GET("/export", snapshotHandler.Save)
+	v1.GET("/export", snapshotHandler.Snap)
 	v1.POST("/import", snapshotHandler.Load)
 
 	v1.GET("/listwatchresources", resourcewatcherHandler.ListWatchResources)

@@ -40,8 +40,8 @@ type Service struct {
 	schedulerService     SchedulerService
 }
 
-// ResourcesForSave indicates all resources and scheduler configuration to be saved.
-type ResourcesForSave struct {
+// ResourcesForSnap indicates all resources and scheduler configuration to be saved.
+type ResourcesForSnap struct {
 	Pods            []corev1.Pod                         `json:"pods"`
 	Nodes           []corev1.Node                        `json:"nodes"`
 	Pvs             []corev1.PersistentVolume            `json:"pvs"`
@@ -149,9 +149,9 @@ func (s *Service) IgnoreSchedulerConfiguration() Option {
 }
 
 // get gets all resources from each service.
-func (s *Service) get(ctx context.Context, opts options) (*ResourcesForSave, error) {
+func (s *Service) get(ctx context.Context, opts options) (*ResourcesForSnap, error) {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
-	resources := ResourcesForSave{}
+	resources := ResourcesForSnap{}
 
 	if err := s.listPods(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPods: %w", err)
@@ -184,8 +184,8 @@ func (s *Service) get(ctx context.Context, opts options) (*ResourcesForSave, err
 	return &resources, nil
 }
 
-// Save exports all resources as one data.
-func (s *Service) Save(ctx context.Context, opts ...Option) (*ResourcesForSave, error) {
+// Snap exports all resources as one data.
+func (s *Service) Snap(ctx context.Context, opts ...Option) (*ResourcesForSnap, error) {
 	options := options{}
 	for _, o := range opts {
 		o.apply(&options)
@@ -263,7 +263,7 @@ func (s *Service) Load(ctx context.Context, resources *ResourcesForLoad, opts ..
 	return nil
 }
 
-func (s *Service) listPods(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listPods(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		pods, err := s.podService.List(ctx, metav1.NamespaceAll)
 		if err != nil {
@@ -281,7 +281,7 @@ func (s *Service) listPods(ctx context.Context, r *ResourcesForSave, eg *util.Se
 	return nil
 }
 
-func (s *Service) listNodes(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listNodes(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		nodes, err := s.nodeService.List(ctx)
 		if err != nil {
@@ -299,7 +299,7 @@ func (s *Service) listNodes(ctx context.Context, r *ResourcesForSave, eg *util.S
 	return nil
 }
 
-func (s *Service) listPvs(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listPvs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		pvs, err := s.pvService.List(ctx)
 		if err != nil {
@@ -317,7 +317,7 @@ func (s *Service) listPvs(ctx context.Context, r *ResourcesForSave, eg *util.Sem
 	return nil
 }
 
-func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		pvcs, err := s.pvcService.List(ctx, metav1.NamespaceAll)
 		if err != nil {
@@ -335,7 +335,7 @@ func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSave, eg *util.Se
 	return nil
 }
 
-func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		scs, err := s.storageClassService.List(ctx)
 		if err != nil {
@@ -353,7 +353,7 @@ func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSave, e
 	return nil
 }
 
-func (s *Service) listPcs(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listPcs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		pcs, err := s.priorityClassService.List(ctx)
 		if err != nil {
@@ -377,7 +377,7 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForSave, eg *util.Sem
 	return nil
 }
 
-func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		nss, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 		if err != nil {
@@ -401,7 +401,7 @@ func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForSave, eg *u
 	return nil
 }
 
-func (s *Service) getSchedulerConfig(r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) getSchedulerConfig(r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		ss, err := s.schedulerService.GetSchedulerConfig()
 		if err != nil && !errors.Is(err, scheduler.ErrServiceDisabled) {

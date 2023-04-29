@@ -83,22 +83,22 @@ func (mr *MockReplicateServiceMockRecorder) Load(arg0, arg1 interface{}, arg2 ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Load", reflect.TypeOf((*MockReplicateService)(nil).Load), varargs...)
 }
 
-// Save mocks base method.
-func (m *MockReplicateService) Save(arg0 context.Context, arg1 ...snapshot.Option) (*snapshot.ResourcesForSave, error) {
+// Snap mocks base method.
+func (m *MockReplicateService) Snap(arg0 context.Context, arg1 ...snapshot.Option) (*snapshot.ResourcesForSnap, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "Save", varargs...)
-	ret0, _ := ret[0].(*snapshot.ResourcesForSave)
+	ret := m.ctrl.Call(m, "Snap", varargs...)
+	ret0, _ := ret[0].(*snapshot.ResourcesForSnap)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Save indicates an expected call of Save.
-func (mr *MockReplicateServiceMockRecorder) Save(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+// Snap indicates an expected call of Snap.
+func (mr *MockReplicateServiceMockRecorder) Snap(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockReplicateService)(nil).Save), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Snap", reflect.TypeOf((*MockReplicateService)(nil).Snap), varargs...)
 }

@@ -12,8 +12,8 @@ import (
 	cfgstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 )
 
-// ConvertResourcesForSaveToResourcesForLoad returns ResourcesForLoad based on ResourcesForSave.
-func ConvertResourcesForSaveToResourcesForLoad(expRes *ResourcesForSave) (*ResourcesForLoad, error) {
+// ConvertResourcesForSnapToResourcesForLoad returns ResourcesForLoad based on ResourcesForSnap.
+func ConvertResourcesForSnapToResourcesForLoad(expRes *ResourcesForSnap) (*ResourcesForLoad, error) {
 	pods, err := convertPodListToApplyConfigurationList(expRes.Pods)
 	if err != nil {
 		return nil, xerrors.Errorf("call convertPodListToApplyConfigurationList: %w", err)
