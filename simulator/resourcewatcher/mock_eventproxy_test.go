@@ -10,7 +10,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-
 	streamwriter "sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
 )
 
