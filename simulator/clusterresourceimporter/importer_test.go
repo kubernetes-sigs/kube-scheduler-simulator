@@ -19,7 +19,7 @@ func TestService_ImportClusterResources(t *testing.T) {
 		wantErr                  bool
 	}{
 		{
-			name: "no error when Import and Export are successful",
+			name: "no error when Load and Save are successful",
 			prepareEachServiceMockFn: func(simulatorExport *m.MockReplicateService, clusterExport *m.MockReplicateService) {
 				dummyOption := new(snapshot.Option)
 				clusterExport.EXPECT().Save(gomock.Any()).Return(&snapshot.ResourcesForSave{}, nil)
@@ -30,7 +30,7 @@ func TestService_ImportClusterResources(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "should return error if Import raise an error",
+			name: "should return error if Load raise an error",
 			prepareEachServiceMockFn: func(simulatorExport *m.MockReplicateService, clusterExport *m.MockReplicateService) {
 				dummyOption := new(snapshot.Option)
 				clusterExport.EXPECT().Save(gomock.Any()).Return(&snapshot.ResourcesForSave{}, nil)
@@ -41,7 +41,7 @@ func TestService_ImportClusterResources(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "should return error if Export raise an error",
+			name: "should return error if Save raise an error",
 			prepareEachServiceMockFn: func(simulatorExport *m.MockReplicateService, clusterExport *m.MockReplicateService) {
 				dummyOption := new(snapshot.Option)
 				clusterExport.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("failed to Import"))

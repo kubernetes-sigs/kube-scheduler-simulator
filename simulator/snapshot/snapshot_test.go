@@ -45,7 +45,7 @@ func TestService_Save(t *testing.T) {
 		wantErr                  bool
 	}{
 		{
-			name: "export all resources",
+			name: "snap all resources",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -84,7 +84,7 @@ func TestService_Save(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "export failure on List of PodService",
+			name: "snap failure on List of PodService",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("list pods"))
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -102,7 +102,7 @@ func TestService_Save(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name: "export failure on List of NodeService",
+			name: "snap failure on List of NodeService",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(nil, xerrors.Errorf("list nodes"))
@@ -120,7 +120,7 @@ func TestService_Save(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name: "export failure on List of PersistentVolumeService",
+			name: "snap failure on List of PersistentVolumeService",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -138,7 +138,7 @@ func TestService_Save(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name: "export failure on List of PersistentVolumeClaims",
+			name: "snap failure on List of PersistentVolumeClaims",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -156,7 +156,7 @@ func TestService_Save(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name: "export failure on List of storageClasses",
+			name: "snap failure on List of storageClasses",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -174,7 +174,7 @@ func TestService_Save(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name: "export failure on List of priorityClasses",
+			name: "snap failure on List of priorityClasses",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -192,7 +192,7 @@ func TestService_Save(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name: "export failure on get scheduler config",
+			name: "snap failure on get scheduler config",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -210,7 +210,7 @@ func TestService_Save(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name: "export failure on List of Namespace",
+			name: "snap failure on List of Namespace",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -260,7 +260,7 @@ func TestService_Save(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "export all pods with different namespaces",
+			name: "snap all pods with different namespaces",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{
 					{
@@ -325,7 +325,7 @@ func TestService_Save(t *testing.T) {
 			},
 		},
 		{
-			name: "export all pvcs with different namespaces",
+			name: "snap all pvcs with different namespaces",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -448,7 +448,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 		wantErr                  bool
 	}{
 		{
-			name: "export all resources",
+			name: "snap all resources",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().List(gomock.Any(), gomock.Any()).Return(&corev1.PodList{Items: []corev1.Pod{}}, nil)
 				nodes.EXPECT().List(gomock.Any()).Return(&corev1.NodeList{Items: []corev1.Node{}}, nil)
@@ -707,7 +707,7 @@ func TestService_Load(t *testing.T) {
 		wantErr                  bool
 	}{
 		{
-			name: "import all success",
+			name: "load all success",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -760,7 +760,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "import all success (with external scheduler enabled.)",
+			name: "load all success (with external scheduler enabled.)",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -813,7 +813,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "import failure on Pod Apply",
+			name: "load failure on Pod Apply",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, xerrors.Errorf("apply pod"))
 				nodes.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.Node{}, nil).Do(func(_ context.Context, cfg *v1.NodeApplyConfiguration) {
@@ -861,7 +861,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "import failure on Node Apply",
+			name: "load failure on Node Apply",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -909,7 +909,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "import failure on PersistentVolume Apply",
+			name: "load failure on PersistentVolume Apply",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -960,7 +960,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "import failure on PersistentVolumeClaim Apply",
+			name: "load failure on PersistentVolumeClaim Apply",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -1008,7 +1008,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "import failure on StorageClass Apply",
+			name: "load failure on StorageClass Apply",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -1056,7 +1056,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "import failure on PriorityClass Apply",
+			name: "load failure on PriorityClass Apply",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -1104,7 +1104,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "import success when PersistentVolumeClaim was not found (Get() return err)",
+			name: "load success when PersistentVolumeClaim was not found (Get() return err)",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -1158,7 +1158,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "import success when PersistentVolumeClaim was found (Get() return err)",
+			name: "load success when PersistentVolumeClaim was found (Get() return err)",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -1262,7 +1262,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "success import pv and pvc from json string (UID be set to nil)",
+			name: "success load pv and pvc from json string (UID be set to nil)",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
@@ -1292,7 +1292,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "success import when pv.Status is not exist",
+			name: "success load when pv.Status is not exist",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
@@ -1322,7 +1322,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "success import when pv.Status.Phase is not exist",
+			name: "success load when pv.Status.Phase is not exist",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pvs.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(&corev1.PersistentVolume{}, nil).Do(func(_ context.Context, cfg *v1.PersistentVolumeApplyConfiguration) {
 					assert.Equal(t, "pv1", *cfg.Name)
@@ -1352,7 +1352,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "import all pods with different namespaces",
+			name: "load all pods with different namespaces",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), testDefaultNamespaceName1, gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -1409,7 +1409,7 @@ func TestService_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "import all pvcs with different namespaces",
+			name: "load all pvcs with different namespaces",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
@@ -1502,7 +1502,7 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 		wantErr                  bool
 	}{
 		{
-			name: "import all success",
+			name: "load all success",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
 				pods.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).Return(&corev1.Pod{}, nil).Do(func(_ context.Context, ns string, cfg *v1.PodApplyConfiguration) {
 					assert.Equal(t, "Pod1", *cfg.Name)
