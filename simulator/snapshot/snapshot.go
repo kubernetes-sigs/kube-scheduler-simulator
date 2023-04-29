@@ -1,4 +1,4 @@
-package export
+package snapshot
 
 //go:generate mockgen -destination=./mock_$GOPACKAGE/pod.go . PodService
 //go:generate mockgen -destination=./mock_$GOPACKAGE/node.go . NodeService
@@ -36,12 +36,12 @@ type Service struct {
 	pvService            PersistentVolumeService
 	pvcService           PersistentVolumeClaimService
 	storageClassService  StorageClassService
-	priorityclassService PriorityClassService
+	priorityClassService PriorityClassService
 	schedulerService     SchedulerService
 }
 
-// ResourcesForExport denotes all resources and scheduler configuration for export.
-type ResourcesForExport struct {
+// ResourcesForSave indicates all resources and scheduler configuration to be saved.
+type ResourcesForSave struct {
 	Pods            []corev1.Pod                         `json:"pods"`
 	Nodes           []corev1.Node                        `json:"nodes"`
 	Pvs             []corev1.PersistentVolume            `json:"pvs"`
@@ -52,8 +52,8 @@ type ResourcesForExport struct {
 	Namespaces      []corev1.Namespace                   `json:"namespaces"`
 }
 
-// ResourcesForImport denotes all resources and scheduler configuration for import.
-type ResourcesForImport struct {
+// ResourcesForLoad denotes indicates all resources and scheduler configuration to be loaded.
+type ResourcesForLoad struct {
 	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
 	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
 	Pvs             []v1.PersistentVolumeApplyConfiguration           `json:"pvs"`
@@ -100,15 +100,15 @@ type SchedulerService interface {
 	RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error
 }
 
-func NewExportService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, storageClasss StorageClassService, priorityClasss PriorityClassService, schedulers SchedulerService) *Service {
+func NewService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, sc StorageClassService, pc PriorityClassService, schedulers SchedulerService) *Service {
 	return &Service{
 		client:               client,
 		podService:           pods,
 		nodeService:          nodes,
 		pvService:            pvs,
 		pvcService:           pvcs,
-		storageClassService:  storageClasss,
-		priorityclassService: priorityClasss,
+		storageClassService:  sc,
+		priorityClassService: pc,
 		schedulerService:     schedulers,
 	}
 }
@@ -141,17 +141,17 @@ func (s *Service) IgnoreErr() Option {
 	return ignoreErrOption(true)
 }
 
-// IgnoreSchedulerConfiguration is the option to ignore the scheduler configuration in the given ResourcesForImport.
-// Note: this option is only for Import method.
-// If it is enabled, the scheduler will not be restarted in import method.
+// IgnoreSchedulerConfiguration is the option to ignore the scheduler configuration in the given ResourcesForLoad.
+// Note: this option is only for Load method.
+// If it is enabled, the scheduler will not be restarted in load method.
 func (s *Service) IgnoreSchedulerConfiguration() Option {
 	return ignoreSchedulerConfigurationOption(true)
 }
 
-// Get gets all resources from each service.
-func (s *Service) get(ctx context.Context, opts options) (*ResourcesForExport, error) {
+// get gets all resources from each service.
+func (s *Service) get(ctx context.Context, opts options) (*ResourcesForSave, error) {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
-	resources := ResourcesForExport{}
+	resources := ResourcesForSave{}
 
 	if err := s.listPods(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPods: %w", err)
@@ -184,24 +184,25 @@ func (s *Service) get(ctx context.Context, opts options) (*ResourcesForExport, e
 	return &resources, nil
 }
 
-func (s *Service) Export(ctx context.Context, opts ...Option) (*ResourcesForExport, error) {
+// Save exports all resources as one data.
+func (s *Service) Save(ctx context.Context, opts ...Option) (*ResourcesForSave, error) {
 	options := options{}
 	for _, o := range opts {
 		o.apply(&options)
 	}
 	resources, err := s.get(ctx, options)
 	if err != nil {
-		return nil, xerrors.Errorf("export resources all: %w", err)
+		return nil, xerrors.Errorf("failed to get(): %w", err)
 	}
 	return resources, nil
 }
 
-// Apply applies all resources from each service.
+// Apply applies all resources to each service.
 //
 //nolint:cyclop // For readability.
-func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts options) error {
+func (s *Service) apply(ctx context.Context, resources *ResourcesForLoad, opts options) error {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
-	// `applyNamespaces` must be called before calling namespaced resources  applying.
+	// `applyNamespaces` must be called before calling namespaced resources applying.
 	if err := s.applyNamespaces(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyNamespaces: %w", err)
 	}
@@ -239,11 +240,11 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForImport, opts
 	return nil
 }
 
-// Import imports all resources from posted data.
+// Load imports all resources from posted data.
 // (1) Restart scheduler based on the data.
 // (2) Apply each resource.
-//   - If UID is not nil, an error will occur. (This is because the api-server will try to find that in existing resources by UID)
-func (s *Service) Import(ctx context.Context, resources *ResourcesForImport, opts ...Option) error {
+//   - If UID is not nil, an error will occur. (This is because the api-server will try to find that from current resources by UID)
+func (s *Service) Import(ctx context.Context, resources *ResourcesForLoad, opts ...Option) error {
 	options := options{}
 	for _, o := range opts {
 		o.apply(&options)
@@ -251,18 +252,18 @@ func (s *Service) Import(ctx context.Context, resources *ResourcesForImport, opt
 	if !options.ignoreSchedulerConfiguration {
 		if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 			if !errors.Is(err, scheduler.ErrServiceDisabled) {
-				return xerrors.Errorf("restart scheduler with imported configuration: %w", err)
+				return xerrors.Errorf("restart scheduler with Loaded configuration: %w", err)
 			}
-			klog.Info("The scheduler configuration hasn't been imported because of an external scheduler is enabled.")
+			klog.Info("The scheduler configuration hasn't been Loaded because of an external scheduler is enabled.")
 		}
 	}
 	if err := s.apply(ctx, resources, options); err != nil {
-		return xerrors.Errorf("import resources all: %w", err)
+		return xerrors.Errorf("failed to apply(): %w", err)
 	}
 	return nil
 }
 
-func (s *Service) listPods(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listPods(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		pods, err := s.podService.List(ctx, metav1.NamespaceAll)
 		if err != nil {
@@ -280,7 +281,7 @@ func (s *Service) listPods(ctx context.Context, r *ResourcesForExport, eg *util.
 	return nil
 }
 
-func (s *Service) listNodes(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listNodes(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		nodes, err := s.nodeService.List(ctx)
 		if err != nil {
@@ -298,7 +299,7 @@ func (s *Service) listNodes(ctx context.Context, r *ResourcesForExport, eg *util
 	return nil
 }
 
-func (s *Service) listPvs(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listPvs(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		pvs, err := s.pvService.List(ctx)
 		if err != nil {
@@ -316,7 +317,7 @@ func (s *Service) listPvs(ctx context.Context, r *ResourcesForExport, eg *util.S
 	return nil
 }
 
-func (s *Service) listPvcs(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		pvcs, err := s.pvcService.List(ctx, metav1.NamespaceAll)
 		if err != nil {
@@ -334,7 +335,7 @@ func (s *Service) listPvcs(ctx context.Context, r *ResourcesForExport, eg *util.
 	return nil
 }
 
-func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		scs, err := s.storageClassService.List(ctx)
 		if err != nil {
@@ -352,9 +353,9 @@ func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForExport,
 	return nil
 }
 
-func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listPcs(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
-		pcs, err := s.priorityclassService.List(ctx)
+		pcs, err := s.priorityClassService.List(ctx)
 		if err != nil {
 			if !opts.ignoreErr {
 				return xerrors.Errorf("call list priorityClasses: %w", err)
@@ -376,7 +377,7 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForExport, eg *util.S
 	return nil
 }
 
-func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		nss, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 		if err != nil {
@@ -400,7 +401,7 @@ func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForExport, eg 
 	return nil
 }
 
-func (s *Service) getSchedulerConfig(r *ResourcesForExport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) getSchedulerConfig(r *ResourcesForSave, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
 		ss, err := s.schedulerService.GetSchedulerConfig()
 		if err != nil && !errors.Is(err, scheduler.ErrServiceDisabled) {
@@ -418,7 +419,7 @@ func (s *Service) getSchedulerConfig(r *ResourcesForExport, eg *util.SemaphoredE
 	return nil
 }
 
-func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) applyPcs(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.PriorityClasses {
 		pc := r.PriorityClasses[i]
 		if isSystemPriorityClass(*pc.Name) {
@@ -426,7 +427,7 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.
 		}
 		if err := eg.Go(func() error {
 			pc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.priorityclassService.Apply(ctx, &pc)
+			_, err := s.priorityClassService.Apply(ctx, &pc)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PriorityClass: %w", err)
@@ -441,7 +442,7 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForImport, eg *util.
 	return nil
 }
 
-func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.StorageClasses {
 		sc := r.StorageClasses[i]
 		if err := eg.Go(func() error {
@@ -461,7 +462,7 @@ func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForImport
 	return nil
 }
 
-func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Pvcs {
 		pvc := r.Pvcs[i]
 		if err := eg.Go(func() error {
@@ -481,7 +482,7 @@ func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForImport, eg *util
 	return nil
 }
 
-func (s *Service) applyPvs(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) applyPvs(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Pvs {
 		pv := r.Pvs[i]
 		if err := eg.Go(func() error {
@@ -513,7 +514,7 @@ func (s *Service) applyPvs(ctx context.Context, r *ResourcesForImport, eg *util.
 	return nil
 }
 
-func (s *Service) applyNodes(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) applyNodes(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Nodes {
 		node := r.Nodes[i]
 		if err := eg.Go(func() error {
@@ -533,7 +534,7 @@ func (s *Service) applyNodes(ctx context.Context, r *ResourcesForImport, eg *uti
 	return nil
 }
 
-func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) applyPods(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Pods {
 		pod := r.Pods[i]
 		if err := eg.Go(func() error {
@@ -553,7 +554,7 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForImport, eg *util
 	return nil
 }
 
-func (s *Service) applyNamespaces(ctx context.Context, r *ResourcesForImport, eg *util.SemaphoredErrGroup, opts options) error {
+func (s *Service) applyNamespaces(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
 	for i := range r.Namespaces {
 		ns := r.Namespaces[i]
 		if isIgnoreNamespace(*ns.Name) {
@@ -581,7 +582,7 @@ func (s *Service) applyNamespaces(ctx context.Context, r *ResourcesForImport, eg
 // The `system-` prefix is reserved by Kubernetes, and users cannot create a PriorityClass with such a name.
 // See: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
 //
-// So, we need to exclude these PriorityClasses when import/export PriorityClasses.
+// So, we need to exclude these PriorityClasses when saving/loading any PriorityClasses.
 func isSystemPriorityClass(name string) bool {
 	return strings.HasPrefix(name, "system-")
 }
@@ -590,7 +591,7 @@ func isSystemPriorityClass(name string) bool {
 // The `kube-` prefix is reserved by Kubernetes, and users cannot create a Namespace with such a name.
 // See: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#working-with-namespaces
 //
-// So, we need to exclude these Namespaces when importing/exporting any Namespaces.
+// So, we need to exclude these Namespaces when saving/loading any Namespaces.
 func isSystemNamespace(name string) bool {
 	return strings.HasPrefix(name, "kube-")
 }
