@@ -24,9 +24,9 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 	configv1 "k8s.io/kube-scheduler/config/v1"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/export/mock_snapshot"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	schedulerCfg "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot/mock_snapshot"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
 
@@ -697,7 +697,7 @@ func TestService_Save_IgnoreErrOption(t *testing.T) {
 }
 
 // TODO: Ensure that these namespaces are actually applied. Issue #139.
-func TestService_Import(t *testing.T) {
+func TestService_Load(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                     string
@@ -1484,15 +1484,15 @@ func TestService_Import(t *testing.T) {
 			s := NewService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 
-			if err := s.Import(context.Background(), tt.applyConfiguration()); (err != nil) != tt.wantErr {
-				t.Fatalf("Import() %v test, \nerror = %v", tt.name, err)
+			if err := s.Load(context.Background(), tt.applyConfiguration()); (err != nil) != tt.wantErr {
+				t.Fatalf("Load() %v test, \nerror = %v", tt.name, err)
 			}
 		})
 	}
 }
 
 // TODO: Ensure that these namespaces are actually applied. Issue #139.
-func TestService_Import_WithIgnoreErrOption(t *testing.T) {
+func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                     string
@@ -1879,8 +1879,8 @@ func TestService_Import_WithIgnoreErrOption(t *testing.T) {
 			s := NewService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 
-			if err := s.Import(context.Background(), tt.applyConfiguration(), s.IgnoreErr()); (err != nil) != tt.wantErr {
-				t.Fatalf("Import() IgnoreErr option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
+			if err := s.Load(context.Background(), tt.applyConfiguration(), s.IgnoreErr()); (err != nil) != tt.wantErr {
+				t.Fatalf("Load() IgnoreErr option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
 			}
 		})
 	}
@@ -2223,7 +2223,7 @@ func Test_applyNamespaces(t *testing.T) {
 	}
 }
 
-func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
+func TestService_Load_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name                     string
@@ -2233,9 +2233,9 @@ func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 		wantErr                  bool
 	}{
 		{
-			name: "Import does not call RestartScheduler",
+			name: "Load does not call RestartScheduler",
 			prepareEachServiceMockFn: func(pods *mock_snapshot.MockPodService, nodes *mock_snapshot.MockNodeService, pvs *mock_snapshot.MockPersistentVolumeService, pvcs *mock_snapshot.MockPersistentVolumeClaimService, storageClasss *mock_snapshot.MockStorageClassService, pcs *mock_snapshot.MockPriorityClassService, schedulers *mock_snapshot.MockSchedulerService) {
-				// If the Import function call this, it will return the error.
+				// If the Load function call this, it will return the error.
 
 				// RestartScheduler must be called zero times.
 				schedulers.EXPECT().RestartScheduler(gomock.Any()).Times(0)
@@ -2285,8 +2285,8 @@ func TestService_Import_WithIgnoreSchedulerConfigurationOption(t *testing.T) {
 			s := NewService(fakeclientset, mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 			tt.prepareEachServiceMockFn(mockPodService, mockNodeService, mockPVService, mockPVCService, mockStorageClassService, mockPriorityClassService, mockSchedulerService)
 
-			if err := s.Import(context.Background(), tt.applyConfiguration(), s.IgnoreSchedulerConfiguration()); (err != nil) != tt.wantErr {
-				t.Fatalf("Import() with ignoreSchedulerConfiguration option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
+			if err := s.Load(context.Background(), tt.applyConfiguration(), s.IgnoreSchedulerConfiguration()); (err != nil) != tt.wantErr {
+				t.Fatalf("Load() with ignoreSchedulerConfiguration option, %v test, \nerror = %v, wantErr %v", tt.name, err, tt.wantErr)
 			}
 		})
 	}

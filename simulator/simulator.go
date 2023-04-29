@@ -49,9 +49,9 @@ func startSimulator() error {
 	}
 	defer ctrlerShutdown()
 
-	existingClusterClient := &clientset.Clientset{}
+	importClusterResourceClient := &clientset.Clientset{}
 	if cfg.ExternalImportEnabled {
-		existingClusterClient, err = clientset.NewForConfig(cfg.ExternalKubeClientCfg)
+		importClusterResourceClient, err = clientset.NewForConfig(cfg.ExternalKubeClientCfg)
 		if err != nil {
 			return xerrors.Errorf("creates a new Clientset for the ExternalKubeClientCfg: %w", err)
 		}
@@ -68,7 +68,7 @@ func startSimulator() error {
 	// need to sleep here to make all controllers create initial resources. (like "system-" priorityclass.)
 	time.Sleep(1 * time.Second)
 
-	dic, err := di.NewDIContainer(client, etcdclient, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, existingClusterClient, cfg.ExternalSchedulerEnabled, cfg.Port)
+	dic, err := di.NewDIContainer(client, etcdclient, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
@@ -80,12 +80,12 @@ func startSimulator() error {
 	}
 
 	// If ExternalImportEnabled is enabled, the simulator import resources
-	// from the existing cluster that indicated by the `KUBECONFIG`.
+	// from the target cluster that indicated by the `KUBECONFIG`.
 	if cfg.ExternalImportEnabled {
 		ctx := context.Background()
 		// This must be called after `StartScheduler`
-		if err := dic.ReplicateExistingClusterService().ImportFromExistingCluster(ctx); err != nil {
-			return xerrors.Errorf("import existing cluster: %w", err)
+		if err := dic.ImportClusterResourceService().ImportClusterResources(ctx); err != nil {
+			return xerrors.Errorf("import from the target cluster: %w", err)
 		}
 	}
 

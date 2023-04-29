@@ -244,7 +244,7 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForLoad, opts o
 // (1) Restart scheduler based on the data.
 // (2) Apply each resource.
 //   - If UID is not nil, an error will occur. (This is because the api-server will try to find that from current resources by UID)
-func (s *Service) Import(ctx context.Context, resources *ResourcesForLoad, opts ...Option) error {
+func (s *Service) Load(ctx context.Context, resources *ResourcesForLoad, opts ...Option) error {
 	options := options{}
 	for _, o := range opts {
 		o.apply(&options)
