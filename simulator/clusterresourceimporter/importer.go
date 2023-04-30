@@ -38,7 +38,8 @@ func NewService(e ReplicateService, i ReplicateService) *Service {
 // ImportClusterResources gets resources from the target cluster via exportService
 // and then apply those resources to the simulator.
 // Note: this method doesn't handle scheduler configuration.
-// If you want to use their scheduler configuration, you need to set config of `KUBE_SCHEDULER_CONFIG_PATH`.
+// If you want to use the scheduler configuration along with the imported resources on the simulator,
+// you need to set the path of the scheduler configuration file to `kubeSchedulerConfigPath` value in the Simulator Server Configuration.
 func (s *Service) ImportClusterResources(ctx context.Context) error {
 	expRes, err := s.exportService.Snap(ctx)
 	if err != nil {
