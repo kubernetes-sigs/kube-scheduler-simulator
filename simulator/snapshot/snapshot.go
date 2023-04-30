@@ -40,7 +40,7 @@ type Service struct {
 	schedulerService     SchedulerService
 }
 
-// ResourcesForSnap indicates all resources and scheduler configuration to be saved.
+// ResourcesForSnap indicates all resources and scheduler configuration to be snapped.
 type ResourcesForSnap struct {
 	Pods            []corev1.Pod                         `json:"pods"`
 	Nodes           []corev1.Node                        `json:"nodes"`
@@ -252,9 +252,9 @@ func (s *Service) Load(ctx context.Context, resources *ResourcesForLoad, opts ..
 	if !options.ignoreSchedulerConfiguration {
 		if err := s.schedulerService.RestartScheduler(resources.SchedulerConfig); err != nil {
 			if !errors.Is(err, scheduler.ErrServiceDisabled) {
-				return xerrors.Errorf("restart scheduler with Loaded configuration: %w", err)
+				return xerrors.Errorf("restart scheduler with loaded configuration: %w", err)
 			}
-			klog.Info("The scheduler configuration hasn't been Loaded because of an external scheduler is enabled.")
+			klog.Info("The scheduler configuration hasn't been loaded because of an external scheduler is enabled.")
 		}
 	}
 	if err := s.apply(ctx, resources, options); err != nil {
