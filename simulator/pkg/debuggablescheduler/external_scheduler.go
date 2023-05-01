@@ -1,4 +1,4 @@
-package externalscheduler
+package debuggablescheduler
 
 import (
 	"context"

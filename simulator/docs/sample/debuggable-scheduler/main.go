@@ -14,13 +14,13 @@ import (
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/docs/sample/nodenumber"
 	extender "sigs.k8s.io/kube-scheduler-simulator/simulator/docs/sample/plugin-extender"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/pkg/externalscheduler"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/pkg/debuggablescheduler"
 )
 
 func main() {
-	command, cancelFn, err := externalscheduler.NewSchedulerCommand(
-		externalscheduler.WithPlugin(nodenumber.Name, nodenumber.New),
-		externalscheduler.WithPluginExtenders(noderesources.Name, extender.New),
+	command, cancelFn, err := debuggablescheduler.NewSchedulerCommand(
+		debuggablescheduler.WithPlugin(nodenumber.Name, nodenumber.New),           // Register the custom scheduler plugin.
+		debuggablescheduler.WithPluginExtenders(noderesources.Name, extender.New), // [Optional] Register the plugin extender. See /simulator/docs/plugin-extender.md
 	)
 	if err != nil {
 		klog.Info(fmt.Sprintf("failed to build the scheduler command: %+v", err))
