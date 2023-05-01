@@ -12,10 +12,10 @@ import (
 	configv1 "k8s.io/kube-scheduler/config/v1"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 
 // PodService represents service for manage Pods.
@@ -76,19 +76,20 @@ type PriorityClassService interface {
 	Delete(ctx context.Context, name string) error
 }
 
-type ExportService interface {
-	Export(ctx context.Context, opts ...export.Option) (*export.ResourcesForExport, error)
-	Import(ctx context.Context, resources *export.ResourcesForImport, opts ...export.Option) error
-	IgnoreErr() export.Option
+// SnapshotService represents a service for exporting/importing resources on the simulator.
+type SnapshotService interface {
+	Snap(ctx context.Context, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
+	Load(ctx context.Context, resources *snapshot.ResourcesForLoad, opts ...snapshot.Option) error
+	IgnoreErr() snapshot.Option
 }
 
 type ResetService interface {
 	Reset(ctx context.Context) error
 }
 
-// ReplicateExistingClusterService represents a service to import resources from the existing cluster.
-type ReplicateExistingClusterService interface {
-	ImportFromExistingCluster(ctx context.Context) error
+// ImportClusterResourceService represents a service to import resources from an target cluster.
+type ImportClusterResourceService interface {
+	ImportClusterResources(ctx context.Context) error
 }
 
 // ResourceWatcherService represents service for watch k8s resources.

@@ -10,15 +10,15 @@ import (
 	"k8s.io/klog/v2"
 	configv1 "k8s.io/kube-scheduler/config/v1"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 
-type ExportHandler struct {
-	service di.ExportService
+type SnapshotHandler struct {
+	service di.SnapshotService
 }
 
-type ResourcesForImport struct {
+type ResourcesForLoad struct {
 	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
 	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
 	Pvs             []v1.PersistentVolumeApplyConfiguration           `json:"pvs"`
@@ -29,41 +29,41 @@ type ResourcesForImport struct {
 	Namespaces      []v1.NamespaceApplyConfiguration                  `json:"namespaces"`
 }
 
-func NewExportHandler(s di.ExportService) *ExportHandler {
-	return &ExportHandler{service: s}
+func NewSnapshotHandler(s di.SnapshotService) *SnapshotHandler {
+	return &SnapshotHandler{service: s}
 }
 
-func (h *ExportHandler) Export(c echo.Context) error {
+func (h *SnapshotHandler) Snap(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	rs, err := h.service.Export(ctx)
+	rs, err := h.service.Snap(ctx)
 	if err != nil {
-		klog.Errorf("failed to export all resources: %+v", err)
+		klog.Errorf("failed to save all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	return c.JSON(http.StatusOK, rs)
 }
 
-func (h *ExportHandler) Import(c echo.Context) error {
+func (h *SnapshotHandler) Load(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	reqResources := new(ResourcesForImport)
+	reqResources := new(ResourcesForLoad)
 	if err := c.Bind(reqResources); err != nil {
-		klog.Errorf("failed to bind import resources all request: %+v", err)
+		klog.Errorf("failed to bind request: %+v", err)
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 
-	err := h.service.Import(ctx, convertToResourcesApplyConfiguration(reqResources))
+	err := h.service.Load(ctx, convertToResourcesApplyConfiguration(reqResources))
 	if err != nil {
-		klog.Errorf("failed to import all resources: %+v", err)
+		klog.Errorf("failed to load all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	return c.NoContent(http.StatusOK)
 }
 
 // convertToResourcesApplyConfiguration converts from *ResourcesApplyConfiguration to *export.ResourcesApplyConfiguration.
-func convertToResourcesApplyConfiguration(r *ResourcesForImport) *export.ResourcesForImport {
-	return &export.ResourcesForImport{
+func convertToResourcesApplyConfiguration(r *ResourcesForLoad) *snapshot.ResourcesForLoad {
+	return &snapshot.ResourcesForLoad{
 		Pods:            r.Pods,
 		Nodes:           r.Nodes,
 		Pvs:             r.Pvs,

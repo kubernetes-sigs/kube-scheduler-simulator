@@ -10,37 +10,37 @@ import (
 	restclient "k8s.io/client-go/rest"
 	configv1 "k8s.io/kube-scheduler/config/v1"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/export"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/clusterresourceimporter"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/node"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/persistentvolume"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/persistentvolumeclaim"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/pod"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/priorityclass"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/replicateexistingcluster"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/reset"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/storageclass"
 )
 
 // Container saves and provides dependencies.
 type Container struct {
-	nodeService                     NodeService
-	podService                      PodService
-	pvService                       PersistentVolumeService
-	pvcService                      PersistentVolumeClaimService
-	storageClassService             StorageClassService
-	schedulerService                SchedulerService
-	exportService                   ExportService
-	priorityClassService            PriorityClassService
-	resetService                    ResetService
-	replicateExistingClusterService ReplicateExistingClusterService
-	resourceWatcherService          ResourceWatcherService
+	nodeService                  NodeService
+	podService                   PodService
+	pvService                    PersistentVolumeService
+	pvcService                   PersistentVolumeClaimService
+	storageClassService          StorageClassService
+	schedulerService             SchedulerService
+	snapshotService              SnapshotService
+	priorityClassService         PriorityClassService
+	resetService                 ResetService
+	importClusterResourceService ImportClusterResourceService
+	resourceWatcherService       ResourceWatcherService
 }
 
 // NewDIContainer initializes Container.
 // It initializes all service and puts to Container.
-// If externalImportEnabled is false, the simulator will not use externalClient and will not create ReplicateExistingClusterService.
+// Only when externalImportEnabled is true, the simulator uses externalClient and creates ImportClusterResourceService.
 func NewDIContainer(
 	client clientset.Interface,
 	etcdclient *clientv3.Client,
@@ -66,11 +66,11 @@ func NewDIContainer(
 	if err != nil {
 		return nil, xerrors.Errorf("initialize reset service: %w", err)
 	}
-	exportService := export.NewExportService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
-	c.exportService = exportService
+	snapshotSvc := snapshot.NewService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
+	c.snapshotService = snapshotSvc
 	if externalImportEnabled {
-		existingClusterExportService := createExportServiceForReplicateExistingClusterService(externalClient, c.schedulerService)
-		c.replicateExistingClusterService = replicateexistingcluster.NewReplicateExistingClusterService(exportService, existingClusterExportService)
+		clusterExportSvc := createReplicateServiceForImportClusterResourceService(externalClient, c.schedulerService)
+		c.importClusterResourceService = clusterresourceimporter.NewService(snapshotSvc, clusterExportSvc)
 	}
 	c.resourceWatcherService = resourcewatcher.NewService(client)
 
@@ -113,8 +113,8 @@ func (c *Container) PriorityClassService() PriorityClassService {
 }
 
 // ExportService returns ExportService.
-func (c *Container) ExportService() ExportService {
-	return c.exportService
+func (c *Container) ExportService() SnapshotService {
+	return c.snapshotService
 }
 
 // ResetService returns ResetService.
@@ -122,10 +122,10 @@ func (c *Container) ResetService() ResetService {
 	return c.resetService
 }
 
-// ReplicateExistingClusterService returns ReplicateExistingClusterService.
+// ImportClusterResourceService returns ImportClusterResourceService.
 // Note: this service will return nil when `externalImportEnabled` is false.
-func (c *Container) ReplicateExistingClusterService() ReplicateExistingClusterService {
-	return c.replicateExistingClusterService
+func (c *Container) ImportClusterResourceService() ImportClusterResourceService {
+	return c.importClusterResourceService
 }
 
 // ResourceWatcherService returns ResourceWatcherService.
@@ -138,9 +138,9 @@ func (c *Container) ExtenderService() ExtenderService {
 	return c.schedulerService.ExtenderService()
 }
 
-// createExportServiceForReplicateExistingClusterService creates each services
-// that will be used for the ExportService for an existing cluster.
-func createExportServiceForReplicateExistingClusterService(externalClient clientset.Interface, schedulerService SchedulerService) *export.Service {
+// createReplicateServiceForImportClusterResourceService creates each services
+// that will be used for the ExportService for a target cluster.
+func createReplicateServiceForImportClusterResourceService(externalClient clientset.Interface, schedulerService SchedulerService) *snapshot.Service {
 	pvService := persistentvolume.NewPersistentVolumeService(externalClient)
 	pvcService := persistentvolumeclaim.NewPersistentVolumeClaimService(externalClient)
 	storageClassService := storageclass.NewStorageClassService(externalClient)
@@ -148,5 +148,5 @@ func createExportServiceForReplicateExistingClusterService(externalClient client
 	podService := pod.NewPodService(externalClient)
 	nodeService := node.NewNodeService(externalClient, podService)
 	priorityClassService := priorityclass.NewPriorityClassService(externalClient)
-	return export.NewExportService(externalClient, podService, nodeService, pvService, pvcService, storageClassService, priorityClassService, schedulerService)
+	return snapshot.NewService(externalClient, podService, nodeService, pvService, pvcService, storageClassService, priorityClassService, schedulerService)
 }

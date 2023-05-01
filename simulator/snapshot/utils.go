@@ -1,4 +1,4 @@
-package export
+package snapshot
 
 import (
 	"encoding/json"
@@ -12,7 +12,8 @@ import (
 	cfgstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 )
 
-func ConvertResourcesForImportToResourcesForExport(expRes *ResourcesForExport) (*ResourcesForImport, error) {
+// ConvertResourcesForSnapToResourcesForLoad returns ResourcesForLoad based on ResourcesForSnap.
+func ConvertResourcesForSnapToResourcesForLoad(expRes *ResourcesForSnap) (*ResourcesForLoad, error) {
 	pods, err := convertPodListToApplyConfigurationList(expRes.Pods)
 	if err != nil {
 		return nil, xerrors.Errorf("call convertPodListToApplyConfigurationList: %w", err)
@@ -41,7 +42,7 @@ func ConvertResourcesForImportToResourcesForExport(expRes *ResourcesForExport) (
 	if err != nil {
 		return nil, xerrors.Errorf("call convertNamespaceListToApplyConfigurationList: %w", err)
 	}
-	return &ResourcesForImport{
+	return &ResourcesForLoad{
 		Pods:            pods,
 		Nodes:           nodes,
 		Pvs:             pvs,

@@ -33,7 +33,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 
 	// initialize each handler
 	schedulercfgHandler := handler.NewSchedulerConfigHandler(dic.SchedulerService())
-	exportHandler := handler.NewExportHandler(dic.ExportService())
+	snapshotHandler := handler.NewSnapshotHandler(dic.ExportService())
 	resetHandler := handler.NewResetHandler(dic.ResetService())
 	resourcewatcherHandler := handler.NewResourceWatcherHandler(dic.ResourceWatcherService())
 	extenderHandler := handler.NewExtenderHandler(dic.ExtenderService())
@@ -46,8 +46,8 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 
 	v1.PUT("/reset", resetHandler.Reset)
 
-	v1.GET("/export", exportHandler.Export)
-	v1.POST("/import", exportHandler.Import)
+	v1.GET("/export", snapshotHandler.Snap)
+	v1.POST("/import", snapshotHandler.Load)
 
 	v1.GET("/listwatchresources", resourcewatcherHandler.ListWatchResources)
 
