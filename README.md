@@ -115,6 +115,10 @@ Also, You can change the configuration of the scheduler through [KubeSchedulerCo
 
 ![configure scheduler](simulator/docs/images/schedulerconfiguration.png)
 
+Export/Import features allow you to save and load the resources in the simulator via yaml files.
+
+![snapshot button](simulator/docs/images/webUI-snapshot.png)
+
 ## Getting started
 
 ### Run simulator with Docker
