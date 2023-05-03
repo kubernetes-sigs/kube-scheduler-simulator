@@ -7,7 +7,7 @@ The simulator has the concept "Plugin Extenders" which allows you to:
 - change specific behaviours on particular plugin by injecting the result
 - etc...
 
-(Note that it's not related to the scheduler's webhook which is also called "extender". 
+(Note that it's not related to the scheduler's webhook which is also called ["extender"](./extender.md). 
 (Sorry for the confusing name 😅))
 
 The Plugin Extenders has `BeforeXXX` and `AfterXXX` for each extension point. (XXX = any extension points. e.g., Filter, Score..etc)
