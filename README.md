@@ -156,15 +156,15 @@ To run the frontend, please see [README.md](web/README.md) on ./web dir.
 
 ## Beta features
 
-### [Beta] Existing cluster importing
+### [Beta] Importing cluster's resources 
 
 The simulator can import resources from your cluster.
-You can use it by setting an `EXTERNAL_IMPORT_ENABLED` environment variable to `1`.
 
-You need to have the kubeconfig to import resources on your cluster.
-The simulator tries to read the kubeconfig file on the environment variable `KUBECONFIG`.
+To use this, you need to follow these two step
+- Set to `true` the `ExternalImportEnabled` value in the simulator server configuration.
+- Set the path of the kubeconfig file of the your cluster to `KubeConfig` value in the Simulator Server Configuration.
 
-For more information about those variables, please see [simulator/docs/environment-variables.md](simulator/docs/environment-variables.md).
+See also [simulator/config/config.go](simulator/config/config.go).
 
 ## Contributing
 

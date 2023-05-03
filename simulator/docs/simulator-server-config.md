@@ -24,7 +24,7 @@ etcdURL: "http://127.0.0.1:2379"
 corsAllowedOriginList:
   - "http://localhost:3000"
 
-# This is for the beta feature "Existing cluster Importing".
+# This is for the beta feature "Importing cluster's resources".
 # This variable is used to find Kubeconfig required to access your
 # cluster for importing resources to scheduler simulator.
 kubeConfig: ""
@@ -44,7 +44,7 @@ kubeApiPort: 3131
 kubeSchedulerConfigPath: ""
 
 # This variable indicates whether the simulator will
-# import resources from an existing cluster or not.
+# import resources from an user cluster's or not.
 # Note, this is still a beta feature.
 externalImportEnabled: false
 
