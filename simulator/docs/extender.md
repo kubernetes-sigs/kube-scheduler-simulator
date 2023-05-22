@@ -17,7 +17,6 @@ this feature is not available.**
 Set the path of the scheduler configuration file configured the Extender to be used,
 to the `kubeSchedulerConfigPath` value in the Simulator Server Configuration.
 
-(No required special configuration is for the simulator to use this feature.)
 
 For example, if you run the server on `http://localhost:8080/scheduler/`,
 the configuration will look like this.
