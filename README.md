@@ -115,7 +115,7 @@ Also, You can change the configuration of the scheduler through [KubeSchedulerCo
 
 ![configure scheduler](simulator/docs/images/schedulerconfiguration.png)
 
-Export/Import features allow you to save and load the resources in the simulator via yaml files.
+Also, you can take a snapshot of the resources so that you can share the situation or load them later.
 
 ![snapshot button](simulator/docs/images/webUI-snapshot.png)
 
