@@ -3,7 +3,7 @@
 This document describes how to use your scheduler extenders in the scheduler running in the simulator.
 The scheduler extender is the webhook-based scheduler extension.
 
-The simulator stores the results of each Extender in the annotation of a pod.
+The simulator adds the results of each extender to Pod's annotation like it does for the scheduler plugins.
 
 (Note that it's not related to the [`plugin-extender`](./plugin-extender.md) which is one of the our simulator's feature. 
 (Sorry for the confusing name 😅))
