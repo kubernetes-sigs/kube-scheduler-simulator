@@ -8,9 +8,7 @@ The simulator stores the results of each Extender in the annotation of a pod.
 (Note that it's not related to the [`plugin-extender`](./plugin-extender.md) which is one of the our simulator's feature. 
 (Sorry for the confusing name 😅))
 
-Note: This function uses our HTTP server on the simulator to store the results.
-Therefore, **if your scheduler is not connected to the server,
-this feature is not available.**
+Note: This feature is not available in [external scheduler](./external-scheduler.md).
 
 ## How to use
 
