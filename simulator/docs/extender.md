@@ -1,9 +1,9 @@
-## Integrate your scheduler extender into the simulator
+## Extender
 
-This document describes how to use your scheduler extenders in the scheduler running in the simulator.
-The scheduler extender is the webhook-based scheduler extension.
+This document describes how to use your `Extenders` in the scheduler running in the simulator.
+The `Extender` is one of the features of the scheduler's webhook on kubernetes.
 
-The simulator adds the results of each extender to Pod's annotation like it does for the scheduler plugins.
+The simulator stores the results of each Extender in the annotation of a pod.
 
 (Note that it's not related to the [`plugin-extender`](./plugin-extender.md) which is one of the our simulator's feature. 
 (Sorry for the confusing name 😅))
@@ -14,11 +14,12 @@ this feature is not available.**
 
 ## How to use
 
-Set the path of the scheduler configuration file configured the Extender to be used,
-to the `kubeSchedulerConfigPath` value in the Simulator Server Configuration.
+You need to configure your extender in KubeSchedulerConfig.
+(via [the simulator config](./simulator-server-config.md) or WebUI)
 
+(No required special configuration is for the simulator to use this feature.)
 
-For example, if your extender listens `http://localhost:8080/scheduler/`,
+For example, if you run the server on `http://localhost:8080/scheduler/`,
 the configuration will look like this.
 
 ```yaml
