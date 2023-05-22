@@ -18,7 +18,7 @@ Set the path of the scheduler configuration file configured the Extender to be u
 to the `kubeSchedulerConfigPath` value in the Simulator Server Configuration.
 
 
-For example, if you run the server on `http://localhost:8080/scheduler/`,
+For example, if your extender listens `http://localhost:8080/scheduler/`,
 the configuration will look like this.
 
 ```yaml
