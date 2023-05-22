@@ -168,7 +168,7 @@ To use this, you need to follow these two step
 - Set to `true` the `ExternalImportEnabled` value in the simulator server configuration.
 - Set the path of the kubeconfig file of the your cluster to `KubeConfig` value in the Simulator Server Configuration.
 
-See also [simulator/config/config.go](simulator/config/config.go).
+See also [simulator/docs/simulator-server-config.md](simulator/docs/simulator-server-config.md).
 
 ## Contributing
 
