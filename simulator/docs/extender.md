@@ -1,7 +1,7 @@
 ## Integrate your scheduler extender into the simulator
 
 This document describes how to use your scheduler extenders in the scheduler running in the simulator.
-The `Extender` is one of the features of the scheduler's webhook on kubernetes.
+The scheduler extender is the webhook-based scheduler extension.
 
 The simulator stores the results of each Extender in the annotation of a pod.
 
