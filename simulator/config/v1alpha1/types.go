@@ -36,7 +36,7 @@ type SimulatorConfiguration struct {
 	// origin for CorsAllowedOriginList
 	CorsAllowedOriginList []string `json:"corsAllowedOriginList,omitempty"`
 
-	// This is for the beta feature "Existing cluster Importing".
+	// This is for the beta feature "Importing cluster's resources".
 	// This variable is used to find Kubeconfig required to access your
 	// cluster for importing resources to scheduler simulator.
 	KubeConfig string `json:"kubeConfig,omitempty"`
@@ -55,7 +55,7 @@ type SimulatorConfiguration struct {
 	KubeSchedulerConfigPath string `json:"kubeSchedulerConfigPath,omitempty"`
 
 	// This variable indicates whether the simulator will
-	// import resources from an existing cluster or not.
+	// import resources from an user cluster's or not.
 	// Note, this is still a beta feature.
 	ExternalImportEnabled bool `json:"externalImportEnabled,omitempty"`
 
