@@ -66,11 +66,11 @@ func NewDIContainer(
 	if err != nil {
 		return nil, xerrors.Errorf("initialize reset service: %w", err)
 	}
-	snapshotSvc := snapshot.NewService(client, c.podService, c.nodeService, c.pvService, c.pvcService, c.storageClassService, c.priorityClassService, c.schedulerService)
+	snapshotSvc := snapshot.NewService(client, c.schedulerService)
 	c.snapshotService = snapshotSvc
 	if externalImportEnabled {
-		clusterExportSvc := createReplicateServiceForImportClusterResourceService(externalClient, c.schedulerService)
-		c.importClusterResourceService = clusterresourceimporter.NewService(snapshotSvc, clusterExportSvc)
+		extSnapshotSvc := snapshot.NewService(externalClient, c.schedulerService)
+		c.importClusterResourceService = clusterresourceimporter.NewService(snapshotSvc, extSnapshotSvc)
 	}
 	c.resourceWatcherService = resourcewatcher.NewService(client)
 
@@ -136,17 +136,4 @@ func (c *Container) ResourceWatcherService() ResourceWatcherService {
 // ExtenderService returns ExtenderService.
 func (c *Container) ExtenderService() ExtenderService {
 	return c.schedulerService.ExtenderService()
-}
-
-// createReplicateServiceForImportClusterResourceService creates each services
-// that will be used for the ExportService for a target cluster.
-func createReplicateServiceForImportClusterResourceService(externalClient clientset.Interface, schedulerService SchedulerService) *snapshot.Service {
-	pvService := persistentvolume.NewPersistentVolumeService(externalClient)
-	pvcService := persistentvolumeclaim.NewPersistentVolumeClaimService(externalClient)
-	storageClassService := storageclass.NewStorageClassService(externalClient)
-
-	podService := pod.NewPodService(externalClient)
-	nodeService := node.NewNodeService(externalClient, podService)
-	priorityClassService := priorityclass.NewPriorityClassService(externalClient)
-	return snapshot.NewService(externalClient, podService, nodeService, pvService, pvcService, storageClassService, priorityClassService, schedulerService)
 }
