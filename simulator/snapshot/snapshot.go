@@ -1,13 +1,5 @@
 package snapshot
 
-//go:generate mockgen -destination=./mock_$GOPACKAGE/pod.go . PodService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/node.go . NodeService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/pv.go . PersistentVolumeService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/pvc.go . PersistentVolumeClaimService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/storageclass.go . StorageClassService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/scheduler.go . SchedulerService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/priorityclass.go . PriorityClassService
-
 import (
 	"context"
 	"errors"
@@ -30,14 +22,8 @@ import (
 )
 
 type Service struct {
-	client               clientset.Interface
-	podService           PodService
-	nodeService          NodeService
-	pvService            PersistentVolumeService
-	pvcService           PersistentVolumeClaimService
-	storageClassService  StorageClassService
-	priorityClassService PriorityClassService
-	schedulerService     SchedulerService
+	client           clientset.Interface
+	schedulerService SchedulerService
 }
 
 // ResourcesForSnap indicates all resources and scheduler configuration to be snapped.
@@ -64,52 +50,15 @@ type ResourcesForLoad struct {
 	Namespaces      []v1.NamespaceApplyConfiguration                  `json:"namespaces"`
 }
 
-type PodService interface {
-	List(ctx context.Context, namespace string) (*corev1.PodList, error)
-	Apply(ctx context.Context, namespace string, pod *v1.PodApplyConfiguration) (*corev1.Pod, error)
-}
-
-type NodeService interface {
-	List(ctx context.Context) (*corev1.NodeList, error)
-	Apply(ctx context.Context, nac *v1.NodeApplyConfiguration) (*corev1.Node, error)
-}
-
-type PersistentVolumeService interface {
-	List(ctx context.Context) (*corev1.PersistentVolumeList, error)
-	Apply(ctx context.Context, persistentVolume *v1.PersistentVolumeApplyConfiguration) (*corev1.PersistentVolume, error)
-}
-
-type PersistentVolumeClaimService interface {
-	Get(ctx context.Context, name string, namespace string) (*corev1.PersistentVolumeClaim, error)
-	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
-	Apply(ctx context.Context, namespace string, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
-}
-
-type StorageClassService interface {
-	List(ctx context.Context) (*storagev1.StorageClassList, error)
-	Apply(ctx context.Context, storageClass *confstoragev1.StorageClassApplyConfiguration) (*storagev1.StorageClass, error)
-}
-
-type PriorityClassService interface {
-	List(ctx context.Context) (*schedulingv1.PriorityClassList, error)
-	Apply(ctx context.Context, priorityClass *schedulingcfgv1.PriorityClassApplyConfiguration) (*schedulingv1.PriorityClass, error)
-}
-
 type SchedulerService interface {
 	GetSchedulerConfig() (*configv1.KubeSchedulerConfiguration, error)
 	RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error
 }
 
-func NewService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, sc StorageClassService, pc PriorityClassService, schedulers SchedulerService) *Service {
+func NewService(client clientset.Interface, schedulers SchedulerService) *Service {
 	return &Service{
-		client:               client,
-		podService:           pods,
-		nodeService:          nodes,
-		pvService:            pvs,
-		pvcService:           pvcs,
-		storageClassService:  sc,
-		priorityClassService: pc,
-		schedulerService:     schedulers,
+		client:           client,
+		schedulerService: schedulers,
 	}
 }
 
