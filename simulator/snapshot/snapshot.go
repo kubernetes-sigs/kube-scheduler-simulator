@@ -427,9 +427,8 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 		}
 		if err := eg.Go(func() error {
 			pc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.priorityClassService.Apply(ctx, &pc)
-			// pc.WithAPIVersion("scheduling.k8s.io/v1").WithKind("PriorityClass")
-			// _, err := s.client.SchedulingV1().PriorityClasses().Apply(ctx, &pc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			pc.WithAPIVersion("scheduling.k8s.io/v1").WithKind("PriorityClass")
+			_, err := s.client.SchedulingV1().PriorityClasses().Apply(ctx, &pc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PriorityClass: %w", err)
@@ -449,9 +448,8 @@ func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForLoad, 
 		sc := r.StorageClasses[i]
 		if err := eg.Go(func() error {
 			sc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.storageClassService.Apply(ctx, &sc)
-			// sc.WithAPIVersion("storage.k8s.io/v1").WithKind("StorageClass")
-			// _, err := s.client.StorageV1().StorageClasses().Apply(ctx, &sc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			sc.WithAPIVersion("storage.k8s.io/v1").WithKind("StorageClass")
+			_, err := s.client.StorageV1().StorageClasses().Apply(ctx, &sc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply StorageClass: %w", err)
@@ -471,9 +469,8 @@ func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForLoad, eg *util.S
 		pvc := r.Pvcs[i]
 		if err := eg.Go(func() error {
 			pvc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.pvcService.Apply(ctx, *pvc.Namespace, &pvc)
-			// pvc.WithAPIVersion("v1").WithKind("PersistentVolumeClaim")
-			// _, err := s.client.CoreV1().PersistentVolumeClaims(*pvc.Namespace).Apply(ctx, &pvc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			pvc.WithAPIVersion("v1").WithKind("PersistentVolumeClaim")
+			_, err := s.client.CoreV1().PersistentVolumeClaims(*pvc.Namespace).Apply(ctx, &pvc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
@@ -493,12 +490,11 @@ func (s *Service) applyPvs(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 		pv := r.Pvs[i]
 		if err := eg.Go(func() error {
 			pv.ObjectMetaApplyConfiguration.UID = nil
-			// pv.WithAPIVersion("v1").WithKind("PersistentVolume")
+			pv.WithAPIVersion("v1").WithKind("PersistentVolume")
 			if pv.Status != nil && pv.Status.Phase != nil {
 				if *pv.Status.Phase == "Bound" {
 					// PersistentVolumeClaims's UID has been changed to a new value.
-					pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name, *pv.Spec.ClaimRef.Namespace)
-					// pvc, err := s.client.CoreV1().PersistentVolumeClaims(*pv.Spec.ClaimRef.Namespace).Get(ctx, *pv.Spec.ClaimRef.Name, metav1.GetOptions{})
+					pvc, err := s.client.CoreV1().PersistentVolumeClaims(*pv.Spec.ClaimRef.Namespace).Get(ctx, *pv.Spec.ClaimRef.Name, metav1.GetOptions{})
 					if err == nil {
 						pv.Spec.ClaimRef.UID = &pvc.UID
 					} else {
@@ -507,8 +503,7 @@ func (s *Service) applyPvs(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 					}
 				}
 			}
-			_, err := s.pvService.Apply(ctx, &pv)
-			// _, err := s.client.CoreV1().PersistentVolumes().Apply(ctx, &pv, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			_, err := s.client.CoreV1().PersistentVolumes().Apply(ctx, &pv, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PersistentVolume: %w", err)
@@ -528,9 +523,8 @@ func (s *Service) applyNodes(ctx context.Context, r *ResourcesForLoad, eg *util.
 		node := r.Nodes[i]
 		if err := eg.Go(func() error {
 			node.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.nodeService.Apply(ctx, &node)
-			// node.WithAPIVersion("v1").WithKind("Node")
-			// _, err := s.client.CoreV1().Nodes().Apply(ctx, &node, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			node.WithAPIVersion("v1").WithKind("Node")
+			_, err := s.client.CoreV1().Nodes().Apply(ctx, &node, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Node: %w", err)
@@ -550,9 +544,8 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForLoad, eg *util.S
 		pod := r.Pods[i]
 		if err := eg.Go(func() error {
 			pod.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.podService.Apply(ctx, *pod.Namespace, &pod)
-			// pod.WithAPIVersion("v1").WithKind("Pod")
-			// _, err := s.client.CoreV1().Pods(*pod.Namespace).Apply(ctx, &pod, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			pod.WithAPIVersion("v1").WithKind("Pod")
+			_, err := s.client.CoreV1().Pods(*pod.Namespace).Apply(ctx, &pod, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Pod: %w", err)
