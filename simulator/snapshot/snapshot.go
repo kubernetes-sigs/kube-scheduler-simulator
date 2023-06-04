@@ -217,9 +217,9 @@ func (s *Service) listPods(ctx context.Context, r *ResourcesForSnap, eg *util.Se
 		pods, err := s.client.CoreV1().Pods(metav1.NamespaceAll).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list pods: %w", err)
+				return xerrors.Errorf("call list Pod: %w", err)
 			}
-			klog.Errorf("failed to call list pods: %v", err)
+			klog.Errorf("failed to call list Pod: %v", err)
 			pods = &corev1.PodList{Items: []corev1.Pod{}}
 		}
 		r.Pods = pods.Items
@@ -235,9 +235,9 @@ func (s *Service) listNodes(ctx context.Context, r *ResourcesForSnap, eg *util.S
 		nodes, err := s.client.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list nodes: %w", err)
+				return xerrors.Errorf("call list Node: %w", err)
 			}
-			klog.Errorf("failed to call list nodes: %v", err)
+			klog.Errorf("failed to call list Node: %v", err)
 			nodes = &corev1.NodeList{Items: []corev1.Node{}}
 		}
 		r.Nodes = nodes.Items
@@ -253,9 +253,9 @@ func (s *Service) listPvs(ctx context.Context, r *ResourcesForSnap, eg *util.Sem
 		pvs, err := s.client.CoreV1().PersistentVolumes().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list PersistentVolumes: %w", err)
+				return xerrors.Errorf("call list PersistentVolume: %w", err)
 			}
-			klog.Errorf("failed to call list PersistentVolumes: %v", err)
+			klog.Errorf("failed to call list PersistentVolume: %v", err)
 			pvs = &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}
 		}
 		r.Pvs = pvs.Items
@@ -271,9 +271,9 @@ func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSnap, eg *util.Se
 		pvcs, err := s.client.CoreV1().PersistentVolumeClaims(metav1.NamespaceAll).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
+				return xerrors.Errorf("call list PersistentVolumeClaim: %w", err)
 			}
-			klog.Errorf("failed to call list PersistentVolumeClaims: %v", err)
+			klog.Errorf("failed to call list PersistentVolumeClaim: %v", err)
 			pvcs = &corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}
 		}
 		r.Pvcs = pvcs.Items
@@ -289,9 +289,9 @@ func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSnap, e
 		scs, err := s.client.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list storageClasses: %w", err)
+				return xerrors.Errorf("call list StorageClass: %w", err)
 			}
-			klog.Errorf("failed to call list storageClasses: %v", err)
+			klog.Errorf("failed to call list StorageClass: %v", err)
 			scs = &storagev1.StorageClassList{Items: []storagev1.StorageClass{}}
 		}
 		r.StorageClasses = scs.Items
@@ -307,9 +307,9 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForSnap, eg *util.Sem
 		pcs, err := s.client.SchedulingV1().PriorityClasses().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list priorityClasses: %w", err)
+				return xerrors.Errorf("call list PriorityClass: %w", err)
 			}
-			klog.Errorf("failed to call list priorityClasses: %v", err)
+			klog.Errorf("failed to call list PriorityClass: %v", err)
 			pcs = &schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}
 		}
 		result := []schedulingv1.PriorityClass{}
@@ -331,9 +331,9 @@ func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForSnap, eg *u
 		nss, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list namespace: %w", err)
+				return xerrors.Errorf("call list Namespace: %w", err)
 			}
-			klog.Errorf("failed to call list namespace: %v", err)
+			klog.Errorf("failed to call list Namespace: %v", err)
 			nss = &corev1.NamespaceList{Items: []corev1.Namespace{}}
 		}
 		result := []corev1.Namespace{}
