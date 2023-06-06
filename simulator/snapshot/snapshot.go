@@ -1,5 +1,7 @@
 package snapshot
 
+//go:generate mockgen -destination=./mock_$GOPACKAGE/scheduler.go . SchedulerService
+
 import (
 	"context"
 	"errors"
