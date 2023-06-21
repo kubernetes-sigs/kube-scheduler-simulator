@@ -8,7 +8,6 @@ import (
 
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
@@ -146,7 +145,7 @@ func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(int
 	}
 }
 
-func updateResultHistory(p *v1.Pod, m map[string]string) error {
+func updateResultHistory(p *corev1.Pod, m map[string]string) error {
 	a, ok := p.GetAnnotations()[ResultsHistoryAnnotation]
 	if !ok {
 		a = "[]"
