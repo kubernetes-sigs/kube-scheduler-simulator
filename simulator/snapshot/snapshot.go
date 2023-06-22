@@ -1,12 +1,6 @@
 package snapshot
 
-//go:generate mockgen -destination=./mock_$GOPACKAGE/pod.go . PodService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/node.go . NodeService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/pv.go . PersistentVolumeService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/pvc.go . PersistentVolumeClaimService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/storageclass.go . StorageClassService
 //go:generate mockgen -destination=./mock_$GOPACKAGE/scheduler.go . SchedulerService
-//go:generate mockgen -destination=./mock_$GOPACKAGE/priorityclass.go . PriorityClassService
 
 import (
 	"context"
@@ -30,14 +24,8 @@ import (
 )
 
 type Service struct {
-	client               clientset.Interface
-	podService           PodService
-	nodeService          NodeService
-	pvService            PersistentVolumeService
-	pvcService           PersistentVolumeClaimService
-	storageClassService  StorageClassService
-	priorityClassService PriorityClassService
-	schedulerService     SchedulerService
+	client           clientset.Interface
+	schedulerService SchedulerService
 }
 
 // ResourcesForSnap indicates all resources and scheduler configuration to be snapped.
@@ -64,52 +52,15 @@ type ResourcesForLoad struct {
 	Namespaces      []v1.NamespaceApplyConfiguration                  `json:"namespaces"`
 }
 
-type PodService interface {
-	List(ctx context.Context, namespace string) (*corev1.PodList, error)
-	Apply(ctx context.Context, namespace string, pod *v1.PodApplyConfiguration) (*corev1.Pod, error)
-}
-
-type NodeService interface {
-	List(ctx context.Context) (*corev1.NodeList, error)
-	Apply(ctx context.Context, nac *v1.NodeApplyConfiguration) (*corev1.Node, error)
-}
-
-type PersistentVolumeService interface {
-	List(ctx context.Context) (*corev1.PersistentVolumeList, error)
-	Apply(ctx context.Context, persistentVolume *v1.PersistentVolumeApplyConfiguration) (*corev1.PersistentVolume, error)
-}
-
-type PersistentVolumeClaimService interface {
-	Get(ctx context.Context, name string, namespace string) (*corev1.PersistentVolumeClaim, error)
-	List(ctx context.Context, namespace string) (*corev1.PersistentVolumeClaimList, error)
-	Apply(ctx context.Context, namespace string, persistentVolumeClaime *v1.PersistentVolumeClaimApplyConfiguration) (*corev1.PersistentVolumeClaim, error)
-}
-
-type StorageClassService interface {
-	List(ctx context.Context) (*storagev1.StorageClassList, error)
-	Apply(ctx context.Context, storageClass *confstoragev1.StorageClassApplyConfiguration) (*storagev1.StorageClass, error)
-}
-
-type PriorityClassService interface {
-	List(ctx context.Context) (*schedulingv1.PriorityClassList, error)
-	Apply(ctx context.Context, priorityClass *schedulingcfgv1.PriorityClassApplyConfiguration) (*schedulingv1.PriorityClass, error)
-}
-
 type SchedulerService interface {
 	GetSchedulerConfig() (*configv1.KubeSchedulerConfiguration, error)
 	RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error
 }
 
-func NewService(client clientset.Interface, pods PodService, nodes NodeService, pvs PersistentVolumeService, pvcs PersistentVolumeClaimService, sc StorageClassService, pc PriorityClassService, schedulers SchedulerService) *Service {
+func NewService(client clientset.Interface, schedulers SchedulerService) *Service {
 	return &Service{
-		client:               client,
-		podService:           pods,
-		nodeService:          nodes,
-		pvService:            pvs,
-		pvcService:           pvcs,
-		storageClassService:  sc,
-		priorityClassService: pc,
-		schedulerService:     schedulers,
+		client:           client,
+		schedulerService: schedulers,
 	}
 }
 
@@ -265,12 +216,12 @@ func (s *Service) Load(ctx context.Context, resources *ResourcesForLoad, opts ..
 
 func (s *Service) listPods(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
-		pods, err := s.podService.List(ctx, metav1.NamespaceAll)
+		pods, err := s.client.CoreV1().Pods(metav1.NamespaceAll).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list pods: %w", err)
+				return xerrors.Errorf("call list Pod: %w", err)
 			}
-			klog.Errorf("failed to call list pods: %v", err)
+			klog.Errorf("failed to call list Pod: %v", err)
 			pods = &corev1.PodList{Items: []corev1.Pod{}}
 		}
 		r.Pods = pods.Items
@@ -283,12 +234,12 @@ func (s *Service) listPods(ctx context.Context, r *ResourcesForSnap, eg *util.Se
 
 func (s *Service) listNodes(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
-		nodes, err := s.nodeService.List(ctx)
+		nodes, err := s.client.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list nodes: %w", err)
+				return xerrors.Errorf("call list Node: %w", err)
 			}
-			klog.Errorf("failed to call list nodes: %v", err)
+			klog.Errorf("failed to call list Node: %v", err)
 			nodes = &corev1.NodeList{Items: []corev1.Node{}}
 		}
 		r.Nodes = nodes.Items
@@ -301,12 +252,12 @@ func (s *Service) listNodes(ctx context.Context, r *ResourcesForSnap, eg *util.S
 
 func (s *Service) listPvs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
-		pvs, err := s.pvService.List(ctx)
+		pvs, err := s.client.CoreV1().PersistentVolumes().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list PersistentVolumes: %w", err)
+				return xerrors.Errorf("call list PersistentVolume: %w", err)
 			}
-			klog.Errorf("failed to call list PersistentVolumes: %v", err)
+			klog.Errorf("failed to call list PersistentVolume: %v", err)
 			pvs = &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{}}
 		}
 		r.Pvs = pvs.Items
@@ -319,12 +270,12 @@ func (s *Service) listPvs(ctx context.Context, r *ResourcesForSnap, eg *util.Sem
 
 func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
-		pvcs, err := s.pvcService.List(ctx, metav1.NamespaceAll)
+		pvcs, err := s.client.CoreV1().PersistentVolumeClaims(metav1.NamespaceAll).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list PersistentVolumeClaims: %w", err)
+				return xerrors.Errorf("call list PersistentVolumeClaim: %w", err)
 			}
-			klog.Errorf("failed to call list PersistentVolumeClaims: %v", err)
+			klog.Errorf("failed to call list PersistentVolumeClaim: %v", err)
 			pvcs = &corev1.PersistentVolumeClaimList{Items: []corev1.PersistentVolumeClaim{}}
 		}
 		r.Pvcs = pvcs.Items
@@ -337,12 +288,12 @@ func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSnap, eg *util.Se
 
 func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
-		scs, err := s.storageClassService.List(ctx)
+		scs, err := s.client.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list storageClasses: %w", err)
+				return xerrors.Errorf("call list StorageClass: %w", err)
 			}
-			klog.Errorf("failed to call list storageClasses: %v", err)
+			klog.Errorf("failed to call list StorageClass: %v", err)
 			scs = &storagev1.StorageClassList{Items: []storagev1.StorageClass{}}
 		}
 		r.StorageClasses = scs.Items
@@ -355,12 +306,12 @@ func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSnap, e
 
 func (s *Service) listPcs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
 	if err := eg.Go(func() error {
-		pcs, err := s.priorityClassService.List(ctx)
+		pcs, err := s.client.SchedulingV1().PriorityClasses().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list priorityClasses: %w", err)
+				return xerrors.Errorf("call list PriorityClass: %w", err)
 			}
-			klog.Errorf("failed to call list priorityClasses: %v", err)
+			klog.Errorf("failed to call list PriorityClass: %v", err)
 			pcs = &schedulingv1.PriorityClassList{Items: []schedulingv1.PriorityClass{}}
 		}
 		result := []schedulingv1.PriorityClass{}
@@ -382,9 +333,9 @@ func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForSnap, eg *u
 		nss, err := s.client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			if !opts.ignoreErr {
-				return xerrors.Errorf("call list namespace: %w", err)
+				return xerrors.Errorf("call list Namespace: %w", err)
 			}
-			klog.Errorf("failed to call list namespace: %v", err)
+			klog.Errorf("failed to call list Namespace: %v", err)
 			nss = &corev1.NamespaceList{Items: []corev1.Namespace{}}
 		}
 		result := []corev1.Namespace{}
@@ -427,7 +378,8 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 		}
 		if err := eg.Go(func() error {
 			pc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.priorityClassService.Apply(ctx, &pc)
+			pc.WithAPIVersion("scheduling.k8s.io/v1").WithKind("PriorityClass")
+			_, err := s.client.SchedulingV1().PriorityClasses().Apply(ctx, &pc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PriorityClass: %w", err)
@@ -447,7 +399,8 @@ func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForLoad, 
 		sc := r.StorageClasses[i]
 		if err := eg.Go(func() error {
 			sc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.storageClassService.Apply(ctx, &sc)
+			sc.WithAPIVersion("storage.k8s.io/v1").WithKind("StorageClass")
+			_, err := s.client.StorageV1().StorageClasses().Apply(ctx, &sc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply StorageClass: %w", err)
@@ -467,7 +420,8 @@ func (s *Service) applyPvcs(ctx context.Context, r *ResourcesForLoad, eg *util.S
 		pvc := r.Pvcs[i]
 		if err := eg.Go(func() error {
 			pvc.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.pvcService.Apply(ctx, *pvc.Namespace, &pvc)
+			pvc.WithAPIVersion("v1").WithKind("PersistentVolumeClaim")
+			_, err := s.client.CoreV1().PersistentVolumeClaims(*pvc.Namespace).Apply(ctx, &pvc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PersistentVolumeClaims: %w", err)
@@ -487,10 +441,11 @@ func (s *Service) applyPvs(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 		pv := r.Pvs[i]
 		if err := eg.Go(func() error {
 			pv.ObjectMetaApplyConfiguration.UID = nil
+			pv.WithAPIVersion("v1").WithKind("PersistentVolume")
 			if pv.Status != nil && pv.Status.Phase != nil {
 				if *pv.Status.Phase == "Bound" {
 					// PersistentVolumeClaims's UID has been changed to a new value.
-					pvc, err := s.pvcService.Get(ctx, *pv.Spec.ClaimRef.Name, *pv.Spec.ClaimRef.Namespace)
+					pvc, err := s.client.CoreV1().PersistentVolumeClaims(*pv.Spec.ClaimRef.Namespace).Get(ctx, *pv.Spec.ClaimRef.Name, metav1.GetOptions{})
 					if err == nil {
 						pv.Spec.ClaimRef.UID = &pvc.UID
 					} else {
@@ -499,7 +454,7 @@ func (s *Service) applyPvs(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 					}
 				}
 			}
-			_, err := s.pvService.Apply(ctx, &pv)
+			_, err := s.client.CoreV1().PersistentVolumes().Apply(ctx, &pv, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PersistentVolume: %w", err)
@@ -519,7 +474,8 @@ func (s *Service) applyNodes(ctx context.Context, r *ResourcesForLoad, eg *util.
 		node := r.Nodes[i]
 		if err := eg.Go(func() error {
 			node.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.nodeService.Apply(ctx, &node)
+			node.WithAPIVersion("v1").WithKind("Node")
+			_, err := s.client.CoreV1().Nodes().Apply(ctx, &node, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Node: %w", err)
@@ -539,7 +495,8 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForLoad, eg *util.S
 		pod := r.Pods[i]
 		if err := eg.Go(func() error {
 			pod.ObjectMetaApplyConfiguration.UID = nil
-			_, err := s.podService.Apply(ctx, *pod.Namespace, &pod)
+			pod.WithAPIVersion("v1").WithKind("Pod")
+			_, err := s.client.CoreV1().Pods(*pod.Namespace).Apply(ctx, &pod, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Pod: %w", err)
