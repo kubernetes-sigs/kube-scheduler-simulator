@@ -11,28 +11,16 @@ import (
 	configv1 "k8s.io/kube-scheduler/config/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/clusterresourceimporter"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/node"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/persistentvolume"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/persistentvolumeclaim"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/pod"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/priorityclass"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/reset"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/storageclass"
 )
 
 // Container saves and provides dependencies.
 type Container struct {
-	nodeService                  NodeService
-	podService                   PodService
-	pvService                    PersistentVolumeService
-	pvcService                   PersistentVolumeClaimService
-	storageClassService          StorageClassService
 	schedulerService             SchedulerService
 	snapshotService              SnapshotService
-	priorityClassService         PriorityClassService
 	resetService                 ResetService
 	importClusterResourceService ImportClusterResourceService
 	resourceWatcherService       ResourceWatcherService
@@ -54,13 +42,7 @@ func NewDIContainer(
 	c := &Container{}
 
 	// initializes each service
-	c.pvService = persistentvolume.NewPersistentVolumeService(client)
-	c.pvcService = persistentvolumeclaim.NewPersistentVolumeClaimService(client)
-	c.storageClassService = storageclass.NewStorageClassService(client)
 	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg, initialSchedulerCfg, externalSchedulerEnabled, simulatorPort)
-	c.podService = pod.NewPodService(client)
-	c.nodeService = node.NewNodeService(client, c.podService)
-	c.priorityClassService = priorityclass.NewPriorityClassService(client)
 	var err error
 	c.resetService, err = reset.NewResetService(etcdclient, client, c.schedulerService)
 	if err != nil {
@@ -77,39 +59,9 @@ func NewDIContainer(
 	return c, nil
 }
 
-// NodeService returns NodeService.
-func (c *Container) NodeService() NodeService {
-	return c.nodeService
-}
-
-// PodService returns PodService.
-func (c *Container) PodService() PodService {
-	return c.podService
-}
-
-// StorageClassService returns StorageClassService.
-func (c *Container) StorageClassService() StorageClassService {
-	return c.storageClassService
-}
-
-// PersistentVolumeService returns PersistentVolumeService.
-func (c *Container) PersistentVolumeService() PersistentVolumeService {
-	return c.pvService
-}
-
-// PersistentVolumeClaimService returns PersistentVolumeClaimService.
-func (c *Container) PersistentVolumeClaimService() PersistentVolumeClaimService {
-	return c.pvcService
-}
-
 // SchedulerService returns SchedulerService.
 func (c *Container) SchedulerService() SchedulerService {
 	return c.schedulerService
-}
-
-// PriorityClassService returns PriorityClassService.
-func (c *Container) PriorityClassService() PriorityClassService {
-	return c.priorityClassService
 }
 
 // ExportService returns ExportService.
