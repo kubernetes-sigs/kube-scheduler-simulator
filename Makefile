@@ -44,7 +44,7 @@ docker_up:
 
 .PHONY: docker_up_local
 docker_up_local:
-	docker-compose up -d -f docker-compose-local.yml
+	docker-compose -f docker-compose-local.yml up -d
 
 .PHONY: docker_build_and_up
 docker_build_and_up: docker_build docker_up_local
