@@ -46,17 +46,10 @@ Simulator is kube-apiserver with some controllers + debuggable scheduler + the H
 There are several ways to integrate your scheduler into the simulator.
 See [integrate-your-scheduler.md](simulator/docs/integrate-your-scheduler.md).
 
-<<<<<<< HEAD
-You can create any resources by communicating with kube-apiserver in any ways (kubectl, k8s client library, or web UI described next)
-and see how your Pods are scheduled.
-
-When you create Pods, Pods will get annotations from the simulator which contains the scheduling results per plugins or extenders.
-=======
 You can create any resources by any ways (kubectl, k8s client library, or web UI described next).
 And when you create Pods, 
 Pods will be scheduled by the [debuggable scheduler](./simulator/docs/debuggable-scheduler.md),
 and they'll get the annotations that explain how each Pod was evaluated by each scheduler plugin.
->>>>>>> 124eecc3 (doc: create the doc for the debuggable scheduler)
 
 ```yaml
 kind: Pod
