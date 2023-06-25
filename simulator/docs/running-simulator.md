@@ -5,7 +5,7 @@ There are multiple ways to run the simulator with web UI.
 
 ### Run simulator with Docker
 
-We have [docker-compose.yml](docker-compose.yml) to run the simulator easily.
+We have [docker-compose.yml](../../docker-compose.yml) to run the simulator easily.
 You should install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/) at first.
 
 You can use either of following commands.
@@ -42,4 +42,4 @@ make start
 
 #### 2. Run web UI
 
-To run the frontend, please see [README.md](web/README.md) on ./web dir.
+To run the frontend, please see [README.md](../../web/README.md) on ./web dir.
