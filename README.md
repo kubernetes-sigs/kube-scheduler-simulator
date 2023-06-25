@@ -18,6 +18,20 @@ which usually requires privileged access to the control plane.
 That's why we are developing a simulator for kube-scheduler
 -- you can try out the behavior of the scheduler while checking which plugin made what decision for which Node.
 
+## Getting started 
+
+```shell
+git clone git@github.com:kubernetes-sigs/kube-scheduler-simulator.git
+cd kube-scheduler-simulator
+# pull images from the registry and run up all components
+make docker_up 
+# All things up! 
+```
+
+You can access the simulator in http://localhost:3000.
+
+Please see [this doc](./simulator/docs/running-simulator.md) to know other ways to run up the simulator.
+
 ## Simulator's architecture
 
 We have several components:
@@ -33,7 +47,7 @@ There are several ways to integrate your scheduler into the simulator.
 See [integrate-your-scheduler.md](simulator/docs/integrate-your-scheduler.md).
 
 You can create any resources by communicating with kube-apiserver in any ways (kubectl, k8s client library, or web UI described next)
-and see how scheduling is done.
+and see how your Pods are scheduled.
 
 When you create Pods, Pods will get annotations from the simulator which contains the scheduling results per plugins or extenders.
 
@@ -73,27 +87,17 @@ The simulator has its own configuration,
 you can refer to the [documentation](./simulator/docs/simulator-server-config.md).
 
 See the following docs to know more about simulator:
+- [import-cluster-resources.md](./simulator/docs/import-cluster-resources.md): describes how you can import resources in your cluster to the simulator so that you can simulate scheduling based on your cluster's situation.
 - [how-it-works.md](simulator/docs/how-it-works.md): describes about how the simulator works.
 - [kube-apiserver.md](simulator/docs/kube-apiserver.md): describe about kube-apiserver in simulator. (how you can configure and access)
 - [api.md](simulator/docs/api.md): describes about HTTP server the simulator has. (mainly for the webUI)
 
 ### Web UI
 
-It's well-optimized Web UI for the simulator.
+Web UI is the easiest way to check the scheduler's behavior.
 
-Web UI is the best way to check the scheduler's behavior very easily.
-Nice table view for the scheduling result, the scheduler configuration reload feature, etc...
-every core features of the simulator can be access with human-friendly ways!
-
-From the web, you can create/edit/delete these resources to simulate a cluster.
-
-- Nodes
-- Pods
-- Persistent Volumes
-- Persistent Volume Claims
-- Storage Classes
-- Priority Classes
-- Namespaces
+Nice table view for the scheduling result, the scheduler configuration reload feature; 
+you can access every core features of the simulator with human-friendly ways!
 
 ![list resources](simulator/docs/images/resources.png)
 
@@ -109,9 +113,10 @@ And, after pods are scheduled, you can see the results of
 
 ![result](simulator/docs/images/result.jpg)
 
-Also, You can change the configuration of the scheduler through [KubeSchedulerConfiguration](https://kubernetes.io/docs/reference/scheduling/config/).
+Also, You can change the configuration of the scheduler through [KubeSchedulerConfiguration](https://kubernetes.io/docs/reference/scheduling/config/) in Web UI.
 
-(Note: changes to any fields other than `.profiles` are disabled on simulator, since they do not affect the results of the scheduling.)
+(Note: changes to any fields other than `.profiles` are disabled on simulator, 
+since they do not affect the results of the scheduling.)
 
 ![configure scheduler](simulator/docs/images/schedulerconfiguration.png)
 
@@ -119,60 +124,9 @@ Also, you can take a snapshot of the resources so that you can share the situati
 
 ![snapshot button](simulator/docs/images/webUI-snapshot.png)
 
-## Getting started
-
-### Run simulator with Docker
-
-We have [docker-compose.yml](docker-compose.yml) to run the simulator easily. You should install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/) firstly.
-
-You can use the following command.
-
-```bash
-# build the images for web frontend and simulator server, then start the containers.
-make docker_build_and_up
-```
-
-Then, you can access the simulator with http://localhost:3000. If you want to deploy the simulator on a remote server and access it via a specific IP (e.g: like http://10.0.0.1:3000/), please make sure that you have executed `export SIMULATOR_EXTERNAL_IP=your.server.ip` before running `docker-compose up -d`.
-
-Note: Insufficient memory allocation may cause problems in building the image.
-Please allocate enough memory in that case.
-
-### Run simulator locally
-
-You have to run frontend, server and etcd.
-
-#### 1. Run simulator server and etcd
-
-To run this simulator's server, you have to install Go and etcd.
-
-You can install etcd with [kubernetes/kubernetes/hack/install-etcd.sh](https://github.com/kubernetes/kubernetes/blob/master/hack/install-etcd.sh).
-
-```bash
-cd simulator
-make start
-```
-
-It starts etcd and simulator-server locally.
-
-#### 2. Run simulator frontend
-
-To run the frontend, please see [README.md](web/README.md) on ./web dir.
-
-## Beta features
-
-### [Beta] Importing cluster's resources 
-
-The simulator can import resources from your cluster.
-
-To use this, you need to follow these two step
-- Set to `true` the `ExternalImportEnabled` value in the simulator server configuration.
-- Set the path of the kubeconfig file of the your cluster to `KubeConfig` value in the Simulator Server Configuration.
-
-See also [simulator/docs/simulator-server-config.md](simulator/docs/simulator-server-config.md).
-
 ## Contributing
 
-see [CONTRIBUTING.md](CONTRIBUTING.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Community, discussion, contribution, and support
 

@@ -1,6 +1,6 @@
 ## External scheduler
 
-This document describes how to use the external scheduler instead of the scheduler running in the simulator.
+This document describes about the feature called "external scheduler"
 
 We use the [`externalscheduler` package](../pkg/externalscheduler); 
 the scheduler built with the [`externalscheduler` package](../pkg/externalscheduler) will export the scheduling results on each Pod annotation.
@@ -9,9 +9,9 @@ the scheduler built with the [`externalscheduler` package](../pkg/externalschedu
 
 - Running your scheduler instead of the default one in the simulator 
   - You can still see the scheduling results in web UI as well!
-- Running your scheduler with the simulator feature in your cluster
-  - All Pods, scheduled by this scheduler, will get the scheduler results on its annotation while each scheduling is done as usual.
-  - Note that it has performance overhead in each scheduling cycle 
+- Running your scheduler with the simulator's feature in your clusterr.
+  - Like in the simulator, all Pods will get the scheduling results on its annotation while each scheduling is done as usual. 
+  - Note that it has performance overhead in each scheduling cycle. 
 since the scheduler needs to make additional effort to export the scheduling results.
 
 ### Change your scheduler
