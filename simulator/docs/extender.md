@@ -21,7 +21,7 @@ For example, if you run the server on `http://localhost:8080/scheduler/`,
 the configuration will look like this.
 
 ```yaml
-apiVersion: kubescheduler.config.k8s.io/v1beta2
+apiVersion: kubescheduler.config.k8s.io/v1
 kind: KubeSchedulerConfiguration
 leaderElection:
   leaderElect: false
