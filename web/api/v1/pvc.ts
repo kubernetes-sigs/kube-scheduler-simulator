@@ -59,7 +59,7 @@ export default function pvcAPI(k8sInstance: AxiosInstance) {
       try {
         // This URL path could list all pods on each namespace.
         const res = await k8sInstance.get<V1PersistentVolumeClaimList>(
-          "namespaces//persistentvolumeclaims",
+          "persistentvolumeclaims",
           {}
         );
         return res.data;
