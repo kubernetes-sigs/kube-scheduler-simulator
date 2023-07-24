@@ -9,7 +9,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -83,14 +82,14 @@ func Test_updateResultHistory(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
-		p       *v1.Pod
+		p       *corev1.Pod
 		m       map[string]string
 		wantErr assert.ErrorAssertionFunc
-		wantPod *v1.Pod
+		wantPod *corev1.Pod
 	}{
 		{
 			name: "success: Pod doesn't have annotation yet",
-			p: &v1.Pod{
+			p: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: nil,
 				},
@@ -99,7 +98,7 @@ func Test_updateResultHistory(t *testing.T) {
 				"result1": "fuga",
 				"result2": "hoge",
 			},
-			wantPod: &v1.Pod{
+			wantPod: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						ResultsHistoryAnnotation: `[{"result1":"fuga","result2":"hoge"}]`,
@@ -110,7 +109,7 @@ func Test_updateResultHistory(t *testing.T) {
 		},
 		{
 			name: "success: Pod already has annotation",
-			p: &v1.Pod{
+			p: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						ResultsHistoryAnnotation: `[{"result1":"fuga","result2":"hoge"}]`,
@@ -121,7 +120,7 @@ func Test_updateResultHistory(t *testing.T) {
 				"result1": "fuga2",
 				"result2": "hoge2",
 			},
-			wantPod: &v1.Pod{
+			wantPod: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						ResultsHistoryAnnotation: `[{"result1":"fuga","result2":"hoge"},{"result1":"fuga2","result2":"hoge2"}]`,
@@ -132,7 +131,7 @@ func Test_updateResultHistory(t *testing.T) {
 		},
 		{
 			name: "fail: Pod has broken value on annotation",
-			p: &v1.Pod{
+			p: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						ResultsHistoryAnnotation: `broken`,
