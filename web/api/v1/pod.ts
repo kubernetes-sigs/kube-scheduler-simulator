@@ -56,7 +56,7 @@ export default function podAPI(k8sInstance: AxiosInstance) {
       try {
         // This URL path could list all pods on each namespace.
         const res = await k8sInstance.get<V1PodList>(
-          "namespaces//pods",
+          "pods",
           {}
         );
         return res.data;
