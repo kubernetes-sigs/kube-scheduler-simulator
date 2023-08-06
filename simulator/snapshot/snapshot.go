@@ -502,7 +502,9 @@ func (s *Service) applyNodes(ctx context.Context, r *ResourcesForLoad, eg *util.
 // Before creating the Pod, a temporary dummy PriorityClass will be created because it is not known if that PriorityClass still exists.
 // The dummy will be deleted immediately after the Pod is created.
 func (s *Service) applyPods(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
-	var unprioritizedPod, prioritizedPod []v1.PodApplyConfiguration
+	// Size is a provisional value. No reason was given.
+	unprioritizedPod := make([]v1.PodApplyConfiguration, 0, len(r.Pods)/2)
+	prioritizedPod := make([]v1.PodApplyConfiguration, 0, len(r.Pods)/2)
 	for _, pod := range r.Pods {
 		if pod.Spec == nil || pod.Spec.PriorityClassName == nil {
 			unprioritizedPod = append(unprioritizedPod, pod)
@@ -526,43 +528,47 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForLoad, eg *util.S
 			return xerrors.Errorf("start error group: %w", err)
 		}
 	}
-	// This can be executed in parallel with the process for Pods that do not have `.spec.priorityClassName`.
-	// These processes in this section cannot be executed in parallel with each other.
 	if err := eg.Go(func() error {
-		for _, pod := range prioritizedPod {
-			pc := &schedulingcfgv1.PriorityClassApplyConfiguration{
-				ObjectMetaApplyConfiguration: &configmetav1.ObjectMetaApplyConfiguration{
-					Name: pod.Spec.PriorityClassName,
-				},
-				Value: pod.Spec.Priority,
-			}
-			_, err := s.applyPc(ctx, *pc)
-			if err != nil {
-				if !opts.ignoreErr {
-					return xerrors.Errorf("apply PC: %w", err)
-				}
-				klog.Errorf("failed to apply PC: %v", err)
-			}
-
-			_, err = s.applyPod(ctx, pod)
-			if err != nil {
-				if !opts.ignoreErr {
-					return xerrors.Errorf("apply Pod: %w", err)
-				}
-				klog.Errorf("failed to apply Pod: %v", err)
-			}
-
-			err = s.client.SchedulingV1().PriorityClasses().Delete(ctx, *pc.Name, metav1.DeleteOptions{})
-			if err != nil {
-				if !opts.ignoreErr {
-					return xerrors.Errorf("delete temporary dummy PC: %w", err)
-				}
-				klog.Errorf("failed to temporary dummy PC: %v", err)
-			}
-		}
-		return nil
+		return s.applyPrioritizedPod(ctx, prioritizedPod, opts)
 	}); err != nil {
 		return xerrors.Errorf("start error group: %w", err)
+	}
+	return nil
+}
+
+// applyPrioritizedPod can be executed in parallel with the process for Pods that do not have `.spec.priorityClassName`.
+// These processes in this section cannot be executed in parallel with each other.
+func (s *Service) applyPrioritizedPod(ctx context.Context, prioritizedPod []v1.PodApplyConfiguration, opts options) error {
+	for _, pod := range prioritizedPod {
+		pc := &schedulingcfgv1.PriorityClassApplyConfiguration{
+			ObjectMetaApplyConfiguration: &configmetav1.ObjectMetaApplyConfiguration{
+				Name: pod.Spec.PriorityClassName,
+			},
+			Value: pod.Spec.Priority,
+		}
+		_, err := s.applyPc(ctx, *pc)
+		if err != nil {
+			if !opts.ignoreErr {
+				return xerrors.Errorf("apply PC: %w", err)
+			}
+			klog.Errorf("failed to apply PC: %v", err)
+		}
+
+		_, err = s.applyPod(ctx, pod)
+		if err != nil {
+			if !opts.ignoreErr {
+				return xerrors.Errorf("apply Pod: %w", err)
+			}
+			klog.Errorf("failed to apply Pod: %v", err)
+		}
+
+		err = s.client.SchedulingV1().PriorityClasses().Delete(ctx, *pc.Name, metav1.DeleteOptions{})
+		if err != nil {
+			if !opts.ignoreErr {
+				return xerrors.Errorf("delete temporary dummy PC: %w", err)
+			}
+			klog.Errorf("failed to temporary dummy PC: %v", err)
+		}
 	}
 	return nil
 }
