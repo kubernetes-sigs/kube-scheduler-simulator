@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   simulator-server:
-    image: registry.k8s.io/scheduler-simulator/simulator-backend:v0.1.1
+    image: simulator-server
     container_name: simulator-server
     environment:
       - PORT=1212
@@ -17,7 +17,7 @@ services:
     networks:
       - simulator-internal-network
   simulator-frontend:
-    image: registry.k8s.io/scheduler-simulator/simulator-frontend:v0.1.1
+    image: simulator-frontend
     restart: always
     container_name: simulator-frontend
     environment:

@@ -1,4 +1,4 @@
-package externalscheduler
+package debuggablescheduler
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/storereflector"
 )
 
-// CreateOptionForOutOfTreePlugin creates the option which can be help with running the debuggable scheduler.
+// CreateOptionForOutOfTreePlugin creates the option which can be help with running the external scheduler.
 // It does:
 // - create the wrapped plugin registries and return the registries as app.Option
 // - initialize and start the store reflector.
@@ -38,8 +38,6 @@ import (
 //   - reads the scheduling config passed from users (or use the default config)
 //   - converts it for enabling wrapped plugins
 //   - makes the defaulting func of the KubeSchedulerConfig always returning the converted one. We can let the scheduler use the converted configuration under any circumstances because the scheduler will always use this defaulting func to load the configuration.
-//
-// Deprecated: the externalscheduler package was renamed to the debuggablescheduler plugin. We'll remove it soon.
 //
 //nolint:funlen,cyclop
 func CreateOptionForOutOfTreePlugin(outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer) ([]app.Option, func(), error) {
@@ -102,7 +100,7 @@ func CreateOptionForOutOfTreePlugin(outOfTreePluginRegistry runtime.Registry, pl
 		return nil, cancel, xerrors.Errorf("ResisterResultSavingToInformer of sharedStore: %w", err)
 	}
 
-	// black magic: We need to use the scheduler config converted for the simulator in the debuggable scheduler.
+	// black magic: We need to use the scheduler config converted for the simulator in the external scheduler.
 	// Here, we overwrite the defaulting func for KubeSchedulerConfiguration,
 	// so that user's config will be replaced with the one we created here
 	// when the scheduler loads the scheduler config

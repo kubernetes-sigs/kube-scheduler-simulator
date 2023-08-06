@@ -50,13 +50,13 @@ each Pod will get `"noderesourcefit-prefilter-data": prefilterData` annotation i
 
 **Currently, the plugin extender can be used only in [the external scheduler](./external-scheduler.md).**
 
-You can use `externalscheduler.WithPluginExtenders` option in `externalscheduler.NewSchedulerCommand`
+You can use `debuggablescheduler.WithPluginExtenders` option in `debuggablescheduler.NewSchedulerCommand`
 to enable some PluginExtender in particular plugin.
 
 ```go
 func main() {
-	command, cancelFn, err := externalscheduler.NewSchedulerCommand(
-        externalscheduler.WithPluginExtenders(noderesources.Name, extender.New),
+	command, cancelFn, err := debuggablescheduler.NewSchedulerCommand(
+        debuggablescheduler.WithPluginExtenders(noderesources.Name, extender.New),
     )
     if err != nil {
         klog.Info(fmt.Sprintf("failed to build the scheduler command: %+v", err))
