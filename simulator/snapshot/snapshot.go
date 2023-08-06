@@ -13,6 +13,7 @@ import (
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
+	configmetav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
 	clientset "k8s.io/client-go/kubernetes"
@@ -161,9 +162,6 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForLoad, opts o
 		return xerrors.Errorf("apply resources: %w", err)
 	}
 
-	if err := s.applyPcs(ctx, resources, errgrp, opts); err != nil {
-		return xerrors.Errorf("call applyPcs: %w", err)
-	}
 	if err := s.applyStorageClasses(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyStorageClasses: %w", err)
 	}
@@ -185,8 +183,13 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForLoad, opts o
 	if err := s.applyPvs(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPvs: %w", err)
 	}
+	// `applyPcs` should be called after `applyPods` finished,
+	// because `applyPods` create some fake PCs.
+	if err := s.applyPcs(ctx, resources, errgrp, opts); err != nil {
+		return xerrors.Errorf("call applyPcs: %w", err)
+	}
 	if err := errgrp.Wait(); err != nil {
-		return xerrors.Errorf("apply PVs: %w", err)
+		return xerrors.Errorf("apply resources: %w", err)
 	}
 	return nil
 }
@@ -377,9 +380,7 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 			continue
 		}
 		if err := eg.Go(func() error {
-			pc.ObjectMetaApplyConfiguration.UID = nil
-			pc.WithAPIVersion("scheduling.k8s.io/v1").WithKind("PriorityClass")
-			_, err := s.client.SchedulingV1().PriorityClasses().Apply(ctx, &pc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			_, err := s.applyPc(ctx, pc)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply PriorityClass: %w", err)
@@ -392,6 +393,12 @@ func (s *Service) applyPcs(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 		}
 	}
 	return nil
+}
+
+func (s *Service) applyPc(ctx context.Context, pc schedulingcfgv1.PriorityClassApplyConfiguration) (*schedulingv1.PriorityClass, error) {
+	pc.ObjectMetaApplyConfiguration.UID = nil
+	pc.WithAPIVersion("scheduling.k8s.io/v1").WithKind("PriorityClass")
+	return s.client.SchedulingV1().PriorityClasses().Apply(ctx, &pc, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 }
 
 func (s *Service) applyStorageClasses(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
@@ -490,13 +497,24 @@ func (s *Service) applyNodes(ctx context.Context, r *ResourcesForLoad, eg *util.
 	return nil
 }
 
+// applyPods creates Pods.
+// We need to consider PriorityClass if a target Pod has `.spec.priorityClassName`.
+// Before creating the Pod, a temporary dummy PriorityClass will be created because it is not known if that PriorityClass still exists.
+// The dummy will be deleted immediately after the Pod is created.
 func (s *Service) applyPods(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
-	for i := range r.Pods {
-		pod := r.Pods[i]
+	var unprioritizedPod, prioritizedPod []v1.PodApplyConfiguration
+	for _, pod := range r.Pods {
+		if pod.Spec == nil || pod.Spec.PriorityClassName == nil {
+			unprioritizedPod = append(unprioritizedPod, pod)
+			continue
+		}
+		prioritizedPod = append(prioritizedPod, pod)
+	}
+
+	for _, p := range unprioritizedPod {
+		pod := p
 		if err := eg.Go(func() error {
-			pod.ObjectMetaApplyConfiguration.UID = nil
-			pod.WithAPIVersion("v1").WithKind("Pod")
-			_, err := s.client.CoreV1().Pods(*pod.Namespace).Apply(ctx, &pod, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			_, err := s.applyPod(ctx, pod)
 			if err != nil {
 				if !opts.ignoreErr {
 					return xerrors.Errorf("apply Pod: %w", err)
@@ -508,7 +526,51 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForLoad, eg *util.S
 			return xerrors.Errorf("start error group: %w", err)
 		}
 	}
+	// This can be executed in parallel with the process for Pods that do not have `.spec.priorityClassName`.
+	// These processes in this section cannot be executed in parallel with each other.
+	if err := eg.Go(func() error {
+		for _, pod := range prioritizedPod {
+			pc := &schedulingcfgv1.PriorityClassApplyConfiguration{
+				ObjectMetaApplyConfiguration: &configmetav1.ObjectMetaApplyConfiguration{
+					Name: pod.Spec.PriorityClassName,
+				},
+				Value: pod.Spec.Priority,
+			}
+			_, err := s.applyPc(ctx, *pc)
+			if err != nil {
+				if !opts.ignoreErr {
+					return xerrors.Errorf("apply PC: %w", err)
+				}
+				klog.Errorf("failed to apply PC: %v", err)
+			}
+
+			_, err = s.applyPod(ctx, pod)
+			if err != nil {
+				if !opts.ignoreErr {
+					return xerrors.Errorf("apply Pod: %w", err)
+				}
+				klog.Errorf("failed to apply Pod: %v", err)
+			}
+
+			err = s.client.SchedulingV1().PriorityClasses().Delete(ctx, *pc.Name, metav1.DeleteOptions{})
+			if err != nil {
+				if !opts.ignoreErr {
+					return xerrors.Errorf("delete temporary dummy PC: %w", err)
+				}
+				klog.Errorf("failed to temporary dummy PC: %v", err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
+	}
 	return nil
+}
+
+func (s *Service) applyPod(ctx context.Context, pod v1.PodApplyConfiguration) (*corev1.Pod, error) {
+	pod.ObjectMetaApplyConfiguration.UID = nil
+	pod.WithAPIVersion("v1").WithKind("Pod")
+	return s.client.CoreV1().Pods(*pod.Namespace).Apply(ctx, &pod, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 }
 
 func (s *Service) applyNamespaces(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {

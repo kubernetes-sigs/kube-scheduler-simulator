@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
+	"github.com/gotidy/ptr"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
@@ -822,6 +823,68 @@ func TestService_Load(t *testing.T) {
 			},
 		},
 		{
+			name: "load all success with pod which is prioritized by already deleted PriorityClass",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForLoad {
+				ns := []v1.NamespaceApplyConfiguration{
+					*v1.Namespace(testNamespace1),
+				}
+				pods := []v1.PodApplyConfiguration{
+					*v1.Pod("Pod1", testNamespace1).WithSpec(&v1.PodSpecApplyConfiguration{
+						Priority:          ptr.Int32(1000),
+						PriorityClassName: ptr.String("PriorityClass1"),
+					}),
+					*v1.Pod("Pod2", testNamespace1).WithSpec(&v1.PodSpecApplyConfiguration{
+						// Already deleted.
+						Priority:          ptr.Int32(2000),
+						PriorityClassName: ptr.String("PriorityClass2"),
+					}),
+				}
+				nodes := []v1.NodeApplyConfiguration{
+					*v1.Node("Node1"),
+				}
+				pvs := []v1.PersistentVolumeApplyConfiguration{
+					*v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"),
+				}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{
+					*v1.PersistentVolumeClaim("PVC1", testNamespace1),
+				}
+				scs := []confstoragev1.StorageClassApplyConfiguration{
+					*confstoragev1.StorageClass("StorageClass1"),
+				}
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{
+					*schedulingcfgv1.PriorityClass("PriorityClass1").WithValue(1000),
+				}
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForLoad{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  scs,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+					Namespaces:      ns,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
+					pc: func(ctx context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, &schedulingv1.PriorityClass{}, nil
+						})
+						c.PrependReactor("delete", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, &schedulingv1.PriorityClass{}, nil
+						})
+					},
+				}, defaultApplyFuncs)
+				return c
+			},
+		},
+		{
 			name: "load all success (with external scheduler enabled.)",
 			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
 				ss.EXPECT().RestartScheduler(gomock.Any()).Return(scheduler.ErrServiceDisabled)
@@ -867,7 +930,7 @@ func TestService_Load(t *testing.T) {
 			},
 		},
 		{
-			name: "load failure to apply Pod",
+			name: "load failure to apply Pod which is not prioritized",
 			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
 				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
@@ -917,6 +980,171 @@ func TestService_Load(t *testing.T) {
 				return c
 			},
 			wantErr: xerrors.New("failed to apply(): apply resources: apply Pod: failed to apply Pod"),
+		},
+		{
+			name: "load failure to apply Pod which is prioritized",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForLoad {
+				ns := []v1.NamespaceApplyConfiguration{
+					*v1.Namespace(testNamespace1),
+				}
+				pods := []v1.PodApplyConfiguration{
+					*v1.Pod("Pod1", testNamespace1).WithSpec(&v1.PodSpecApplyConfiguration{
+						Priority:          ptr.Int32(1000),
+						PriorityClassName: ptr.String("PC1"),
+					}),
+				}
+				nodes := []v1.NodeApplyConfiguration{
+					*v1.Node("Node1"),
+				}
+				pvs := []v1.PersistentVolumeApplyConfiguration{
+					*v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"),
+				}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{
+					*v1.PersistentVolumeClaim("PVC1", testNamespace1),
+				}
+				scs := []confstoragev1.StorageClassApplyConfiguration{
+					*confstoragev1.StorageClass("StorageClass1"),
+				}
+				// Avoid to call the api via applyPcs().
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForLoad{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  scs,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+					Namespaces:      ns,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
+					pod: func(ctx context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, nil, xerrors.New("failed to apply Pod")
+						})
+					},
+				}, defaultApplyFuncs)
+				return c
+			},
+			wantErr: xerrors.New("failed to apply(): apply resources: apply Pod: failed to apply Pod"),
+		},
+		{
+			name: "load failure to apply PriorityClass on applyPods()",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForLoad {
+				ns := []v1.NamespaceApplyConfiguration{
+					*v1.Namespace(testNamespace1),
+				}
+				pods := []v1.PodApplyConfiguration{
+					*v1.Pod("Pod1", testNamespace1).WithSpec(&v1.PodSpecApplyConfiguration{
+						Priority:          ptr.Int32(1000),
+						PriorityClassName: ptr.String("PC1"),
+					}),
+				}
+				nodes := []v1.NodeApplyConfiguration{
+					*v1.Node("Node1"),
+				}
+				pvs := []v1.PersistentVolumeApplyConfiguration{
+					*v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"),
+				}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{
+					*v1.PersistentVolumeClaim("PVC1", testNamespace1),
+				}
+				scs := []confstoragev1.StorageClassApplyConfiguration{
+					*confstoragev1.StorageClass("StorageClass1"),
+				}
+				// Avoid to call the api via applyPcs().
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForLoad{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  scs,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+					Namespaces:      ns,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
+					pc: func(ctx context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, nil, xerrors.New("failed to apply PriorityClass")
+						})
+					},
+				}, defaultApplyFuncs)
+				return c
+			},
+			wantErr: xerrors.New("failed to apply(): apply resources: apply PC: failed to apply PriorityClass"),
+		},
+		{
+			name: "load failure to delete PriorityClass on applyPods()",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForLoad {
+				ns := []v1.NamespaceApplyConfiguration{
+					*v1.Namespace(testNamespace1),
+				}
+				pods := []v1.PodApplyConfiguration{
+					*v1.Pod("Pod1", testNamespace1).WithSpec(&v1.PodSpecApplyConfiguration{
+						Priority:          ptr.Int32(1000),
+						PriorityClassName: ptr.String("PC1"),
+					}),
+				}
+				nodes := []v1.NodeApplyConfiguration{
+					*v1.Node("Node1"),
+				}
+				pvs := []v1.PersistentVolumeApplyConfiguration{
+					*v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"),
+				}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{
+					*v1.PersistentVolumeClaim("PVC1", testNamespace1),
+				}
+				scs := []confstoragev1.StorageClassApplyConfiguration{
+					*confstoragev1.StorageClass("StorageClass1"),
+				}
+				// Avoid to call the api via applyPcs().
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForLoad{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  scs,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+					Namespaces:      ns,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
+					pc: func(ctx context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, &schedulingv1.PriorityClass{}, nil
+						})
+						c.PrependReactor("delete", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, nil, xerrors.New("failed to delete PriorityClass")
+						})
+					},
+				}, defaultApplyFuncs)
+				return c
+			},
+			wantErr: xerrors.New("failed to apply(): apply resources: delete temporary dummy PC: failed to delete PriorityClass"),
 		},
 		{
 			name: "load failure to apply Node",
@@ -1020,7 +1248,7 @@ func TestService_Load(t *testing.T) {
 				}, defaultApplyFuncs)
 				return c
 			},
-			wantErr: xerrors.New("failed to apply(): apply PVs: apply PersistentVolume: failed to apply PersistentVolume"),
+			wantErr: xerrors.New("failed to apply(): apply resources: apply PersistentVolume: failed to apply PersistentVolume"),
 		},
 		{
 			name: "load failure to apply PersistentVolumeClaim",
@@ -1480,7 +1708,7 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 			},
 		},
 		{
-			name: "no error if failure to apply Pod",
+			name: "no error if failure to apply Pod which is not prioritized",
 			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
 				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
 			},
@@ -1524,6 +1752,165 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 					pod: func(ctx context.Context, c *fake.Clientset) {
 						c.PrependReactor("patch", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 							return true, nil, xerrors.New("failed to apply Pod")
+						})
+					},
+				}, defaultApplyFuncs)
+				return c
+			},
+		},
+		{
+			name: "no error if failure to apply Pod which is prioritized",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForLoad {
+				ns := []v1.NamespaceApplyConfiguration{
+					*v1.Namespace(testNamespace1),
+				}
+				pods := []v1.PodApplyConfiguration{
+					*v1.Pod("Pod1", testNamespace1).WithSpec(&v1.PodSpecApplyConfiguration{
+						Priority:          ptr.Int32(1000),
+						PriorityClassName: ptr.String("PC1"),
+					}),
+				}
+				nodes := []v1.NodeApplyConfiguration{
+					*v1.Node("Node1"),
+				}
+				pvs := []v1.PersistentVolumeApplyConfiguration{
+					*v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"),
+				}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{
+					*v1.PersistentVolumeClaim("PVC1", testNamespace1),
+				}
+				scs := []confstoragev1.StorageClassApplyConfiguration{
+					*confstoragev1.StorageClass("StorageClass1"),
+				}
+				// Avoid to call the api via applyPcs().
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForLoad{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  scs,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+					Namespaces:      ns,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
+					pod: func(ctx context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, nil, xerrors.New("failed to apply Pod")
+						})
+					},
+				}, defaultApplyFuncs)
+				return c
+			},
+		},
+		{
+			name: "no error if failure to apply PriorityClass on applyPods()",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForLoad {
+				ns := []v1.NamespaceApplyConfiguration{
+					*v1.Namespace(testNamespace1),
+				}
+				pods := []v1.PodApplyConfiguration{
+					*v1.Pod("Pod1", testNamespace1).WithSpec(&v1.PodSpecApplyConfiguration{
+						Priority:          ptr.Int32(1000),
+						PriorityClassName: ptr.String("PC1"),
+					}),
+				}
+				nodes := []v1.NodeApplyConfiguration{
+					*v1.Node("Node1"),
+				}
+				pvs := []v1.PersistentVolumeApplyConfiguration{
+					*v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"),
+				}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{
+					*v1.PersistentVolumeClaim("PVC1", testNamespace1),
+				}
+				scs := []confstoragev1.StorageClassApplyConfiguration{
+					*confstoragev1.StorageClass("StorageClass1"),
+				}
+				// Avoid to call the api via applyPcs().
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForLoad{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  scs,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+					Namespaces:      ns,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
+					pc: func(ctx context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, nil, xerrors.New("failed to apply PriorityClass")
+						})
+					},
+				}, defaultApplyFuncs)
+				return c
+			},
+		},
+		{
+			name: "no error if failure to delete PriorityClass on applyPods()",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().RestartScheduler(gomock.Any()).Return(nil)
+			},
+			applyConfiguration: func() *ResourcesForLoad {
+				ns := []v1.NamespaceApplyConfiguration{
+					*v1.Namespace(testNamespace1),
+				}
+				pods := []v1.PodApplyConfiguration{
+					*v1.Pod("Pod1", testNamespace1).WithSpec(&v1.PodSpecApplyConfiguration{
+						Priority:          ptr.Int32(1000),
+						PriorityClassName: ptr.String("PC1"),
+					}),
+				}
+				nodes := []v1.NodeApplyConfiguration{
+					*v1.Node("Node1"),
+				}
+				pvs := []v1.PersistentVolumeApplyConfiguration{
+					*v1.PersistentVolume("PV1").WithStatus(v1.PersistentVolumeStatus().WithPhase("Pending")).WithUID("test"),
+				}
+				pvcs := []v1.PersistentVolumeClaimApplyConfiguration{
+					*v1.PersistentVolumeClaim("PVC1", testNamespace1),
+				}
+				scs := []confstoragev1.StorageClassApplyConfiguration{
+					*confstoragev1.StorageClass("StorageClass1"),
+				}
+				// Avoid to call the api via applyPcs().
+				pcs := []schedulingcfgv1.PriorityClassApplyConfiguration{}
+				config, _ := schedulerCfg.DefaultSchedulerConfig()
+				return &ResourcesForLoad{
+					Pods:            pods,
+					Nodes:           nodes,
+					Pvs:             pvs,
+					Pvcs:            pvcs,
+					StorageClasses:  scs,
+					PriorityClasses: pcs,
+					SchedulerConfig: config,
+					Namespaces:      ns,
+				}
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
+					pc: func(ctx context.Context, c *fake.Clientset) {
+						c.PrependReactor("delete", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, nil, xerrors.New("failed to delete PriorityClass")
 						})
 					},
 				}, defaultApplyFuncs)
