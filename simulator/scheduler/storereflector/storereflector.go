@@ -80,7 +80,7 @@ func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(int
 		ctx := context.Background()
 		pod, ok := newObj.(*corev1.Pod)
 		if !ok {
-			klog.ErrorS(nil, "Cannot convert to *v1.Pod", "obj", newObj)
+			klog.ErrorS(nil, "Cannot convert to *corev1.Pod", "obj", newObj)
 			return
 		}
 
