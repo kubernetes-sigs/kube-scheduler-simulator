@@ -116,7 +116,7 @@ func (s *Service) StartScheduler(versionedcfg *configv1.KubeSchedulerConfigurati
 	s.currentSchedulerCfg = versionedcfg.DeepCopy()
 
 	var err error
-	// Extender service must be initialized using unconverted config.
+	// Extender service must be initialized using `versionedcfg.Extenders` config which is not override for simulator (before calling OverrideExtendersCfgToSimulator()).
 	s.extenderService, err = extender.New(clientSet, versionedcfg.Extenders, s.sharedStore)
 	if err != nil {
 		return xerrors.Errorf("New extender service: %w", err)
