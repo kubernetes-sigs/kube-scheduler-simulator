@@ -26,77 +26,79 @@ import (
 	simulatorconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	simulatorschedulerconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/storereflector"
 )
 
-// CreateOptionForOutOfTreePlugin creates the option which can be help with running the external scheduler.
-// It does:
-// - create the wrapped plugin registries and return the registries as app.Option
-// - initialize and start the store reflector.
-// - the scheduler config conversion
-//   - reads the scheduling config passed from users (or use the default config)
-//   - converts it for enabling wrapped plugins
-//   - makes the defaulting func of the KubeSchedulerConfig always returning the converted one. We can let the scheduler use the converted configuration under any circumstances because the scheduler will always use this defaulting func to load the configuration.
-//
-//nolint:funlen,cyclop
-func CreateOptionForOutOfTreePlugin(outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer) ([]app.Option, func(), error) {
-	if outOfTreePluginRegistry != nil {
-		simulatorschedulerconfig.SetOutOfTreeRegistries(outOfTreePluginRegistry)
-	}
+type Configs struct {
+	versioned   *v1.KubeSchedulerConfiguration
+	internalCfg *config.KubeSchedulerConfiguration
+	clientSet   *clientset.Clientset
+	sharedStore storereflector.Reflector
+	port        int
+}
 
+// NewConfigs loads flags and initializes kube scheduler configuration and clientSet.
+// It does the scheduler config conversion
+// - parse each flags.
+// - reads the scheduling config passed from users (or use the default config).
+// - converts it for enabling wrapped plugins.
+// - reads the kubeConfig and creates clientSet to enables storereflector to communicates with the api-server.
+// - initialize the store reflector.
+func NewConfigs() (Configs, error) {
 	// flags defined in the upstream scheduler
 	configFile := flag.String("config", "", "")
 	master := flag.String("master", "", "")
+	// port indicates port number of the proxy server for Extenders.
+	// This flag is debuggable_scheduler's own.
+	port := flag.Int("proxyPort", 1212, "")
 	flag.Parse()
 
-	var versionedcfg *v1.KubeSchedulerConfiguration
-	var err error
-	if configFile == nil {
-		versionedcfg, err = simulatorschedulerconfig.DefaultSchedulerConfig()
-		if err != nil {
-			return nil, nil, xerrors.Errorf("get default scheduler config: %w", err)
-		}
-	} else {
-		versionedcfg, err = loadConfigFromFile(*configFile)
-		if err != nil {
-			return nil, nil, xerrors.Errorf("load scheduler config: %w", err)
-		}
+	versionedcfg, err := loadKubeSchedulerConfig(configFile)
+	if err != nil {
+		return Configs{}, xerrors.Errorf("load scheduler config: %w", err)
 	}
 
 	versioned, err := scheduler.ConvertConfigurationForSimulator(versionedcfg)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("convert scheduler config to apply: %w", err)
+		return Configs{}, xerrors.Errorf("convert scheduler config to apply: %w", err)
 	}
 
 	internalCfg, err := scheduler.ConvertSchedulerConfigToInternalConfig(versioned)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("convert scheduler config to internal one: %w", err)
+		return Configs{}, xerrors.Errorf("convert scheduler config to internal one: %w", err)
 	}
 
-	sharedStore := storereflector.New()
+	clientSet, err := loadKubeConfig(master, internalCfg)
+	if err != nil {
+		return Configs{}, xerrors.Errorf("load kubeconfig: %w", err)
+	}
 
-	registry, err := plugin.NewRegistry(sharedStore, internalCfg, pluginExtender)
+	return Configs{
+		versioned:   versioned,
+		internalCfg: internalCfg,
+		clientSet:   clientSet,
+		sharedStore: storereflector.New(),
+		port:        *port,
+	}, nil
+}
+
+// CreateOptions creates the option which can be help with running the external scheduler
+// and resister the storereflector to informer.
+// Then, here makes the defaulting func of the KubeSchedulerConfig always returns the converted one.
+// We can let the scheduler use the converted configuration under any circumstances because the scheduler will always use this defaulting func to load the configuration.
+func CreateOptions(configs Configs, outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer) ([]app.Option, func(), error) {
+	// Override the Extenders config so that the connection is directed to the simulator server.
+	extender.OverrideExtendersCfgToSimulator(configs.versioned, configs.port)
+
+	opts, err := CreateOptionForPlugin(outOfTreePluginRegistry, pluginExtender, configs.sharedStore, configs.internalCfg)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("convert scheduler config to apply: %w", err)
-	}
-	kubeconfig, err := simulatorconfig.GetKubeClientConfig()
-	if err != nil {
-		return nil, nil, xerrors.Errorf("get kubeconfig: %w", err)
-	}
-	if internalCfg.ClientConnection.Kubeconfig != "" {
-		kubeconfig, err = createKubeConfig(internalCfg.ClientConnection, *master)
-		if err != nil {
-			return nil, nil, xerrors.Errorf("get kubeconfig specified in config: %w", err)
-		}
-	}
-	clientSet, err := clientset.NewForConfig(kubeconfig)
-	if err != nil {
-		return nil, nil, xerrors.Errorf("creates a new Clientset for kubeconfig: %w", err)
+		return nil, nil, xerrors.Errorf("CreateOptionForPlugin: %w", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	if err := sharedStore.ResisterResultSavingToInformer(clientSet, ctx.Done()); err != nil {
+	if err := configs.sharedStore.ResisterResultSavingToInformer(configs.clientSet, ctx.Done()); err != nil {
 		return nil, cancel, xerrors.Errorf("ResisterResultSavingToInformer of sharedStore: %w", err)
 	}
 
@@ -111,10 +113,65 @@ func CreateOptionForOutOfTreePlugin(outOfTreePluginRegistry runtime.Registry, pl
 			panic("unexpected type")
 		}
 		configv1.SetObjectDefaults_KubeSchedulerConfiguration(c)
-		c.Profiles = versioned.Profiles
+		c.Profiles = configs.versioned.Profiles
+		c.Extenders = configs.versioned.Extenders
 	})
 
-	return generateWithPluginOptions(registry), cancel, nil
+	return opts, cancel, nil
+}
+
+// CreateOptionForPlugin creates Option for in/out of tree plugins.
+// It does create the wrapped plugin registries and return the registries as app.Option
+func CreateOptionForPlugin(outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer, sharedStore storereflector.Reflector, internalCfg *config.KubeSchedulerConfiguration) ([]app.Option, error) {
+	if outOfTreePluginRegistry != nil {
+		// This must be called before plugin.NewRegistry().
+		simulatorschedulerconfig.SetOutOfTreeRegistries(outOfTreePluginRegistry)
+	}
+
+	// loads in/out of tree plugins and wraps it for debuggable.
+	registry, err := plugin.NewRegistry(sharedStore, internalCfg, pluginExtender)
+	if err != nil {
+		return nil, xerrors.Errorf("convert scheduler config to apply: %w", err)
+	}
+
+	return generateWithPluginOptions(registry), nil
+}
+
+// loadKubeSchedulerConfig loads specified scheduler config or default one.
+func loadKubeSchedulerConfig(configFile *string) (*v1.KubeSchedulerConfiguration, error) {
+	var versionedcfg *v1.KubeSchedulerConfiguration
+	var err error
+	if configFile == nil {
+		versionedcfg, err = simulatorschedulerconfig.DefaultSchedulerConfig()
+		if err != nil {
+			return nil, xerrors.Errorf("get default scheduler config: %w", err)
+		}
+	} else {
+		versionedcfg, err = loadConfigFromFile(*configFile)
+		if err != nil {
+			return nil, xerrors.Errorf("load scheduler config: %w", err)
+		}
+	}
+	return versionedcfg, nil
+}
+
+// loadKubeConfig loads kubeConfig.
+func loadKubeConfig(master *string, internalCfg *config.KubeSchedulerConfiguration) (*clientset.Clientset, error) {
+	kubeconfig, err := simulatorconfig.GetKubeClientConfig()
+	if err != nil {
+		return nil, xerrors.Errorf("get kubeconfig: %w", err)
+	}
+	if internalCfg.ClientConnection.Kubeconfig != "" {
+		kubeconfig, err = createKubeConfig(internalCfg.ClientConnection, *master)
+		if err != nil {
+			return nil, xerrors.Errorf("get kubeconfig specified in config: %w", err)
+		}
+	}
+	clientSet, err := clientset.NewForConfig(kubeconfig)
+	if err != nil {
+		return nil, xerrors.Errorf("creates a new Clientset for kubeconfig: %w", err)
+	}
+	return clientSet, nil
 }
 
 // createKubeConfig creates a kubeConfig from the given config and masterOverride.
