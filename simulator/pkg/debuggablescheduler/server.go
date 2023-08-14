@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"golang.org/x/xerrors"
+
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/handler"

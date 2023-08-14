@@ -121,7 +121,7 @@ func CreateOptions(configs Configs, outOfTreePluginRegistry runtime.Registry, pl
 }
 
 // CreateOptionForPlugin creates Option for in/out of tree plugins.
-// It does create the wrapped plugin registries and return the registries as app.Option
+// It does create the wrapped plugin registries and return the registries as app.Option.
 func CreateOptionForPlugin(outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer, sharedStore storereflector.Reflector, internalCfg *config.KubeSchedulerConfiguration) ([]app.Option, error) {
 	if outOfTreePluginRegistry != nil {
 		// This must be called before plugin.NewRegistry().
