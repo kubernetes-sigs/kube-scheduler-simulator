@@ -10,7 +10,6 @@ import (
 	"golang.org/x/xerrors"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
@@ -31,7 +30,7 @@ AwEHoUQDQgAEH6cuzP8XuD5wal6wf9M6xDljTOPLX2i8uIp/C/ASqiIGUeeKQtX0
 -----END EC PRIVATE KEY-----`
 
 // StartAPIServer starts both the secure k8sAPIServer and proxy server to handle insecure serving, and it make panic when a error happen.
-func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []string) (*restclient.Config, func(), error) {
+func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []string) (string, func(), error) {
 	h := &APIServerHolder{Initialized: make(chan struct{})}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		req.Header.Set("User-Agent", restclient.DefaultKubernetesUserAgent())
@@ -41,7 +40,7 @@ func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []st
 
 	l, err := net.Listen("tcp", kubeAPIServerURL)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("announces on the local network address: %w", err)
+		return "", nil, xerrors.Errorf("announces on the local network address: %w", err)
 	}
 
 	s := &httptest.Server{
@@ -56,17 +55,17 @@ func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []st
 
 	aggregatorServer, cleanUpFunc, err := createK8SAPIChainedServer(etcdURL, corsAllowedOriginList)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("start k8s api chained server: %w", err)
+		return "", nil, xerrors.Errorf("start k8s api chained server: %w", err)
 	}
 
 	closeFn, err := setUpHandlerAndRun(aggregatorServer, s, h)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("run aggregator server: %w", err)
+		return "", nil, xerrors.Errorf("run aggregator server: %w", err)
 	}
 
 	err = createClusterRoleAndRoleBindings(aggregatorServer.GenericAPIServer.LoopbackClientConfig)
 	if err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 
 	shutdownFunc := func() {
@@ -77,14 +76,7 @@ func StartAPIServer(kubeAPIServerURL, etcdURL string, corsAllowedOriginList []st
 		klog.Info("destroyed API server")
 	}
 
-	cfg := &restclient.Config{
-		Host:          s.URL,
-		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
-		QPS:           5000.0,
-		Burst:         5000,
-	}
-
-	return cfg, shutdownFunc, nil
+	return s.URL, shutdownFunc, nil
 }
 
 func setUpHandlerAndRun(aggregatorServer *apiserver.APIAggregator, s *httptest.Server, h *APIServerHolder) (func(), error) {
