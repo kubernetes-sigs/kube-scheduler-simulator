@@ -9,7 +9,9 @@ import (
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientset "k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
@@ -35,11 +37,23 @@ func startSimulator() error {
 		return xerrors.Errorf("get config: %w", err)
 	}
 
-	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL, cfg.CorsAllowedOriginList)
-	if err != nil {
-		return xerrors.Errorf("start API server: %w", err)
+	kubeAPIServerURL := cfg.KubeAPIServerURL
+
+	if kubeAPIServerURL == "" {
+		url, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL, cfg.CorsAllowedOriginList)
+		if err != nil {
+			return xerrors.Errorf("start API server: %w", err)
+		}
+		defer apiShutdown()
+		kubeAPIServerURL = url
 	}
-	defer apiShutdown()
+
+	restclientCfg := &restclient.Config{
+		Host:          kubeAPIServerURL,
+		ContentConfig: restclient.ContentConfig{GroupVersion: &schema.GroupVersion{Group: "", Version: "v1"}},
+		QPS:           5000.0,
+		Burst:         5000,
+	}
 
 	client := clientset.NewForConfigOrDie(restclientCfg)
 
