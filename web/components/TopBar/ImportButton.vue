@@ -104,7 +104,7 @@ export default defineComponent({
 
       reader.onload = function () {
         try {
-          const filedata: ResourcesForImport = yaml.load(
+          const filedata = <ResourcesForImport>yaml.load(
             reader.result as string
           );
           data.filedata = filedata;
@@ -114,7 +114,7 @@ export default defineComponent({
         }
       };
       reader.onabort = function () {
-        console.log("aaaa");
+        console.log("file read aborted");
       };
       reader.readAsText(file);
     }
