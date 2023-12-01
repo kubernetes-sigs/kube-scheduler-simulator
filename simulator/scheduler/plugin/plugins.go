@@ -173,21 +173,21 @@ func NewPluginConfig(pc []configv1.PluginConfig) ([]configv1.PluginConfig, error
 func ConvertForSimulator(pls *configv1.Plugins) (*configv1.Plugins, error) {
 	newpls := pls.DeepCopy()
 
-	applyPluingSet(&newpls.PreFilter, pls.PreFilter, configv1.PluginSet{})
-	applyPluingSet(&newpls.Filter, pls.Filter, configv1.PluginSet{})
-	applyPluingSet(&newpls.PostFilter, pls.PostFilter, configv1.PluginSet{})
-	applyPluingSet(&newpls.PreScore, pls.PreScore, configv1.PluginSet{})
-	applyPluingSet(&newpls.Score, pls.Score, configv1.PluginSet{})
-	applyPluingSet(&newpls.Reserve, pls.Reserve, configv1.PluginSet{})
-	applyPluingSet(&newpls.Permit, pls.Permit, configv1.PluginSet{})
-	applyPluingSet(&newpls.PreBind, pls.PreBind, configv1.PluginSet{})
-	applyPluingSet(&newpls.Bind, pls.Bind, configv1.PluginSet{})
-	applyPluingSet(&newpls.PostBind, pls.PostBind, configv1.PluginSet{})
+	applyPluginSet(&newpls.PreFilter, pls.PreFilter, configv1.PluginSet{})
+	applyPluginSet(&newpls.Filter, pls.Filter, configv1.PluginSet{})
+	applyPluginSet(&newpls.PostFilter, pls.PostFilter, configv1.PluginSet{})
+	applyPluginSet(&newpls.PreScore, pls.PreScore, configv1.PluginSet{})
+	applyPluginSet(&newpls.Score, pls.Score, configv1.PluginSet{})
+	applyPluginSet(&newpls.Reserve, pls.Reserve, configv1.PluginSet{})
+	applyPluginSet(&newpls.Permit, pls.Permit, configv1.PluginSet{})
+	applyPluginSet(&newpls.PreBind, pls.PreBind, configv1.PluginSet{})
+	applyPluginSet(&newpls.Bind, pls.Bind, configv1.PluginSet{})
+	applyPluginSet(&newpls.PostBind, pls.PostBind, configv1.PluginSet{})
 	inTreeMultiPointPls, err := config.InTreeMultiPointPluginSet()
 	if err != nil {
 		return nil, xerrors.Errorf("get in tree multi point plugins: %w", err)
 	}
-	applyPluingSet(&newpls.MultiPoint, pls.MultiPoint, inTreeMultiPointPls)
+	applyPluginSet(&newpls.MultiPoint, pls.MultiPoint, inTreeMultiPointPls)
 	// The default MultiPoint PluginSets should be disable to "*" here
 	// so that the scheduler won't enable all default plugins.
 	disableAllPluginSet(&newpls.MultiPoint)
@@ -204,8 +204,8 @@ func disableAllPluginSet(targetPlsSet *configv1.PluginSet) {
 	}
 }
 
-// applyPluingSet merges inTree and outOfTree PluginSet.
-func applyPluingSet(targetPlsSet *configv1.PluginSet, plsSet configv1.PluginSet, inTreePls configv1.PluginSet) {
+// applyPluginSet merges inTree and outOfTree PluginSet.
+func applyPluginSet(targetPlsSet *configv1.PluginSet, plsSet configv1.PluginSet, inTreePls configv1.PluginSet) {
 	merged := mergePluginSet(inTreePls, plsSet)
 	enabledPls := make([]configv1.Plugin, 0, len(merged.Enabled))
 	for _, p := range merged.Enabled {
