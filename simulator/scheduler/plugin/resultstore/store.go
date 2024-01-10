@@ -530,7 +530,7 @@ func (s *Store) AddPreFilterResult(namespace, podName, pluginName, reason string
 
 	s.results[k].preFilterStatus[pluginName] = reason
 	if preFilterResult != nil {
-		s.results[k].preFilterResult[pluginName] = preFilterResult.NodeNames.List()
+		s.results[k].preFilterResult[pluginName] = preFilterResult.NodeNames.UnsortedList()
 	}
 }
 

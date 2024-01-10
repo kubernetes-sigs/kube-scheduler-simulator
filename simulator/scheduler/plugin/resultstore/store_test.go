@@ -854,7 +854,7 @@ func TestStore_AddPreFilterResult(t *testing.T) {
 				pluginName: "plugin",
 				reason:     "reason",
 				preFilterResult: &framework.PreFilterResult{
-					NodeNames: sets.NewString("hoge"),
+					NodeNames: sets.New("hoge"),
 				},
 			},
 			wantResultMap: func() map[key]*result {

@@ -25,7 +25,7 @@ func startPersistentVolumeController(ctx context.Context, controllerCtx controll
 		NodeInformer:              controllerCtx.InformerFactory.Core().V1().Nodes(),
 		EnableDynamicProvisioning: true,
 	}
-	volumeController, err := persistentvolume.NewController(params)
+	volumeController, err := persistentvolume.NewController(ctx, params)
 	if err != nil {
 		return xerrors.Errorf("construct persistentvolume controller: %w", err)
 	}

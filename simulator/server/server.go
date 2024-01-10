@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"golang.org/x/xerrors"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
@@ -71,7 +71,7 @@ func (s *SimulatorServer) Start(port int) (
 	e := s.e
 
 	go func() {
-		if err := e.Start(":" + strconv.Itoa(port)); err != nil && !xerrors.Is(err, http.ErrServerClosed) {
+		if err := e.Start(":" + strconv.Itoa(port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			e.Logger.Fatalf("failed to start server successfully: %v", err)
 		}
 	}()

@@ -183,12 +183,21 @@ func createK8SAPIChainedServer(etcdURL string, corsAllowedOriginList []string) (
 		return nil, nil, err
 	}
 
-	completedOpts, err := apiserverapp.Complete(serverOpts)
+	completedOpts, err := serverOpts.Complete()
 	if err != nil {
 		return nil, nil, xerrors.Errorf("complete k8s api server options: %w", err)
 	}
 
-	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts)
+	config, err := apiserverapp.NewConfig(completedOpts)
+	if err != nil {
+		return nil, nil, err
+	}
+	completed, err := config.Complete()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	aggregatorServer, err := apiserverapp.CreateServerChain(completed)
 	if err != nil {
 		return nil, nil, err
 	}

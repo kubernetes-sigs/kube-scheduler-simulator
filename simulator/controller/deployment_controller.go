@@ -11,6 +11,7 @@ var _ initFunc = startDeploymentController
 
 func startDeploymentController(ctx context.Context, controllerCtx controllerContext) error {
 	dc, err := deployment.NewDeploymentController(
+		ctx,
 		controllerCtx.InformerFactory.Apps().V1().Deployments(),
 		controllerCtx.InformerFactory.Apps().V1().ReplicaSets(),
 		controllerCtx.InformerFactory.Core().V1().Pods(),
