@@ -5,7 +5,7 @@ generate:
 
 .PHONY: lint
 lint:
-	golangci-lint run --timeout 30m ./...
+	golangci-lint run --timeout 90m ./...
 
 .PHONY: format
 format:
