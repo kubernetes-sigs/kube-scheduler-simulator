@@ -1,7 +1,8 @@
 .PHONY: tools
 tools:
 	cd ./tools; \
-	cat tools.go | grep "_" | awk -F'"' '{print $$2}' | xargs -tI % go install %
+	cat tools.go | grep "_" | awk -F'"' '{print $$2}' | xargs -tI % go install %; \
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
 
 .PHONY: lint
 # run golangci-lint on all modules
