@@ -24,6 +24,8 @@ import (
 )
 
 // This key is for testing purposes only and is not considered secure.
+//
+//nolint:gosec
 const ecdsaPrivateKey = `-----BEGIN EC PRIVATE KEY-----
 MHcCAQEEIEZmTmUhuanLjPA2CLquXivuwBDHTt5XYwgIr/kA1LtRoAoGCCqGSM49
 AwEHoUQDQgAEH6cuzP8XuD5wal6wf9M6xDljTOPLX2i8uIp/C/ASqiIGUeeKQtX0
@@ -183,12 +185,21 @@ func createK8SAPIChainedServer(etcdURL string, corsAllowedOriginList []string) (
 		return nil, nil, err
 	}
 
-	completedOpts, err := apiserverapp.Complete(serverOpts)
+	completedOpts, err := serverOpts.Complete()
 	if err != nil {
 		return nil, nil, xerrors.Errorf("complete k8s api server options: %w", err)
 	}
 
-	aggregatorServer, err := apiserverapp.CreateServerChain(completedOpts)
+	config, err := apiserverapp.NewConfig(completedOpts)
+	if err != nil {
+		return nil, nil, err
+	}
+	completed, err := config.Complete()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	aggregatorServer, err := apiserverapp.CreateServerChain(completed)
 	if err != nil {
 		return nil, nil, err
 	}

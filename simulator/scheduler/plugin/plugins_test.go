@@ -202,6 +202,7 @@ func TestConvertForSimulator(t *testing.T) {
 						{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 						{Name: "ImageLocalityWrapped", Weight: &weight1},
 						{Name: "DefaultBinderWrapped"},
+						{Name: "SchedulingGatesWrapped"},
 					},
 					Disabled: []configv1.Plugin{
 						{Name: "*"},

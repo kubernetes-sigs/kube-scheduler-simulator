@@ -165,6 +165,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "DefaultPreemptionWrapped"},
 					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
+					{Name: "SchedulingGatesWrapped"},
 				}
 				cfg.Profiles = append(cfg.Profiles, *profile2)
 				return &cfg
@@ -334,6 +335,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
+					{Name: "SchedulingGatesWrapped"},
 				}
 				return &cfg
 			}(),
@@ -399,6 +401,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
+					{Name: "SchedulingGatesWrapped"},
 				}
 				return &cfg
 			}(),
@@ -482,6 +485,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
+					{Name: "SchedulingGatesWrapped"},
 				}
 				return &cfg
 			}(),
@@ -549,6 +553,7 @@ func configGeneratedFromDefault() configv1.KubeSchedulerConfiguration {
 		{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 		{Name: "ImageLocalityWrapped", Weight: &weight1},
 		{Name: "DefaultBinderWrapped"},
+		{Name: "SchedulingGatesWrapped"},
 	}
 	cfg.Profiles[0].Plugins.MultiPoint.Disabled = []configv1.Plugin{
 		{Name: "*"},

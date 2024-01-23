@@ -46,9 +46,9 @@ type extender struct {
 	weight           int64
 	client           httpClient
 	nodeCacheCapable bool
-	//nolint:staticcheck // Same as the k/k's definition.
+
 	// https://github.com/kubernetes/kubernetes/blob/fc04e732bb3e7198d2fa44efa5457c7c6f8c0f5b/pkg/scheduler/extender.go#L51
-	managedResources sets.String
+	managedResources sets.Set[string]
 }
 
 // makeTransport makes http.Transport from the extender config.
@@ -96,7 +96,7 @@ func newExtender(config *configv1.Extender) (Extender, error) {
 		Transport: transport,
 		Timeout:   config.HTTPTimeout.Duration,
 	}
-	managedResources := sets.NewString()
+	managedResources := sets.New[string]()
 	for _, r := range config.ManagedResources {
 		managedResources.Insert(r.Name)
 	}

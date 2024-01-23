@@ -232,7 +232,7 @@ func mergePluginSet(defaultPluginSet, customPluginSet configv1.PluginSet) config
 		plugin configv1.Plugin
 	}
 
-	disabledPlugins := sets.NewString()
+	disabledPlugins := sets.New[string]()
 	enabledCustomPlugins := make(map[string]pluginIndex)
 	// replacedPluginIndex is a set of index of plugins, which have replaced the default plugins.
 	replacedPluginIndex := sets.NewInt()

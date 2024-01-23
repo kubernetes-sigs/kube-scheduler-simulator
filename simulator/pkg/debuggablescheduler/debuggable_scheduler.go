@@ -19,7 +19,6 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 	configv1 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1"
-	configv1beta2 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1beta2"
 	configv1beta3 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1beta3"
 	"k8s.io/kubernetes/pkg/scheduler/framework/runtime"
 
@@ -162,10 +161,7 @@ func loadConfig(data []byte) (*v1.KubeSchedulerConfiguration, error) {
 		// conversion. See KubeSchedulerConfiguration internal type definition for
 		// more details.
 		cfgObj.TypeMeta.APIVersion = gvk.GroupVersion().String()
-		switch cfgObj.TypeMeta.APIVersion {
-		case configv1beta2.SchemeGroupVersion.String():
-			klog.InfoS("KubeSchedulerConfiguration v1beta2 is deprecated in v1.25, will be removed in v1.28")
-		case configv1beta3.SchemeGroupVersion.String():
+		if cfgObj.TypeMeta.APIVersion == configv1beta3.SchemeGroupVersion.String() {
 			klog.InfoS("KubeSchedulerConfiguration v1beta3 is deprecated in v1.26, will be removed in v1.29")
 		}
 

@@ -1287,67 +1287,67 @@ func Test_wrappedPlugin_PreFilter(t *testing.T) {
 			name: "happy with extender",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreFilterPlugin, extender *mock_plugin.MockPreFilterPluginExtender) {
 				extender.EXPECT().BeforePreFilter(gomock.Any(), gomock.Any(), testPod).Return(nil, framework.NewStatus(framework.Success))
-				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success))
+				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
-				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success)).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success))
+				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.New("hoge")})
+				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Success)).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Success))
 			},
-			want:  &framework.PreFilterResult{NodeNames: sets.NewString("hoge")},
+			want:  &framework.PreFilterResult{NodeNames: sets.New("hoge")},
 			want1: framework.NewStatus(framework.Success),
 		},
 		{
 			name: "unhappy: BeforePreFilter returns non-success",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreFilterPlugin, extender *mock_plugin.MockPreFilterPluginExtender) {
-				extender.EXPECT().BeforePreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Unschedulable))
+				extender.EXPECT().BeforePreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Unschedulable))
 			},
-			want:  &framework.PreFilterResult{NodeNames: sets.NewString("hoge")},
+			want:  &framework.PreFilterResult{NodeNames: sets.New("hoge")},
 			want1: framework.NewStatus(framework.Unschedulable),
 		},
 		{
 			name: "unhappy: AfterPreFilter returns non-success",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreFilterPlugin, extender *mock_plugin.MockPreFilterPluginExtender) {
 				extender.EXPECT().BeforePreFilter(gomock.Any(), gomock.Any(), testPod).Return(nil, framework.NewStatus(framework.Success))
-				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success))
+				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
-				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success)).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Unschedulable))
+				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.New("hoge")})
+				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Success)).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Unschedulable))
 			},
-			want:  &framework.PreFilterResult{NodeNames: sets.NewString("hoge")},
+			want:  &framework.PreFilterResult{NodeNames: sets.New("hoge")},
 			want1: framework.NewStatus(framework.Unschedulable),
 		},
 		{
 			name: "unhappy: PreFilter and AfterPreFilter return non-success",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreFilterPlugin, extender *mock_plugin.MockPreFilterPluginExtender) {
 				extender.EXPECT().BeforePreFilter(gomock.Any(), gomock.Any(), testPod).Return(nil, framework.NewStatus(framework.Success))
-				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Unschedulable, "error"))
+				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Unschedulable, "error"))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", "error", &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
-				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Unschedulable, "error")).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Unschedulable))
+				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", "error", &framework.PreFilterResult{NodeNames: sets.New("hoge")})
+				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Unschedulable, "error")).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Unschedulable))
 			},
-			want:  &framework.PreFilterResult{NodeNames: sets.NewString("hoge")},
+			want:  &framework.PreFilterResult{NodeNames: sets.New("hoge")},
 			want1: framework.NewStatus(framework.Unschedulable),
 		},
 		{
 			name: "happy: PreFilter returns non-success, but AfterPreFilter return success",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreFilterPlugin, extender *mock_plugin.MockPreFilterPluginExtender) {
 				extender.EXPECT().BeforePreFilter(gomock.Any(), gomock.Any(), testPod).Return(nil, framework.NewStatus(framework.Success))
-				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Unschedulable, "error"))
+				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Unschedulable, "error"))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", "error", &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
-				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Unschedulable, "error")).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge2")}, framework.NewStatus(framework.Success))
+				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", "error", &framework.PreFilterResult{NodeNames: sets.New("hoge")})
+				extender.EXPECT().AfterPreFilter(gomock.Any(), gomock.Any(), testPod, &framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Unschedulable, "error")).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge2")}, framework.NewStatus(framework.Success))
 			},
-			want:  &framework.PreFilterResult{NodeNames: sets.NewString("hoge2")},
+			want:  &framework.PreFilterResult{NodeNames: sets.New("hoge2")},
 			want1: framework.NewStatus(framework.Success),
 		},
 		{
 			name: "happy without extender",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreFilterPlugin, extender *mock_plugin.MockPreFilterPluginExtender) {
-				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.NewString("hoge")}, framework.NewStatus(framework.Success))
+				se.EXPECT().PreFilter(gomock.Any(), gomock.Any(), testPod).Return(&framework.PreFilterResult{NodeNames: sets.New("hoge")}, framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
-				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.NewString("hoge")})
+				s.EXPECT().AddPreFilterResult("namespace", "pod", "name", resultstore.SuccessMessage, &framework.PreFilterResult{NodeNames: sets.New("hoge")})
 			},
 			noExtender: true,
-			want:       &framework.PreFilterResult{NodeNames: sets.NewString("hoge")},
+			want:       &framework.PreFilterResult{NodeNames: sets.New("hoge")},
 			want1:      framework.NewStatus(framework.Success),
 		},
 	}

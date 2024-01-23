@@ -153,11 +153,11 @@ func (s *Service) StartScheduler(versionedcfg *configv1.KubeSchedulerConfigurati
 	}
 
 	sched, err := scheduler.New(
+		ctx,
 		clientSet,
 		informerFactory,
 		dynInformerFactory,
 		profile.NewRecorderFactory(evtBroadcaster),
-		ctx.Done(),
 		scheduler.WithKubeConfig(restConfig),
 		scheduler.WithProfiles(cfg.Profiles...),
 		scheduler.WithPercentageOfNodesToScore(cfg.PercentageOfNodesToScore),

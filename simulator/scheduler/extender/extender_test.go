@@ -73,7 +73,7 @@ func TestHttpExtender_send(t *testing.T) {
 					weight:           1,
 					client:           m,
 					nodeCacheCapable: false,
-					managedResources: sets.NewString(),
+					managedResources: sets.New[string](),
 				}
 			},
 			wantErr: false,
@@ -106,7 +106,7 @@ func TestHttpExtender_send(t *testing.T) {
 					weight:           1,
 					client:           m,
 					nodeCacheCapable: false,
-					managedResources: sets.NewString(),
+					managedResources: sets.New[string](),
 				}
 			},
 			wantErr: true,
@@ -141,7 +141,7 @@ func TestHttpExtender_send(t *testing.T) {
 					weight:           1,
 					client:           m,
 					nodeCacheCapable: false,
-					managedResources: sets.NewString(),
+					managedResources: sets.New[string](),
 				}
 			},
 			wantErr: true,
@@ -174,7 +174,7 @@ func TestHttpExtender_send(t *testing.T) {
 					weight:           1,
 					client:           m,
 					nodeCacheCapable: false,
-					managedResources: sets.NewString(),
+					managedResources: sets.New[string](),
 				}
 			},
 			wantErr: true,
@@ -210,7 +210,7 @@ func TestHttpExtender_send(t *testing.T) {
 					weight:           1,
 					client:           m,
 					nodeCacheCapable: false,
-					managedResources: sets.NewString(),
+					managedResources: sets.New[string](),
 				}
 			},
 			wantErr: true,
