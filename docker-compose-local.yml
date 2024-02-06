@@ -5,13 +5,13 @@ services:
     container_name: simulator-server
     environment:
       - PORT=1212
-      - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://127.0.0.1:32765
+      - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://127.0.0.1:2379
       - CORS_ALLOWED_ORIGIN_LIST=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3000
       - KUBE_API_HOST=0.0.0.0
-      - KUBE_API_PORT=32765
+      - KUBE_API_PORT=3131
     ports:
       - "1212:1212"
-      - "32765:32765"
+      - "3131:3131"
     restart: always
     tty: true
     networks:
@@ -23,7 +23,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - BASE_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1212
-      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:32765
+      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3131
     ports:
     - "3000:3000"
     tty: true

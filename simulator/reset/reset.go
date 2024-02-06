@@ -40,7 +40,7 @@ func NewResetService(
 		schedService: schedService,
 	}
 
-	result, err := etcdClient.Get(context.Background(), "/registry", clientv3.WithPrefix())
+	result, err := etcdClient.Get(context.Background(), "/kube-scheduler-simulator", clientv3.WithPrefix())
 	if err != nil {
 		return nil, xerrors.Errorf("get all data in etcd: %w", err)
 	}
@@ -54,7 +54,7 @@ func NewResetService(
 
 // Reset resets all resources and scheduler configuration to the initial state.
 func (s *Service) Reset(ctx context.Context) error {
-	if _, err := s.etcdClient.Delete(ctx, "/registry", clientv3.WithPrefix()); err != nil {
+	if _, err := s.etcdClient.Delete(ctx, "/kube-scheduler-simulator", clientv3.WithPrefix()); err != nil {
 		return xerrors.Errorf("delete all data in etcd: %w", err)
 	}
 

@@ -38,7 +38,12 @@ func startSimulator() error {
 	defer cancel()
 
 	cluster := kwok.NewCluster("kube-scheduler-simulator")
-	if _, err := cluster.Create(ctx); err != nil {
+	_, err = cluster.Create(ctx,
+		"--kube-apiserver-port=3131",
+		"--etcd-port=2379",
+		"--etcd-prefix=/kube-scheduler-simulator",
+	)
+	if err != nil {
 		return xerrors.Errorf("create cluster: %w", err)
 	}
 

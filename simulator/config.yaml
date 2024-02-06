@@ -11,7 +11,7 @@ port: 1212
 
 # This is the URL for etcd. The simulator runs kube-apiserver
 # internally, and the kube-apiserver uses this etcd.
-etcdURL: "http://127.0.0.1:32765"
+etcdURL: "http://127.0.0.1:2379"
 
 # This URL represents the URL once web UI is started.
 # The simulator and internal kube-apiserver set the allowed
@@ -29,7 +29,7 @@ kubeConfig: ""
 kubeApiHost: "127.0.0.1"
 
 # This is the port of kube-apiserver. Its default value is 3131.
-kubeApiPort: 32765
+kubeApiPort: 3131
 
 
 # The path to a KubeSchedulerConfiguration file.
