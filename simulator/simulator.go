@@ -42,6 +42,7 @@ func startSimulator() error {
 		"--kube-apiserver-port=3131",
 		"--etcd-port=2379",
 		"--etcd-prefix=/kube-scheduler-simulator",
+		"--disable-kube-scheduler",
 	)
 	if err != nil {
 		return xerrors.Errorf("create cluster: %w", err)
