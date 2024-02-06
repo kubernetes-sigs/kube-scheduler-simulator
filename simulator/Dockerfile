@@ -13,11 +13,11 @@ RUN go mod download
 COPY . .
 RUN go build -v -o ./bin/simulator simulator.go
 
-FROM alpine:3.14.0
+FROM golang:1.21.6-alpine3.19
 
-COPY --from=build-env /go/src/simulator/bin/simulator /simulator
-RUN chmod a+x /simulator
-COPY --from=build-env /go/src/simulator/config.yaml /config.yaml
+COPY --from=build-env /go/src/simulator/bin/simulator .
+RUN chmod a+x ./simulator
+COPY config.yaml .
 
 EXPOSE 1212
-CMD ["/simulator"]
+CMD ["./simulator"]

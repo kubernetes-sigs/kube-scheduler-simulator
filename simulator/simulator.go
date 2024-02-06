@@ -11,10 +11,9 @@ import (
 	"golang.org/x/xerrors"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/e2e-framework/support/kwok"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/controller"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/k8sapiserver"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 )
@@ -35,19 +34,15 @@ func startSimulator() error {
 		return xerrors.Errorf("get config: %w", err)
 	}
 
-	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL, cfg.CorsAllowedOriginList)
-	if err != nil {
-		return xerrors.Errorf("start API server: %w", err)
-	}
-	defer apiShutdown()
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
 
-	client := clientset.NewForConfigOrDie(restclientCfg)
-
-	ctrlerShutdown, err := controller.RunController(client, restclientCfg)
-	if err != nil {
-		return xerrors.Errorf("start controllers: %w", err)
+	cluster := kwok.NewCluster("kube-scheduler-simulator")
+	if _, err := cluster.Create(ctx); err != nil {
+		return xerrors.Errorf("create cluster: %w", err)
 	}
-	defer ctrlerShutdown()
+
+	client := clientset.NewForConfigOrDie(cluster.KubernetesRestConfig())
 
 	importClusterResourceClient := &clientset.Clientset{}
 	if cfg.ExternalImportEnabled {
@@ -65,10 +60,7 @@ func startSimulator() error {
 		return xerrors.Errorf("create an etcd client: %w", err)
 	}
 
-	// need to sleep here to make all controllers create initial resources. (like "system-" priorityclass.)
-	time.Sleep(1 * time.Second)
-
-	dic, err := di.NewDIContainer(client, etcdclient, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
+	dic, err := di.NewDIContainer(client, etcdclient, cluster.KubernetesRestConfig(), cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
