@@ -12,6 +12,7 @@ services:
     ports:
       - "1212:1212"
       - "3131:3131"
+      - "1313:1313"
     restart: always
     tty: true
     networks:
@@ -23,7 +24,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - BASE_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1212
-      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3131
+      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1313
     ports:
     - "3000:3000"
     tty: true

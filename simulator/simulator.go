@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -37,7 +38,7 @@ func startSimulator() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
-	cluster := kwok.NewCluster("kube-scheduler-simulator")
+	cluster := kwok.NewCluster("kwok").WithVersion("v0.5.0")
 	_, err = cluster.Create(ctx,
 		"--kube-apiserver-port=3131",
 		"--etcd-port=2379",
@@ -47,6 +48,13 @@ func startSimulator() error {
 	if err != nil {
 		return xerrors.Errorf("create cluster: %w", err)
 	}
+
+	cmd := exec.Command("kwokctl", "kubectl", "proxy", "--port=1313", "--address=0.0.0.0")
+	err = cmd.Start()
+	if err != nil {
+		return xerrors.Errorf("start kubectl proxy: %w", err)
+	}
+	klog.Infof("kubectl proxy: pid=%d", cmd.Process.Pid)
 
 	client := clientset.NewForConfigOrDie(cluster.KubernetesRestConfig())
 
