@@ -33,6 +33,8 @@ services:
     volumes:
       - simulator-etcd-data:/var/lib/etcd
       - ./kwok.yaml:/root/.kwok/kwok.yaml
+    networks:
+      - simulator-internal-network
 networks:
   simulator-internal-network:
     driver: bridge
