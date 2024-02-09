@@ -9,6 +9,7 @@ import (
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
@@ -53,6 +54,10 @@ func startSimulator() error {
 	})
 	if err != nil {
 		return xerrors.Errorf("create an etcd client: %w", err)
+	}
+
+	if _, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{}); err != nil {
+		return xerrors.Errorf("get kube-system namespace: %w", err)
 	}
 
 	dic, err := di.NewDIContainer(client, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
