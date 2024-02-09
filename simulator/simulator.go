@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -11,8 +10,8 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
-	"sigs.k8s.io/e2e-framework/support/kwok"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
@@ -35,28 +34,10 @@ func startSimulator() error {
 		return xerrors.Errorf("get config: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-
-	cluster := kwok.NewCluster("kwok").WithVersion("v0.5.0")
-	_, err = cluster.Create(ctx,
-		"--kube-apiserver-port=3131",
-		"--etcd-port=2379",
-		"--etcd-prefix=/kube-scheduler-simulator",
-		"--disable-kube-scheduler",
-	)
-	if err != nil {
-		return xerrors.Errorf("create cluster: %w", err)
+	restCfg := &rest.Config{
+		Host: cfg.KubeAPIServerURL,
 	}
-
-	cmd := exec.Command("kwokctl", "kubectl", "proxy", "--port=1313", "--address=0.0.0.0")
-	err = cmd.Start()
-	if err != nil {
-		return xerrors.Errorf("start kubectl proxy: %w", err)
-	}
-	klog.Infof("kubectl proxy: pid=%d", cmd.Process.Pid)
-
-	client := clientset.NewForConfigOrDie(cluster.KubernetesRestConfig())
+	client := clientset.NewForConfigOrDie(restCfg)
 
 	importClusterResourceClient := &clientset.Clientset{}
 	if cfg.ExternalImportEnabled {
@@ -74,7 +55,7 @@ func startSimulator() error {
 		return xerrors.Errorf("create an etcd client: %w", err)
 	}
 
-	dic, err := di.NewDIContainer(client, etcdclient, cluster.KubernetesRestConfig(), cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
+	dic, err := di.NewDIContainer(client, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
