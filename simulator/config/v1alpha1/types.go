@@ -43,6 +43,13 @@ type SimulatorConfiguration struct {
 	// This is the URL for kube-apiserver.
 	KubeAPIServerURL string `json:"kubeApiServerUrl,omitempty"`
 
+	// This is the host of kube-apiserver which the simulator
+	// starts internally. Its default value is 127.0.0.1.
+	KubeAPIHost string `json:"kubeApiHost,omitempty"`
+
+	// This is the port of kube-apiserver. Its default value is 3131.
+	KubeAPIPort int `json:"kubeApiPort,omitempty"`
+
 	// The path to a KubeSchedulerConfiguration file.
 	// If passed, the simulator will start the scheduler
 	// with that configuration. Or, if you use web UI,
