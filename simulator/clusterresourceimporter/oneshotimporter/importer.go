@@ -1,4 +1,4 @@
-package clusterresourceimporter
+package oneshotimporter
 
 //go:generate mockgen -destination=./mock_$GOPACKAGE/replicate.go . ReplicateService
 

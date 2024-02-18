@@ -23,43 +23,47 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type SimulatorConfiguration struct {
 	metav1.TypeMeta `json:",inline"`
 
-	// This is the port number on which kube-scheduler-simulator
+	// Port is the port number on which kube-scheduler-simulator
 	// server is started.
 	Port int `json:"port,omitempty"`
 
-	// This is the URL for etcd. The simulator runs kube-apiserver
-	// internally, and the kube-apiserver uses this etcd.
 	EtcdURL string `json:"etcdURL,omitempty"`
 
-	// This URL represents the URL once web UI is started.
-	// The simulator and internal kube-apiserver set the allowed
-	// origin for CorsAllowedOriginList
+	// CorsAllowedOriginList is the list that the simulator server and the internal kube-apiserver use as the allowed
+	// origin for CorsAllowedOriginList.
 	CorsAllowedOriginList []string `json:"corsAllowedOriginList,omitempty"`
 
-	// This is for the beta feature "Importing cluster's resources".
-	// This variable is used to find Kubeconfig required to access your
-	// cluster for importing resources to scheduler simulator.
+	// KubeConfig is a path to Kubeconfig for your real kubernetes cluster.
+	// This configuration is used for importing resources to scheduler simulator.
 	KubeConfig string `json:"kubeConfig,omitempty"`
 
-	// This is the host of kube-apiserver which the simulator
-	// starts internally. Its default value is 127.0.0.1.
+	// This is the URL for kube-apiserver.
+	KubeAPIServerURL string `json:"kubeApiServerUrl,omitempty"`
+
 	KubeAPIHost string `json:"kubeApiHost,omitempty"`
 
-	// This is the port of kube-apiserver. Its default value is 3131.
+	// KubeAPIPort is the port of kube-apiserver that the simulator has internally. Its default value is 3131.
 	KubeAPIPort int `json:"kubeApiPort,omitempty"`
 
-	// The path to a KubeSchedulerConfiguration file.
+	// KubeSchedulerConfigPath is a path to a KubeSchedulerConfiguration file.
 	// If passed, the simulator will start the scheduler
 	// with that configuration. Or, if you use web UI,
 	// you can change the configuration from the web UI as well.
 	KubeSchedulerConfigPath string `json:"kubeSchedulerConfigPath,omitempty"`
 
-	// This variable indicates whether the simulator will
+	// ExternalImportEnabled indicates whether the simulator will
 	// import resources from an user cluster's or not.
-	// Note, this is still a beta feature.
+	// When you set it true, you also have to set KubeConfig envrionment variable.
+	// Note that this is still a beta feature.
 	ExternalImportEnabled bool `json:"externalImportEnabled,omitempty"`
 
-	// This variable indicates whether an external scheduler
+	// ExternalSyncEnabled indicates whether the simulator will
+	// sync resources from an user cluster's or not.
+	// When you set it true, you also have to set KubeConfig envrionment variable.
+	// Note that this is still a beta feature.
+	ExternalSyncEnabled bool `json:"externalSyncEnabled,omitempty"`
+
+	// ExternalSchedulerEnabled indicates whether an external scheduler
 	// is used.
 	ExternalSchedulerEnabled bool `json:"externalSchedulerEnabled,omitempty"`
 }

@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	outOfTreeRegistries = runtime.Registry{
+	OutOfTreeRegistries = runtime.Registry{
 		// TODO(user): add your plugins registries here.
 	}
 
-	registeredOutOfTreeMultiPointName = []string{}
+	RegisteredOutOfTreeMultiPointName = []string{}
 )
 
 // RegisteredMultiPointPluginNames returns all registered multipoint plugin names.
@@ -43,20 +43,16 @@ func InTreeMultiPointPluginSet() (configv1.PluginSet, error) {
 }
 
 func OutOfTreeMultiPointPluginNames() []string {
-	return registeredOutOfTreeMultiPointName
+	return RegisteredOutOfTreeMultiPointName
 }
 
 func InTreeRegistries() runtime.Registry {
 	return plugins.NewInTreeRegistry()
 }
 
-func OutOfTreeRegistries() runtime.Registry {
-	return outOfTreeRegistries
-}
-
 func SetOutOfTreeRegistries(r runtime.Registry) {
 	for k, v := range r {
-		outOfTreeRegistries[k] = v
-		registeredOutOfTreeMultiPointName = append(registeredOutOfTreeMultiPointName, k)
+		OutOfTreeRegistries[k] = v
+		RegisteredOutOfTreeMultiPointName = append(RegisteredOutOfTreeMultiPointName, k)
 	}
 }

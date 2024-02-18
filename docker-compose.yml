@@ -5,13 +5,10 @@ services:
     container_name: simulator-server
     environment:
       - PORT=1212
-      - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-etcd:2379
-      - CORS_ALLOWED_ORIGIN_LIST=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3000
-      - KUBE_API_HOST=0.0.0.0
-      - KUBE_API_PORT=3131
+      - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-cluster:2379
+      - KUBE_APISERVER_URL=http://simulator-cluster:8080
     ports:
       - "1212:1212"
-      - "3131:3131"
     restart: always
     tty: true
     networks:
@@ -23,21 +20,23 @@ services:
     environment:
       - HOST=0.0.0.0
       - BASE_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1212
-      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3131
+      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:8080
     ports:
     - "3000:3000"
     tty: true
-  simulator-etcd:
-    image: quay.io/coreos/etcd:v3.4.26
-    container_name: simulator-etcd
+  simulator-cluster:
+    image: registry.k8s.io/kwok/cluster:v0.5.0-k8s.v1.29.0
+    container_name: simulator-cluster
     restart: always
+    ports:
+      - "8080:8080"
     volumes:
       - simulator-etcd-data:/var/lib/etcd
-    command: etcd --advertise-client-urls http://simulator-etcd:2379 --data-dir /var/lib/etcd --listen-client-urls http://0.0.0.0:2379 --initial-cluster-state new --initial-cluster-token tkn
+      - ./kwok.yaml:/root/.kwok/kwok.yaml
     networks:
       - simulator-internal-network
-volumes:
-  simulator-etcd-data:
 networks:
   simulator-internal-network:
     driver: bridge
+volumes:
+  simulator-etcd-data:

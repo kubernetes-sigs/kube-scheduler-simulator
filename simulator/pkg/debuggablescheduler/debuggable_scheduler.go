@@ -39,7 +39,7 @@ import (
 //   - makes the defaulting func of the KubeSchedulerConfig always returning the converted one. We can let the scheduler use the converted configuration under any circumstances because the scheduler will always use this defaulting func to load the configuration.
 //
 //nolint:funlen,cyclop
-func CreateOptionForOutOfTreePlugin(outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer) ([]app.Option, func(), error) {
+func CreateOptionForOutOfTreePlugin(outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer, schedulerConfigPath *string) ([]app.Option, func(), error) {
 	if outOfTreePluginRegistry != nil {
 		simulatorschedulerconfig.SetOutOfTreeRegistries(outOfTreePluginRegistry)
 	}
@@ -51,10 +51,17 @@ func CreateOptionForOutOfTreePlugin(outOfTreePluginRegistry runtime.Registry, pl
 
 	var versionedcfg *v1.KubeSchedulerConfiguration
 	var err error
-	if configFile == nil {
-		versionedcfg, err = simulatorschedulerconfig.DefaultSchedulerConfig()
-		if err != nil {
-			return nil, nil, xerrors.Errorf("get default scheduler config: %w", err)
+	if *configFile == "" {
+		if schedulerConfigPath != nil {
+			versionedcfg, err = loadConfigFromFile(*schedulerConfigPath)
+			if err != nil {
+				return nil, nil, xerrors.Errorf("load scheduler config: %w", err)
+			}
+		} else {
+			versionedcfg, err = simulatorschedulerconfig.DefaultSchedulerConfig()
+			if err != nil {
+				return nil, nil, xerrors.Errorf("get default scheduler config: %w", err)
+			}
 		}
 	} else {
 		versionedcfg, err = loadConfigFromFile(*configFile)

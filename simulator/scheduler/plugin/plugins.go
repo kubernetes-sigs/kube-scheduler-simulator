@@ -37,7 +37,7 @@ func NewRegistry(sharedStore storereflector.Reflector, cfg *schedulerConfig.Kube
 
 func newPluginFactories(store *schedulingresultstore.Store, pluginExtenders map[string]PluginExtenderInitializer) (map[string]schedulerRuntime.PluginFactory, error) {
 	intreeRegistries := config.InTreeRegistries()
-	outoftreeRegistries := config.OutOfTreeRegistries()
+	var outoftreeRegistries map[string]schedulerRuntime.PluginFactory = config.OutOfTreeRegistries
 	pls, err := config.RegisteredMultiPointPluginNames()
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get registered plugin names: %w", err)

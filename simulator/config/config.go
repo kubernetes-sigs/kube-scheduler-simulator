@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"strconv"
@@ -31,10 +32,12 @@ type Config struct {
 	KubeAPIServerURL      string
 	EtcdURL               string
 	CorsAllowedOriginList []string
-	// ExternalImportEnabled indicates whether the simulator will import resources from an target cluster or not.
+	// ExternalImportEnabled indicates whether the simulator will import resources from an target cluster once
+	// when it's started.
 	ExternalImportEnabled bool
+	ResourceSyncEnabled   bool
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
-	// This field is non-empty only when ExternalImportEnabled == true.
+	// This field should be set when ExternalImportEnabled == true.
 	ExternalKubeClientCfg *rest.Config
 	InitialSchedulerCfg   *configv1.KubeSchedulerConfiguration
 	// ExternalSchedulerEnabled indicates whether an external scheduler is enabled.
@@ -137,6 +140,10 @@ func getPort() (int, error) {
 
 // getKubeAPIServerURL gets KubeAPIServerURL from environment variable first, if empty from the config file.
 func getKubeAPIServerURL() string {
+	url := os.Getenv("KUBE_APISERVER_URL")
+	if url == "" && configYaml.KubeAPIServerURL != "" {
+		return configYaml.KubeAPIServerURL
+	}
 	p := os.Getenv("KUBE_API_PORT")
 	if p == "" {
 		p = strconv.Itoa(configYaml.KubeAPIPort)
@@ -144,7 +151,6 @@ func getKubeAPIServerURL() string {
 			p = "3131"
 		}
 	}
-
 	h := os.Getenv("KUBE_API_HOST")
 	if h == "" {
 		h = configYaml.KubeAPIHost
@@ -152,7 +158,8 @@ func getKubeAPIServerURL() string {
 			h = "127.0.0.1"
 		}
 	}
-	return h + ":" + p
+
+	return fmt.Sprintf("%s:%s", h, p)
 }
 
 // getExternalSchedulerEnabled gets ExternalSchedulerEnabled from environment variable first,
