@@ -7,7 +7,7 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/framework/runtime"
 )
 
-var outOfTreeRegistries = runtime.Registry{
+var OutOfTreeRegistries = runtime.Registry{
 	// TODO(user): add your plugins registries here.
 }
 
@@ -39,8 +39,8 @@ func InTreeMultiPointPluginSet() (configv1.PluginSet, error) {
 }
 
 func OutOfTreeMultiPointPluginNames() []string {
-	registeredOutOfTreeMultiPointName := make([]string, 0, len(outOfTreeRegistries))
-	for k := range outOfTreeRegistries {
+	registeredOutOfTreeMultiPointName := make([]string, 0, len(OutOfTreeRegistries))
+	for k := range OutOfTreeRegistries {
 		registeredOutOfTreeMultiPointName = append(registeredOutOfTreeMultiPointName, k)
 	}
 	return registeredOutOfTreeMultiPointName
@@ -50,12 +50,8 @@ func InTreeRegistries() runtime.Registry {
 	return plugins.NewInTreeRegistry()
 }
 
-func OutOfTreeRegistries() runtime.Registry {
-	return outOfTreeRegistries
-}
-
 func SetOutOfTreeRegistries(r runtime.Registry) {
 	for k, v := range r {
-		outOfTreeRegistries[k] = v
+		OutOfTreeRegistries[k] = v
 	}
 }

@@ -64,4 +64,6 @@ type SimulatorConfiguration struct {
 	// This variable indicates whether an external scheduler
 	// is used.
 	ExternalSchedulerEnabled bool `json:"externalSchedulerEnabled,omitempty"`
+
+	ResourceSyncEnabled bool
 }

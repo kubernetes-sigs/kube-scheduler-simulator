@@ -33,9 +33,16 @@ type ResetService interface {
 	Reset(ctx context.Context) error
 }
 
-// ImportClusterResourceService represents a service to import resources from an target cluster.
-type ImportClusterResourceService interface {
+// OneShotClusterResourceImporter represents a service to import resources from an target cluster when starting the simulator.
+type OneShotClusterResourceImporter interface {
 	ImportClusterResources(ctx context.Context) error
+}
+
+// ResourceSyncer represents a service to constantly sync resources from an target cluster.
+type ResourceSyncer interface {
+	// Run starts the resource syncer.
+	// It should be run until the context is canceled.
+	Run(ctx context.Context) error
 }
 
 // ResourceWatcherService represents service for watch k8s resources.
