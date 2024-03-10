@@ -6,7 +6,7 @@ services:
     environment:
       - PORT=1212
       - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-cluster:2379
-      - KUBE_APISERVER_URL=http://simulator-cluster:8080
+      - KUBE_APISERVER_URL=http://simulator-cluster:3131
     ports:
       - "1212:1212"
     restart: always
@@ -20,7 +20,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - BASE_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1212
-      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:8080
+      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3131
     ports:
     - "3000:3000"
     tty: true
@@ -29,7 +29,7 @@ services:
     container_name: simulator-cluster
     restart: always
     ports:
-      - "8080:8080"
+      - "3131:3131"
     volumes:
       - simulator-etcd-data:/var/lib/etcd
       - ./kwok.yaml:/root/.kwok/kwok.yaml
