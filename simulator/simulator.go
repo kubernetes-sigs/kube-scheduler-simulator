@@ -57,18 +57,17 @@ func startSimulator() error {
 		return xerrors.Errorf("create an etcd client: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	wait.UntilWithContext(ctx, func(ctx context.Context) {
-		ns, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
+	wait.PollUntilContextCancel(ctx, time.Second*5, true, func(ctx context.Context) (bool, error) {
+		_, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
 		if err != nil {
 			klog.Infof("waiting for kube-system namespace to be ready: %v", err)
+			return false, err
 		}
-		if ns != nil {
-			klog.Infof("kube-system namespace is ready")
-			cancel()
-		}
-	}, 3*time.Second)
+		klog.Info("kubeapi-server is ready")
+		return true, nil
+	})
 
 	dic, err := di.NewDIContainer(client, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
 	if err != nil {
