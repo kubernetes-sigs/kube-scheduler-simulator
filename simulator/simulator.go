@@ -10,6 +10,7 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
@@ -56,9 +57,18 @@ func startSimulator() error {
 		return xerrors.Errorf("create an etcd client: %w", err)
 	}
 
-	if _, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{}); err != nil {
-		return xerrors.Errorf("get kube-system namespace: %w", err)
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+	wait.UntilWithContext(ctx, func(ctx context.Context) {
+		ns, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
+		if err != nil {
+			klog.Infof("waiting for kube-system namespace to be ready: %v", err)
+		}
+		if ns != nil {
+			klog.Infof("kube-system namespace is ready")
+			cancel()
+		}
+	}, 3*time.Second)
 
 	dic, err := di.NewDIContainer(client, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
 	if err != nil {
