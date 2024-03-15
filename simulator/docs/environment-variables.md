@@ -6,8 +6,9 @@ if the environment variable is not set, it will read the configuration in the co
 For config file, please refer to the simulator [config.yaml](./../config.yaml).
 
 > [!WARNING]
-> `KUBE_API_HOST` and `KUBE_API_PORT` are deprecated. They will be removed in the near future.
-> Please use `KUBE_APISEVER_URL` instead.
+> To reduce the maintenance burden, the simulator no longer run kube-apiserver internally 
+> and we made the simulator require the kube-apiserver outside.
+> `KUBE_API_HOST` and `KUBE_API_PORT` are deprecated and will be removed in the near future, meanwhile they're just ignored.
 
 ---
 
@@ -33,17 +34,19 @@ resources". This variable is used to find Kubeconfig required to
 access your cluster for importing resources to scheduler simulator.
 
 `KUBE_APISEVER_URL`: This is the URL of kube-apiserver which the
-simulator starts internally. Its default value is `http://{simulator-cluster-ip}:8080`.
+simulator uses. This variable is used to connect to external kube-apiserver.
 
 `KUBE_API_HOST`: This is the host of kube-apiserver which the
 simulator starts internally. Its default value is `127.0.0.1`.
+This variable is deprecated and will be removed in the near future, but you can use `KUBE_APISEVER_URL` instead.
 
 `KUBE_API_PORT`: This is the port of kube-apiserver. Its default
 value is `3131`.
+This variable is deprecated and will be removed in the near future, but you can use `KUBE_APISEVER_URL` instead.
 
 `KUBE_SCHEDULER_CONFIG_PATH`: The path to a KubeSchedulerConfiguration
 file.  If passed, the simulator will start the scheduler with that
-configuration.  Or, if you use web UI, you can change the
+configuration. Or, if you use web UI, you can change the
 configuration from the web UI as well.
 
 `EXTERNAL_IMPORT_ENABLED`: This variable indicates whether the simulator

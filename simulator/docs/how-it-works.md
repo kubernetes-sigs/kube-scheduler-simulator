@@ -5,12 +5,15 @@ This page describes how the simulator works.
 ### 0. starts the simulator.
 
 The simulator server works with the following:
-- [kube-apiserver (+ etcd)](kube-apiserver.md)
+- [kube-apiserver](kube-apiserver.md)
+- etcd
 - scheduler
 - controllers for core resources
 - [HTTP server](api.md) 
 
-When the simulator server starts, it will start these components with server.
+In advance, the simulator needs to launch etcd, controllers and kube-apiserver outside.
+[KWOK](https://github.com/kubernetes-sigs/kwok) can launch these components all at once, thus we recommend using it.
+When the simulator server starts, it will start scheduler and HTTP server.
 
 ### 1. users request creating resource.
 

@@ -1,5 +1,11 @@
 ## Kube-apiserver
 
+> [!WARNING]
+> To reduce the maintenance burden, the simulator no longer run kube-apiserver internally 
+> and we made the simulator require the kube-apiserver outside.
+> The simulator needs to launch the kube-apiserver outside.
+> We highly recommend using the [KWOK](https://github.com/kubernetes-sigs/kwok).
+
 This page describes about kube-apiserver run in simulator.
 
 ### How to communicate with this kube-apiserver
