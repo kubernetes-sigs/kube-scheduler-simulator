@@ -59,7 +59,7 @@ func startSimulator() error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	wait.PollUntilContextCancel(ctx, time.Second*5, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextCancel(ctx, time.Second*5, true, func(ctx context.Context) (bool, error) {
 		_, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
 		if err != nil {
 			klog.Infof("waiting for kube-system namespace to be ready: %v", err)
@@ -68,6 +68,9 @@ func startSimulator() error {
 		klog.Info("kubeapi-server is ready")
 		return true, nil
 	})
+	if err != nil {
+		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
+	}
 
 	dic, err := di.NewDIContainer(client, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
 	if err != nil {
