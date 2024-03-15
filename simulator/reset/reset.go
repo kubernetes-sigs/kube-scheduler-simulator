@@ -26,6 +26,8 @@ type Service struct {
 	schedService SchedulerService
 }
 
+const EtcdPrefix = "/kube-scheduler-simulator"
+
 // NewResetService initializes Service.
 // ResetService always tries to restore the cluster to the initial state.
 func NewResetService(
@@ -40,7 +42,7 @@ func NewResetService(
 		schedService: schedService,
 	}
 
-	result, err := etcdClient.Get(context.Background(), util.EtcdPrefix, clientv3.WithPrefix())
+	result, err := etcdClient.Get(context.Background(), EtcdPrefix, clientv3.WithPrefix())
 	if err != nil {
 		return nil, xerrors.Errorf("get all data in etcd: %w", err)
 	}
@@ -54,7 +56,7 @@ func NewResetService(
 
 // Reset resets all resources and scheduler configuration to the initial state.
 func (s *Service) Reset(ctx context.Context) error {
-	if _, err := s.etcdClient.Delete(ctx, util.EtcdPrefix, clientv3.WithPrefix()); err != nil {
+	if _, err := s.etcdClient.Delete(ctx, EtcdPrefix, clientv3.WithPrefix()); err != nil {
 		return xerrors.Errorf("delete all data in etcd: %w", err)
 	}
 
