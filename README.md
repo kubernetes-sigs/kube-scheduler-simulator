@@ -41,12 +41,12 @@ We have several components:
 
 ### Simulator
 
-Simulator is kube-apiserver with some controllers + debuggable scheduler + the HTTP server which mainly for the web UI.
+Simulator is composed of debuggable scheduler + the HTTP server which mainly for the web UI.
 
 There are several ways to integrate your scheduler into the simulator.
 See [integrate-your-scheduler.md](simulator/docs/integrate-your-scheduler.md).
 
-You can create any resources by any ways (kubectl, k8s client library, or web UI described next).
+You can create any resources by communication with kube-apiserver outside via any clients (e.g. kubectl, k8s client library, or web UI described next).
 And when you create Pods, 
 Pods will be scheduled by the [debuggable scheduler](./simulator/docs/debuggable-scheduler.md),
 and they'll get the annotations that explain how each Pod was evaluated by each scheduler plugin.
