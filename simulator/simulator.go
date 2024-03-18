@@ -63,7 +63,7 @@ func startSimulator() error {
 		_, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
 		if err != nil {
 			klog.Infof("waiting for kube-system namespace to be ready: %v", err)
-			return false, err
+			return false, nil
 		}
 		klog.Info("kubeapi-server is ready")
 		return true, nil
