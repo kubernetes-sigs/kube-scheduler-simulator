@@ -23,6 +23,8 @@ That's why we are developing a simulator for kube-scheduler
 ```shell
 git clone git@github.com:kubernetes-sigs/kube-scheduler-simulator.git
 cd kube-scheduler-simulator
+# switch to the version you want to use.
+git switch simulator/v0.1.1
 # pull images from the registry and run up all components
 make docker_up 
 # All things up! 
@@ -46,7 +48,8 @@ Simulator is composed of debuggable scheduler + the HTTP server which mainly for
 There are several ways to integrate your scheduler into the simulator.
 See [integrate-your-scheduler.md](simulator/docs/integrate-your-scheduler.md).
 
-You can create any resources by communication with kube-apiserver outside via any clients (e.g. kubectl, k8s client library, or web UI described next).
+Simulator runs with a fake cluster powered by [KWOK](https://github.com/kubernetes-sigs/kwok)
+You can create any resources in KWOK cluster via any clients (e.g. kubectl, k8s client library, or web UI described next).
 And when you create Pods, 
 Pods will be scheduled by the [debuggable scheduler](./simulator/docs/debuggable-scheduler.md),
 and they'll get the annotations that explain how each Pod was evaluated by each scheduler plugin.
