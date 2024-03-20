@@ -1,0 +1,19 @@
+title: metrics collector
+kep-number: 167
+authors:
+  - "@196Ikuchil"
+owning-sig: sig-scheduling
+status: provisional
+creation-date: 2022-11-07
+reviewers:
+  - "@sanposhiho"
+approvers:
+  - "@sanposhiho"
+
+stage: alpha
+
+milestone:
+  alpha: "v0.1"
+
+see-also:
+  - "/keps/140-scenario-based-simulation"
