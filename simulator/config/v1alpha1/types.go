@@ -27,8 +27,7 @@ type SimulatorConfiguration struct {
 	// server is started.
 	Port int `json:"port,omitempty"`
 
-	// This is the URL for etcd. The simulator runs kube-apiserver
-	// internally, and the kube-apiserver uses this etcd.
+	// This is the URL for etcd.
 	EtcdURL string `json:"etcdURL,omitempty"`
 
 	// This URL represents the URL once web UI is started.
@@ -40,6 +39,9 @@ type SimulatorConfiguration struct {
 	// This variable is used to find Kubeconfig required to access your
 	// cluster for importing resources to scheduler simulator.
 	KubeConfig string `json:"kubeConfig,omitempty"`
+
+	// This is the URL for kube-apiserver.
+	KubeAPIServerURL string `json:"kubeApiServerUrl,omitempty"`
 
 	// This is the host of kube-apiserver which the simulator
 	// starts internally. Its default value is 127.0.0.1.

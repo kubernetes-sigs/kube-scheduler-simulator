@@ -68,7 +68,10 @@ func NewConfig() (*Config, error) {
 		return nil, xerrors.Errorf("get frontend URL: %w", err)
 	}
 
-	apiurl := getKubeAPIServerURL()
+	apiurl, err := getKubeAPIServerURL()
+	if err != nil {
+		return nil, xerrors.Errorf("get kube API server URL: %w", err)
+	}
 
 	externalimportenabled := getExternalImportEnabled()
 	externalKubeClientCfg := &rest.Config{}
@@ -136,23 +139,15 @@ func getPort() (int, error) {
 }
 
 // getKubeAPIServerURL gets KubeAPIServerURL from environment variable first, if empty from the config file.
-func getKubeAPIServerURL() string {
-	p := os.Getenv("KUBE_API_PORT")
-	if p == "" {
-		p = strconv.Itoa(configYaml.KubeAPIPort)
-		if p == "" {
-			p = "3131"
+func getKubeAPIServerURL() (string, error) {
+	url := os.Getenv("KUBE_APISERVER_URL")
+	if url == "" {
+		url = configYaml.KubeAPIServerURL
+		if url == "" {
+			return "", xerrors.Errorf("get KUBE_APISERVER_URL from config: %w", ErrEmptyConfig)
 		}
 	}
-
-	h := os.Getenv("KUBE_API_HOST")
-	if h == "" {
-		h = configYaml.KubeAPIHost
-		if h == "" {
-			h = "127.0.0.1"
-		}
-	}
-	return h + ":" + p
+	return url, nil
 }
 
 // getExternalSchedulerEnabled gets ExternalSchedulerEnabled from environment variable first,

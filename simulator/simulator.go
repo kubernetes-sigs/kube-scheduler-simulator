@@ -9,12 +9,13 @@ import (
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/controller"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/k8sapiserver"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 )
@@ -35,19 +36,10 @@ func startSimulator() error {
 		return xerrors.Errorf("get config: %w", err)
 	}
 
-	restclientCfg, apiShutdown, err := k8sapiserver.StartAPIServer(cfg.KubeAPIServerURL, cfg.EtcdURL, cfg.CorsAllowedOriginList)
-	if err != nil {
-		return xerrors.Errorf("start API server: %w", err)
+	restCfg := &rest.Config{
+		Host: cfg.KubeAPIServerURL,
 	}
-	defer apiShutdown()
-
-	client := clientset.NewForConfigOrDie(restclientCfg)
-
-	ctrlerShutdown, err := controller.RunController(client, restclientCfg)
-	if err != nil {
-		return xerrors.Errorf("start controllers: %w", err)
-	}
-	defer ctrlerShutdown()
+	client := clientset.NewForConfigOrDie(restCfg)
 
 	importClusterResourceClient := &clientset.Clientset{}
 	if cfg.ExternalImportEnabled {
@@ -65,10 +57,22 @@ func startSimulator() error {
 		return xerrors.Errorf("create an etcd client: %w", err)
 	}
 
-	// need to sleep here to make all controllers create initial resources. (like "system-" priorityclass.)
-	time.Sleep(1 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	err = wait.PollUntilContextCancel(ctx, time.Second*5, true, func(ctx context.Context) (bool, error) {
+		_, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
+		if err != nil {
+			klog.Infof("waiting for kube-system namespace to be ready: %v", err)
+			return false, nil
+		}
+		klog.Info("kubeapi-server is ready")
+		return true, nil
+	})
+	if err != nil {
+		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
+	}
 
-	dic, err := di.NewDIContainer(client, etcdclient, restclientCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
+	dic, err := di.NewDIContainer(client, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}

@@ -5,24 +5,15 @@ This page describes how the simulator works.
 ### 0. starts the simulator.
 
 The simulator server works with the following:
-- [kube-apiserver (+ etcd)](kube-apiserver.md)
 - scheduler
-- controllers for core resources
 - [HTTP server](api.md) 
 
-When the simulator server starts, it will start these components with server.
+In advance, the simulator needs to launch etcd, controller-manager and kube-apiserver outside.
+We recommend using [KWOK](https://github.com/kubernetes-sigs/kwok), see [docker-compose.yml](../../docker-compose.yml) to know how we wire things up.
 
 ### 1. users request creating resource.
 
-Users can create resources below by communicating with kube-apiserver in simulator via any clients (e.g. kubectl, k8s client library or Web UI)
-
-- Nodes
-- Pods
-- Persistent Volumes
-- Persistent Volume Claims
-- Storage Classes
-- Priority Classes
-- Namespaces
+Users can create resources by communicating with kube-apiserver of KWOK via any clients (e.g. kubectl, k8s client library or [Web UI](../../web))
 
 ### 2. the scheduler schedules a new pod.
 

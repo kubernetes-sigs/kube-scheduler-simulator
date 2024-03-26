@@ -29,13 +29,9 @@ corsAllowedOriginList:
 # cluster for importing resources to scheduler simulator.
 kubeConfig: ""
 
-# This is the host of kube-apiserver which the simulator
-# starts internally. Its default value is 127.0.0.1.
-kubeApiHost: "127.0.0.1"
-
-# This is the port of kube-apiserver. Its default value is 3131.
-kubeApiPort: 3131
-
+# This is the URL of kube-apiserver which the simulator uses.
+# This variable is used to connect to external kube-apiserver.
+kubeAPIServerURL: ""
 
 # The path to a KubeSchedulerConfiguration file.
 # If passed, the simulator will start the scheduler
