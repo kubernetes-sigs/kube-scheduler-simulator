@@ -19,7 +19,7 @@ by passing a default KubeSchedulerConfiguration file via the environment variabl
 
 ### Example
 
-We will explain the case where you want to add [nodenumber](../sample/nodenumber/plugin.go) plugin as example.
+We will explain the case where you want to add [nodenumber](./sample/nodenumber/plugin.go) plugin as example.
 
 The nodenumber plugin is an example plugin that favors nodes that have the number suffix which is the same as the number suffix of the pod name.
 And we can configure it via `NodeNumberArgs`.
