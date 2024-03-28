@@ -127,7 +127,7 @@ func (pl *NodeNumber) ScoreExtensions() framework.ScoreExtensions {
 }
 
 // New initializes a new plugin and returns it.
-func New(arg runtime.Object, h framework.Handle) (framework.Plugin, error) {
+func New(ctx context.Context, arg runtime.Object, h framework.Handle) (framework.Plugin, error) {
 	typedArg := NodeNumberArgs{Reverse: false}
 	if arg != nil {
 		err := frameworkruntime.DecodeInto(arg, &typedArg)
