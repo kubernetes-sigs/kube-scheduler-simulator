@@ -13,13 +13,11 @@ import (
 	_ "k8s.io/component-base/logs/json/register" // for JSON log format registration
 	_ "k8s.io/component-base/metrics/prometheus/clientgo"
 	_ "k8s.io/component-base/metrics/prometheus/version" // for version metric registration
-	"k8s.io/klog/v2"
 	v1 "k8s.io/kube-scheduler/config/v1"
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 	configv1 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1"
-	configv1beta3 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1beta3"
 	"k8s.io/kubernetes/pkg/scheduler/framework/runtime"
 
 	simulatorconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/config"
@@ -161,9 +159,6 @@ func loadConfig(data []byte) (*v1.KubeSchedulerConfiguration, error) {
 		// conversion. See KubeSchedulerConfiguration internal type definition for
 		// more details.
 		cfgObj.TypeMeta.APIVersion = gvk.GroupVersion().String()
-		if cfgObj.TypeMeta.APIVersion == configv1beta3.SchemeGroupVersion.String() {
-			klog.InfoS("KubeSchedulerConfiguration v1beta3 is deprecated in v1.26, will be removed in v1.29")
-		}
 
 		return convertSchedulerConfigToV1Config(cfgObj)
 	}

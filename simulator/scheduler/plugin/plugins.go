@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 
@@ -63,8 +64,8 @@ func newPluginFactories(store *schedulingresultstore.Store, pluginExtenders map[
 			continue
 		}
 
-		factory := func(configuration runtime.Object, f framework.Handle) (framework.Plugin, error) {
-			p, err := r(configuration, f)
+		factory := func(ctx context.Context, configuration runtime.Object, f framework.Handle) (framework.Plugin, error) {
+			p, err := r(ctx, configuration, f)
 			if err != nil {
 				return nil, xerrors.Errorf("create original plugin: %w", err)
 			}

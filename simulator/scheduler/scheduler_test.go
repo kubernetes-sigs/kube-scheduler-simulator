@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	configv1 "k8s.io/kube-scheduler/config/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	schedConfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 )
@@ -145,7 +145,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 			want: func() *configv1.KubeSchedulerConfiguration {
 				cfg := configGeneratedFromDefault()
 				profile2 := cfg.Profiles[0].DeepCopy()
-				profile2.SchedulerName = pointer.String(nondefaultschedulername)
+				profile2.SchedulerName = ptr.To(nondefaultschedulername)
 				profile2.Plugins.MultiPoint.Enabled = []configv1.Plugin{
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},

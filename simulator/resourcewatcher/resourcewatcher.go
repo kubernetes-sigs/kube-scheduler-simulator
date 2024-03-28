@@ -96,7 +96,7 @@ func (s *Service) run(p *eventProxy, stopCh <-chan struct{}, cancel context.Canc
 	// ListAndWatch usually continues to wait for WATCH to end and does not return any value.
 	if err := s.doListAndWatch(p, stopCh); err != nil {
 		cancel()
-		klog.Errorf("call ListAndWatch: %w", err)
+		klog.Errorf("call ListAndWatch: %v", err)
 	}
 }
 
