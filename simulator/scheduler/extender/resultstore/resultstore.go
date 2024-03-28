@@ -94,7 +94,7 @@ func (s *store) GetStoredResult(pod *v1.Pod) map[string]string {
 	}
 
 	if err := s.addBindResultToMap(annotation, k); err != nil {
-		klog.Errorf("failed to add bind result to the pod: $+v", err)
+		klog.Errorf("failed to add bind result to the pod: %+v", err)
 		return nil
 	}
 

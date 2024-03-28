@@ -183,7 +183,7 @@ func (p *eventProxy) watchErrorHandler(err error) {
 	case errors.Is(io.EOF, err):
 		// watch closed normally
 	case errors.Is(io.ErrUnexpectedEOF, err):
-		klog.Infof("watch for %v closed with unexpected EOF: %w", p.r, err)
+		klog.Infof("watch for %v closed with unexpected EOF: %v", p.r, err)
 	default:
 		utilruntime.HandleError(fmt.Errorf("failed to watch %v: %w", p.r, err))
 	}
