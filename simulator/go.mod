@@ -1,6 +1,6 @@
 module sigs.k8s.io/kube-scheduler-simulator/simulator
 
-go 1.21
+go 1.22.1
 
 replace (
 	google.golang.org/grpc => google.golang.org/grpc v1.38.0
