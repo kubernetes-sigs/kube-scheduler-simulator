@@ -23,9 +23,8 @@ That's why we are developing a simulator for kube-scheduler
 ```shell
 git clone git@github.com:kubernetes-sigs/kube-scheduler-simulator.git
 cd kube-scheduler-simulator
-# switch to the version you want to use.
-git switch simulator/v0.1.1
-# pull images from the registry and run up all components
+# Pull the latest stable images for simulator from the registry, 
+# and run up all components.
 make docker_up 
 # All things up! 
 ```
