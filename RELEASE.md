@@ -9,7 +9,9 @@
 7. Publish a draft release using the tag you created in 3.
 8. Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter).
 9. Publish release.
-10. Email `kubernetes-sig-scheduling@googlegroups.com` to announce the release.
+10. Make sure the new version's image can be pulled and we can run the simulator correctly.
+11. Create a PR to update [docker-compose.yml](./docker-compose.yml) specifies the new release.
+12. Email `kubernetes-sig-scheduling@googlegroups.com` to announce the release.
 
 ## Notes
 See [post-kube-scheduler-simulator-push-images dashboard](https://testgrid.k8s.io/sig-scheduling#post-kube-scheduler-simulator-push-images) for staging registry image build job status.
