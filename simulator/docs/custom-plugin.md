@@ -27,6 +27,11 @@ And we can configure it via `NodeNumberArgs`.
 First, you need to add registry for the nodenumber plugin to `outOfTreeRegistries`.
 
 ```go
+import (
+  ...
+  "sigs.k8s.io/kube-scheduler-simulator/simulator/docs/sample/nodenumber"
+)
+
 outOfTreeRegistries = runtime.Registry{
     // TODO(user): add your plugins registries here.
     nodenumber.Name: nodenumber.New,
