@@ -77,16 +77,21 @@ func CreateOptionForOutOfTreePlugin(outOfTreePluginRegistry runtime.Registry, pl
 	if err != nil {
 		return nil, nil, xerrors.Errorf("convert scheduler config to apply: %w", err)
 	}
-	kubeconfig, err := simulatorconfig.GetKubeClientConfig()
-	if err != nil {
-		return nil, nil, xerrors.Errorf("get kubeconfig: %w", err)
-	}
+
+	var kubeconfig *restclient.Config
 	if internalCfg.ClientConnection.Kubeconfig != "" {
 		kubeconfig, err = createKubeConfig(internalCfg.ClientConnection, *master)
 		if err != nil {
 			return nil, nil, xerrors.Errorf("get kubeconfig specified in config: %w", err)
 		}
+	} else {
+		// If the kubeconfig is not specified in the configuration, the simulator will use the default kubeconfig.
+		kubeconfig, err = simulatorconfig.GetKubeClientConfig()
+		if err != nil {
+			return nil, nil, xerrors.Errorf("get kubeconfig: %w", err)
+		}
 	}
+
 	clientSet, err := clientset.NewForConfig(kubeconfig)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("creates a new Clientset for kubeconfig: %w", err)
