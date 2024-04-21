@@ -22,7 +22,7 @@ mod-download: ## Downloads the Go module
 
 .PHONY: build
 build:  
-	go build -o ./bin/simulator ./simulator.go
+	go build -o ./bin/simulator ./cmd/simulator/simulator.go
 
 .PHONY: start
 start: build

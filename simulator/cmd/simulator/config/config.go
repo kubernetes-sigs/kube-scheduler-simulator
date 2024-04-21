@@ -15,7 +15,7 @@ import (
 	configv1 "k8s.io/kube-scheduler/config/v1"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/config/v1alpha1"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/cmd/simulator/config/v1alpha1"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 )
 

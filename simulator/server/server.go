@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/cmd/simulator/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/handler"
 )
