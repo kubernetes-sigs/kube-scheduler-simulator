@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/restmapper"
 	"k8s.io/klog/v2"
 
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/cmd/simulator/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/syncer"
