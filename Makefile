@@ -37,7 +37,7 @@ docker_build_server:
 
 .PHONY: docker_build_scheduler
 docker_build_scheduler:
-	docker build -f simulator/cmd/scheduler/Dockerfile -t scheduler simulator
+	docker build -f simulator/cmd/scheduler/Dockerfile -t simulator-scheduler simulator
 
 .PHONY: docker_build_front
 docker_build_front: 

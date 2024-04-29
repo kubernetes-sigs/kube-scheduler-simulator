@@ -1,4 +1,4 @@
-package debuggablescheduler
+package main
 
 import (
 	"fmt"
