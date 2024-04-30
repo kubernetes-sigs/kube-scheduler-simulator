@@ -5,6 +5,9 @@ services:
     container_name: simulator-scheduler
     environment:
       - KUBE_APISERVER_URL=http://simulator-cluster:3131
+      - KUBE_CONFIG_PATH=/root/.kube/kubeconfig.yaml
+    volumes:
+      - ./simulator/docs/sample/debuggable-scheduler/kubeconfig.yaml:/root/.kube/kubeconfig.yaml
     restart: always
     tty: true
     networks:
