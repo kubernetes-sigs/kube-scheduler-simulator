@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/dynamic"
@@ -68,20 +70,21 @@ func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.C
 }
 
 func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error {
-	if s.disabled {
-		return xerrors.Errorf("an external scheduler is enabled: %w", ErrServiceDisabled)
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		klog.Info("shutdown scheduler...")
+		return err
 	}
-
-	s.ShutdownScheduler()
-
-	oldSchedulerCfg := s.currentSchedulerCfg
-	if err := s.StartScheduler(cfg); err != nil {
-		klog.Infof("failed to start scheduler: %v. restarting with old configuration", err)
-		if err2 := s.StartScheduler(oldSchedulerCfg); err2 != nil {
-			klog.Warningf("failed to start scheduler with old configuration: %v", err2)
-			return xerrors.Errorf("start scheduler: %w, restart scheduler with old configuration: %w", err, err2)
+	containers, err := cli.ContainerList(ctx, container.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, c := range containers {
+		if c.Names[0] == "/simulator-server" {
+			err := cli.ContainerRestart(ctx, c.ID, container.StopOptions{})
+			return err
 		}
-		return xerrors.Errorf("start scheduler: %w", err)
 	}
 	return nil
 }
