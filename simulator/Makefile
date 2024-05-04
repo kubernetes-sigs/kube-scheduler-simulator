@@ -24,8 +24,3 @@ mod-download: ## Downloads the Go module
 build:  
 	go build -o ./bin/simulator ./cmd/simulator/simulator.go
 	go build -o ./bin/scheduler ./cmd/scheduler/scheduler.go
-
-.PHONY: start
-start: build
-	./hack/start_simulator.sh
-	./bin/scheduler
