@@ -1,7 +1,7 @@
 ## Running simulator
 
-There are multiple ways to run the simulator with web UI.
-
+The simulator requires docker installed in your laptop.
+We have [docker-compose.yml](../../docker-compose.yml) to run the simulator easily.
 
 ### Run simulator with Docker
 
