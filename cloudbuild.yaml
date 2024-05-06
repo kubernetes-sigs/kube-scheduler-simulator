@@ -8,7 +8,7 @@ steps:
     - build
     - --tag=gcr.io/$PROJECT_ID/simulator-backend:$_GIT_TAG
     - --tag=gcr.io/$PROJECT_ID/simulator-backend:latest
-    - -f=./simulator/Dockerfile
+    - -f=./simulator/cmd/simulator/Dockerfile
     - ./simulator/
   - name: gcr.io/cloud-builders/docker
     args:
