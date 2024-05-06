@@ -16,7 +16,7 @@ import (
 func main() {
 	command, cancelFn, err := debuggablescheduler.NewSchedulerCommand()
 	if err != nil {
-		klog.Info(fmt.Sprintf("failed to build the scheduler command: %+v", err))
+		klog.Info(fmt.Sprintf("failed to build the debuggablescheduler command: %+v", err))
 		os.Exit(1)
 	}
 	code := cli.Run(command)
