@@ -29,11 +29,15 @@ build:
 	cd simulator/ && make build
 
 .PHONY: docker_build
-docker_build: docker_build_server docker_build_front
+docker_build: docker_build_server docker_build_scheduler docker_build_front
 
 .PHONY: docker_build_server
 docker_build_server: 
-	docker build -t simulator-server ./simulator/
+	docker build -f simulator/cmd/simulator/Dockerfile -t simulator-server simulator
+
+.PHONY: docker_build_scheduler
+docker_build_scheduler:
+	docker build -f simulator/cmd/scheduler/Dockerfile -t simulator-scheduler simulator
 
 .PHONY: docker_build_front
 docker_build_front: 
