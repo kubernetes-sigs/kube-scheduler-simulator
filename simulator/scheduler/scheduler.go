@@ -81,7 +81,7 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 		return err
 	}
 	for _, c := range containers {
-		if c.Names[0] == "/simulator-server" {
+		if c.Names[0] == "/simulator-scheduler" {
 			err := cli.ContainerRestart(ctx, c.ID, container.StopOptions{})
 			return err
 		}
