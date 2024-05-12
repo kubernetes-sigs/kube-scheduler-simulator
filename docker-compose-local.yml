@@ -3,15 +3,12 @@ services:
   simulator-scheduler:
     image: simulator-scheduler
     container_name: simulator-scheduler
-    environment:
-      - KUBE_APISERVER_URL=http://simulator-cluster:3131
-      - KUBECONFIG=/root/.kube/kubeconfig.yaml
-    volumes:
-      - ./simulator/docs/sample/debuggable-scheduler/kubeconfig.yaml:/root/.kube/kubeconfig.yaml
     restart: always
     tty: true
     networks:
       - simulator-internal-network
+    depends_on:
+      - simulator-cluster
   simulator-server:
     image: simulator-server
     container_name: simulator-server
