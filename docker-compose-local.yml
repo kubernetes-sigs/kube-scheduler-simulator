@@ -22,6 +22,8 @@ services:
     tty: true
     networks:
       - simulator-internal-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   simulator-frontend:
     image: simulator-frontend
     restart: always

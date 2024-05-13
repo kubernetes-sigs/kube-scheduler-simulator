@@ -2,10 +2,3 @@ kind: KubeSchedulerConfiguration
 apiVersion: kubescheduler.config.k8s.io/v1
 clientConnection:
   kubeconfig: kubeconfig.yaml
-profiles:
-  - schedulerName: default-scheduler
-    plugins:
-      multiPoint:
-        enabled:
-          - name: NodeNumber
-            weight: 10
