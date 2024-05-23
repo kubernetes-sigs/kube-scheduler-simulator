@@ -1,3 +1,11 @@
+BUILD      ?= build
+USE_BUILDX ?=
+
+# Setup buildx flags
+ifneq ("$(USE_BUILDX)","")
+BUILD = buildx build --platform=linux/arm64 -o type=docker
+endif
+
 .PHONY: tools
 tools:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
@@ -32,16 +40,16 @@ build:
 docker_build: docker_build_server docker_build_scheduler docker_build_front
 
 .PHONY: docker_build_server
-docker_build_server: 
-	docker build -f simulator/cmd/simulator/Dockerfile -t simulator-server simulator
+docker_build_server:
+	docker $(BUILD) -f simulator/cmd/simulator/Dockerfile -t simulator-server simulator
 
 .PHONY: docker_build_scheduler
 docker_build_scheduler:
-	docker build -f simulator/cmd/scheduler/Dockerfile -t simulator-scheduler simulator
+	docker $(BUILD) -f simulator/cmd/scheduler/Dockerfile -t simulator-scheduler simulator
 
 .PHONY: docker_build_front
-docker_build_front: 
-	docker build -t simulator-frontend ./web/
+docker_build_front:
+	docker $(BUILD) -t simulator-frontend ./web/
 
 .PHONY: docker_up
 docker_up:
