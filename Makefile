@@ -1,9 +1,11 @@
 BUILD      ?= build
+
 USE_BUILDX ?=
+BUILDX_PLATFORM ?= linux/amd64
 
 # Setup buildx flags
 ifneq ("$(USE_BUILDX)","")
-BUILD = buildx build --platform=linux/arm64 -o type=docker
+BUILD = buildx build --platform=$(BUILDX_PLATFORM) -o type=docker
 endif
 
 .PHONY: tools
