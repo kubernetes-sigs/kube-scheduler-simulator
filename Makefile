@@ -1,7 +1,11 @@
 BUILD      ?= build
 
 USE_BUILDX ?=
-BUILDX_PLATFORM ?= linux/amd64
+HOSTARCH := $(shell uname -m)
+ifeq ($(HOSTARCH),x86_64)
+HOSTARCH := amd64
+endif
+BUILDX_PLATFORM ?= linux/$(HOSTARCH)
 
 # Setup buildx flags
 ifneq ("$(USE_BUILDX)","")
