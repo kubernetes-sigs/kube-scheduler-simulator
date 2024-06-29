@@ -51,10 +51,7 @@ func NewSimulatorServer(cfg *config.Config, dic *di.Container) *SimulatorServer 
 
 	v1.GET("/listwatchresources", resourcewatcherHandler.ListWatchResources)
 
-	v1.POST("/extender/filter/:id", extenderHandler.Filter)
-	v1.POST("/extender/prioritize/:id", extenderHandler.Prioritize)
-	v1.POST("/extender/preempt/:id", extenderHandler.Preempt)
-	v1.POST("/extender/bind/:id", extenderHandler.Bind)
+	RouteExtender(v1, extenderHandler)
 
 	// initialize SimulatorServer.
 	s := &SimulatorServer{e: e}
@@ -85,4 +82,12 @@ func (s *SimulatorServer) Start(port int) (
 	}
 
 	return shutdownFn, nil
+}
+
+// RouteExtender routes request for extender to 4 endpoints.
+func RouteExtender(v1 *echo.Group, handler *handler.ExtenderHandler) {
+	v1.POST("/extender/filter/:id", handler.Filter)
+	v1.POST("/extender/prioritize/:id", handler.Prioritize)
+	v1.POST("/extender/preempt/:id", handler.Preempt)
+	v1.POST("/extender/bind/:id", handler.Bind)
 }
