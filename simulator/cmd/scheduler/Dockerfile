@@ -18,6 +18,4 @@ FROM alpine:3.14.0
 COPY --from=build-env /go/src/simulator/bin/scheduler /scheduler
 RUN chmod a+x /scheduler
 
-COPY ./docs/sample/debuggable-scheduler/scheduler.yaml ./docs/sample/debuggable-scheduler/kubeconfig.yaml ./
-
-CMD ["/scheduler", "--config", "scheduler.yaml", "--master", "http://simulator-cluster:3131"]
+CMD ["/scheduler"]
