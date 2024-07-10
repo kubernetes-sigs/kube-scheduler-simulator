@@ -7,7 +7,7 @@ To use this, you need to follow these two steps
 - Set the path of the kubeconfig file of the your cluster to `KubeConfig` value in the Simulator Server Configuration.
 
 ```yaml
-externalSchedulerEnabled: false
+externalImportEnabled: false
 kubeConfig: "/path/to/your-cluster-kubeconfig"
 ```
 
