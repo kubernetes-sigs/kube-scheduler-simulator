@@ -3,15 +3,14 @@ services:
   simulator-scheduler:
     image: simulator-scheduler
     container_name: simulator-scheduler
-    environment:
-      - KUBE_APISERVER_URL=http://simulator-cluster:3131
-      - KUBECONFIG=/root/.kube/kubeconfig.yaml
-    volumes:
-      - ./simulator/docs/sample/debuggable-scheduler/kubeconfig.yaml:/root/.kube/kubeconfig.yaml
     restart: always
     tty: true
     networks:
       - simulator-internal-network
+    depends_on:
+      - simulator-cluster
+    volumes:
+      - sched-conf:/config
   simulator-server:
     image: simulator-server
     container_name: simulator-server
@@ -25,6 +24,9 @@ services:
     tty: true
     networks:
       - simulator-internal-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - sched-conf:/config
   simulator-frontend:
     image: simulator-frontend
     restart: always
@@ -34,7 +36,7 @@ services:
       - BASE_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1212
       - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3131
     ports:
-    - "3000:3000"
+      - "3000:3000"
     tty: true
   simulator-cluster:
     image: registry.k8s.io/kwok/cluster:v0.5.1-k8s.v1.29.0
@@ -54,3 +56,9 @@ networks:
     driver: bridge
 volumes:
   simulator-etcd-data:
+  sched-conf:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/simulator/cmd/scheduler
+      o: bind
