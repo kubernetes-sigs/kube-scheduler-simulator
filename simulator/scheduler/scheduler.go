@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"golang.org/x/xerrors"
@@ -22,6 +23,7 @@ import (
 	apiconfigv1 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1"
 	"k8s.io/kubernetes/pkg/scheduler/profile"
 
+	simulatorconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 	simulatorschedconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin"
@@ -76,16 +78,45 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 		klog.Info("shutdown scheduler...")
 		return err
 	}
-	containers, err := cli.ContainerList(ctx, container.ListOptions{})
+
+	var oldCfg *configv1.KubeSchedulerConfiguration
+	oldCfg, err = simulatorconfig.GetSchedulerCfg()
+	if err != nil {
+		return xerrors.Errorf("read old scheduler.yaml: %w", err)
+	}
+
+	err = simulatorschedconfig.WriteConfig(cfg)
+
+	var containers []types.Container
+	containers, err = cli.ContainerList(ctx, container.ListOptions{})
 	if err != nil {
 		return err
 	}
+	var inspect types.ContainerJSON
 	for _, c := range containers {
 		if c.Names[0] == "/simulator-scheduler" {
-			err := cli.ContainerRestart(ctx, c.ID, container.StopOptions{})
-			return err
+			err = cli.ContainerRestart(ctx, c.ID, container.StopOptions{})
+			if err != nil {
+				return err
+			}
+			inspect, err = cli.ContainerInspect(ctx, c.ID)
+			if err != nil {
+				return err
+			}
+			if inspect.State.Status != "running" {
+				err = simulatorschedconfig.WriteConfig(oldCfg)
+				if err != nil {
+					return err
+				}
+				err = cli.ContainerRestart(ctx, c.ID, container.StopOptions{})
+				if err != nil {
+					return err
+				}
+			}
+			break
 		}
 	}
+	s.currentSchedulerCfg = cfg.DeepCopy()
 	return nil
 }
 

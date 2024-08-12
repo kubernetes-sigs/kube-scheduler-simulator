@@ -22,4 +22,4 @@ RUN chmod a+x /scheduler
 
 COPY ./cmd/scheduler/scheduler.yaml ./cmd/scheduler/kubeconfig.yaml ./
 
-CMD ["/scheduler", "--config", "scheduler.yaml", "--master", "http://simulator-cluster:3131"]
+CMD ["/scheduler", "--config", "/config/scheduler.yaml", "--master", "http://simulator-cluster:3131"]
