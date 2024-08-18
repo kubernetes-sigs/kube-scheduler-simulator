@@ -70,7 +70,7 @@ func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.C
 	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg, sharedStore: sharedStore, simulatorPort: simulatorPort}
 }
 
-func restartContainer(cli *client.Client, ctx context.Context, id string, cfg *configv1.KubeSchedulerConfiguration) error {
+func restartContainer(ctx context.Context, cli *client.Client, id string, cfg *configv1.KubeSchedulerConfiguration) error {
 	if err := simulatorschedconfig.WriteConfig(cfg); err != nil {
 		return xerrors.Errorf("read old scheduler.yaml: %w", err)
 	}
@@ -109,8 +109,8 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 		if c.Names[0] != "/simulator-scheduler" {
 			continue
 		}
-		if err := restartContainer(cli, ctx, c.ID, cfg); err != nil {
-			if err := restartContainer(cli, ctx, c.ID, oldCfg); err != nil {
+		if err := restartContainer(ctx, cli, c.ID, cfg); err != nil {
+			if err := restartContainer(ctx, cli, c.ID, oldCfg); err != nil {
 				return xerrors.Errorf("oldConfig restart failed: %w", err)
 			}
 		}

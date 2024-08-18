@@ -290,7 +290,7 @@ func WriteConfig(cfg *v1.KubeSchedulerConfiguration) error {
 		return fmt.Errorf("failed to marshal yaml: %w", err)
 	}
 
-	if err := os.WriteFile(kubeSchedulerConfigPath, data, 0o644); err != nil {
+	if err := os.WriteFile(kubeSchedulerConfigPath, data, 0o600); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
