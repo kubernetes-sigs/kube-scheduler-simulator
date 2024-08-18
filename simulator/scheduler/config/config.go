@@ -143,7 +143,8 @@ func convertDebuggingConfiguration(cfg componentbaseconfigv1alpha1.DebuggingConf
 }
 
 func convertProfiles(profiles []v1.KubeSchedulerProfile) []KubeSchedulerProfile {
-	var result []KubeSchedulerProfile
+	result := make([]KubeSchedulerProfile, 0, len(profiles))
+
 	for _, p := range profiles {
 		result = append(result, KubeSchedulerProfile{
 			SchedulerName:            p.SchedulerName,
@@ -184,7 +185,8 @@ func convertPluginSet(set v1.PluginSet) PluginSet {
 }
 
 func convertPluginsArray(plugins []v1.Plugin) []Plugin {
-	var result []Plugin
+	result := make([]Plugin, 0, len(plugins))
+
 	for _, p := range plugins {
 		result = append(result, Plugin{
 			Name:   p.Name,
@@ -194,9 +196,9 @@ func convertPluginsArray(plugins []v1.Plugin) []Plugin {
 	return result
 }
 
-func convertPluginConfig(config []v1.PluginConfig) []PluginConfig {
-	var result []PluginConfig
-	for _, c := range config {
+func convertPluginConfig(configs []v1.PluginConfig) []PluginConfig {
+	result := make([]PluginConfig, 0, len(configs))
+	for _, c := range configs {
 		result = append(result, PluginConfig{
 			Name: c.Name,
 			Args: c.Args,
@@ -206,7 +208,7 @@ func convertPluginConfig(config []v1.PluginConfig) []PluginConfig {
 }
 
 func convertExtenders(extenders []v1.Extender) []Extender {
-	var result []Extender
+	result := make([]Extender, 0, len(extenders))
 	for _, e := range extenders {
 		result = append(result, Extender{
 			URLPrefix:        e.URLPrefix,
@@ -227,7 +229,7 @@ func convertExtenders(extenders []v1.Extender) []Extender {
 }
 
 func convertExtenderManagedResources(resources []v1.ExtenderManagedResource) []ExtenderManagedResource {
-	var result []ExtenderManagedResource
+	result := make([]ExtenderManagedResource, 0, len(resources))
 	for _, r := range resources {
 		result = append(result, ExtenderManagedResource{
 			Name:               r.Name,
@@ -288,7 +290,7 @@ func WriteConfig(cfg *v1.KubeSchedulerConfiguration) error {
 		return fmt.Errorf("failed to marshal yaml: %w", err)
 	}
 
-	if err := os.WriteFile(kubeSchedulerConfigPath, data, 0644); err != nil {
+	if err := os.WriteFile(kubeSchedulerConfigPath, data, 0o644); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
