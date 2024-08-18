@@ -85,7 +85,9 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 		return xerrors.Errorf("read old scheduler.yaml: %w", err)
 	}
 
-	err = simulatorschedconfig.WriteConfig(cfg)
+	if err := simulatorschedconfig.WriteConfig(cfg); err != nil {
+		return xerrors.Errorf("read old scheduler.yaml: %w", err)
+	}
 
 	var containers []types.Container
 	containers, err = cli.ContainerList(ctx, container.ListOptions{})
@@ -95,8 +97,7 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 	var inspect types.ContainerJSON
 	for _, c := range containers {
 		if c.Names[0] == "/simulator-scheduler" {
-			err = cli.ContainerRestart(ctx, c.ID, container.StopOptions{})
-			if err != nil {
+			if err := cli.ContainerRestart(ctx, c.ID, container.StopOptions{}); err != nil {
 				return err
 			}
 			inspect, err = cli.ContainerInspect(ctx, c.ID)
@@ -104,12 +105,10 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 				return err
 			}
 			if inspect.State.Status != "running" {
-				err = simulatorschedconfig.WriteConfig(oldCfg)
-				if err != nil {
+				if err := simulatorschedconfig.WriteConfig(oldCfg); err != nil {
 					return err
 				}
-				err = cli.ContainerRestart(ctx, c.ID, container.StopOptions{})
-				if err != nil {
+				if err := cli.ContainerRestart(ctx, c.ID, container.StopOptions{}); err != nil {
 					return err
 				}
 			}

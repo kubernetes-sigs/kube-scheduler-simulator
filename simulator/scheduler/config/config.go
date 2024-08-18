@@ -31,7 +31,6 @@ type LeaderElectionConfiguration struct {
 	ResourceNamespace string          `yaml:"resourceNamespace,omitempty"`
 }
 
-// ClientConnectionConfiguration with YAML tags
 type ClientConnectionConfiguration struct {
 	Kubeconfig         string  `yaml:"kubeconfig"`
 	AcceptContentTypes string  `yaml:"acceptContentTypes,omitempty"`
@@ -40,7 +39,6 @@ type ClientConnectionConfiguration struct {
 	Burst              int32   `yaml:"burst,omitempty"`
 }
 
-// DebuggingConfiguration with YAML tags
 type DebuggingConfiguration struct {
 	EnableProfiling           *bool `yaml:"enableProfiling,omitempty"`
 	EnableContentionProfiling *bool `yaml:"enableContentionProfiling,omitempty"`
