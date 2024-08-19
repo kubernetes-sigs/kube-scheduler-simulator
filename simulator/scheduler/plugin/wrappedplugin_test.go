@@ -1181,6 +1181,12 @@ func Test_wrappedPlugin_PreScore(t *testing.T) {
 
 	testPod := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod", Namespace: "namespace"}}
 	testNodes := []*v1.Node{{ObjectMeta: metav1.ObjectMeta{Name: "node"}}}
+	testNodeInfos := make([]*framework.NodeInfo, len(testNodes))
+	for i, node := range testNodes {
+		nodeInfo := &framework.NodeInfo{}
+		nodeInfo.SetNode(node)
+		testNodeInfos[i] = nodeInfo
+	}
 
 	tests := []struct {
 		name           string
@@ -1191,58 +1197,58 @@ func Test_wrappedPlugin_PreScore(t *testing.T) {
 		{
 			name: "happy with extender",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreScorePlugin, extender *mock_plugin.MockPreScorePluginExtender) {
-				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
-				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
+				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Success))
+				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
 				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", resultstore.SuccessMessage)
-				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodes, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Success))
+				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Success))
 			},
 			want: framework.NewStatus(framework.Success),
 		},
 		{
 			name: "unhappy: BeforePreScore returns non-success",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreScorePlugin, extender *mock_plugin.MockPreScorePluginExtender) {
-				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Unschedulable))
+				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Unschedulable))
 			},
 			want: framework.NewStatus(framework.Unschedulable),
 		},
 		{
 			name: "unhappy: AfterPreScore returns non-success",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreScorePlugin, extender *mock_plugin.MockPreScorePluginExtender) {
-				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
-				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
+				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Success))
+				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
 				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", resultstore.SuccessMessage)
-				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodes, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Unschedulable))
+				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos, framework.NewStatus(framework.Success)).Return(framework.NewStatus(framework.Unschedulable))
 			},
 			want: framework.NewStatus(framework.Unschedulable),
 		},
 		{
 			name: "unhappy: PreScore and AfterPreScore return non-success",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreScorePlugin, extender *mock_plugin.MockPreScorePluginExtender) {
-				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
-				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Unschedulable, "error"))
+				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Success))
+				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Unschedulable, "error"))
 				se.EXPECT().Name().Return("name")
 				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", "error")
-				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodes, framework.NewStatus(framework.Unschedulable, "error")).Return(framework.NewStatus(framework.Unschedulable))
+				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos, framework.NewStatus(framework.Unschedulable, "error")).Return(framework.NewStatus(framework.Unschedulable))
 			},
 			want: framework.NewStatus(framework.Unschedulable),
 		},
 		{
 			name: "happy: PreScore returns non-success, but AfterPreScore return success",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreScorePlugin, extender *mock_plugin.MockPreScorePluginExtender) {
-				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
-				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Unschedulable, "error"))
+				extender.EXPECT().BeforePreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Success))
+				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Unschedulable, "error"))
 				se.EXPECT().Name().Return("name")
 				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", "error")
-				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodes, framework.NewStatus(framework.Unschedulable, "error")).Return(framework.NewStatus(framework.Success))
+				extender.EXPECT().AfterPreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos, framework.NewStatus(framework.Unschedulable, "error")).Return(framework.NewStatus(framework.Success))
 			},
 			want: framework.NewStatus(framework.Success),
 		},
 		{
 			name: "happy without extender",
 			prepareMocksFn: func(s *mock_plugin.MockStore, se *mock_plugin.MockPreScorePlugin, extender *mock_plugin.MockPreScorePluginExtender) {
-				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodes).Return(framework.NewStatus(framework.Success))
+				se.EXPECT().PreScore(gomock.Any(), gomock.Any(), testPod, testNodeInfos).Return(framework.NewStatus(framework.Success))
 				se.EXPECT().Name().Return("name")
 				s.EXPECT().AddPreScoreResult("namespace", "pod", "name", resultstore.SuccessMessage)
 			},
@@ -1267,7 +1273,7 @@ func Test_wrappedPlugin_PreScore(t *testing.T) {
 			if !tt.noExtender {
 				w.preScorePluginExtender = ex
 			}
-			assert.Equalf(t, tt.want, w.PreScore(context.Background(), framework.NewCycleState(), testPod, testNodes), "PreScore(ctx, cyclestate, %v, %v)", testPod, testNodes)
+			assert.Equalf(t, tt.want, w.PreScore(context.Background(), framework.NewCycleState(), testPod, testNodeInfos), "PreScore(ctx, cyclestate, %v, %v)", testPod, testNodes)
 		})
 	}
 }

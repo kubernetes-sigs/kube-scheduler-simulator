@@ -183,6 +183,7 @@ func TestConvertForSimulator(t *testing.T) {
 				},
 				MultiPoint: configv1.PluginSet{
 					Enabled: []configv1.Plugin{
+						{Name: "SchedulingGatesWrapped"},
 						{Name: "PrioritySortWrapped"},
 						{Name: "NodeUnschedulableWrapped"},
 						{Name: "NodeNameWrapped"},
@@ -202,7 +203,6 @@ func TestConvertForSimulator(t *testing.T) {
 						{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 						{Name: "ImageLocalityWrapped", Weight: &weight1},
 						{Name: "DefaultBinderWrapped"},
-						{Name: "SchedulingGatesWrapped"},
 					},
 					Disabled: []configv1.Plugin{
 						{Name: "*"},

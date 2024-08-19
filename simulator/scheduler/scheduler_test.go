@@ -147,6 +147,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 				profile2 := cfg.Profiles[0].DeepCopy()
 				profile2.SchedulerName = ptr.To(nondefaultschedulername)
 				profile2.Plugins.MultiPoint.Enabled = []configv1.Plugin{
+					{Name: "SchedulingGatesWrapped"},
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},
 					{Name: "NodeNameWrapped"},
@@ -165,7 +166,6 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "DefaultPreemptionWrapped"},
 					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
-					{Name: "SchedulingGatesWrapped"},
 				}
 				cfg.Profiles = append(cfg.Profiles, *profile2)
 				return &cfg
@@ -315,6 +315,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "*"},
 				}
 				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []configv1.Plugin{
+					{Name: "SchedulingGatesWrapped"},
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},
 					{Name: "NodeNameWrapped"},
@@ -335,7 +336,6 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
-					{Name: "SchedulingGatesWrapped"},
 				}
 				return &cfg
 			}(),
@@ -381,6 +381,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "*"},
 				}
 				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []configv1.Plugin{
+					{Name: "SchedulingGatesWrapped"},
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},
 					{Name: "NodeNameWrapped"},
@@ -401,7 +402,6 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
-					{Name: "SchedulingGatesWrapped"},
 				}
 				return &cfg
 			}(),
@@ -466,6 +466,7 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "*"},
 				}
 				cfg.Profiles[0].Plugins.MultiPoint.Enabled = []configv1.Plugin{
+					{Name: "SchedulingGatesWrapped"},
 					{Name: "PrioritySortWrapped"},
 					{Name: "NodeUnschedulableWrapped"},
 					{Name: "NodeNameWrapped"},
@@ -485,7 +486,6 @@ func Test_convertConfigurationForSimulator(t *testing.T) {
 					{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 					{Name: "ImageLocalityWrapped", Weight: &weight1},
 					{Name: "DefaultBinderWrapped"},
-					{Name: "SchedulingGatesWrapped"},
 				}
 				return &cfg
 			}(),
@@ -533,6 +533,7 @@ func configGeneratedFromDefault() configv1.KubeSchedulerConfiguration {
 	cfg := versioned.DeepCopy()
 
 	cfg.Profiles[0].Plugins.MultiPoint.Enabled = []configv1.Plugin{
+		{Name: "SchedulingGatesWrapped"},
 		{Name: "PrioritySortWrapped"},
 		{Name: "NodeUnschedulableWrapped"},
 		{Name: "NodeNameWrapped"},
@@ -553,7 +554,6 @@ func configGeneratedFromDefault() configv1.KubeSchedulerConfiguration {
 		{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
 		{Name: "ImageLocalityWrapped", Weight: &weight1},
 		{Name: "DefaultBinderWrapped"},
-		{Name: "SchedulingGatesWrapped"},
 	}
 	cfg.Profiles[0].Plugins.MultiPoint.Disabled = []configv1.Plugin{
 		{Name: "*"},

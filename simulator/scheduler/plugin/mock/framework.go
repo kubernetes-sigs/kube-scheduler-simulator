@@ -221,7 +221,7 @@ func (mr *MockPreScorePluginMockRecorder) Name() *gomock.Call {
 }
 
 // PreScore mocks base method.
-func (m *MockPreScorePlugin) PreScore(arg0 context.Context, arg1 *framework.CycleState, arg2 *v1.Pod, arg3 []*v1.Node) *framework.Status {
+func (m *MockPreScorePlugin) PreScore(arg0 context.Context, arg1 *framework.CycleState, arg2 *v1.Pod, arg3 []*framework.NodeInfo) *framework.Status {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PreScore", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*framework.Status)
