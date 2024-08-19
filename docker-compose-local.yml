@@ -25,6 +25,10 @@ services:
     tty: true
     networks:
       - simulator-internal-network
+    depends_on:
+      init-debug-real-cluster:
+        condition: "service_completed_successfully"
+        required: false
   simulator-frontend:
     image: simulator-frontend
     restart: always
@@ -49,6 +53,38 @@ services:
       - KWOK_KUBE_APISERVER_PORT=3131
     networks:
       - simulator-internal-network
+  debug-real-cluster:
+    image: registry.k8s.io/kwok/cluster:v0.6.0-k8s.v1.30.2
+    container_name: debug-real-cluster
+    restart: always
+    healthcheck:
+      test: "kwokctl kubectl get nodes"
+      start_period: 60s
+      start_interval: 1s
+      interval: 600s
+    ports:
+      - "3132:3132"
+    environment:
+      - KWOK_KUBE_APISERVER_PORT=3132
+    networks:
+      - simulator-internal-network
+    profiles:
+      - debug
+  init-debug-real-cluster:
+    image: bitnami/kubectl:1.30.2
+    container_name: init-debug-real-cluster
+    volumes:
+      - ./simulator/kubeconfig.yaml:/.kube/config
+      - ./debug/manifests.yaml:/manifests.yaml
+    command: apply -f /manifests.yaml
+    networks:
+      - simulator-internal-network
+    depends_on:
+      debug-real-cluster:
+        condition: "service_healthy"
+        required: true
+    profiles:
+      - debug
 networks:
   simulator-internal-network:
     driver: bridge

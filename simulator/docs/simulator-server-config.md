@@ -27,7 +27,7 @@ corsAllowedOriginList:
 # This is for the beta feature "Importing cluster's resources".
 # This variable is used to find Kubeconfig required to access your
 # cluster for importing resources to scheduler simulator.
-kubeConfig: ""
+kubeConfig: "/kubeconfig.yaml"
 
 # This is the URL of kube-apiserver which the simulator uses.
 # This variable is used to connect to external kube-apiserver.
