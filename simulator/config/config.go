@@ -76,7 +76,7 @@ func NewConfig() (*Config, error) {
 	externalimportenabled := getExternalImportEnabled()
 	externalKubeClientCfg := &rest.Config{}
 	if externalimportenabled {
-		externalKubeClientCfg, err = GetKubeClientConfig()
+		externalKubeClientCfg, err = clientcmd.BuildConfigFromFlags("", configYaml.KubeConfig)
 		if err != nil {
 			return nil, xerrors.Errorf("get kube clientconfig: %w", err)
 		}
