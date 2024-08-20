@@ -74,10 +74,10 @@ type PostFilterPluginExtender interface {
 type PreScorePluginExtender interface {
 	// BeforePreScore is a function that runs before the PreFilter method of the original plugin.
 	// If BeforePreScore returns non-success status, the simulator plugin doesn't run the PreScore method of the original plugin and return that status.
-	BeforePreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*v1.Node) *framework.Status
+	BeforePreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*framework.NodeInfo) *framework.Status
 	// AfterPreScore is a function that is run after the PreScore method of the original plugin.
 	// A PreScore of the simulator plugin finally returns the status returned from AfterPreScore.
-	AfterPreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*v1.Node, preScoreStatus *framework.Status) *framework.Status
+	AfterPreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*framework.NodeInfo, preScoreStatus *framework.Status) *framework.Status
 }
 
 // ScorePluginExtender is the extender for Score plugin.
@@ -456,7 +456,7 @@ func (w *wrappedPlugin) PreFilterExtensions() framework.PreFilterExtensions {
 // PreScore wraps original PreScore plugin of Scheduler Framework.
 // You can run your function before and/or after the execution of original PreScore plugin
 // by configuring with WithExtendersOption.
-func (w *wrappedPlugin) PreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*v1.Node) *framework.Status {
+func (w *wrappedPlugin) PreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*framework.NodeInfo) *framework.Status {
 	if w.originalPreScorePlugin == nil {
 		// return nil not to affect scoring
 		return nil
