@@ -33,8 +33,8 @@ type ResetService interface {
 	Reset(ctx context.Context) error
 }
 
-// ImportClusterResourceService represents a service to import resources from an target cluster.
-type ImportClusterResourceService interface {
+// OneShotClusterResourceImporter represents a service to import resources from an target cluster when starting the simulator.
+type OneShotClusterResourceImporter interface {
 	ImportClusterResources(ctx context.Context) error
 }
 
