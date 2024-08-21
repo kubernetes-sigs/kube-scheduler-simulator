@@ -19,6 +19,9 @@ services:
       - PORT=1212
       - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-cluster:2379
       - KUBE_APISERVER_URL=http://simulator-cluster:3131
+    volumes:
+      - ./simulator/config.yaml:/config.yaml
+      - ./simulator/kubeconfig.yaml:/kubeconfig.yaml
     ports:
       - "1212:1212"
     restart: always
