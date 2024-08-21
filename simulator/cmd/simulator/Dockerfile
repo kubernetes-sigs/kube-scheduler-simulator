@@ -8,13 +8,17 @@ ENV GOARCH=${TARGETARCH}
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
 
+RUN go env -w GOCACHE=/go-cache
+RUN go env -w GOMODCACHE=/gomod-cache
+
 WORKDIR /go/src/simulator
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/gomod-cache go mod download
 
 COPY . .
-RUN go build -v -o ./bin/simulator ./cmd/simulator/simulator.go
+RUN --mount=type=cache,target=/gomod-cache --mount=type=cache,target=/go-cache \
+    go build -v -o ./bin/simulator ./cmd/simulator/simulator.go
 
 FROM alpine:3.14.0
 
