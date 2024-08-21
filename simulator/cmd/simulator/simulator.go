@@ -88,7 +88,7 @@ func startSimulator() error {
 	if cfg.ExternalImportEnabled {
 		ctx := context.Background()
 		// This must be called after `StartScheduler`
-		if err := dic.ImportClusterResourceService().ImportClusterResources(ctx); err != nil {
+		if err := dic.OneshotClusterResourceImporter().ImportClusterResources(ctx); err != nil {
 			return xerrors.Errorf("import from the target cluster: %w", err)
 		}
 	}
