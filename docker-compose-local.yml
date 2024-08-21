@@ -26,8 +26,8 @@ services:
     networks:
       - simulator-internal-network
     depends_on:
-      init-debug-real-cluster:
-        condition: "service_completed_successfully"
+      debug-real-cluster:
+        condition: "service_healthy"
         required: false
   simulator-frontend:
     image: simulator-frontend
@@ -68,21 +68,6 @@ services:
       - KWOK_KUBE_APISERVER_PORT=3132
     networks:
       - simulator-internal-network
-    profiles:
-      - debug
-  init-debug-real-cluster:
-    image: bitnami/kubectl:1.30.2
-    container_name: init-debug-real-cluster
-    volumes:
-      - ./simulator/kubeconfig.yaml:/.kube/config
-      - ./debug/manifests.yaml:/manifests.yaml
-    command: apply -f /manifests.yaml
-    networks:
-      - simulator-internal-network
-    depends_on:
-      debug-real-cluster:
-        condition: "service_healthy"
-        required: true
     profiles:
       - debug
 networks:
