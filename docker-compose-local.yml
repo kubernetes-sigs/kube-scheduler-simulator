@@ -26,7 +26,7 @@ services:
     networks:
       - simulator-internal-network
     depends_on:
-      debug-real-cluster:
+      fake-source-cluster:
         condition: "service_healthy"
         required: false
   simulator-frontend:
@@ -53,9 +53,9 @@ services:
       - KWOK_KUBE_APISERVER_PORT=3131
     networks:
       - simulator-internal-network
-  debug-real-cluster:
+  fake-source-cluster:
     image: registry.k8s.io/kwok/cluster:v0.6.0-k8s.v1.30.2
-    container_name: debug-real-cluster
+    container_name: fake-source-cluster
     restart: always
     healthcheck:
       test: "kwokctl kubectl get nodes"
