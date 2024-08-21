@@ -69,7 +69,7 @@ services:
     networks:
       - simulator-internal-network
     profiles:
-      - debug
+      - externalImportEnabled
 networks:
   simulator-internal-network:
     driver: bridge
