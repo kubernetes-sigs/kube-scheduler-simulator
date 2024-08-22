@@ -6,6 +6,8 @@ package di
 import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/client-go/dynamic"
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	configv1 "k8s.io/kube-scheduler/config/v1"
@@ -15,6 +17,7 @@ import (
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/syncer"
 )
 
 // Container saves and provides dependencies.
@@ -23,6 +26,7 @@ type Container struct {
 	snapshotService                SnapshotService
 	resetService                   ResetService
 	oneshotClusterResourceImporter OneShotClusterResourceImporter
+	resourceSyncer                 ResourceSyncer
 	resourceWatcherService         ResourceWatcherService
 }
 
@@ -31,13 +35,18 @@ type Container struct {
 // Only when externalImportEnabled is true, the simulator uses externalClient and creates ImportClusterResourceService.
 func NewDIContainer(
 	client clientset.Interface,
+	dynamicClient dynamic.Interface,
+	restMapper meta.RESTMapper,
 	etcdclient *clientv3.Client,
 	restclientCfg *restclient.Config,
 	initialSchedulerCfg *configv1.KubeSchedulerConfiguration,
 	externalImportEnabled bool,
+	resourceSyncEnabled bool,
 	externalClient clientset.Interface,
+	externalDynamicClient dynamic.Interface,
 	externalSchedulerEnabled bool,
 	simulatorPort int,
+	syncerOptions syncer.Options,
 ) (*Container, error) {
 	c := &Container{}
 
@@ -53,6 +62,9 @@ func NewDIContainer(
 	if externalImportEnabled {
 		extSnapshotSvc := snapshot.NewService(externalClient, c.schedulerService)
 		c.oneshotClusterResourceImporter = oneshotimporter.NewService(snapshotSvc, extSnapshotSvc)
+	}
+	if resourceSyncEnabled {
+		c.resourceSyncer = syncer.New(externalDynamicClient, dynamicClient, restMapper, syncerOptions)
 	}
 	c.resourceWatcherService = resourcewatcher.NewService(client)
 
@@ -78,6 +90,11 @@ func (c *Container) ResetService() ResetService {
 // Note: this service will return nil when `externalImportEnabled` is false.
 func (c *Container) OneshotClusterResourceImporter() OneShotClusterResourceImporter {
 	return c.oneshotClusterResourceImporter
+}
+
+// ResourceSyncer returns ResourceSyncer.
+func (c *Container) ResourceSyncer() ResourceSyncer {
+	return c.resourceSyncer
 }
 
 // ResourceWatcherService returns ResourceWatcherService.

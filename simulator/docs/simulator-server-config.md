@@ -40,9 +40,17 @@ kubeAPIServerURL: ""
 kubeSchedulerConfigPath: ""
 
 # This variable indicates whether the simulator will
-# import resources from an user cluster's or not.
-# Note, this is still a beta feature.
+# import resources from a user cluster specified by kubeConfig.
+# Note that it only imports the resources once when the simulator is started.
+# You cannot make both externalImportEnabled and resourceSyncEnabled true because those features would be conflicted.
+# This is still a beta feature.
 externalImportEnabled: false
+
+# This variable indicates whether the simulator will
+# keep syncing resources from an user cluster's or not.
+# You cannot make both externalImportEnabled and resourceSyncEnabled true because those features would be conflicted.
+# Note, this is still a beta feature.
+resourceSyncEnabled: false
 
 # This variable indicates whether an external scheduler
 # is used.
