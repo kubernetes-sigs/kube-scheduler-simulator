@@ -3,6 +3,8 @@ services:
   simulator-server:
     image: registry.k8s.io/scheduler-simulator/simulator-backend:v0.2.0
     container_name: simulator-server
+    volumes:
+      - ./simulator/config.yaml:/config.yaml
     environment:
       - PORT=1212
       - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-cluster:2379
