@@ -12,35 +12,24 @@ Note: This feature is not available in [external scheduler](./external-scheduler
 
 ## How to use
 
-You need to configure your extender in KubeSchedulerConfig.
-(via [the simulator config](./simulator-server-config.md) or WebUI)
++ Run k8s-scheduler-extender-example in local
+First, clone and run the k8s-scheduler-extender-example repository locally. This example demonstrates how to extend Kubernetes' scheduler with a custom extender.
 
-(No required special configuration is for the simulator to use this feature.)
+[View the `k8s-scheduler-extender-example` on GitHub](https://github.com/everpeace/k8s-scheduler-extender-example?tab=readme-ov-file)
 
-For example, if you run the server on `http://localhost:8080/scheduler/`,
-the configuration will look like this.
-
-```yaml
-apiVersion: kubescheduler.config.k8s.io/v1
-kind: KubeSchedulerConfiguration
-leaderElection:
-  leaderElect: false
-profiles:
-  - schedulerName: default-scheduler
-extenders:
-  - urlPrefix: "http://localhost:8080/scheduler/"
-    filterVerb: "predicates/always_true"
-    prioritizeVerb: "priorities/zero_score"
-    preemptVerb: "preemption"
-    bindVerb: ""
-    weight: 1
-    enableHTTPS: false
-    nodeCacheCapable: false
++ Run Kwok with the Debuggable Scheduler and Enable the Extender
+Set up Kwok and configure it to run the debuggable scheduler with the custom extender enabled. Kwok is a tool for running simulated Kubernetes clusters, which allows you to test and debug schedulers efficiently.
+To build and start the environment, run the following command:
+```sh
+$ make docker_build docker_up
 ```
 
-After the above settings are made, when the simulator is started and the pod is scheduled, 
-you will see each Pod gets many results on the annotation like this:
-
+Step 3: Create a Pod and Verify the Extender's Results
+After setting up the environment, create a Pod in your Kubernetes cluster. Once the Pod is scheduled, you can verify that the extender's results are correctly reflected in the Pod's annotations.
+To check the annotations, use the following command:
+```sh
+$ kubectl get pod <POD_NAME> -o yaml
+```
 ```yaml
 kind: Pod
 apiVersion: v1
@@ -48,16 +37,25 @@ metadata:
   name: pod-2rsvz
 ...
   annotations:
+    annotations:
     scheduler-simulator/bind-result: '{"DefaultBinder":"success"}'
-    scheduler-simulator/extender-bind-result: '{}'
-    scheduler-simulator/extender-filter-result: >-
-      {"http://localhost:8080/scheduler/":{"Nodes":{"metadata":{},"items":[{"metadata":{"name":"node-sc9ns","generateName":"node-","uid":"4b008c90-971e-4816-a0f4-dc1a3b6e856e","resourceVersion":"208","creationTimestamp":"2023-03-03T16:03:50Z","managedFields":[{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2023-03-03T16:03:50Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:generateName":{}}}}]},"spec":{},"status":{"capacity":{"cpu":"4","memory":"32Gi","pods":"110"},"allocatable":{"cpu":"4","memory":"32Gi","pods":"110"},"phase":"Running","conditions":[{"type":"Ready","status":"True","lastHeartbeatTime":null,"lastTransitionTime":null}],"daemonEndpoints":{"kubeletEndpoint":{"Port":0}},"nodeInfo":{"machineID":"","systemUUID":"","bootID":"","kernelVersion":"","osImage":"","containerRuntimeVersion":"","kubeletVersion":"","kubeProxyVersion":"","operatingSystem":"","architecture":""}}},{"metadata":{"name":"node-pwzdq","generateName":"node-","uid":"b24f918d-94ae-4c35-9e2c-2376998dbede","resourceVersion":"209","creationTimestamp":"2023-03-03T16:03:53Z","managedFields":[{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2023-03-03T16:03:53Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:generateName":{}}}}]},"spec":{},"status":{"capacity":{"cpu":"4","memory":"32Gi","pods":"110"},"allocatable":{"cpu":"4","memory":"32Gi","pods":"110"},"phase":"Running","conditions":[{"type":"Ready","status":"True","lastHeartbeatTime":null,"lastTransitionTime":null}],"daemonEndpoints":{"kubeletEndpoint":{"Port":0}},"nodeInfo":{"machineID":"","systemUUID":"","bootID":"","kernelVersion":"","osImage":"","containerRuntimeVersion":"","kubeletVersion":"","kubeProxyVersion":"","operatingSystem":"","architecture":""}}}]},"NodeNames":null,"FailedNodes":{},"FailedAndUnresolvableNodes":null,"Error":""}}
-    scheduler-simulator/extender-preempt-result: '{}'
-    scheduler-simulator/extender-prioritize-result: >-
-      {"http://localhost:8080/scheduler/":[{"Host":"node-sc9ns","Score":0},{"Host":"node-pwzdq","Score":0}]}
-    scheduler-simulator/score-result: >-
-      {"node-282x7":{"ImageLocality":"0","InterPodAffinity":"0","NodeAffinity":"0","NodeNumber":"0","NodeResourcesBalancedAllocation":"52","NodeResourcesFit":"47","PodTopologySpread":"0","TaintToleration":"0","VolumeBinding":"0"},"node-gp9t4":{"ImageLocality":"0","InterPodAffinity":"0","NodeAffinity":"0","NodeNumber":"0","NodeResourcesBalancedAllocation":"76","NodeResourcesFit":"73","PodTopologySpread":"0","TaintToleration":"0","VolumeBinding":"0"}}
+    scheduler-simulator/filter-result: '{"node-cl8rv":{"NodeName":"passed","NodeResourcesFit":"passed","NodeUnschedulable":"passed","TaintToleration":"passed"},"node-thcvl":{"NodeName":"passed","NodeResourcesFit":"passed","NodeUnschedulable":"passed","TaintToleration":"passed"}}'
+    scheduler-simulator/finalscore-result: '{"node-cl8rv":{"ImageLocality":"0","NodeAffinity":"0","NodeResourcesBalancedAllocation":"76","NodeResourcesFit":"70","TaintToleration":"300","VolumeBinding":"0"},"node-thcvl":{"ImageLocality":"0","NodeAffinity":"0","NodeResourcesBalancedAllocation":"52","NodeResourcesFit":"47","TaintToleration":"300","VolumeBinding":"0"}}'
+    scheduler-simulator/permit-result: '{}'
+    scheduler-simulator/permit-result-timeout: '{}'
+    scheduler-simulator/postfilter-result: '{}'
+    scheduler-simulator/prebind-result: '{"VolumeBinding":"success"}'
+    scheduler-simulator/prefilter-result: '{}'
+    scheduler-simulator/prefilter-result-status: '{"AzureDiskLimits":"","EBSLimits":"","GCEPDLimits":"","InterPodAffinity":"","NodeAffinity":"","NodePorts":"","NodeResourcesFit":"success","NodeVolumeLimits":"","PodTopologySpread":"","VolumeBinding":"","VolumeRestrictions":"","VolumeZone":""}'
+    scheduler-simulator/prescore-result: '{"InterPodAffinity":"","NodeAffinity":"success","NodeResourcesBalancedAllocation":"success","NodeResourcesFit":"success","PodTopologySpread":"","TaintToleration":"success"}'
+    scheduler-simulator/reserve-result: '{"VolumeBinding":"success"}'
+    scheduler-simulator/result-history: '[{"scheduler-simulator/bind-result":"{\"DefaultBinder\":\"Operation
+      cannot be fulfilled on pods/binding \\\"pod-pvzns\\\": pod pod-pvzns is already
+      assigned to node \\\"node-cl8rv\\\"\"}","scheduler-simulator/filter-result":"{\"node-cl8rv\":{\"NodeName\":\"passed\",\"NodeResourcesFit\":\"passed\",\"NodeUnschedulable\":\"passed\",\"TaintToleration\":\"passed\"},\"node-thcvl\":{\"NodeName\":\"passed\",\"NodeResourcesFit\":\"passed\",\"NodeUnschedulable\":\"passed\",\"TaintToleration\":\"passed\"}}","scheduler-simulator/finalscore-result":"{\"node-cl8rv\":{\"ImageLocality\":\"0\",\"NodeAffinity\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"70\",\"TaintToleration\":\"300\",\"VolumeBinding\":\"0\"},\"node-thcvl\":{\"ImageLocality\":\"0\",\"NodeAffinity\":\"0\",\"NodeResourcesBalancedAllocation\":\"52\",\"NodeResourcesFit\":\"47\",\"TaintToleration\":\"300\",\"VolumeBinding\":\"0\"}}","scheduler-simulator/permit-result":"{}","scheduler-simulator/permit-result-timeout":"{}","scheduler-simulator/postfilter-result":"{}","scheduler-simulator/prebind-result":"{\"VolumeBinding\":\"success\"}","scheduler-simulator/prefilter-result":"{}","scheduler-simulator/prefilter-result-status":"{\"AzureDiskLimits\":\"\",\"EBSLimits\":\"\",\"GCEPDLimits\":\"\",\"InterPodAffinity\":\"\",\"NodeAffinity\":\"\",\"NodePorts\":\"\",\"NodeResourcesFit\":\"success\",\"NodeVolumeLimits\":\"\",\"PodTopologySpread\":\"\",\"VolumeBinding\":\"\",\"VolumeRestrictions\":\"\",\"VolumeZone\":\"\"}","scheduler-simulator/prescore-result":"{\"InterPodAffinity\":\"\",\"NodeAffinity\":\"success\",\"NodeResourcesBalancedAllocation\":\"success\",\"NodeResourcesFit\":\"success\",\"PodTopologySpread\":\"\",\"TaintToleration\":\"success\"}","scheduler-simulator/reserve-result":"{\"VolumeBinding\":\"success\"}","scheduler-simulator/score-result":"{\"node-cl8rv\":{\"ImageLocality\":\"0\",\"NodeAffinity\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"70\",\"TaintToleration\":\"0\",\"VolumeBinding\":\"0\"},\"node-thcvl\":{\"ImageLocality\":\"0\",\"NodeAffinity\":\"0\",\"NodeResourcesBalancedAllocation\":\"52\",\"NodeResourcesFit\":\"47\",\"TaintToleration\":\"0\",\"VolumeBinding\":\"0\"}}","scheduler-simulator/selected-node":"node-cl8rv"},{"scheduler-simulator/bind-result":"{\"DefaultBinder\":\"success\"}","scheduler-simulator/filter-result":"{\"node-cl8rv\":{\"NodeName\":\"passed\",\"NodeResourcesFit\":\"passed\",\"NodeUnschedulable\":\"passed\",\"TaintToleration\":\"passed\"},\"node-thcvl\":{\"NodeName\":\"passed\",\"NodeResourcesFit\":\"passed\",\"NodeUnschedulable\":\"passed\",\"TaintToleration\":\"passed\"}}","scheduler-simulator/finalscore-result":"{\"node-cl8rv\":{\"ImageLocality\":\"0\",\"NodeAffinity\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"70\",\"TaintToleration\":\"300\",\"VolumeBinding\":\"0\"},\"node-thcvl\":{\"ImageLocality\":\"0\",\"NodeAffinity\":\"0\",\"NodeResourcesBalancedAllocation\":\"52\",\"NodeResourcesFit\":\"47\",\"TaintToleration\":\"300\",\"VolumeBinding\":\"0\"}}","scheduler-simulator/permit-result":"{}","scheduler-simulator/permit-result-timeout":"{}","scheduler-simulator/postfilter-result":"{}","scheduler-simulator/prebind-result":"{\"VolumeBinding\":\"success\"}","scheduler-simulator/prefilter-result":"{}","scheduler-simulator/prefilter-result-status":"{\"AzureDiskLimits\":\"\",\"EBSLimits\":\"\",\"GCEPDLimits\":\"\",\"InterPodAffinity\":\"\",\"NodeAffinity\":\"\",\"NodePorts\":\"\",\"NodeResourcesFit\":\"success\",\"NodeVolumeLimits\":\"\",\"PodTopologySpread\":\"\",\"VolumeBinding\":\"\",\"VolumeRestrictions\":\"\",\"VolumeZone\":\"\"}","scheduler-simulator/prescore-result":"{\"InterPodAffinity\":\"\",\"NodeAffinity\":\"success\",\"NodeResourcesBalancedAllocation\":\"success\",\"NodeResourcesFit\":\"success\",\"PodTopologySpread\":\"\",\"TaintToleration\":\"success\"}","scheduler-simulator/reserve-result":"{\"VolumeBinding\":\"success\"}","scheduler-simulator/score-result":"{\"node-cl8rv\":{\"ImageLocality\":\"0\",\"NodeAffinity\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"70\",\"TaintToleration\":\"0\",\"VolumeBinding\":\"0\"},\"node-thcvl\":{\"ImageLocality\":\"0\",\"NodeAffinity\":\"0\",\"NodeResourcesBalancedAllocation\":\"52\",\"NodeResourcesFit\":\"47\",\"TaintToleration\":\"0\",\"VolumeBinding\":\"0\"}}","scheduler-simulator/selected-node":"node-cl8rv"}]'
+    scheduler-simulator/score-result: '{"node-cl8rv":{"ImageLocality":"0","NodeAffinity":"0","NodeResourcesBalancedAllocation":"76","NodeResourcesFit":"70","TaintToleration":"0","VolumeBinding":"0"},"node-thcvl":{"ImageLocality":"0","NodeAffinity":"0","NodeResourcesBalancedAllocation":"52","NodeResourcesFit":"47","TaintToleration":"0","VolumeBinding":"0"}}'
+    scheduler-simulator/selected-node: node-cl8rv
 ...
 ```
 
+You can also view the annotation results from the web UI. Simply select the Pod you created and scheduled, then check the Resource Definition section to see the annotations.
 
