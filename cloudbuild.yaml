@@ -5,6 +5,7 @@ timeout: 3000s
 steps:
   - name: gcr.io/cloud-builders/docker
     args:
+    - buildx
     - build
     - --tag=gcr.io/$PROJECT_ID/simulator-backend:$_GIT_TAG
     - --tag=gcr.io/$PROJECT_ID/simulator-backend:latest
@@ -12,6 +13,7 @@ steps:
     - ./simulator/
   - name: gcr.io/cloud-builders/docker
     args:
+    - buildx
     - build
     - --tag=gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG
     - --tag=gcr.io/$PROJECT_ID/simulator-frontend:latest
