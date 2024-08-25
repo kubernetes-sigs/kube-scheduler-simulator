@@ -1,4 +1,114 @@
 kind: KubeSchedulerConfiguration
 apiVersion: kubescheduler.config.k8s.io/v1
-clientConnection:
-  kubeconfig: kubeconfig.yaml
+parallelism: 16
+leaderElection:  
+  leaderElect: true  
+  leaseDuration: 15s  
+  renewDeadline: 10s  
+  retryPeriod: 2s  
+  resourceLock: leases  
+  resourceName: kube-scheduler  
+  resourceNamespace: kube-system
+clientConnection:  
+  kubeconfig: ''  
+  acceptContentTypes: ''  
+  contentType: application/vnd.kubernetes.protobuf  
+  qps: 50  
+  burst: 100
+enableProfiling: true
+enableContentionProfiling: true
+percentageOfNodesToScore: 0
+podInitialBackoffSeconds: 1
+podMaxBackoffSeconds: 10
+profiles:  
+- schedulerName: default-scheduler
+  plugins:      
+    preEnqueue: {}      
+    queueSort: {}      
+    preFilter: {}      
+    filter: {}      
+    postFilter: {}      
+    preScore: {}      
+    score: {}      
+    reserve: {}      
+    permit: {}      
+    preBind: {}      
+    bind: {}      
+    postBind: {}      
+    multiPoint:        
+      enabled:          
+      - name: PrioritySort          
+      - name: NodeUnschedulable          
+      - name: NodeName          
+      - name: TaintToleration            
+        weight: 3          
+      - name: NodeAffinity            
+        weight: 2          
+      - name: NodePorts          
+      - name: NodeResourcesFit            
+        weight: 1          
+      - name: VolumeRestrictions          
+      - name: EBSLimits          
+      - name: GCEPDLimits          
+      - name: NodeVolumeLimits          
+      - name: AzureDiskLimits          
+      - name: VolumeBinding          
+      - name: VolumeZone          
+      - name: PodTopologySpread            
+        weight: 2          
+      - name: InterPodAffinity            
+        weight: 2          
+      - name: DefaultPreemption          
+      - name: NodeResourcesBalancedAllocation            
+        weight: 1          
+      - name: ImageLocality            
+        weight: 1          
+      - name: DefaultBinder          
+      - name: SchedulingGates    
+  pluginConfig:      
+    - name: DefaultPreemption        
+      args:          
+        kind: DefaultPreemptionArgs          
+        apiVersion: kubescheduler.config.k8s.io/v1          
+        minCandidateNodesPercentage: 10          
+        minCandidateNodesAbsolute: 100      
+    - name: InterPodAffinity        
+      args:         
+        kind: InterPodAffinityArgs          
+        apiVersion: kubescheduler.config.k8s.io/v1          
+        hardPodAffinityWeight: 1          
+        ignorePreferredTermsOfExistingPods: false      
+    - name: NodeAffinity        
+      args:          
+        kind: NodeAffinityArgs          
+        apiVersion: kubescheduler.config.k8s.io/v1      
+    - name: NodeResourcesBalancedAllocation        
+      args:          
+        kind: NodeResourcesBalancedAllocationArgs          
+        apiVersion: kubescheduler.config.k8s.io/v1          
+        resources:            
+          - name: cpu              
+            weight: 1            
+          - name: memory              
+            weight: 1      
+    - name: NodeResourcesFit        
+      args:          
+        kind: NodeResourcesFitArgs          
+        apiVersion: kubescheduler.config.k8s.io/v1          
+        scoringStrategy:            
+          type: LeastAllocated            
+          resources:              
+            - name: cpu                
+              weight: 1              
+            - name: memory                
+              weight: 1      
+    - name: PodTopologySpread        
+      args:          
+        kind: PodTopologySpreadArgs          
+        apiVersion: kubescheduler.config.k8s.io/v1          
+        defaultingType: System      
+    - name: VolumeBinding        
+      args:          
+        kind: VolumeBindingArgs          
+        apiVersion: kubescheduler.config.k8s.io/v1          
+        bindTimeoutSeconds: 600
