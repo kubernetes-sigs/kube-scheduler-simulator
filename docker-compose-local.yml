@@ -1,5 +1,11 @@
 version: "3.7"
 services:
+  init-container:
+      image: busybox
+      volumes:
+        - conf:/config
+        - ${PWD}/simulator/cmd/scheduler:/host-config:ro    
+      command: sh -c "cp -rf /host-config/* /config/"
   simulator-scheduler:
     image: simulator-scheduler
     container_name: simulator-scheduler
@@ -8,11 +14,11 @@ services:
     networks:
       - simulator-internal-network
     depends_on:
-      - simulator-cluster
+      - init-container
     environment:
       - KUBECONFIG=/config/kubeconfig.yaml
     volumes:
-      - sched-conf:/config
+      - conf:/config
   simulator-server:
     image: simulator-server
     container_name: simulator-server
@@ -29,7 +35,7 @@ services:
       - simulator-internal-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - sched-conf:/config
+      - conf:/config
   simulator-frontend:
     image: simulator-frontend
     restart: always
@@ -59,9 +65,5 @@ networks:
     driver: bridge
 volumes:
   simulator-etcd-data:
-  sched-conf:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/simulator/cmd/scheduler
-      o: bind
+  conf:
+
