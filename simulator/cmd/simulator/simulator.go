@@ -11,13 +11,24 @@ import (
 	"golang.org/x/xerrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/memory"
+	"k8s.io/client-go/dynamic"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/restmapper"
 	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/syncer"
+)
+
+const (
+	kubeAPIServerPollInterval = 5 * time.Second
+	kubeAPIServerReadyTimeout = 2 * time.Minute
+	importTimeout             = 2 * time.Minute
 )
 
 // entry point.
@@ -40,12 +51,22 @@ func startSimulator() error {
 		Host: cfg.KubeAPIServerURL,
 	}
 	client := clientset.NewForConfigOrDie(restCfg)
+	dynamicClient := dynamic.NewForConfigOrDie(restCfg)
+	discoverClient := discovery.NewDiscoveryClient(client.RESTClient())
+	cachedDiscoveryClient := memory.NewMemCacheClient(discoverClient)
+	restMapper := restmapper.NewDeferredDiscoveryRESTMapper(cachedDiscoveryClient)
 
 	importClusterResourceClient := &clientset.Clientset{}
-	if cfg.ExternalImportEnabled {
+	var importClusterDynamicClient dynamic.Interface
+	if cfg.ExternalImportEnabled || cfg.ResourceSyncEnabled {
 		importClusterResourceClient, err = clientset.NewForConfig(cfg.ExternalKubeClientCfg)
 		if err != nil {
 			return xerrors.Errorf("creates a new Clientset for the ExternalKubeClientCfg: %w", err)
+		}
+
+		importClusterDynamicClient, err = dynamic.NewForConfig(cfg.ExternalKubeClientCfg)
+		if err != nil {
+			return xerrors.Errorf("creates a new dynamic Clientset for the ExternalKubeClientCfg: %w", err)
 		}
 	}
 
@@ -57,9 +78,10 @@ func startSimulator() error {
 		return xerrors.Errorf("create an etcd client: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err = wait.PollUntilContextCancel(ctx, time.Second*5, true, func(ctx context.Context) (bool, error) {
+
+	err = wait.PollUntilContextTimeout(ctx, kubeAPIServerPollInterval, kubeAPIServerReadyTimeout, true, func(ctx context.Context) (bool, error) {
 		_, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
 		if err != nil {
 			klog.Infof("waiting for kube-system namespace to be ready: %v", err)
@@ -72,7 +94,7 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	dic, err := di.NewDIContainer(client, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, importClusterResourceClient, cfg.ExternalSchedulerEnabled, cfg.Port)
+	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.ExternalSchedulerEnabled, cfg.Port, syncer.Options{})
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
@@ -86,10 +108,18 @@ func startSimulator() error {
 	// If ExternalImportEnabled is enabled, the simulator import resources
 	// from the target cluster that indicated by the `KUBECONFIG`.
 	if cfg.ExternalImportEnabled {
-		ctx := context.Background()
 		// This must be called after `StartScheduler`
-		if err := dic.OneshotClusterResourceImporter().ImportClusterResources(ctx); err != nil {
+		timeoutCtx, timeoutCancel := context.WithTimeout(ctx, importTimeout)
+		defer timeoutCancel()
+		if err := dic.OneshotClusterResourceImporter().ImportClusterResources(timeoutCtx); err != nil {
 			return xerrors.Errorf("import from the target cluster: %w", err)
+		}
+	}
+
+	if cfg.ResourceSyncEnabled {
+		// Start the resource syncer to sync resources from the target cluster.
+		if err = dic.ResourceSyncer().Run(ctx); err != nil {
+			return xerrors.Errorf("start syncing: %w", err)
 		}
 	}
 
