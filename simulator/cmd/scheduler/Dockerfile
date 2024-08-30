@@ -24,4 +24,6 @@ FROM alpine:3.14.0
 COPY --from=build-env /go/src/simulator/bin/scheduler /scheduler
 RUN chmod a+x /scheduler
 
-CMD ["/scheduler"]
+COPY ./cmd/scheduler/scheduler.yaml ./cmd/scheduler/kubeconfig.yaml ./
+
+CMD ["/scheduler", "--config", "/config/scheduler.yaml"]

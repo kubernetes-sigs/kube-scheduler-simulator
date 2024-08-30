@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/dynamic"
@@ -19,6 +21,7 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 	apiconfigv1 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1"
 	"k8s.io/kubernetes/pkg/scheduler/profile"
+	simulatorconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 
 	simulatorschedconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender"
@@ -67,22 +70,53 @@ func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.C
 	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg, sharedStore: sharedStore, simulatorPort: simulatorPort}
 }
 
+func restartContainer(ctx context.Context, cli *client.Client, id string, cfg *configv1.KubeSchedulerConfiguration) error {
+	if err := simulatorschedconfig.WriteConfig(cfg); err != nil {
+		return xerrors.Errorf("read old scheduler.yaml: %w", err)
+	}
+
+	if err := cli.ContainerRestart(ctx, id, container.StopOptions{}); err != nil {
+		return err
+	}
+	inspect, err := cli.ContainerInspect(ctx, id)
+	if err != nil {
+		return err
+	}
+	if inspect.State.Status != "running" {
+		return xerrors.Errorf("restart container status is not running")
+	}
+	return nil
+}
+
 func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error {
-	if s.disabled {
-		return xerrors.Errorf("an external scheduler is enabled: %w", ErrServiceDisabled)
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		klog.Info("shutdown scheduler...")
+		return err
 	}
 
-	s.ShutdownScheduler()
+	oldCfg, err := simulatorconfig.GetSchedulerCfg()
+	if err != nil {
+		return xerrors.Errorf("read old scheduler.yaml: %w", err)
+	}
 
-	oldSchedulerCfg := s.currentSchedulerCfg
-	if err := s.StartScheduler(cfg); err != nil {
-		klog.Infof("failed to start scheduler: %v. restarting with old configuration", err)
-		if err2 := s.StartScheduler(oldSchedulerCfg); err2 != nil {
-			klog.Warningf("failed to start scheduler with old configuration: %v", err2)
-			return xerrors.Errorf("start scheduler: %w, restart scheduler with old configuration: %w", err, err2)
+	containers, err := cli.ContainerList(ctx, container.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, c := range containers {
+		if c.Names[0] != "/simulator-scheduler" {
+			continue
 		}
-		return xerrors.Errorf("start scheduler: %w", err)
+		if err := restartContainer(ctx, cli, c.ID, cfg); err != nil {
+			if err := restartContainer(ctx, cli, c.ID, oldCfg); err != nil {
+				return xerrors.Errorf("oldConfig restart failed: %w", err)
+			}
+		}
+		break
 	}
+	s.currentSchedulerCfg = cfg.DeepCopy()
 	return nil
 }
 

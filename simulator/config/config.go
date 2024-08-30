@@ -91,7 +91,7 @@ func NewConfig() (*Config, error) {
 		}
 	}
 
-	initialschedulerCfg, err := getSchedulerCfg()
+	initialschedulerCfg, err := GetSchedulerCfg()
 	if err != nil {
 		return nil, xerrors.Errorf("get SchedulerCfg: %w", err)
 	}
@@ -230,7 +230,7 @@ func parseStringListEnv(e string) []string {
 // and converts it into *configv1.KubeSchedulerConfiguration.
 // KUBE_SCHEDULER_CONFIG_PATH is not required.
 // If KUBE_SCHEDULER_CONFIG_PATH is not set, the default configuration of kube-scheduler will be used.
-func getSchedulerCfg() (*configv1.KubeSchedulerConfiguration, error) {
+func GetSchedulerCfg() (*configv1.KubeSchedulerConfiguration, error) {
 	kubeSchedulerConfigPath := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
 	if kubeSchedulerConfigPath == "" {
 		kubeSchedulerConfigPath = configYaml.KubeSchedulerConfigPath
