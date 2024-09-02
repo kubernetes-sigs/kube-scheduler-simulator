@@ -7,7 +7,7 @@
 5. Add the prow-job settings for the new release branch [here](https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kube-scheduler-simulator). 
 6. Push the release branch to the kube-scheduler-simulator repo and ensure branch protection is enabled. (not required for patch releases)
 7. Publish a draft release using the tag you created in 3.
-8. Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter).
+8. Perform the [image promotion process](https://github.com/kubernetes/k8s.io/blob/main/registry.k8s.io/images/k8s-staging-sched-simulator/images.yaml).
 9. Publish release.
 10. Make sure the new version's image can be pulled and we can run the simulator correctly.
 11. Create a PR to update [docker-compose.yml](./docker-compose.yml) specifies the new release.
