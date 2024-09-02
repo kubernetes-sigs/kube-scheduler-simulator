@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   simulator-server:
-    image: registry.k8s.io/scheduler-simulator/simulator-backend:v0.2.0
+    image: registry.k8s.io/scheduler-simulator/simulator-backend:v0.3.0
     container_name: simulator-server
     volumes:
       - ./simulator/config.yaml:/config.yaml
@@ -16,7 +16,7 @@ services:
     networks:
       - simulator-internal-network
   simulator-frontend:
-    image: registry.k8s.io/scheduler-simulator/simulator-frontend:v0.2.0
+    image: registry.k8s.io/scheduler-simulator/simulator-frontend:v0.3.0
     restart: always
     container_name: simulator-frontend
     environment:
