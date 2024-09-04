@@ -1,10 +1,10 @@
-### [Beta] Import your real cluster's resources
+# [Beta] Import your real cluster's resources
 
 There are two ways to import resources from your cluster. These methods cannot be used simultaneously.
 - Import resources from your cluster once when initializing the simulator.
 - Keep importing resources from your cluster.
 
-#### One-shot import: Import resources once when initializing the simulator
+## One-shot import: Import resources once when initializing the simulator
 
 To use this, you need to follow these two steps in the simulator configuration:
 - Set `true` to `externalImportEnabled`.
@@ -16,7 +16,7 @@ externalImportEnabled: true
 kubeConfig: "/path/to/your-cluster-kubeconfig"
 ```
 
-#### Syncer: Keep importing resources 
+## Syncer: Keep importing resources 
 
 To use this, you need to follow these two steps in the scheduler configuration:
 - Set `true` to `resourceSyncEnabled`.
@@ -32,7 +32,7 @@ kubeConfig: "/path/to/your-cluster-kubeconfig"
 > When you enable `resourceSyncEnabled`, adding/updating/deleting resources directly in the simulator cluster could cause a problem of syncing. 
 > You can do them for debugging etc purposes though, make sure you reboot the simulator and the fake source cluster afterward.
 
-##### How it syncs Pods
+### How it syncs Pods
 
 We cannot simply sync all changes to Pods, 
 because the real cluster has the scheduler, and it schedules all Pods in the cluster.
@@ -51,7 +51,7 @@ It means that the scheduling results may be different between a real cluster and
 But, it's OK.
 Our purpose is to create a fake cluster for testing the scheduling, which gets the same load as the production cluster.
 
-##### Resources to import
+### Resources to import
 
 It imports the following resources, which the scheduler's default plugins take into account during scheduling.
 
