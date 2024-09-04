@@ -63,7 +63,7 @@ It imports the following resources, which the scheduler's default plugins take i
 
 If you need to, you can tweak which resources to import via the option in [/simulator/cmd/simulator/simulator.go](https://github.com/kubernetes-sigs/kube-scheduler-simulator/blob/master/simulator/cmd/simulator/simulator.go):
 
-```
+```go
 dic, err := di.NewDIContainer(..., syncer.Options{
   // GVRsToSync is a list of GroupVersionResource that will be synced.
 	// If GVRsToSync is nil, defaultGVRs are used.
