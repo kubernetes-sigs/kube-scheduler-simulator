@@ -65,11 +65,11 @@ If you need to, you can tweak which resources to import via the option in [/simu
 
 ```go
 dic, err := di.NewDIContainer(..., syncer.Options{
-  // GVRsToSync is a list of GroupVersionResource that will be synced.
+	// GVRsToSync is a list of GroupVersionResource that will be synced.
 	// If GVRsToSync is nil, defaultGVRs are used.
 	GVRsToSync: []schema.GroupVersionResource{
-    {Group: "your-group", Version: "v1", Resource: "your-custom-resources"},
-  }
+    		{Group: "your-group", Version: "v1", Resource: "your-custom-resources"},
+  	}
 
 	// Actually, more options are available...
  
