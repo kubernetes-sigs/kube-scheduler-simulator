@@ -185,24 +185,3 @@ func ConvertSchedulerConfigToInternalConfig(versioned *configv1.KubeSchedulerCon
 
 	return &cfg, nil
 }
-
-// filterOutNonAllowedChangesOnCfg excludes non-allowed changes.
-// Now, we accept only changes to Profiles.Plugins and Extenders fields.
-func filterOutNonAllowedChangesOnCfg(originalCfg *config.KubeSchedulerConfiguration) (*config.KubeSchedulerConfiguration, error) {
-	defaultCfg, err := simulatorschedconfig.DefaultSchedulerConfig()
-	if err != nil {
-		return nil, xerrors.Errorf("get default scheduler config: %w", err)
-	}
-	apiconfigv1.SetDefaults_KubeSchedulerConfiguration(defaultCfg)
-	defaultconvertedcfg := config.KubeSchedulerConfiguration{}
-	if err := scheme.Scheme.Convert(defaultCfg, &defaultconvertedcfg, nil); err != nil {
-		return nil, xerrors.Errorf("convert configuration: %w", err)
-	}
-	originalCfg.SetGroupVersionKind(configv1.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
-
-	// set default value to all field other than Profiles and Extenders.
-	defaultconvertedcfg.Profiles = originalCfg.Profiles
-	defaultconvertedcfg.Extenders = originalCfg.Extenders
-
-	return &defaultconvertedcfg, nil
-}
