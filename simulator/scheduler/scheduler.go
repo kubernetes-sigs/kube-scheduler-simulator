@@ -8,23 +8,17 @@ import (
 	"github.com/docker/docker/client"
 	"golang.org/x/xerrors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/dynamic/dynamicinformer"
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/events"
 	"k8s.io/klog/v2"
 	configv1 "k8s.io/kube-scheduler/config/v1"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
-	"k8s.io/kubernetes/pkg/scheduler"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 	apiconfigv1 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1"
-	"k8s.io/kubernetes/pkg/scheduler/profile"
 	simulatorconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 
 	simulatorschedconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/storereflector"
 )
@@ -127,97 +121,97 @@ func (s *Service) ResetScheduler() error {
 // StartScheduler starts scheduler.
 //
 //nolint:funlen,cyclop
-func (s *Service) StartScheduler(versionedcfg *configv1.KubeSchedulerConfiguration) (retErr error) {
-	clientSet := s.clientset
-	restConfig := s.restclientCfg
-	ctx, cancel := context.WithCancel(context.Background())
-	defer func() {
-		if retErr != nil {
-			cancel()
-		}
-	}()
-	informerFactory := scheduler.NewInformerFactory(clientSet, 0)
-	var dynInformerFactory dynamicinformer.DynamicSharedInformerFactory
-	if restConfig != nil {
-		dynClient := dynamic.NewForConfigOrDie(restConfig)
-		dynInformerFactory = dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynClient, 0, v1.NamespaceAll, nil)
-	}
-	evtBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{
-		Interface: clientSet.EventsV1(),
-	})
-	evtBroadcaster.StartRecordingToSink(ctx.Done())
+// func (s *Service) StartScheduler(versionedcfg *configv1.KubeSchedulerConfiguration) (retErr error) {
+// 	clientSet := s.clientset
+// 	restConfig := s.restclientCfg
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer func() {
+// 		if retErr != nil {
+// 			cancel()
+// 		}
+// 	}()
+// 	informerFactory := scheduler.NewInformerFactory(clientSet, 0)
+// 	var dynInformerFactory dynamicinformer.DynamicSharedInformerFactory
+// 	if restConfig != nil {
+// 		dynClient := dynamic.NewForConfigOrDie(restConfig)
+// 		dynInformerFactory = dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynClient, 0, v1.NamespaceAll, nil)
+// 	}
+// 	evtBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{
+// 		Interface: clientSet.EventsV1(),
+// 	})
+// 	evtBroadcaster.StartRecordingToSink(ctx.Done())
 
-	s.currentSchedulerCfg = versionedcfg.DeepCopy()
+// 	s.currentSchedulerCfg = versionedcfg.DeepCopy()
 
-	var err error
-	// Extender service must be initialized using `versionedcfg.Extenders` config which is not override for simulator (before calling OverrideExtendersCfgToSimulator()).
-	s.extenderService, err = extender.New(clientSet, versionedcfg.Extenders, s.sharedStore)
-	if err != nil {
-		return xerrors.Errorf("New extender service: %w", err)
-	}
+// 	var err error
+// 	// Extender service must be initialized using `versionedcfg.Extenders` config which is not override for simulator (before calling OverrideExtendersCfgToSimulator()).
+// 	s.extenderService, err = extender.New(clientSet, versionedcfg.Extenders, s.sharedStore)
+// 	if err != nil {
+// 		return xerrors.Errorf("New extender service: %w", err)
+// 	}
 
-	// Override the Extenders config so that the connection is directed to the simulator server.
-	extender.OverrideExtendersCfgToSimulator(versionedcfg, s.simulatorPort)
+// 	// Override the Extenders config so that the connection is directed to the simulator server.
+// 	extender.OverrideExtendersCfgToSimulator(versionedcfg, s.simulatorPort)
 
-	versioned, err := ConvertConfigurationForSimulator(versionedcfg)
-	if err != nil {
-		return xerrors.Errorf("convert scheduler config to apply: %w", err)
-	}
+// 	versioned, err := ConvertConfigurationForSimulator(versionedcfg)
+// 	if err != nil {
+// 		return xerrors.Errorf("convert scheduler config to apply: %w", err)
+// 	}
 
-	cfg, err := ConvertSchedulerConfigToInternalConfig(versioned)
-	if err != nil {
-		return xerrors.Errorf("convert scheduler config to internal one: %w", err)
-	}
+// 	cfg, err := ConvertSchedulerConfigToInternalConfig(versioned)
+// 	if err != nil {
+// 		return xerrors.Errorf("convert scheduler config to internal one: %w", err)
+// 	}
 
-	cfg, err = filterOutNonAllowedChangesOnCfg(cfg)
-	if err != nil {
-		return xerrors.Errorf("filter out non allowed changes: %w", err)
-	}
+// 	cfg, err = filterOutNonAllowedChangesOnCfg(cfg)
+// 	if err != nil {
+// 		return xerrors.Errorf("filter out non allowed changes: %w", err)
+// 	}
 
-	registry, err := plugin.NewRegistry(s.sharedStore, cfg, nil)
-	if err != nil {
-		return xerrors.Errorf("plugin registry: %w", err)
-	}
+// 	registry, err := plugin.NewRegistry(s.sharedStore, cfg, nil)
+// 	if err != nil {
+// 		return xerrors.Errorf("plugin registry: %w", err)
+// 	}
 
-	if s.sharedStore != nil {
-		// Resister the event handler function to store the result stored in the sharedStore in pod.
-		if err := s.sharedStore.ResisterResultSavingToInformer(clientSet, ctx.Done()); err != nil {
-			return xerrors.Errorf("ResisterResultSavingToInformer of sharedStore: %w", err)
-		}
-	}
+// 	if s.sharedStore != nil {
+// 		// Resister the event handler function to store the result stored in the sharedStore in pod.
+// 		if err := s.sharedStore.ResisterResultSavingToInformer(clientSet, ctx.Done()); err != nil {
+// 			return xerrors.Errorf("ResisterResultSavingToInformer of sharedStore: %w", err)
+// 		}
+// 	}
 
-	sched, err := scheduler.New(
-		ctx,
-		clientSet,
-		informerFactory,
-		dynInformerFactory,
-		profile.NewRecorderFactory(evtBroadcaster),
-		scheduler.WithKubeConfig(restConfig),
-		scheduler.WithProfiles(cfg.Profiles...),
-		scheduler.WithPercentageOfNodesToScore(cfg.PercentageOfNodesToScore),
-		scheduler.WithPodMaxBackoffSeconds(cfg.PodMaxBackoffSeconds),
-		scheduler.WithPodInitialBackoffSeconds(cfg.PodInitialBackoffSeconds),
-		scheduler.WithExtenders(cfg.Extenders...),
-		scheduler.WithParallelism(cfg.Parallelism),
-		scheduler.WithFrameworkOutOfTreeRegistry(registry),
-	)
-	if err != nil {
-		return xerrors.Errorf("create scheduler: %w", err)
-	}
+// 	sched, err := scheduler.New(
+// 		ctx,
+// 		clientSet,
+// 		informerFactory,
+// 		dynInformerFactory,
+// 		profile.NewRecorderFactory(evtBroadcaster),
+// 		scheduler.WithKubeConfig(restConfig),
+// 		scheduler.WithProfiles(cfg.Profiles...),
+// 		scheduler.WithPercentageOfNodesToScore(cfg.PercentageOfNodesToScore),
+// 		scheduler.WithPodMaxBackoffSeconds(cfg.PodMaxBackoffSeconds),
+// 		scheduler.WithPodInitialBackoffSeconds(cfg.PodInitialBackoffSeconds),
+// 		scheduler.WithExtenders(cfg.Extenders...),
+// 		scheduler.WithParallelism(cfg.Parallelism),
+// 		scheduler.WithFrameworkOutOfTreeRegistry(registry),
+// 	)
+// 	if err != nil {
+// 		return xerrors.Errorf("create scheduler: %w", err)
+// 	}
 
-	informerFactory.Start(ctx.Done())
-	if dynInformerFactory != nil {
-		dynInformerFactory.Start(ctx.Done())
-	}
-	informerFactory.WaitForCacheSync(ctx.Done())
-	if dynInformerFactory != nil {
-		dynInformerFactory.WaitForCacheSync(ctx.Done())
-	}
+// 	informerFactory.Start(ctx.Done())
+// 	if dynInformerFactory != nil {
+// 		dynInformerFactory.Start(ctx.Done())
+// 	}
+// 	informerFactory.WaitForCacheSync(ctx.Done())
+// 	if dynInformerFactory != nil {
+// 		dynInformerFactory.WaitForCacheSync(ctx.Done())
+// 	}
 
-	go sched.Run(ctx)
-	s.shutdownfn = cancel
-	return nil
-}
+// 	go sched.Run(ctx)
+// 	s.shutdownfn = cancel
+// 	return nil
+// }
 
 func (s *Service) ShutdownScheduler() {
 	if s.shutdownfn != nil {

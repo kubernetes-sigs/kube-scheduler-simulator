@@ -98,12 +98,12 @@ func startSimulator() error {
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
-	if !cfg.ExternalSchedulerEnabled {
-		if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
-			return xerrors.Errorf("start scheduler: %w", err)
-		}
-		defer dic.SchedulerService().ShutdownScheduler()
-	}
+	// if !cfg.ExternalSchedulerEnabled {
+	// 	if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
+	// 		return xerrors.Errorf("start scheduler: %w", err)
+	// 	}
+	// 	defer dic.SchedulerService().ShutdownScheduler()
+	// }
 
 	// If ExternalImportEnabled is enabled, the simulator import resources
 	// from the target cluster that indicated by the `KUBECONFIG`.
