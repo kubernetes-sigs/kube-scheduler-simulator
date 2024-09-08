@@ -15,6 +15,7 @@ services:
       - conf:/config
     depends_on:
       - init-container
+      - simulator-cluster
     restart: always
     tty: true
     networks:
