@@ -64,21 +64,32 @@ func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.C
 	return &Service{clientset: client, restclientCfg: restclientCfg, initialSchedulerCfg: initCfg, sharedStore: sharedStore, simulatorPort: simulatorPort}
 }
 
-func restartContainer(ctx context.Context, cli *client.Client, id string, cfg *configv1.KubeSchedulerConfiguration) error {
-	if err := simulatorschedconfig.UpdateSchedulerConfig(cfg); err != nil {
-		return xerrors.Errorf("read old scheduler.yaml: %w", err)
+func restartContainer(ctx context.Context, cli *client.Client, cfg *configv1.KubeSchedulerConfiguration) error {
+	containers, err := cli.ContainerList(ctx, container.ListOptions{})
+	if err != nil {
+		return xerrors.Errorf("failed to get container list: %w", err)
+	}
+	for _, c := range containers {
+		if c.Names[0] != "/simulator-scheduler" {
+			continue
+		}
+		if err := simulatorschedconfig.UpdateSchedulerConfig(cfg); err != nil {
+			return xerrors.Errorf("read old scheduler.yaml: %w", err)
+		}
+
+		if err := cli.ContainerRestart(ctx, c.ID, container.StopOptions{}); err != nil {
+			return xerrors.Errorf("failed restart container: %w", err)
+		}
+		inspect, err := cli.ContainerInspect(ctx, c.ID)
+		if err != nil {
+			return xerrors.Errorf("failed get container inspect: %w", err)
+		}
+		if inspect.State.Status != "running" {
+			return xerrors.Errorf("restart container status is not running")
+		}
+		break
 	}
 
-	if err := cli.ContainerRestart(ctx, id, container.StopOptions{}); err != nil {
-		return xerrors.Errorf("failed restart container: %w", err)
-	}
-	inspect, err := cli.ContainerInspect(ctx, id)
-	if err != nil {
-		return xerrors.Errorf("failed get container inspect: %w", err)
-	}
-	if inspect.State.Status != "running" {
-		return xerrors.Errorf("restart container status is not running")
-	}
 	return nil
 }
 
@@ -97,20 +108,10 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 		return xerrors.Errorf("read old scheduler.yaml: %w", err)
 	}
 
-	containers, err := cli.ContainerList(ctx, container.ListOptions{})
-	if err != nil {
-		return xerrors.Errorf("failed to get container list: %w", err)
-	}
-	for _, c := range containers {
-		if c.Names[0] != "/simulator-scheduler" {
-			continue
+	if err := restartContainer(ctx, cli, cfg); err != nil {
+		if err := restartContainer(ctx, cli, oldCfg); err != nil {
+			return xerrors.Errorf("oldConfig restart failed: %w", err)
 		}
-		if err := restartContainer(ctx, cli, c.ID, cfg); err != nil {
-			if err := restartContainer(ctx, cli, c.ID, oldCfg); err != nil {
-				return xerrors.Errorf("oldConfig restart failed: %w", err)
-			}
-		}
-		break
 	}
 	s.currentSchedulerCfg = cfg.DeepCopy()
 	return nil
