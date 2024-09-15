@@ -70,11 +70,11 @@ func restartContainer(ctx context.Context, cli *client.Client, id string, cfg *c
 	}
 
 	if err := cli.ContainerRestart(ctx, id, container.StopOptions{}); err != nil {
-		return err
+		return xerrors.Errorf("failed restart container: %w", err)
 	}
 	inspect, err := cli.ContainerInspect(ctx, id)
 	if err != nil {
-		return err
+		return xerrors.Errorf("failed get container inspect: %w", err)
 	}
 	if inspect.State.Status != "running" {
 		return xerrors.Errorf("restart container status is not running")
@@ -89,8 +89,7 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		klog.Info("shutdown scheduler...")
-		return err
+		return xerrors.Errorf("failed to create docker client: %w", err)
 	}
 
 	oldCfg, err := simulatorconfig.GetSchedulerCfg()
@@ -100,7 +99,7 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 
 	containers, err := cli.ContainerList(ctx, container.ListOptions{})
 	if err != nil {
-		return err
+		return xerrors.Errorf("failed to get container list: %w", err)
 	}
 	for _, c := range containers {
 		if c.Names[0] != "/simulator-scheduler" {
