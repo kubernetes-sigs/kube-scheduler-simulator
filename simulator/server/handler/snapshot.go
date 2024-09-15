@@ -36,7 +36,8 @@ func NewSnapshotHandler(s di.SnapshotService) *SnapshotHandler {
 func (h *SnapshotHandler) Snap(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	rs, err := h.service.Snap(ctx)
+	var label map[string]string
+	rs, err := h.service.Snap(ctx, label)
 	if err != nil {
 		klog.Errorf("failed to save all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
