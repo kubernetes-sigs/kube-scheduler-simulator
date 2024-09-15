@@ -20,7 +20,7 @@ func DefaultSchedulerConfig() (*v1.KubeSchedulerConfiguration, error) {
 	return &versionedCfg, nil
 }
 
-func WriteConfig(cfg *v1.KubeSchedulerConfiguration) error {
+func UpdateSchedulerConfig(cfg *v1.KubeSchedulerConfiguration) error {
 	jsonData, err := json.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal jsonData: %w", err)

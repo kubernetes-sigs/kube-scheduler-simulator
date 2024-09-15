@@ -65,7 +65,7 @@ func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.C
 }
 
 func restartContainer(ctx context.Context, cli *client.Client, id string, cfg *configv1.KubeSchedulerConfiguration) error {
-	if err := simulatorschedconfig.WriteConfig(cfg); err != nil {
+	if err := simulatorschedconfig.UpdateSchedulerConfig(cfg); err != nil {
 		return xerrors.Errorf("read old scheduler.yaml: %w", err)
 	}
 
@@ -82,6 +82,9 @@ func restartContainer(ctx context.Context, cli *client.Client, id string, cfg *c
 	return nil
 }
 
+// RestartScheduler restarts the debuggable scheduler with a new config.
+// Specifically, it updates the config file, which is also mounted on the debuggable scheduler,
+// and then restart the debuggable scheduler.
 func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
