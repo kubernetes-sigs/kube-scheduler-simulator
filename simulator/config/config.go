@@ -25,6 +25,8 @@ var ErrEmptyConfig = errors.New("config is required, but empty")
 // configYaml represents the value from the config file.
 var configYaml = &v1alpha1.SimulatorConfiguration{}
 
+const defaultSchedulerCfgPath = "/config/scheduler.yaml"
+
 // Config is configuration for simulator.
 type Config struct {
 	Port                  int
@@ -225,7 +227,7 @@ func parseStringListEnv(e string) []string {
 	return list
 }
 
-// getSchedulerCfg reads KUBE_SCHEDULER_CONFIG_PATH which means initial kube-scheduler configuration
+// GetSchedulerCfg reads KUBE_SCHEDULER_CONFIG_PATH which means initial kube-scheduler configuration
 // if empty from the config file.
 // and converts it into *configv1.KubeSchedulerConfiguration.
 // KUBE_SCHEDULER_CONFIG_PATH is not required.
@@ -235,6 +237,7 @@ func GetSchedulerCfg() (*configv1.KubeSchedulerConfiguration, error) {
 	if kubeSchedulerConfigPath == "" {
 		kubeSchedulerConfigPath = configYaml.KubeSchedulerConfigPath
 		if kubeSchedulerConfigPath == "" {
+			config.SetKubeSchedulerCfg(defaultSchedulerCfgPath)
 			dsc, err := config.DefaultSchedulerConfig()
 			if err != nil {
 				return nil, xerrors.Errorf("create default scheduler config: %w", err)
@@ -242,6 +245,7 @@ func GetSchedulerCfg() (*configv1.KubeSchedulerConfiguration, error) {
 			return dsc, nil
 		}
 	}
+	config.SetKubeSchedulerCfg(kubeSchedulerConfigPath)
 	data, err := os.ReadFile(kubeSchedulerConfigPath)
 	if err != nil {
 		return nil, xerrors.Errorf("read scheduler config file: %w", err)

@@ -11,6 +11,9 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 )
 
+// kubeSchedulerConfigPath represents the file path to the scheduler configuration.
+var kubeSchedulerConfigPath string
+
 // DefaultSchedulerConfig creates KubeSchedulerConfiguration default configuration.
 func DefaultSchedulerConfig() (*v1.KubeSchedulerConfiguration, error) {
 	var versionedCfg v1.KubeSchedulerConfiguration
@@ -18,6 +21,11 @@ func DefaultSchedulerConfig() (*v1.KubeSchedulerConfiguration, error) {
 	versionedCfg.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("KubeSchedulerConfiguration"))
 
 	return &versionedCfg, nil
+}
+
+// SetKubeSchedulerCfg set Scheduler config path
+func SetKubeSchedulerCfg(path string) {
+	kubeSchedulerConfigPath = path
 }
 
 func UpdateSchedulerConfig(cfg *v1.KubeSchedulerConfiguration) error {
@@ -37,8 +45,6 @@ func UpdateSchedulerConfig(cfg *v1.KubeSchedulerConfiguration) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal yaml: %w", err)
 	}
-
-	kubeSchedulerConfigPath := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
 
 	if err := os.WriteFile(kubeSchedulerConfigPath, data, 0o600); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
