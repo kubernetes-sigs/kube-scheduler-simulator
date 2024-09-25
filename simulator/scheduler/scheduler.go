@@ -16,8 +16,8 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 	apiconfigv1 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1"
-	simulatorconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 
+	simulatorconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/config"
 	simulatorschedconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/storereflector"
