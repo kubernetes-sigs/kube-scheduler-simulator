@@ -1,0 +1,2 @@
+kind: KubeSchedulerConfiguration
+apiVersion: kubescheduler.config.k8s.io/v1

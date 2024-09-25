@@ -1,5 +1,11 @@
 version: "3.7"
 services:
+  extender:
+    image: test/test:test
+    ports:
+      - "80:80"
+    networks:
+      - simulator-internal-network
   init-container:
       image: busybox
       volumes:
