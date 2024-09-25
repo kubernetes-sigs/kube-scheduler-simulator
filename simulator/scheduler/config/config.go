@@ -23,7 +23,7 @@ func DefaultSchedulerConfig() (*v1.KubeSchedulerConfiguration, error) {
 	return &versionedCfg, nil
 }
 
-// SetKubeSchedulerCfg set Scheduler config path
+// SetKubeSchedulerCfg set Scheduler config path.
 func SetKubeSchedulerCfg(path string) {
 	kubeSchedulerConfigPath = path
 }
