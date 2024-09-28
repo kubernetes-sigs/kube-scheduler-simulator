@@ -34,6 +34,7 @@ type Config struct {
 	// ExternalImportEnabled indicates whether the simulator will import resources from a target cluster once
 	// when it's started.
 	ExternalImportEnabled bool
+	ImportLabel           map[string]string
 	// ExternalImportEnabled indicates whether the simulator will keep syncing resources from a target cluster.
 	ResourceSyncEnabled bool
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
@@ -105,6 +106,7 @@ func NewConfig() (*Config, error) {
 		CorsAllowedOriginList:    corsAllowedOriginList,
 		InitialSchedulerCfg:      initialschedulerCfg,
 		ExternalImportEnabled:    externalimportenabled,
+		ImportLabel:              configYaml.ImportLabel,
 		ExternalKubeClientCfg:    externalKubeClientCfg,
 		ExternalSchedulerEnabled: externalSchedEnabled,
 		ResourceSyncEnabled:      resourceSyncEnabled,
