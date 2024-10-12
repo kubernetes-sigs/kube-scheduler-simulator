@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   extender:
-    image: test/test:test
+    image: test/test:test   # TODO(user): replace it with your extender's image
     ports:
       - "80:80"
     networks:
