@@ -1,5 +1,7 @@
 version: "3.7"
 services:
+  # This container copies the data,
+  # so any changes made to the configuration files within the Pod will not affect the original files.
   init-container:
       image: busybox
       volumes:
