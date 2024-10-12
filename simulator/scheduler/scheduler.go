@@ -109,7 +109,7 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 	}
 
 	if err := restartContainer(ctx, cli, cfg); err != nil {
-		klog.Errorf("failed to apply new scheduler config: %w", err)
+		klog.Errorf("failed to apply new scheduler config: %v", err)
 		// If failing restarting the container, we roll back to the old config.
 		if err := restartContainer(ctx, cli, oldCfg); err != nil {
 			return xerrors.Errorf("oldConfig restart failed: %w", err)
