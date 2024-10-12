@@ -23,11 +23,12 @@ func DefaultSchedulerConfig() (*v1.KubeSchedulerConfiguration, error) {
 	return &versionedCfg, nil
 }
 
-// SetKubeSchedulerCfg set Scheduler config path.
-func SetKubeSchedulerCfg(path string) {
+// SetKubeSchedulerCfgPath set Scheduler config path.
+func SetKubeSchedulerCfgPath(path string) {
 	kubeSchedulerConfigPath = path
 }
 
+// UpdateSchedulerConfig writes the given scheduler config to kubeSchedulerConfigPath.
 func UpdateSchedulerConfig(cfg *v1.KubeSchedulerConfiguration) error {
 	jsonData, err := json.Marshal(cfg)
 	if err != nil {
