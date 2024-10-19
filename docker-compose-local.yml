@@ -1,3 +1,5 @@
+# Note for maintainers: When making a change in this file,
+# you're likely to make the same change in simulator/docs/sample/plugin-extender/docker-compose.yaml.
 version: "3.7"
 services:
   # This container copies the data,

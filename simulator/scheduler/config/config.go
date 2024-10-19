@@ -12,6 +12,7 @@ import (
 )
 
 // kubeSchedulerConfigPath represents the file path to the scheduler configuration.
+// It should be initialized when loading the simulator config.
 var kubeSchedulerConfigPath string
 
 // DefaultSchedulerConfig creates KubeSchedulerConfiguration default configuration.
