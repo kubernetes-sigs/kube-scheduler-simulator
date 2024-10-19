@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/kube-scheduler/config/v1"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
@@ -31,6 +32,9 @@ func SetKubeSchedulerCfgPath(path string) {
 
 // UpdateSchedulerConfig writes the given scheduler config to kubeSchedulerConfigPath.
 func UpdateSchedulerConfig(cfg *v1.KubeSchedulerConfiguration) error {
+	if kubeSchedulerConfigPath == "" {
+		return xerrors.New("kubeSchedulerConfigPath isn't initialized, which is likely a bug in the simulator")
+	}
 	jsonData, err := json.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal jsonData: %w", err)
