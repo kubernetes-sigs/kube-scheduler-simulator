@@ -87,10 +87,10 @@ func restartContainer(ctx context.Context, cli *client.Client, cfg *configv1.Kub
 		if inspect.State.Status != "running" {
 			return xerrors.Errorf("restart container status is not running")
 		}
-		break
+		return nil
 	}
 
-	return nil
+	return xerrors.Errorf("can not find simulator-scheduler")
 }
 
 // RestartScheduler restarts the debuggable scheduler with a new config.
