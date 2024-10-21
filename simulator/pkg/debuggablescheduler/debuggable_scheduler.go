@@ -138,7 +138,7 @@ func CreateOptionForPlugin(outOfTreePluginRegistry runtime.Registry, pluginExten
 func loadKubeSchedulerConfig(configFile *string) (*v1.KubeSchedulerConfiguration, error) {
 	var versionedcfg *v1.KubeSchedulerConfiguration
 	var err error
-	if configFile == nil {
+	if configFile == nil || *configFile == ""{
 		versionedcfg, err = simulatorschedulerconfig.DefaultSchedulerConfig()
 		if err != nil {
 			return nil, xerrors.Errorf("get default scheduler config: %w", err)
