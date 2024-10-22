@@ -1,3 +1,4 @@
 web/*
 submodules/kubernetes/*
-docker-compose.yml
+compose.yml
+compose.local.yml
