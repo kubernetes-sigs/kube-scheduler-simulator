@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   simulator-server:
     image: registry.k8s.io/scheduler-simulator/simulator-backend:v0.3.0
