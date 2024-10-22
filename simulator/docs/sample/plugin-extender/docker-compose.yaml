@@ -1,9 +1,11 @@
-# Note for maintainers: When making a change in this file,
-# you're likely to make the same change in simulator/docs/sample/plugin-extender/docker-compose.yaml.
 version: "3.7"
 services:
-  # This container copies the data,
-  # so any changes made to the configuration files within the Pod will not affect the original files.
+  extender:
+    image: test/test:test   # TODO(user): replace it with your extender's image
+    ports:
+      - "80:80"
+    networks:
+      - simulator-internal-network
   init-container:
       image: busybox
       volumes:

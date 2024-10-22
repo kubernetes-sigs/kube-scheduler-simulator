@@ -11,14 +11,12 @@ The simulator stores the results of each Extender in the annotation of a pod.
 Note: This feature is not available in [external scheduler](./external-scheduler.md).
 
 ## How to use
+In this example, we describe how you can run an extender with the simulator, using [k8s-scheduler-extender-example](https://github.com/everpeace/k8s-scheduler-extender-example).
 
-You need to configure your extender in KubeSchedulerConfig.
-(via [the simulator config](./simulator-server-config.md) or WebUI)
++ Create k8s-scheduler-extender-example's Image: Clone [k8s-scheduler-extender-example](https://github.com/everpeace/k8s-scheduler-extender-example) repository, and follow the step `1 build a docker image` on README.
 
-(No required special configuration is for the simulator to use this feature.)
-
-For example, if you run the server on `http://localhost:8080/scheduler/`,
-the configuration will look like this.
++ Set up your extender in KubeSchedulerConfiguration either through [`kubeSchedulerConfigPath`](./simulator-server-config.md) or the Web UI.
+For example, if you are running the server on http://kube-scheduler-simulator-extender-1:80/scheduler/, your configuration might look like the following:
 
 ```yaml
 apiVersion: kubescheduler.config.k8s.io/v1
@@ -28,7 +26,7 @@ leaderElection:
 profiles:
   - schedulerName: default-scheduler
 extenders:
-  - urlPrefix: "http://localhost:8080/scheduler/"
+  - urlPrefix: "http://kube-scheduler-simulator-extender-1:80/scheduler"
     filterVerb: "predicates/always_true"
     prioritizeVerb: "priorities/zero_score"
     preemptVerb: "preemption"
@@ -38,8 +36,17 @@ extenders:
     nodeCacheCapable: false
 ```
 
-After the above settings are made, when the simulator is started and the pod is scheduled, 
-you will see each Pod gets many results on the annotation like this:
++ Run Simulator:
+We have an example [`docker-compose.yaml`](./example/docker-compose.yaml); you can overwrite the [`docker-compose-local.yaml`](../../docker-compose-local.yml) file with this file, but make sure to update the extender's image name there.
+
+To run the simulator, use the following commands:
+```sh
+$ make docker_build docker_up_local
+```
+
++ Create a Pod and examine your Extender's Results:
+The simulator started with the above steps should have your extender(s) enabled. You can create Pod(s) in the simulator and see the result. 
+The result shows up in the Pod's annotations `scheduler-simulator/extender-xxx` like the following:
 
 ```yaml
 kind: Pod
@@ -47,17 +54,13 @@ apiVersion: v1
 metadata:
   name: pod-2rsvz
 ...
-  annotations:
-    scheduler-simulator/bind-result: '{"DefaultBinder":"success"}'
-    scheduler-simulator/extender-bind-result: '{}'
-    scheduler-simulator/extender-filter-result: >-
-      {"http://localhost:8080/scheduler/":{"Nodes":{"metadata":{},"items":[{"metadata":{"name":"node-sc9ns","generateName":"node-","uid":"4b008c90-971e-4816-a0f4-dc1a3b6e856e","resourceVersion":"208","creationTimestamp":"2023-03-03T16:03:50Z","managedFields":[{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2023-03-03T16:03:50Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:generateName":{}}}}]},"spec":{},"status":{"capacity":{"cpu":"4","memory":"32Gi","pods":"110"},"allocatable":{"cpu":"4","memory":"32Gi","pods":"110"},"phase":"Running","conditions":[{"type":"Ready","status":"True","lastHeartbeatTime":null,"lastTransitionTime":null}],"daemonEndpoints":{"kubeletEndpoint":{"Port":0}},"nodeInfo":{"machineID":"","systemUUID":"","bootID":"","kernelVersion":"","osImage":"","containerRuntimeVersion":"","kubeletVersion":"","kubeProxyVersion":"","operatingSystem":"","architecture":""}}},{"metadata":{"name":"node-pwzdq","generateName":"node-","uid":"b24f918d-94ae-4c35-9e2c-2376998dbede","resourceVersion":"209","creationTimestamp":"2023-03-03T16:03:53Z","managedFields":[{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2023-03-03T16:03:53Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:generateName":{}}}}]},"spec":{},"status":{"capacity":{"cpu":"4","memory":"32Gi","pods":"110"},"allocatable":{"cpu":"4","memory":"32Gi","pods":"110"},"phase":"Running","conditions":[{"type":"Ready","status":"True","lastHeartbeatTime":null,"lastTransitionTime":null}],"daemonEndpoints":{"kubeletEndpoint":{"Port":0}},"nodeInfo":{"machineID":"","systemUUID":"","bootID":"","kernelVersion":"","osImage":"","containerRuntimeVersion":"","kubeletVersion":"","kubeProxyVersion":"","operatingSystem":"","architecture":""}}}]},"NodeNames":null,"FailedNodes":{},"FailedAndUnresolvableNodes":null,"Error":""}}
-    scheduler-simulator/extender-preempt-result: '{}'
-    scheduler-simulator/extender-prioritize-result: >-
-      {"http://localhost:8080/scheduler/":[{"Host":"node-sc9ns","Score":0},{"Host":"node-pwzdq","Score":0}]}
-    scheduler-simulator/score-result: >-
-      {"node-282x7":{"ImageLocality":"0","InterPodAffinity":"0","NodeAffinity":"0","NodeNumber":"0","NodeResourcesBalancedAllocation":"52","NodeResourcesFit":"47","PodTopologySpread":"0","TaintToleration":"0","VolumeBinding":"0"},"node-gp9t4":{"ImageLocality":"0","InterPodAffinity":"0","NodeAffinity":"0","NodeNumber":"0","NodeResourcesBalancedAllocation":"76","NodeResourcesFit":"73","PodTopologySpread":"0","TaintToleration":"0","VolumeBinding":"0"}}
-...
+annotations:
+      scheduler-simulator/extender-bind-result: '{}'
+      scheduler-simulator/extender-filter-result: '{"http://kube-scheduler-simulator-extender-1:80/scheduler":{"Nodes":{"metadata":{},"items":[{"metadata":{"name":"node-tzjll","generateName":"node-","uid":"a3e39211-2200-4dee-99a8-a27b2ac528b3","resourceVersion":"223","creationTimestamp":"2024-09-25T12:24:50Z","annotations":{"node.alpha.kubernetes.io/ttl":"0"},"managedFields":[{"manager":"kube-controller-manager","operation":"Update","apiVersion":"v1","time":"2024-09-25T12:24:50Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:node.alpha.kubernetes.io/ttl":{}}}}},{"manager":"simulator","operation":"Update","apiVersion":"v1","time":"2024-09-25T12:24:50Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:generateName":{}}}}]},"spec":{},"status":{"capacity":{"cpu":"4","memory":"32Gi","pods":"110"},"allocatable":{"cpu":"4","memory":"32Gi","pods":"110"},"phase":"Running","conditions":[{"type":"Ready","status":"True","lastHeartbeatTime":null,"lastTransitionTime":null}],"daemonEndpoints":{"kubeletEndpoint":{"Port":0}},"nodeInfo":{"machineID":"","systemUUID":"","bootID":"","kernelVersion":"","osImage":"","containerRuntimeVersion":"","kubeletVersion":"","kubeProxyVersion":"","operatingSystem":"","architecture":""}}}]},"NodeNames":null,"FailedNodes":{},"FailedAndUnresolvableNodes":null,"Error":""}}'
+      scheduler-simulator/extender-preempt-result: '{}'
+      scheduler-simulator/extender-prioritize-result: '{}'
+      ....
 ```
 
+You can also view the annotation results from the web UI. Simply select the Pod you created and scheduled, then check the Resource Definition section to see the annotations.
 
