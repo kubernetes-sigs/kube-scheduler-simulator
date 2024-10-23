@@ -229,6 +229,7 @@ func TestService_Snap(t *testing.T) {
 		name                     string
 		prepareEachServiceMockFn func(*mock_snapshot.MockSchedulerService)
 		prepareFakeClientSetFn   func() *fake.Clientset
+		labels                   map[string]string
 		wantReturn               func() *ResourcesForSnap
 		wantErr                  error
 	}{
@@ -520,6 +521,54 @@ func TestService_Snap(t *testing.T) {
 				return r
 			},
 		},
+		{
+			name: "Snap all Pods with different namespaces use labelSelector",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().GetSchedulerConfig().Return(&configv1.KubeSchedulerConfiguration{}, nil)
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				ctx := context.Background()
+				// add test data.
+				invokeResourcesFn(ctx, c, SettingClientFuncMap{
+					pod: func(ctx context.Context, c *fake.Clientset) {
+						c.CoreV1().Pods(testNamespace1).Create(ctx, &corev1.Pod{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "pod1",
+								Labels: map[string]string{
+									"test": "test1",
+								},
+							},
+							Spec: corev1.PodSpec{
+								NodeName: "node1",
+							},
+						}, metav1.CreateOptions{})
+						c.CoreV1().Pods(testNamespace2).Create(ctx, &corev1.Pod{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "pod2",
+							},
+							Spec: corev1.PodSpec{
+								NodeName: "node1",
+							},
+						}, metav1.CreateOptions{})
+					},
+				}, defaultFuncs)
+				return c
+			},
+			labels: map[string]string{
+				"test": "test1",
+			},
+			wantReturn: func() *ResourcesForSnap {
+				r := defaultResForSnapFn()
+				r.Pods = []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: testNamespace1},
+						Spec:       corev1.PodSpec{NodeName: "node1"},
+					},
+				}
+				return r
+			},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -531,7 +580,7 @@ func TestService_Snap(t *testing.T) {
 
 			s := NewService(fakeClientset, mockSchedulerSvc)
 			tt.prepareEachServiceMockFn(mockSchedulerSvc)
-			r, err := s.Snap(context.Background())
+			r, err := s.Snap(context.Background(), tt.labels)
 
 			var diffResponse string
 			if tt.wantReturn != nil {
@@ -750,7 +799,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 			mockSchedulerSvc := mock_snapshot.NewMockSchedulerService(ctrl)
 			s := NewService(fakeClientset, mockSchedulerSvc)
 			tt.prepareEachServiceMockFn(mockSchedulerSvc)
-			r, err := s.Snap(context.Background(), s.IgnoreErr())
+			var labels map[string]string
+			r, err := s.Snap(context.Background(), labels, s.IgnoreErr())
 
 			var diffResponse string
 			if tt.wantReturn != nil {

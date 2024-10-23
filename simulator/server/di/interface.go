@@ -24,7 +24,7 @@ type SchedulerService interface {
 
 // SnapshotService represents a service for exporting/importing resources on the simulator.
 type SnapshotService interface {
-	Snap(ctx context.Context, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
+	Snap(ctx context.Context, importLabel map[string]string, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
 	Load(ctx context.Context, resources *snapshot.ResourcesForLoad, opts ...snapshot.Option) error
 	IgnoreErr() snapshot.Option
 }
@@ -35,7 +35,7 @@ type ResetService interface {
 
 // OneShotClusterResourceImporter represents a service to import resources from an target cluster when starting the simulator.
 type OneShotClusterResourceImporter interface {
-	ImportClusterResources(ctx context.Context) error
+	ImportClusterResources(ctx context.Context, importLabel map[string]string) error
 }
 
 // ResourceSyncer represents a service to constantly sync resources from an target cluster.
