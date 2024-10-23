@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   simulator-scheduler:
     image: simulator-scheduler
@@ -14,48 +13,15 @@ services:
       - simulator-internal-network
   simulator-server:
     image: simulator-server
-    container_name: simulator-server
-    environment:
-      - PORT=1212
-      - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-cluster:2379
-      - KUBE_APISERVER_URL=http://simulator-cluster:3131
     volumes:
-      - ./simulator/config.yaml:/config.yaml
       - ./simulator/kubeconfig.yaml:/kubeconfig.yaml
-    ports:
-      - "1212:1212"
-    restart: always
-    tty: true
-    networks:
-      - simulator-internal-network
     depends_on:
       fake-source-cluster:
         condition: "service_healthy"
         required: false
   simulator-frontend:
     image: simulator-frontend
-    restart: always
-    container_name: simulator-frontend
-    environment:
-      - HOST=0.0.0.0
-      - BASE_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1212
-      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3131
-    ports:
-    - "3000:3000"
-    tty: true
   simulator-cluster:
-    image: registry.k8s.io/kwok/cluster:v0.6.0-k8s.v1.30.2
-    container_name: simulator-cluster
-    restart: always
-    ports:
-      - "3131:3131"
-    volumes:
-      - simulator-etcd-data:/var/lib/etcd
-      - ./kwok.yaml:/root/.kwok/kwok.yaml
-    environment:
-      - KWOK_KUBE_APISERVER_PORT=3131
-    networks:
-      - simulator-internal-network
   fake-source-cluster:
     image: registry.k8s.io/kwok/cluster:v0.6.0-k8s.v1.30.2
     container_name: fake-source-cluster
@@ -73,8 +39,3 @@ services:
       - simulator-internal-network
     profiles:
       - externalImportEnabled
-networks:
-  simulator-internal-network:
-    driver: bridge
-volumes:
-  simulator-etcd-data:
