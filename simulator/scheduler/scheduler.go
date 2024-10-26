@@ -90,7 +90,7 @@ func restartContainer(ctx context.Context, cli *client.Client, cfg *configv1.Kub
 		return nil
 	}
 
-	return xerrors.Errorf("can not find simulator-scheduler")
+	return xerrors.New("can not find simulator-scheduler, are you running the debuggable scheduler along with this simulator container?")
 }
 
 // RestartScheduler restarts the debuggable scheduler with a new config.
