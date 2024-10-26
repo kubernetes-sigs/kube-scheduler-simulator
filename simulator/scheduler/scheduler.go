@@ -115,7 +115,7 @@ func (s *Service) RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) err
 			return xerrors.Errorf("oldConfig restart failed: %w", err)
 		}
 	}
-	s.currentSchedulerCfg = cfg.DeepCopy()
+	s.SetSchedulerConfig(cfg)
 	return nil
 }
 
@@ -136,6 +136,10 @@ func (s *Service) GetSchedulerConfig() (*configv1.KubeSchedulerConfiguration, er
 	}
 
 	return s.currentSchedulerCfg, nil
+}
+
+func (s *Service) SetSchedulerConfig(cfg *configv1.KubeSchedulerConfiguration) {
+	s.currentSchedulerCfg = cfg.DeepCopy()
 }
 
 // ExtenderService returns ExtenderService interface.

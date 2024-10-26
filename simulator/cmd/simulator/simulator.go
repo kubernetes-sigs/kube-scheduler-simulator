@@ -110,6 +110,10 @@ func startSimulator() error {
 		}
 	}
 
+	if !cfg.ExternalSchedulerEnabled {
+		dic.SchedulerService().SetSchedulerConfig(cfg.InitialSchedulerCfg)
+	}
+
 	if cfg.ResourceSyncEnabled {
 		// Start the resource syncer to sync resources from the target cluster.
 		if err = dic.ResourceSyncer().Run(ctx); err != nil {
