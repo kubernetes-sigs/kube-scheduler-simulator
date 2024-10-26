@@ -1,17 +1,17 @@
 ## Running simulator
 
-The simulator requires docker installed in your laptop.
-We have [docker-compose.yml](../../docker-compose.yml) to run the simulator easily.
+The simulator requires Docker installed in your laptop.
+We have [compose.yml](../../compose.yml) to run the simulator easily.
 
 ### Run simulator with Docker
 
-We have [docker-compose.yml](../../docker-compose.yml) to run the simulator easily.
-You should install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/) at first.
+We have [compose.yml](../../compose.yml) to run the simulator easily.
+You should install [Docker](https://docs.docker.com/engine/install/) at first.
 
 You can use either of following commands.
 
 ```bash
-# pull docker images from the registry and run them. 
+# pull docker images from the registry and run them.
 # It's the easiest way to run up the simulator and web UI.
 make docker_up
 

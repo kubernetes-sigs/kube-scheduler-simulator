@@ -73,7 +73,7 @@ Get all resources and current scheduler configuration.
 
 ### Response
 
-[ResourcesForImport](/simulator/server/handler/export.go#L21)
+[ResourcesForLoad](/simulator/server/handler/snapshot.go#L21)
 
 You can find sample requests/responses [here](api-samples/v1/export.md)
 
@@ -92,7 +92,7 @@ Apply resources and scheduler configuration.
 
 ### Request Body
 
-[ResourcesForImport](/simulator/server/handler/export.go#L21)
+[ResourcesForLoad](/simulator/server/handler/snapshot.go#L21)
 
 You can find sample requests/responses [here](api-samples/v1/import.md)
 ### Response

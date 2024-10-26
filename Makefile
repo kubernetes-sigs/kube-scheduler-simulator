@@ -63,7 +63,7 @@ docker_up:
 
 .PHONY: docker_up_local
 docker_up_local:
-	docker compose -f docker-compose-local.yml up -d
+	docker compose -f compose.yml -f compose.local.yml up -d
 
 .PHONY: docker_build_and_up
 docker_build_and_up: docker_build docker_up_local
@@ -74,4 +74,4 @@ docker_down:
 
 .PHONY: docker_down_local
 docker_down_local:
-	docker compose -f docker-compose-local.yml down --volumes
+	docker compose -f compose.yml -f compose.local.yml down --volumes

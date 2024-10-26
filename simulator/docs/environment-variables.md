@@ -9,7 +9,7 @@ For config file, please refer to the simulator [config.yaml](./../config.yaml).
 
 This page describes the environment variables that are used to configure the simulator.
 
-Please refer to [docker-compose.yml](./../../docker-compose.yml) as an example use.
+Please refer to [compose.yml](./../../compose.yml) as an example use.
 
 ### For Simulator
 
@@ -24,7 +24,7 @@ kube-apiserver uses this etcd.
 started. The simulator and internal kube-apiserver set the allowed
 origin for `CORS_ALLOWED_ORIGIN_LIST`.
 
-`KUBECONFIG`: This is for the beta feature "Importing cluster's 
+`KUBECONFIG`: This is for the beta feature "Importing cluster's
 resources". This variable is used to find Kubeconfig required to
 access your cluster for importing resources to scheduler simulator.
 

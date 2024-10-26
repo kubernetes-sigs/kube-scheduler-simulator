@@ -7,7 +7,7 @@ This page describes how the simulator works.
 The simulator server works with the [HTTP server](api.md).
 
 In advance, the simulator needs to launch debuggable-scheduler, etcd, controller-manager and kube-apiserver outside.
-We recommend using [KWOK](https://github.com/kubernetes-sigs/kwok), see [docker-compose.yml](../../docker-compose.yml) to know how we wire things up.
+We recommend using [KWOK](https://github.com/kubernetes-sigs/kwok), see [compose.yml](../../compose.yml) to know how we wire things up.
 
 ### 1. users request creating resource.
 
