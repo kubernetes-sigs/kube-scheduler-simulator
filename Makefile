@@ -74,4 +74,4 @@ docker_down:
 
 .PHONY: docker_down_local
 docker_down_local:
-	docker compose -f compose.yml -f compose.local.yml down
+	docker compose -f compose.yml -f compose.local.yml down --volumes

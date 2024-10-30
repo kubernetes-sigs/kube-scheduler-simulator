@@ -1,9 +1,11 @@
-# Note for maintainers: When making a change in this file,
-# you're likely to make the same change in simulator/docs/sample/plugin-extender/docker-compose.yaml.
 version: "3.7"
 services:
-  # This container copies the data,
-  # so any changes made to the configuration files within the Pod will not affect the original files.
+  extender:
+    image: test/test:test   # TODO(user): replace it with your extender's image
+    ports:
+      - "80:80"
+    networks:
+      - simulator-internal-network
   init-container:
       image: busybox
       volumes:
@@ -26,7 +28,13 @@ services:
       - simulator-internal-network
   simulator-server:
     image: simulator-server
+    container_name: simulator-server
+    environment:
+      - PORT=1212
+      - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-cluster:2379
+      - KUBE_APISERVER_URL=http://simulator-cluster:3131
     volumes:
+      - ./simulator/config.yaml:/config.yaml
       - ./simulator/kubeconfig.yaml:/kubeconfig.yaml
       - /var/run/docker.sock:/var/run/docker.sock
       - conf:/config
@@ -42,7 +50,28 @@ services:
         required: false
   simulator-frontend:
     image: simulator-frontend
+    restart: always
+    container_name: simulator-frontend
+    environment:
+      - HOST=0.0.0.0
+      - BASE_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:1212
+      - KUBE_API_SERVER_URL=http://${SIMULATOR_EXTERNAL_IP:-localhost}:3131
+    ports:
+    - "3000:3000"
+    tty: true
   simulator-cluster:
+    image: registry.k8s.io/kwok/cluster:v0.6.0-k8s.v1.30.2
+    container_name: simulator-cluster
+    restart: always
+    ports:
+      - "3131:3131"
+    volumes:
+      - simulator-etcd-data:/var/lib/etcd
+      - ./kwok.yaml:/root/.kwok/kwok.yaml
+    environment:
+      - KWOK_KUBE_APISERVER_PORT=3131
+    networks:
+      - simulator-internal-network
   fake-source-cluster:
     image: registry.k8s.io/kwok/cluster:v0.6.0-k8s.v1.30.2
     container_name: fake-source-cluster
