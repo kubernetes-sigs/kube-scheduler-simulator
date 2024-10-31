@@ -1,3 +1,6 @@
+> [!CAUTION]
+To maintain compatibility, the externalSchedulerEnabled setting remains available, but the feature is disabled.
+
 ## External scheduler
 
 The external scheduler is the feature of the simulator 

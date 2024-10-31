@@ -44,14 +44,13 @@ func NewDIContainer(
 	resourceSyncEnabled bool,
 	externalClient clientset.Interface,
 	externalDynamicClient dynamic.Interface,
-	externalSchedulerEnabled bool,
 	simulatorPort int,
 	syncerOptions syncer.Options,
 ) (*Container, error) {
 	c := &Container{}
 
 	// initializes each service
-	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg, initialSchedulerCfg, externalSchedulerEnabled, simulatorPort)
+	c.schedulerService = scheduler.NewSchedulerService(client, restclientCfg, initialSchedulerCfg, simulatorPort)
 	var err error
 	c.resetService, err = reset.NewResetService(etcdclient, client, c.schedulerService)
 	if err != nil {
