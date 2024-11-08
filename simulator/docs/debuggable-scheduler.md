@@ -37,6 +37,7 @@ and the web UI just visualizes those scheduling details on the annotations.
 ## Integrate your plugins to the simulator
 
 You can integrate your plugins to the simulator, that is, to the debuggable scheduler working within the simulator, by following these steps:
+
 1. Register your plugins [here](../cmd/scheduler/scheduler.go#L17) in a very similar way you do with the normal scheduler.
 
 ```go
@@ -44,6 +45,12 @@ You can integrate your plugins to the simulator, that is, to the debuggable sche
         debuggablescheduler.WithPlugin(yourcustomplugin.Name, yourcustomplugin.New),
         debuggablescheduler.WithPluginExtenders(noderesources.Name, extender.New), // [optional] see plugin-extender.md about PluginExtender.
     )
+```
+
+2. Rebuild the scheduler and restart.
+
+```sh
+make docker_build docker_up_local
 ```
 
 ### The plugin extender
