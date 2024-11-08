@@ -43,8 +43,6 @@ type Config struct {
 	// This field should be set when ExternalImportEnabled == true or ResourceSyncEnabled == true.
 	ExternalKubeClientCfg *rest.Config
 	InitialSchedulerCfg   *configv1.KubeSchedulerConfiguration
-	// ExternalSchedulerEnabled indicates whether an external scheduler is enabled.
-	ExternalSchedulerEnabled bool
 }
 
 const (
@@ -99,18 +97,15 @@ func NewConfig() (*Config, error) {
 		return nil, xerrors.Errorf("get SchedulerCfg: %w", err)
 	}
 
-	externalSchedEnabled := getExternalSchedulerEnabled()
-
 	return &Config{
-		Port:                     port,
-		KubeAPIServerURL:         apiurl,
-		EtcdURL:                  etcdurl,
-		CorsAllowedOriginList:    corsAllowedOriginList,
-		InitialSchedulerCfg:      initialschedulerCfg,
-		ExternalImportEnabled:    externalimportenabled,
-		ExternalKubeClientCfg:    externalKubeClientCfg,
-		ExternalSchedulerEnabled: externalSchedEnabled,
-		ResourceSyncEnabled:      resourceSyncEnabled,
+		Port:                  port,
+		KubeAPIServerURL:      apiurl,
+		EtcdURL:               etcdurl,
+		CorsAllowedOriginList: corsAllowedOriginList,
+		InitialSchedulerCfg:   initialschedulerCfg,
+		ExternalImportEnabled: externalimportenabled,
+		ExternalKubeClientCfg: externalKubeClientCfg,
+		ResourceSyncEnabled:   resourceSyncEnabled,
 	}, nil
 }
 
@@ -161,17 +156,6 @@ func getKubeAPIServerURL() (string, error) {
 		}
 	}
 	return url, nil
-}
-
-// getExternalSchedulerEnabled gets ExternalSchedulerEnabled from environment variable first,
-// if empty from the config file.
-func getExternalSchedulerEnabled() bool {
-	e := os.Getenv("EXTERNAL_SCHEDULER_ENABLED")
-	b, err := strconv.ParseBool(e)
-	if e == "" || err != nil {
-		b = configYaml.ExternalSchedulerEnabled
-	}
-	return b
 }
 
 // getEtcdURL gets EtcdURL from environment variable first,

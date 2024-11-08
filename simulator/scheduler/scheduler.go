@@ -28,11 +28,6 @@ type Service struct {
 	// function to shutdown scheduler.
 	shutdownfn func()
 
-	// disabled represents if this Service is disabled.
-	// If externalSchedulerEnabled, it'll be true
-	// because we don't need to start scheduler, and we cannot change an external scheduler's config in that case.
-	disabled bool
-
 	clientset           clientset.Interface
 	restclientCfg       *restclient.Config
 	initialSchedulerCfg *configv1.KubeSchedulerConfiguration
@@ -52,11 +47,7 @@ type ExtenderService interface {
 var ErrServiceDisabled = errors.New("scheduler service is disabled")
 
 // NewSchedulerService starts scheduler and return *Service.
-func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *configv1.KubeSchedulerConfiguration, externalSchedulerEnabled bool, simulatorPort int) *Service {
-	if externalSchedulerEnabled {
-		return &Service{disabled: true}
-	}
-
+func NewSchedulerService(client clientset.Interface, restclientCfg *restclient.Config, initialSchedulerCfg *configv1.KubeSchedulerConfiguration, simulatorPort int) *Service {
 	// sharedStore has some resultstores which are referenced by Registry of Plugins and Extenders.
 	sharedStore := storereflector.New()
 
@@ -131,10 +122,6 @@ func (s *Service) ShutdownScheduler() {
 }
 
 func (s *Service) GetSchedulerConfig() (*configv1.KubeSchedulerConfiguration, error) {
-	if s.disabled {
-		return nil, xerrors.Errorf("an external scheduler is enabled: %w", ErrServiceDisabled)
-	}
-
 	return s.currentSchedulerCfg, nil
 }
 
