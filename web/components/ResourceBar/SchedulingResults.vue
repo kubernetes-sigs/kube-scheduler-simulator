@@ -53,10 +53,10 @@ export default defineComponent({
   },
   
   setup(props) {
-    const filterResultAnnotationKey = "scheduler-simulator/filter-result";
-    const scoreResultAnnotationKey = "scheduler-simulator/score-result";
+    const filterResultAnnotationKey = "kube-scheduler-simulator.sigs.k8s.io/filter-result";
+    const scoreResultAnnotationKey = "kube-scheduler-simulator.sigs.k8s.io/score-result";
     const finalScoreResultAnnotationKey =
-      "scheduler-simulator/finalscore-result";
+      "kube-scheduler-simulator.sigs.k8s.io/finalscore-result";
 
     // scheduling results
     const filterTableHeader = ():Array<{text: string;value: string;}> => {
