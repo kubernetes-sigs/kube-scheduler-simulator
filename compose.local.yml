@@ -5,37 +5,10 @@ services:
   # This container copies the data,
   # so any changes made to the configuration files within the Pod will not affect the original files.
   init-container:
-      image: busybox
-      volumes:
-        - conf:/config
-        - ${PWD}/simulator/cmd/scheduler:/host-config:ro    
-      command: sh -c "cp -rf /host-config/* /config/"
   simulator-scheduler:
     image: simulator-scheduler
-    container_name: simulator-scheduler
-    environment:
-      - KUBECONFIG=/config/kubeconfig.yaml
-    volumes:
-      - conf:/config
-    depends_on:
-      - init-container
-      - simulator-cluster
-    restart: always
-    tty: true
-    networks:
-      - simulator-internal-network
   simulator-server:
     image: simulator-server
-    volumes:
-      - ./simulator/kubeconfig.yaml:/kubeconfig.yaml
-      - /var/run/docker.sock:/var/run/docker.sock
-      - conf:/config
-    ports:
-      - "1212:1212"
-    restart: always
-    tty: true
-    networks:
-      - simulator-internal-network
     depends_on:
       fake-source-cluster:
         condition: "service_healthy"
