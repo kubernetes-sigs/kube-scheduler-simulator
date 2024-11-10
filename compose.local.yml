@@ -4,7 +4,7 @@ version: "3.7"
 services:
   # This container copies the data,
   # so any changes made to the configuration files within the Pod will not affect the original files.
-  init-container:
+  init-container: {}
   simulator-scheduler:
     image: simulator-scheduler
   simulator-server:
@@ -15,7 +15,7 @@ services:
         required: false
   simulator-frontend:
     image: simulator-frontend
-  simulator-cluster:
+  simulator-cluster: {}
   fake-source-cluster:
     image: registry.k8s.io/kwok/cluster:v0.6.0-k8s.v1.30.2
     container_name: fake-source-cluster
