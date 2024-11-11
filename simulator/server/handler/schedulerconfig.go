@@ -36,7 +36,8 @@ func (h *SchedulerConfigHandler) GetSchedulerConfig(c echo.Context) error {
 	return c.JSON(http.StatusOK, cfg)
 }
 
-// ApplySchedulerConfig currently only takes profiles from the posted payload and applies them.
+// ApplySchedulerConfig currently only takes profiles and extenders from the
+// posted payload and applies them.
 func (h *SchedulerConfigHandler) ApplySchedulerConfig(c echo.Context) error {
 	reqSchedulerCfg := new(configv1.KubeSchedulerConfiguration)
 	if err := c.Bind(reqSchedulerCfg); err != nil {
@@ -51,6 +52,7 @@ func (h *SchedulerConfigHandler) ApplySchedulerConfig(c echo.Context) error {
 
 	cfg = cfg.DeepCopy()
 	cfg.Profiles = reqSchedulerCfg.Profiles
+	cfg.Extenders = reqSchedulerCfg.Extenders
 	if err := h.service.RestartScheduler(cfg); err != nil {
 		klog.Errorf("failed to restart scheduler: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
