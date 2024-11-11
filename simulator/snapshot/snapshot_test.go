@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
