@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   extender:
     image: test/test:test   # TODO(user): replace it with your extender's image

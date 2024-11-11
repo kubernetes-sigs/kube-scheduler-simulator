@@ -17,13 +17,13 @@ RUN yarn build && yarn install --production --ignore-scripts --prefer-offline
 FROM node:16-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NUXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NUXT_TELEMETRY_DISABLED=1
 # Currnently, HOST_ENV is used to decide whether to import the TEMPLATE files of the k8s resources.
 # ./components/lib/templates/*.yaml
-ENV HOST_ENV production
-ENV BASE_URL http://localhost:1212
-ENV KUBE_API_SERVER_URL http://localhost:3131
+ENV HOST_ENV=production
+ENV BASE_URL=http://localhost:1212
+ENV KUBE_API_SERVER_URL=http://localhost:3131
 
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nuxtjs -u 1001
