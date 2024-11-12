@@ -220,6 +220,8 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/tetratelabs/wazero v1.7.2 h1:1+z5nXJNwMLPAWaTePFi49SSTL0IMx/i3Fg8Yc25GDc=
+github.com/tetratelabs/wazero v1.7.2/go.mod h1:ytl6Zuh20R/eROuyDaGPkp82O9C/DJfXAwJfQ3X6/7Y=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75 h1:6fotK7otjonDflCTK0BCfls4SPy3NcCVb5dqqmbRknE=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75/go.mod h1:KO6IkyS8Y3j8OdNO85qEYBsRPuteD+YciPomcXdrMnk=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
@@ -430,6 +432,8 @@ k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 h1:BZqlfIlq5YbRMFko6/PM7F
 k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340/go.mod h1:yD4MZYeKMBwQKVht279WycxKyM84kkAx2DPrTXaeb98=
 k8s.io/kube-scheduler v0.30.4 h1:6H+NfNuJ4RvUdSD1dtnJBXuYGAp+ETGZaxFk4sLGPdU=
 k8s.io/kube-scheduler v0.30.4/go.mod h1:7MMICziKySYQQ7rOFGBsSkn1PE3urPwsxlp6uwU+NhU=
+k8s.io/kubectl v0.30.4 h1:jU+6WSvcSgzs07H624RA2L79FnqppyV6BKI+dHWDzyo=
+k8s.io/kubectl v0.30.4/go.mod h1:4KnGCshO4fFxd/tncWcbKH3Nj9wtoFYwMYPj8CUnduE=
 k8s.io/kubelet v0.30.4 h1:2TP59RVxuWuKpD58gQ6qow1Oy2Ys2uOH4hfSD/qv5EQ=
 k8s.io/kubelet v0.30.4/go.mod h1:v0lRl+1y2NNId5OlFiJ1rhjXc9D8Tp7PqvQYJS7W/L0=
 k8s.io/kubernetes v1.30.4 h1:LfWX7JNmT9Hp8uFVHsB9gQCZesjcWTQ02PHwMz6dGqk=
@@ -442,6 +446,8 @@ sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.29.0 h1:/U5vjBbQn3RCh
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.29.0/go.mod h1:z7+wmGM2dfIiLRfrC6jb5kV2Mq/sK1ZP303cxzkV5Y4=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd h1:EDPBXCAspyGV4jQlpZSudPeMmr1bNJefnuqLsRAsHZo=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd/go.mod h1:B8JuhiUyNFVKdsE8h686QcCxMaH6HrOAZj4vswFpcB0=
+sigs.k8s.io/kube-scheduler-wasm-extension/scheduler v0.0.0-20241111155045-2ce7072312c8 h1:jOyiY8zbvXtuMb7ImqNcSFtVOmnXhWQ8pxhECz95PKk=
+sigs.k8s.io/kube-scheduler-wasm-extension/scheduler v0.0.0-20241111155045-2ce7072312c8/go.mod h1:N0BrfQ58AMkBbmjeGupvhUv/FFErpuYYs8D1YPPyY0Q=
 sigs.k8s.io/structured-merge-diff/v4 v4.4.1 h1:150L+0vs/8DA78h1u02ooW1/fFq/Lwr+sGiqlzvrtq4=
 sigs.k8s.io/structured-merge-diff/v4 v4.4.1/go.mod h1:N8hJocpFajUSSeSJ9bOZ77VzejKZaXsTtZo4/u7Io08=
 sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=
