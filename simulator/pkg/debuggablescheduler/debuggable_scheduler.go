@@ -57,6 +57,12 @@ func NewConfigs() (Configs, error) {
 		return Configs{}, xerrors.Errorf("load scheduler config: %w", err)
 	}
 
+	// Register wasm plugins to the wasm registry.
+	// This _needs_ to happen before the scheduler configuration is converted.
+	if err := simulatorschedulerconfig.RegisterWasmPlugins(versionedcfg); err != nil {
+		return Configs{}, xerrors.Errorf("register wasm plugins: %w", err)
+	}
+
 	versioned, err := scheduler.ConvertConfigurationForSimulator(versionedcfg)
 	if err != nil {
 		return Configs{}, xerrors.Errorf("convert scheduler config to apply: %w", err)
