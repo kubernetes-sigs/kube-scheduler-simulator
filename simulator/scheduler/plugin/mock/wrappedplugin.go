@@ -372,7 +372,7 @@ func (m *MockPreScorePluginExtender) EXPECT() *MockPreScorePluginExtenderMockRec
 }
 
 // AfterPreScore mocks base method.
-func (m *MockPreScorePluginExtender) AfterPreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*v1.Node, preScoreStatus *framework.Status) *framework.Status {
+func (m *MockPreScorePluginExtender) AfterPreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*framework.NodeInfo, preScoreStatus *framework.Status) *framework.Status {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AfterPreScore", ctx, state, pod, nodes, preScoreStatus)
 	ret0, _ := ret[0].(*framework.Status)
@@ -386,7 +386,7 @@ func (mr *MockPreScorePluginExtenderMockRecorder) AfterPreScore(ctx, state, pod,
 }
 
 // BeforePreScore mocks base method.
-func (m *MockPreScorePluginExtender) BeforePreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*v1.Node) *framework.Status {
+func (m *MockPreScorePluginExtender) BeforePreScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodes []*framework.NodeInfo) *framework.Status {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BeforePreScore", ctx, state, pod, nodes)
 	ret0, _ := ret[0].(*framework.Status)
