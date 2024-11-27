@@ -91,11 +91,11 @@ func NewConfigs() (Configs, error) {
 // and resister the storereflector to informer.
 // Then, here makes the defaulting func of the KubeSchedulerConfig always returns the converted one.
 // We can let the scheduler use the converted configuration under any circumstances because the scheduler will always use this defaulting func to load the configuration.
-func CreateOptions(configs Configs, outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer) ([]app.Option, func(), error) {
+func CreateOptions(configs Configs, pluginExtender map[string]plugin.PluginExtenderInitializer) ([]app.Option, func(), error) {
 	// Override the Extenders config so that the connection is directed to the simulator server.
 	extender.OverrideExtendersCfgToSimulator(configs.versioned, configs.port)
 
-	opts, err := CreateOptionForPlugin(outOfTreePluginRegistry, pluginExtender, configs.sharedStore, configs.internalCfg)
+	opts, err := CreateOptionForPlugin(pluginExtender, configs.sharedStore, configs.internalCfg)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("CreateOptionForPlugin: %w", err)
 	}
@@ -125,12 +125,7 @@ func CreateOptions(configs Configs, outOfTreePluginRegistry runtime.Registry, pl
 
 // CreateOptionForPlugin creates Option for in/out of tree plugins.
 // It does create the wrapped plugin registries and return the registries as app.Option.
-func CreateOptionForPlugin(outOfTreePluginRegistry runtime.Registry, pluginExtender map[string]plugin.PluginExtenderInitializer, sharedStore storereflector.Reflector, internalCfg *config.KubeSchedulerConfiguration) ([]app.Option, error) {
-	if outOfTreePluginRegistry != nil {
-		// This must be called before plugin.NewRegistry().
-		simulatorschedulerconfig.SetOutOfTreeRegistries(outOfTreePluginRegistry)
-	}
-
+func CreateOptionForPlugin(pluginExtender map[string]plugin.PluginExtenderInitializer, sharedStore storereflector.Reflector, internalCfg *config.KubeSchedulerConfiguration) ([]app.Option, error) {
 	// loads in/out of tree plugins and wraps it for debuggable.
 	registry, err := plugin.NewRegistry(sharedStore, internalCfg, pluginExtender)
 	if err != nil {
