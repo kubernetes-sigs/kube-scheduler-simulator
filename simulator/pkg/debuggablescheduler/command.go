@@ -5,8 +5,8 @@ import (
 	"golang.org/x/xerrors"
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
 	"k8s.io/kubernetes/pkg/scheduler/framework/runtime"
-	simulatorschedulerconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 
+	simulatorschedulerconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin"
 )
