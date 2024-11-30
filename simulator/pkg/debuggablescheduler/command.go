@@ -6,6 +6,7 @@ import (
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
 	"k8s.io/kubernetes/pkg/scheduler/framework/runtime"
 
+	simulatorschedulerconfig "sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/extender"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/plugin"
 )
@@ -15,6 +16,11 @@ func NewSchedulerCommand(opts ...Option) (*cobra.Command, func(), error) {
 	for _, o := range opts {
 		o(opt)
 	}
+
+	if opt.outOfTreeRegistry != nil {
+		simulatorschedulerconfig.SetOutOfTreeRegistries(opt.outOfTreeRegistry)
+	}
+
 	configs, err := NewConfigs()
 	if err != nil {
 		return nil, nil, xerrors.Errorf("failed to NewConfigs(): %w", err)
@@ -27,7 +33,7 @@ func NewSchedulerCommand(opts ...Option) (*cobra.Command, func(), error) {
 		return nil, nil, xerrors.Errorf("failed to New Extender service: %w", err)
 	}
 
-	schedulerOpts, cancelFn, err := CreateOptions(configs, opt.outOfTreeRegistry, opt.pluginExtender)
+	schedulerOpts, cancelFn, err := CreateOptions(configs, opt.pluginExtender)
 	if err != nil {
 		return nil, cancelFn, err
 	}
