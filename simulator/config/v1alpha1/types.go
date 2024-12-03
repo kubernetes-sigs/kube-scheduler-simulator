@@ -61,6 +61,7 @@ type SimulatorConfiguration struct {
 	// Note, this is still a beta feature.
 	ExternalImportEnabled bool `json:"externalImportEnabled,omitempty"`
 
+	// This is Labels to select which resources import from external cluster.
 	ImportLabel map[string]string `json:"importLabel,omitempty"`
 
 	// This variable indicates whether the simulator will

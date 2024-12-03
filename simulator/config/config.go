@@ -34,7 +34,8 @@ type Config struct {
 	// ExternalImportEnabled indicates whether the simulator will import resources from a target cluster once
 	// when it's started.
 	ExternalImportEnabled bool
-	ImportLabel           map[string]string
+	// ImportLabel is Labels to select which resources import from external cluster.
+	ImportLabel map[string]string
 	// ExternalImportEnabled indicates whether the simulator will keep syncing resources from a target cluster.
 	ResourceSyncEnabled bool
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
