@@ -451,7 +451,7 @@ StepPhase: OperatingCompleted
 
 See [#How the simulator knows when a cluster state gets converged by the controller?](#how-the-simulator-knows-when-a-cluster-state-gets-converged-by-the-controller).
 
-We use `WaitForControllerFinish` to wait for all controllers to finish their work to deal with (1).
+We use `WaitConditionFunc` to wait for all controllers to finish their work to deal with (1).
 
 ##### 4. the SimulationController starts
 
@@ -469,7 +469,7 @@ ScenarioStep: {X, 0} -> {X, 1}
 StepPhase: ControllerRunning -> ControllerPaused
 
 The SimulationController may perform some operations for k8s resources.
-In admission webhook, we change the StepPhase to ControllerStopped and increment MinorStep. (Then, the requests are accepted.)
+In admission webhook, we change the StepPhase to ControllerPaused and increment MinorStep. (Then, the requests are accepted.)
 
 ##### 6. the SimulationController stops working
 
@@ -483,7 +483,7 @@ https://kubernetes.io/docs/concepts/architecture/controller/
 
 The SimulationController always checks ScenarioStep at the end of its loop. And if StepPhase is ControllerPaused, the controller stops working. 
 
-StepPhase was changed to ControllerStopped at (5), and the SimulationController should be stopped at the end of that loop.
+StepPhase was changed to ControllerPaused at (5), and the SimulationController should be stopped at the end of that loop.
 
 See also [# How to stop the SimulationControllers loop](#how-to-stop-the-simulationcontrollers-loop).
 
@@ -503,7 +503,7 @@ It will repeat from (3) to (7) until the SimulationController can no longer do a
 ScenarioStep: {X, Y} 
 StepPhase: ControllerRunning -> ControllerCompleted
 
-We use `WaitForControllerFinish` of the SimulationController to detect this (like at (3)).
+We use `WaitConditionFunc` of the SimulationController to detect this (like at (3)).
 The SimulationController stops working again like at (6).
 
 After ControllerCompleted, the next SimulationController is started. 
