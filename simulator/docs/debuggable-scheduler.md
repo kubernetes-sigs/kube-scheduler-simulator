@@ -1,11 +1,7 @@
 ## Debuggable scheduler
 
-The "debuggable scheduler" is the core concept of the simulator.
-
-### What's the "debuggable scheduler"?
-
-The debuggable scheduler is the scheduler that schedules Pods like other schedulers, 
-but it exposes the scheduling results from each scheduling plugin on Pod annotation.
+The "debuggable scheduler" is the core component of the simulator,
+which is responsible for scheduling Pods like the normal scheduler, but also recording all the scheduling details to the Pod annotations.
 
 ```yaml
 kind: Pod
@@ -13,82 +9,67 @@ apiVersion: v1
 metadata:
   name: hoge-pod
   annotations:
-    scheduler-simulator/bind-result: '{"DefaultBinder":"success"}'
-    scheduler-simulator/filter-result: >-
+    kube-scheduler-simulator.sigs.k8s.io/bind-result: '{"DefaultBinder":"success"}'
+    kube-scheduler-simulator.sigs.k8s.io/filter-result: >-
       {"node-282x7":{"AzureDiskLimits":"passed","EBSLimits":"passed","GCEPDLimits":"passed","InterPodAffinity":"passed","NodeAffinity":"passed","NodeName":"passed","NodePorts":"passed","NodeResourcesFit":"passed","NodeUnschedulable":"passed","NodeVolumeLimits":"passed","PodTopologySpread":"passed","TaintToleration":"passed","VolumeBinding":"passed","VolumeRestrictions":"passed","VolumeZone":"passed"},"node-gp9t4":{"AzureDiskLimits":"passed","EBSLimits":"passed","GCEPDLimits":"passed","InterPodAffinity":"passed","NodeAffinity":"passed","NodeName":"passed","NodePorts":"passed","NodeResourcesFit":"passed","NodeUnschedulable":"passed","NodeVolumeLimits":"passed","PodTopologySpread":"passed","TaintToleration":"passed","VolumeBinding":"passed","VolumeRestrictions":"passed","VolumeZone":"passed"}}
-    scheduler-simulator/finalscore-result: >-
+    kube-scheduler-simulator.sigs.k8s.io/finalscore-result: >-
       {"node-282x7":{"ImageLocality":"0","InterPodAffinity":"0","NodeAffinity":"0","NodeNumber":"0","NodeResourcesBalancedAllocation":"76","NodeResourcesFit":"73","PodTopologySpread":"200","TaintToleration":"300","VolumeBinding":"0"},"node-gp9t4":{"ImageLocality":"0","InterPodAffinity":"0","NodeAffinity":"0","NodeNumber":"0","NodeResourcesBalancedAllocation":"76","NodeResourcesFit":"73","PodTopologySpread":"200","TaintToleration":"300","VolumeBinding":"0"}}
-    scheduler-simulator/permit-result: '{}'
-    scheduler-simulator/permit-result-timeout: '{}'
-    scheduler-simulator/postfilter-result: '{}'
-    scheduler-simulator/prebind-result: '{"VolumeBinding":"success"}'
-    scheduler-simulator/prefilter-result: '{}'
-    scheduler-simulator/prefilter-result-status: >-
+    kube-scheduler-simulator.sigs.k8s.io/permit-result: '{}'
+    kube-scheduler-simulator.sigs.k8s.io/permit-result-timeout: '{}'
+    kube-scheduler-simulator.sigs.k8s.io/postfilter-result: '{}'
+    kube-scheduler-simulator.sigs.k8s.io/prebind-result: '{"VolumeBinding":"success"}'
+    kube-scheduler-simulator.sigs.k8s.io/prefilter-result: '{}'
+    kube-scheduler-simulator.sigs.k8s.io/prefilter-result-status: >-
       {"InterPodAffinity":"success","NodeAffinity":"success","NodePorts":"success","NodeResourcesFit":"success","PodTopologySpread":"success","VolumeBinding":"success","VolumeRestrictions":"success"}
-    scheduler-simulator/prescore-result: >-
+    kube-scheduler-simulator.sigs.k8s.io/prescore-result: >-
       {"InterPodAffinity":"success","NodeAffinity":"success","NodeNumber":"success","PodTopologySpread":"success","TaintToleration":"success"}
-    scheduler-simulator/reserve-result: '{"VolumeBinding":"success"}'
-    scheduler-simulator/result-history: >-
-      [{"noderesourcefit-prefilter-data":"{\"MilliCPU\":100,\"Memory\":17179869184,\"EphemeralStorage\":0,\"AllowedPodNumber\":0,\"ScalarResources\":null}","scheduler-simulator/bind-result":"{\"DefaultBinder\":\"success\"}","scheduler-simulator/filter-result":"{\"node-282x7\":{\"AzureDiskLimits\":\"passed\",\"EBSLimits\":\"passed\",\"GCEPDLimits\":\"passed\",\"InterPodAffinity\":\"passed\",\"NodeAffinity\":\"passed\",\"NodeName\":\"passed\",\"NodePorts\":\"passed\",\"NodeResourcesFit\":\"passed\",\"NodeUnschedulable\":\"passed\",\"NodeVolumeLimits\":\"passed\",\"PodTopologySpread\":\"passed\",\"TaintToleration\":\"passed\",\"VolumeBinding\":\"passed\",\"VolumeRestrictions\":\"passed\",\"VolumeZone\":\"passed\"},\"node-gp9t4\":{\"AzureDiskLimits\":\"passed\",\"EBSLimits\":\"passed\",\"GCEPDLimits\":\"passed\",\"InterPodAffinity\":\"passed\",\"NodeAffinity\":\"passed\",\"NodeName\":\"passed\",\"NodePorts\":\"passed\",\"NodeResourcesFit\":\"passed\",\"NodeUnschedulable\":\"passed\",\"NodeVolumeLimits\":\"passed\",\"PodTopologySpread\":\"passed\",\"TaintToleration\":\"passed\",\"VolumeBinding\":\"passed\",\"VolumeRestrictions\":\"passed\",\"VolumeZone\":\"passed\"}}","scheduler-simulator/finalscore-result":"{\"node-282x7\":{\"ImageLocality\":\"0\",\"InterPodAffinity\":\"0\",\"NodeAffinity\":\"0\",\"NodeNumber\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"73\",\"PodTopologySpread\":\"200\",\"TaintToleration\":\"300\",\"VolumeBinding\":\"0\"},\"node-gp9t4\":{\"ImageLocality\":\"0\",\"InterPodAffinity\":\"0\",\"NodeAffinity\":\"0\",\"NodeNumber\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"73\",\"PodTopologySpread\":\"200\",\"TaintToleration\":\"300\",\"VolumeBinding\":\"0\"}}","scheduler-simulator/permit-result":"{}","scheduler-simulator/permit-result-timeout":"{}","scheduler-simulator/postfilter-result":"{}","scheduler-simulator/prebind-result":"{\"VolumeBinding\":\"success\"}","scheduler-simulator/prefilter-result":"{}","scheduler-simulator/prefilter-result-status":"{\"InterPodAffinity\":\"success\",\"NodeAffinity\":\"success\",\"NodePorts\":\"success\",\"NodeResourcesFit\":\"success\",\"PodTopologySpread\":\"success\",\"VolumeBinding\":\"success\",\"VolumeRestrictions\":\"success\"}","scheduler-simulator/prescore-result":"{\"InterPodAffinity\":\"success\",\"NodeAffinity\":\"success\",\"NodeNumber\":\"success\",\"PodTopologySpread\":\"success\",\"TaintToleration\":\"success\"}","scheduler-simulator/reserve-result":"{\"VolumeBinding\":\"success\"}","scheduler-simulator/score-result":"{\"node-282x7\":{\"ImageLocality\":\"0\",\"InterPodAffinity\":\"0\",\"NodeAffinity\":\"0\",\"NodeNumber\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"73\",\"PodTopologySpread\":\"0\",\"TaintToleration\":\"0\",\"VolumeBinding\":\"0\"},\"node-gp9t4\":{\"ImageLocality\":\"0\",\"InterPodAffinity\":\"0\",\"NodeAffinity\":\"0\",\"NodeNumber\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"73\",\"PodTopologySpread\":\"0\",\"TaintToleration\":\"0\",\"VolumeBinding\":\"0\"}}","scheduler-simulator/selected-node":"node-282x7"}]
-    scheduler-simulator/score-result: >-
+    kube-scheduler-simulator.sigs.k8s.io/reserve-result: '{"VolumeBinding":"success"}'
+    kube-scheduler-simulator.sigs.k8s.io/result-history: >-
+      [{"noderesourcefit-prefilter-data":"{\"MilliCPU\":100,\"Memory\":17179869184,\"EphemeralStorage\":0,\"AllowedPodNumber\":0,\"ScalarResources\":null}","kube-scheduler-simulator.sigs.k8s.io/bind-result":"{\"DefaultBinder\":\"success\"}","kube-scheduler-simulator.sigs.k8s.io/filter-result":"{\"node-282x7\":{\"AzureDiskLimits\":\"passed\",\"EBSLimits\":\"passed\",\"GCEPDLimits\":\"passed\",\"InterPodAffinity\":\"passed\",\"NodeAffinity\":\"passed\",\"NodeName\":\"passed\",\"NodePorts\":\"passed\",\"NodeResourcesFit\":\"passed\",\"NodeUnschedulable\":\"passed\",\"NodeVolumeLimits\":\"passed\",\"PodTopologySpread\":\"passed\",\"TaintToleration\":\"passed\",\"VolumeBinding\":\"passed\",\"VolumeRestrictions\":\"passed\",\"VolumeZone\":\"passed\"},\"node-gp9t4\":{\"AzureDiskLimits\":\"passed\",\"EBSLimits\":\"passed\",\"GCEPDLimits\":\"passed\",\"InterPodAffinity\":\"passed\",\"NodeAffinity\":\"passed\",\"NodeName\":\"passed\",\"NodePorts\":\"passed\",\"NodeResourcesFit\":\"passed\",\"NodeUnschedulable\":\"passed\",\"NodeVolumeLimits\":\"passed\",\"PodTopologySpread\":\"passed\",\"TaintToleration\":\"passed\",\"VolumeBinding\":\"passed\",\"VolumeRestrictions\":\"passed\",\"VolumeZone\":\"passed\"}}","kube-scheduler-simulator.sigs.k8s.io/finalscore-result":"{\"node-282x7\":{\"ImageLocality\":\"0\",\"InterPodAffinity\":\"0\",\"NodeAffinity\":\"0\",\"NodeNumber\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"73\",\"PodTopologySpread\":\"200\",\"TaintToleration\":\"300\",\"VolumeBinding\":\"0\"},\"node-gp9t4\":{\"ImageLocality\":\"0\",\"InterPodAffinity\":\"0\",\"NodeAffinity\":\"0\",\"NodeNumber\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"73\",\"PodTopologySpread\":\"200\",\"TaintToleration\":\"300\",\"VolumeBinding\":\"0\"}}","kube-scheduler-simulator.sigs.k8s.io/permit-result":"{}","kube-scheduler-simulator.sigs.k8s.io/permit-result-timeout":"{}","kube-scheduler-simulator.sigs.k8s.io/postfilter-result":"{}","kube-scheduler-simulator.sigs.k8s.io/prebind-result":"{\"VolumeBinding\":\"success\"}","kube-scheduler-simulator.sigs.k8s.io/prefilter-result":"{}","kube-scheduler-simulator.sigs.k8s.io/prefilter-result-status":"{\"InterPodAffinity\":\"success\",\"NodeAffinity\":\"success\",\"NodePorts\":\"success\",\"NodeResourcesFit\":\"success\",\"PodTopologySpread\":\"success\",\"VolumeBinding\":\"success\",\"VolumeRestrictions\":\"success\"}","kube-scheduler-simulator.sigs.k8s.io/prescore-result":"{\"InterPodAffinity\":\"success\",\"NodeAffinity\":\"success\",\"NodeNumber\":\"success\",\"PodTopologySpread\":\"success\",\"TaintToleration\":\"success\"}","kube-scheduler-simulator.sigs.k8s.io/reserve-result":"{\"VolumeBinding\":\"success\"}","kube-scheduler-simulator.sigs.k8s.io/score-result":"{\"node-282x7\":{\"ImageLocality\":\"0\",\"InterPodAffinity\":\"0\",\"NodeAffinity\":\"0\",\"NodeNumber\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"73\",\"PodTopologySpread\":\"0\",\"TaintToleration\":\"0\",\"VolumeBinding\":\"0\"},\"node-gp9t4\":{\"ImageLocality\":\"0\",\"InterPodAffinity\":\"0\",\"NodeAffinity\":\"0\",\"NodeNumber\":\"0\",\"NodeResourcesBalancedAllocation\":\"76\",\"NodeResourcesFit\":\"73\",\"PodTopologySpread\":\"0\",\"TaintToleration\":\"0\",\"VolumeBinding\":\"0\"}}","kube-scheduler-simulator.sigs.k8s.io/selected-node":"node-282x7"}]
+    kube-scheduler-simulator.sigs.k8s.io/score-result: >-
       {"node-282x7":{"ImageLocality":"0","InterPodAffinity":"0","NodeAffinity":"0","NodeNumber":"0","NodeResourcesBalancedAllocation":"76","NodeResourcesFit":"73","PodTopologySpread":"0","TaintToleration":"0","VolumeBinding":"0"},"node-gp9t4":{"ImageLocality":"0","InterPodAffinity":"0","NodeAffinity":"0","NodeNumber":"0","NodeResourcesBalancedAllocation":"76","NodeResourcesFit":"73","PodTopologySpread":"0","TaintToleration":"0","VolumeBinding":"0"}}
-    scheduler-simulator/selected-node: node-282x7
+    kube-scheduler-simulator.sigs.k8s.io/selected-node: node-282x7
 ```
 
-The simulator runs the debuggable scheduler built from the upstream scheduler by default,
-that's why we can see the scheduling results like the above in the simulator.
+The simulator works with the debuggable scheduler built from the upstream scheduler by default,
+and the web UI just visualizes those scheduling details on the annotations.
 
-## Build a debuggable scheduler from your scheduler
+## Integrate your plugins to the simulator
 
-You can use the [`debuggablescheduler` package](../pkg/debuggablescheduler) to transform your scheduler into a debuggable scheduler.
+You can integrate your plugins to the simulator, that is, to the debuggable scheduler working within the simulator, by following these steps:
 
-The debuggable scheduler could work anywhere, in the simulator or even in your cluster.
-
-### Change your scheduler
-
-Here, we assume you're registering your custom plugins in your scheduler like this:
+1. Register your plugins [here](../cmd/scheduler/scheduler.go#L17) in a very similar way you do with the normal scheduler.
 
 ```go
-// your scheduler's main package
-func main() {
-	command := app.NewSchedulerCommand(
-		app.WithPlugin(yourcustomplugin.Name, yourcustomplugin.New),
-	)
-
-	code := cli.Run(command)
-	os.Exit(code)
-}
-```
-
-Then, you need to replace few lines to use the [`debuggablescheduler` package](../pkg/debuggablescheduler).
-
-```go
-func main() {
-	command, cancelFn, err := debuggablescheduler.NewSchedulerCommand(
+    command, cancelFn, err := debuggablescheduler.NewSchedulerCommand(
         debuggablescheduler.WithPlugin(yourcustomplugin.Name, yourcustomplugin.New),
         debuggablescheduler.WithPluginExtenders(noderesources.Name, extender.New), // [optional] see plugin-extender.md about PluginExtender.
     )
-    if err != nil {
-        klog.Info(fmt.Sprintf("failed to build the scheduler command: %+v", err))
-        os.Exit(1)
-    }
-    code := cli.Run(command)
-    cancelFn()
-    os.Exit(code)
-}
 ```
 
-As you see, `debuggablescheduler.NewSchedulerCommand` has much similar interface as the `app.NewSchedulerCommand`.
-You can register your plugins by `debuggablescheduler.WithPlugin` option.
+2. Rebuild the scheduler and restart.
+
+```sh
+make docker_build docker_up_local
+```
 
 ### The plugin extender
 
-We have the plugin extender feature to expand the debuggable scheduler more.
-See [plugin-extender.md](./plugin-extender.md) to know more about it.
+We have the plugin extender feature to provide more debuggability from the debuggable scheduler.
+See [plugin-extender.md](./plugin-extender.md).
+
+### Use the debuggable scheduler in your dev cluster
+
+The debuggable scheduler can work outside the simulator, that is, in your clusters too.
+which allows you to have the same debuggability with your custom scheduler in real clusters.
+
+It's just a single binary that doesn't contain anything but the debuggability features that we described so far.
+
+> [!NOTE]
+> We do not recommend using it in the production cluster because the debuggable scheduler contains the overhead.
+> Also, you may want to pay attention to the fact that the annotations would be visible to all cluster users,
+> which could leak the hints of other tenants to cluster users.
 
 ### The example debuggable scheduler
 
-We have the sample implementation in [./sample/debuggable-scheduler](./sample/debuggable-scheduler).
-
-You can try to run it in the simulator via [external scheduler](./external-scheduler.md) feature.
-See [external-scheduler.md#the-example-external-scheduler](./external-scheduler.md#the-example-external-scheduler).
+We have the sample to show how to implement the debuggable scheduler in [./sample/debuggable-scheduler](./sample/debuggable-scheduler).

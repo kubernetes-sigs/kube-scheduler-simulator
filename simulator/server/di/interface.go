@@ -15,8 +15,8 @@ import (
 // SchedulerService represents service for manage scheduler.
 type SchedulerService interface {
 	GetSchedulerConfig() (*configv1.KubeSchedulerConfiguration, error)
+	SetSchedulerConfig(cfg *configv1.KubeSchedulerConfiguration)
 	RestartScheduler(cfg *configv1.KubeSchedulerConfiguration) error
-	StartScheduler(cfg *configv1.KubeSchedulerConfiguration) error
 	ResetScheduler() error
 	ShutdownScheduler()
 	ExtenderService() scheduler.ExtenderService

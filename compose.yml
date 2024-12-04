@@ -1,10 +1,34 @@
-version: "3.7"
 services:
+  # This container copies the data,
+  # so any changes made to the configuration files within the Pod will not affect the original files.
+  init-container:
+      image: busybox
+      volumes:
+        - conf:/config
+        - ${PWD}/simulator/cmd/scheduler:/host-config:ro    
+      command: sh -c "cp -rf /host-config/* /config/"
+  simulator-scheduler:
+    image: registry.k8s.io/scheduler-simulator/debuggable-scheduler:v0.4.0
+    container_name: simulator-scheduler
+    environment:
+      - KUBECONFIG=/config/kubeconfig.yaml
+    volumes:
+      - conf:/config
+    depends_on:
+      - init-container
+      - simulator-cluster
+    restart: always
+    tty: true
+    networks:
+      - simulator-internal-network
   simulator-server:
-    image: registry.k8s.io/scheduler-simulator/simulator-backend:v0.3.0
+    image: registry.k8s.io/scheduler-simulator/simulator-backend:v0.4.0
     container_name: simulator-server
     volumes:
       - ./simulator/config.yaml:/config.yaml
+      - ./simulator/kubeconfig.yaml:/kubeconfig.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - conf:/config
     environment:
       - PORT=1212
       - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-cluster:2379
@@ -16,7 +40,7 @@ services:
     networks:
       - simulator-internal-network
   simulator-frontend:
-    image: registry.k8s.io/scheduler-simulator/simulator-frontend:v0.3.0
+    image: registry.k8s.io/scheduler-simulator/simulator-frontend:v0.4.0
     restart: always
     container_name: simulator-frontend
     environment:
@@ -44,3 +68,4 @@ networks:
     driver: bridge
 volumes:
   simulator-etcd-data:
+  conf:

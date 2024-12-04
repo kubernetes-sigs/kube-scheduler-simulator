@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	ExtenderFilterResultAnnotationKey = "scheduler-simulator/extender-filter-result"
+	ExtenderFilterResultAnnotationKey = "kube-scheduler-simulator.sigs.k8s.io/extender-filter-result"
 	ResultStoreKey                    = "ExtenderResultStoreKey"
 )
 
@@ -48,7 +48,7 @@ func TestReflector_storeAllResultToPodFunc(t *testing.T) {
 				}, metav1.CreateOptions{})
 				return c
 			},
-			wantAnnotation: map[string]string{ExtenderFilterResultAnnotationKey: "some results", ResultsHistoryAnnotation: "[{\"scheduler-simulator/extender-filter-result\":\"some results\"}]"},
+			wantAnnotation: map[string]string{ExtenderFilterResultAnnotationKey: "some results", ResultsHistoryAnnotation: "[{\"kube-scheduler-simulator.sigs.k8s.io/extender-filter-result\":\"some results\"}]"},
 		},
 	}
 	for _, tt := range tests {

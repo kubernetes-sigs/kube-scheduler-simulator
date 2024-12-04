@@ -25,6 +25,9 @@ var ErrEmptyConfig = errors.New("config is required, but empty")
 // configYaml represents the value from the config file.
 var configYaml = &v1alpha1.SimulatorConfiguration{}
 
+// defaultSchedulerCfgPath is where we have the scheduler config in the container by default.
+const defaultSchedulerCfgPath = "/config/scheduler.yaml"
+
 // Config is configuration for simulator.
 type Config struct {
 	Port                  int
@@ -42,8 +45,6 @@ type Config struct {
 	// This field should be set when ExternalImportEnabled == true or ResourceSyncEnabled == true.
 	ExternalKubeClientCfg *rest.Config
 	InitialSchedulerCfg   *configv1.KubeSchedulerConfiguration
-	// ExternalSchedulerEnabled indicates whether an external scheduler is enabled.
-	ExternalSchedulerEnabled bool
 }
 
 const (
@@ -93,24 +94,21 @@ func NewConfig() (*Config, error) {
 		}
 	}
 
-	initialschedulerCfg, err := getSchedulerCfg()
+	initialschedulerCfg, err := GetSchedulerCfg()
 	if err != nil {
 		return nil, xerrors.Errorf("get SchedulerCfg: %w", err)
 	}
 
-	externalSchedEnabled := getExternalSchedulerEnabled()
-
 	return &Config{
-		Port:                     port,
-		KubeAPIServerURL:         apiurl,
-		EtcdURL:                  etcdurl,
-		CorsAllowedOriginList:    corsAllowedOriginList,
-		InitialSchedulerCfg:      initialschedulerCfg,
-		ExternalImportEnabled:    externalimportenabled,
-		ImportLabel:              configYaml.ImportLabel,
-		ExternalKubeClientCfg:    externalKubeClientCfg,
-		ExternalSchedulerEnabled: externalSchedEnabled,
-		ResourceSyncEnabled:      resourceSyncEnabled,
+		Port:                  port,
+		KubeAPIServerURL:      apiurl,
+		EtcdURL:               etcdurl,
+		CorsAllowedOriginList: corsAllowedOriginList,
+		InitialSchedulerCfg:   initialschedulerCfg,
+		ExternalImportEnabled: externalimportenabled,
+		ImportLabel:           configYaml.ImportLabel,
+		ExternalKubeClientCfg: externalKubeClientCfg,
+		ResourceSyncEnabled:   resourceSyncEnabled,
 	}, nil
 }
 
@@ -161,17 +159,6 @@ func getKubeAPIServerURL() (string, error) {
 		}
 	}
 	return url, nil
-}
-
-// getExternalSchedulerEnabled gets ExternalSchedulerEnabled from environment variable first,
-// if empty from the config file.
-func getExternalSchedulerEnabled() bool {
-	e := os.Getenv("EXTERNAL_SCHEDULER_ENABLED")
-	b, err := strconv.ParseBool(e)
-	if e == "" || err != nil {
-		b = configYaml.ExternalSchedulerEnabled
-	}
-	return b
 }
 
 // getEtcdURL gets EtcdURL from environment variable first,
@@ -228,16 +215,17 @@ func parseStringListEnv(e string) []string {
 	return list
 }
 
-// getSchedulerCfg reads KUBE_SCHEDULER_CONFIG_PATH which means initial kube-scheduler configuration
+// GetSchedulerCfg reads KUBE_SCHEDULER_CONFIG_PATH which means initial kube-scheduler configuration
 // if empty from the config file.
 // and converts it into *configv1.KubeSchedulerConfiguration.
 // KUBE_SCHEDULER_CONFIG_PATH is not required.
 // If KUBE_SCHEDULER_CONFIG_PATH is not set, the default configuration of kube-scheduler will be used.
-func getSchedulerCfg() (*configv1.KubeSchedulerConfiguration, error) {
+func GetSchedulerCfg() (*configv1.KubeSchedulerConfiguration, error) {
 	kubeSchedulerConfigPath := os.Getenv("KUBE_SCHEDULER_CONFIG_PATH")
 	if kubeSchedulerConfigPath == "" {
 		kubeSchedulerConfigPath = configYaml.KubeSchedulerConfigPath
 		if kubeSchedulerConfigPath == "" {
+			config.SetKubeSchedulerCfgPath(defaultSchedulerCfgPath)
 			dsc, err := config.DefaultSchedulerConfig()
 			if err != nil {
 				return nil, xerrors.Errorf("create default scheduler config: %w", err)
@@ -245,6 +233,7 @@ func getSchedulerCfg() (*configv1.KubeSchedulerConfiguration, error) {
 			return dsc, nil
 		}
 	}
+	config.SetKubeSchedulerCfgPath(kubeSchedulerConfigPath)
 	data, err := os.ReadFile(kubeSchedulerConfigPath)
 	if err != nil {
 		return nil, xerrors.Errorf("read scheduler config file: %w", err)

@@ -94,15 +94,9 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.ExternalSchedulerEnabled, cfg.Port, syncer.Options{})
+	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, syncer.Options{})
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
-	}
-	if !cfg.ExternalSchedulerEnabled {
-		if err := dic.SchedulerService().StartScheduler(cfg.InitialSchedulerCfg); err != nil {
-			return xerrors.Errorf("start scheduler: %w", err)
-		}
-		defer dic.SchedulerService().ShutdownScheduler()
 	}
 
 	// If ExternalImportEnabled is enabled, the simulator import resources
@@ -115,6 +109,8 @@ func startSimulator() error {
 			return xerrors.Errorf("import from the target cluster: %w", err)
 		}
 	}
+
+	dic.SchedulerService().SetSchedulerConfig(cfg.InitialSchedulerCfg)
 
 	if cfg.ResourceSyncEnabled {
 		// Start the resource syncer to sync resources from the target cluster.

@@ -1,13 +1,26 @@
-version: "3.7"
 services:
+  extender:
+    image: test/test:test   # TODO(user): replace it with your extender's image
+    ports:
+      - "80:80"
+    networks:
+      - simulator-internal-network
+  init-container:
+      image: busybox
+      volumes:
+        - conf:/config
+        - ${PWD}/simulator/cmd/scheduler:/host-config:ro    
+      command: sh -c "cp -rf /host-config/* /config/"
   simulator-scheduler:
     image: simulator-scheduler
     container_name: simulator-scheduler
     environment:
-      - KUBE_APISERVER_URL=http://simulator-cluster:3131
-      - KUBECONFIG=/root/.kube/kubeconfig.yaml
+      - KUBECONFIG=/config/kubeconfig.yaml
     volumes:
-      - ./simulator/docs/sample/debuggable-scheduler/kubeconfig.yaml:/root/.kube/kubeconfig.yaml
+      - conf:/config
+    depends_on:
+      - init-container
+      - simulator-cluster
     restart: always
     tty: true
     networks:
@@ -22,6 +35,8 @@ services:
     volumes:
       - ./simulator/config.yaml:/config.yaml
       - ./simulator/kubeconfig.yaml:/kubeconfig.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - conf:/config
     ports:
       - "1212:1212"
     restart: always
@@ -78,3 +93,4 @@ networks:
     driver: bridge
 volumes:
   simulator-etcd-data:
+  conf:

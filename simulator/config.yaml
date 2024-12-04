@@ -47,7 +47,3 @@ externalImportEnabled: false
 # You cannot make both externalImportEnabled and resourceSyncEnabled true because those features would be conflicted.
 # Note, this is still a beta feature.
 resourceSyncEnabled: false
-
-# This variable indicates whether an external scheduler
-# is used.
-externalSchedulerEnabled: false

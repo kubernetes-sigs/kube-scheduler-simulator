@@ -15,6 +15,14 @@ steps:
     args:
     - buildx
     - build
+    - --tag=gcr.io/$PROJECT_ID/debuggable-scheduler:$_GIT_TAG
+    - --tag=gcr.io/$PROJECT_ID/debuggable-scheduler:latest
+    - -f=./simulator/cmd/scheduler/Dockerfile
+    - ./simulator/
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - buildx
+    - build
     - --tag=gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG
     - --tag=gcr.io/$PROJECT_ID/simulator-frontend:latest
     - -f=./web/Dockerfile
@@ -29,6 +37,8 @@ options:
 # this will push these images, or cause the build to fail if they weren't built.
 images:
   - 'gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG'
+  - 'gcr.io/$PROJECT_ID/simulator-frontend:latest'
+  - 'gcr.io/$PROJECT_ID/simulator-backend:$_GIT_TAG'
   - 'gcr.io/$PROJECT_ID/simulator-backend:latest'
-  - 'gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG'
-  - 'gcr.io/$PROJECT_ID/simulator-backend:latest'
+  - 'gcr.io/$PROJECT_ID/debuggable-scheduler:$_GIT_TAG'
+  - 'gcr.io/$PROJECT_ID/debuggable-scheduler:latest'
