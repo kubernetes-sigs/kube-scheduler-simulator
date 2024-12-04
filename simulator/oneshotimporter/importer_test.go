@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"golang.org/x/xerrors"
 
 	m "sigs.k8s.io/kube-scheduler-simulator/simulator/oneshotimporter/mock_clusterresourceimporter"

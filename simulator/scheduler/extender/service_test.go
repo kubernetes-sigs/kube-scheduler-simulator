@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/kubernetes/fake"
 	configv1 "k8s.io/kube-scheduler/config/v1"
