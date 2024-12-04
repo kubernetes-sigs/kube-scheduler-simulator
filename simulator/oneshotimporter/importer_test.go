@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"golang.org/x/xerrors"
 
-	m "sigs.k8s.io/kube-scheduler-simulator/simulator/oneshotimporter/mock_clusterresourceimporter"
+	m "sigs.k8s.io/kube-scheduler-simulator/simulator/oneshotimporter/mock_oneshotimporter"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 
@@ -22,7 +22,7 @@ func TestService_ImportClusterResources(t *testing.T) {
 			name: "no error when Load and Snap are successful",
 			prepareEachServiceMockFn: func(simulatorExport *m.MockReplicateService, clusterExport *m.MockReplicateService) {
 				dummyOption := new(snapshot.Option)
-				clusterExport.EXPECT().Snap(gomock.Any()).Return(&snapshot.ResourcesForSnap{}, nil)
+				clusterExport.EXPECT().Snap(gomock.Any(), gomock.Any()).Return(&snapshot.ResourcesForSnap{}, nil)
 				simulatorExport.EXPECT().Load(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(1)
 				simulatorExport.EXPECT().IgnoreSchedulerConfiguration().Return(*dummyOption).Times(1)
@@ -33,7 +33,7 @@ func TestService_ImportClusterResources(t *testing.T) {
 			name: "should return error if Load raise an error",
 			prepareEachServiceMockFn: func(simulatorExport *m.MockReplicateService, clusterExport *m.MockReplicateService) {
 				dummyOption := new(snapshot.Option)
-				clusterExport.EXPECT().Snap(gomock.Any()).Return(&snapshot.ResourcesForSnap{}, nil)
+				clusterExport.EXPECT().Snap(gomock.Any(), gomock.Any()).Return(&snapshot.ResourcesForSnap{}, nil)
 				simulatorExport.EXPECT().Load(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(xerrors.Errorf("failed to Import"))
 				simulatorExport.EXPECT().IgnoreErr().Return(*dummyOption).Times(1)
 				simulatorExport.EXPECT().IgnoreSchedulerConfiguration().Return(*dummyOption).Times(1)
@@ -63,7 +63,7 @@ func TestService_ImportClusterResources(t *testing.T) {
 			s := NewService(mockSimulatorExportService, mockClusterExportService)
 			tt.prepareEachServiceMockFn(mockSimulatorExportService, mockClusterExportService)
 
-			if err := s.ImportClusterResources(context.Background()); (err != nil) != tt.wantErr {
+			if err := s.ImportClusterResources(context.Background(), map[string]string{}); (err != nil) != tt.wantErr {
 				t.Fatalf("ImportClusterResources() %v test, \nerror = %v", tt.name, err)
 			}
 		})
