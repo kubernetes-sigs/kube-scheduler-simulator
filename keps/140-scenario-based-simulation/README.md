@@ -64,6 +64,10 @@ Therefore, this kep proposes to define the scenario **as CRD**. All clients, inc
 The Scenario is a non-namespaced resource. 
 This CRD will be applied to kube-apiserver started in kube-scheduler-simulator.
 
+The following diagram depicts the high-level relationship among entities in `Scenario` CRD.
+
+![Scenario CRD diagram](images/crd-diagram.png)
+
 We may need to change etcd request-size limitation by --max-request-bytes since the scenario resource may be more significant than other standard resources.
 https://etcd.io/docs/v3.4/dev-guide/limit/#request-size-limit
 
