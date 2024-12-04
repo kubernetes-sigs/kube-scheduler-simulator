@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"golang.org/x/xerrors"
 
-	m "sigs.k8s.io/kube-scheduler-simulator/simulator/oneshotimporter/mock_oneshotimporter"
+	m "sigs.k8s.io/kube-scheduler-simulator/simulator/oneshotimporter/mock_clusterresourceimporter"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 
