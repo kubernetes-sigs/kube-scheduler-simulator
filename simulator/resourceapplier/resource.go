@@ -1,4 +1,4 @@
-package syncer
+package resourceapplier
 
 import (
 	"context"
@@ -11,49 +11,31 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// DefaultGVRs is a list of GroupVersionResource that we sync by default (configurable with Options),
-// which is a suitable resource set for the vanilla scheduler.
-//
-// Note that this order matters - When first importing resources, we want to sync namespaces first, then priorityclasses, storageclasses...
-var DefaultGVRs = []schema.GroupVersionResource{
-	{Group: "", Version: "v1", Resource: "namespaces"},
-	{Group: "scheduling.k8s.io", Version: "v1", Resource: "priorityclasses"},
-	{Group: "storage.k8s.io", Version: "v1", Resource: "storageclasses"},
-	{Group: "", Version: "v1", Resource: "persistentvolumeclaims"},
-	{Group: "", Version: "v1", Resource: "nodes"},
-	{Group: "", Version: "v1", Resource: "persistentvolumes"},
-	{Group: "", Version: "v1", Resource: "pods"},
-}
-
-// Event is a type of events that occur in the source cluster.
-type Event int
-
-const (
-	Add Event = iota
-	Update
-)
-
-// mandatoryMutatingFunctions is MutatingFunctions that we must register.
+// mandatoryFilterForCreating is FilteringFunctions that we must register for creating.
 // We don't allow users to opt out them.
-var mandatoryMutatingFunctions = map[schema.GroupVersionResource]MutatingFunction{
+var mandatoryFilterForCreating = map[schema.GroupVersionResource]FilteringFunction{}
+
+// mandatoryMutateForCreating is MutatingFunctions that we must register for creating.
+// We don't allow users to opt out them.
+var mandatoryMutateForCreating = map[schema.GroupVersionResource]MutatingFunction{
 	{Group: "", Version: "v1", Resource: "persistentvolumes"}: mutatePV,
 	{Group: "", Version: "v1", Resource: "pods"}:              mutatePods,
 }
 
-// mandatoryFilteringFunctions is FilteringFunctions that we must register.
+// mandatoryFilterForUpdating is FilteringFunctions that we must register.
 // We don't allow users to opt out them.
-var mandatoryFilteringFunctions = map[schema.GroupVersionResource]FilteringFunction{
-	{Group: "", Version: "v1", Resource: "pods"}: filterPods,
+var mandatoryFilterForUpdating = map[schema.GroupVersionResource]FilteringFunction{
+	{Group: "", Version: "v1", Resource: "pods"}: filterPodsForUpdating,
 }
 
-// FilteringFunction is a function that filters a resource.
-// If it returns false, the resource will not be imported.
-type FilteringFunction func(ctx context.Context, resource *unstructured.Unstructured, clients *Clients, event Event) (bool, error)
+// mandatoryMutateForUpdating is MutatingFunctions that we must register for updating.
+// We don't allow users to opt out them.
+var mandatoryMutateForUpdating = map[schema.GroupVersionResource]MutatingFunction{
+	{Group: "", Version: "v1", Resource: "persistentvolumes"}: mutatePV,
+	{Group: "", Version: "v1", Resource: "pods"}:              mutatePods,
+}
 
-// MutatingFunction is a function that mutates a resource before importing it.
-type MutatingFunction func(ctx context.Context, resource *unstructured.Unstructured, clients *Clients, event Event) (*unstructured.Unstructured, error)
-
-func mutatePV(ctx context.Context, resource *unstructured.Unstructured, clients *Clients, _ Event) (*unstructured.Unstructured, error) {
+func mutatePV(ctx context.Context, resource *unstructured.Unstructured, clients *Clients) (*unstructured.Unstructured, error) {
 	var pv v1.PersistentVolume
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(resource.UnstructuredContent(), &pv)
 	if err != nil {
@@ -64,7 +46,7 @@ func mutatePV(ctx context.Context, resource *unstructured.Unstructured, clients 
 		// PersistentVolumeClaims's UID is changed in a destination cluster when importing from a source cluster,
 		// and thus we need to update the PVC UID in the PersistentVolume.
 		// Get PVC of pv.Spec.ClaimRef.Name.
-		pvc, err := clients.SrcDynamicClient.Resource(schema.GroupVersionResource{
+		pvc, err := clients.DynamicClient.Resource(schema.GroupVersionResource{
 			Group:    "",
 			Version:  "v1",
 			Resource: "persistentvolumeclaims",
@@ -80,7 +62,7 @@ func mutatePV(ctx context.Context, resource *unstructured.Unstructured, clients 
 	return &unstructured.Unstructured{Object: modifiedUnstructed}, err
 }
 
-func mutatePods(_ context.Context, resource *unstructured.Unstructured, _ *Clients, _ Event) (*unstructured.Unstructured, error) {
+func mutatePods(_ context.Context, resource *unstructured.Unstructured, _ *Clients) (*unstructured.Unstructured, error) {
 	var pod v1.Pod
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(resource.UnstructuredContent(), &pod)
 	if err != nil {
@@ -100,12 +82,7 @@ func mutatePods(_ context.Context, resource *unstructured.Unstructured, _ *Clien
 
 // filterPods checks if a pod is already scheduled when it's updated.
 // We only want to update pods that are not yet scheduled.
-func filterPods(_ context.Context, resource *unstructured.Unstructured, _ *Clients, event Event) (bool, error) {
-	if event == Add {
-		// We always add a Pod, regardless it's scheduled or not.
-		return true, nil
-	}
-
+func filterPodsForUpdating(_ context.Context, resource *unstructured.Unstructured, _ *Clients) (bool, error) {
 	var pod v1.Pod
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(resource.UnstructuredContent(), &pod)
 	if err != nil {
