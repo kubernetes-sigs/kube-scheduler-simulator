@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	snapshot "sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 
@@ -83,7 +84,7 @@ func (mr *MockReplicateServiceMockRecorder) Load(arg0, arg1 interface{}, arg2 ..
 }
 
 // Snap mocks base method.
-func (m *MockReplicateService) Snap(arg0 context.Context, arg1 map[string]string, arg2 ...snapshot.Option) (*snapshot.ResourcesForSnap, error) {
+func (m *MockReplicateService) Snap(arg0 context.Context, arg1 v1.LabelSelector, arg2 ...snapshot.Option) (*snapshot.ResourcesForSnap, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

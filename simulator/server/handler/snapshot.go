@@ -10,6 +10,7 @@ import (
 	"k8s.io/klog/v2"
 	configv1 "k8s.io/kube-scheduler/config/v1"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
@@ -36,7 +37,7 @@ func NewSnapshotHandler(s di.SnapshotService) *SnapshotHandler {
 func (h *SnapshotHandler) Snap(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var label map[string]string
+	var label metav1.LabelSelector
 	rs, err := h.service.Snap(ctx, label)
 	if err != nil {
 		klog.Errorf("failed to save all resources: %+v", err)

@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/xerrors"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 
@@ -20,7 +21,7 @@ type Service struct {
 
 type ReplicateService interface {
 	// Snap will be used to export resources from target cluster.
-	Snap(ctx context.Context, importLabel map[string]string, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
+	Snap(ctx context.Context, labelSelector metav1.LabelSelector, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
 	// Load will be used to import resources the from data which was exported.
 	Load(ctx context.Context, resources *snapshot.ResourcesForLoad, opts ...snapshot.Option) error
 	IgnoreErr() snapshot.Option
@@ -40,8 +41,8 @@ func NewService(e ReplicateService, i ReplicateService) *Service {
 // Note: this method doesn't handle scheduler configuration.
 // If you want to use the scheduler configuration along with the imported resources on the simulator,
 // you need to set the path of the scheduler configuration file to `kubeSchedulerConfigPath` value in the Simulator Server Configuration.
-func (s *Service) ImportClusterResources(ctx context.Context, importLabel map[string]string) error {
-	expRes, err := s.exportService.Snap(ctx, importLabel)
+func (s *Service) ImportClusterResources(ctx context.Context, labelSelector metav1.LabelSelector) error {
+	expRes, err := s.exportService.Snap(ctx, labelSelector)
 	if err != nil {
 		return xerrors.Errorf("call Snap of the exportService: %w", err)
 	}

@@ -229,7 +229,7 @@ func TestService_Snap(t *testing.T) {
 		name                     string
 		prepareEachServiceMockFn func(*mock_snapshot.MockSchedulerService)
 		prepareFakeClientSetFn   func() *fake.Clientset
-		labels                   map[string]string
+		labels                   metav1.LabelSelector
 		wantReturn               func() *ResourcesForSnap
 		wantErr                  error
 	}{
@@ -555,8 +555,10 @@ func TestService_Snap(t *testing.T) {
 				}, defaultFuncs)
 				return c
 			},
-			labels: map[string]string{
-				"test": "test1",
+			labels: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"test": "test1",
+				},
 			},
 			wantReturn: func() *ResourcesForSnap {
 				r := &ResourcesForSnap{
@@ -803,7 +805,7 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 			mockSchedulerSvc := mock_snapshot.NewMockSchedulerService(ctrl)
 			s := NewService(fakeClientset, mockSchedulerSvc)
 			tt.prepareEachServiceMockFn(mockSchedulerSvc)
-			var labels map[string]string
+			var labels metav1.LabelSelector
 			r, err := s.Snap(context.Background(), labels, s.IgnoreErr())
 
 			var diffResponse string
@@ -1919,7 +1921,7 @@ func TestFunction_listPcs(t *testing.T) {
 	tests := []struct {
 		name                   string
 		prepareFakeClientSetFn func() *fake.Clientset
-		labels                 map[string]string
+		labels                 metav1.LabelSelector
 		wantReturn             func() *ResourcesForSnap
 		wantErr                bool
 	}{
@@ -1973,8 +1975,10 @@ func TestFunction_listPcs(t *testing.T) {
 		},
 		{
 			name: "all pc which have `env` lavel's value is not `prod` should filter out",
-			labels: map[string]string{
-				"env": "prod",
+			labels: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"env": "prod",
+				},
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()

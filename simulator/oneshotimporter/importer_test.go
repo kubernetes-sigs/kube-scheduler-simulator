@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"golang.org/x/xerrors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	m "sigs.k8s.io/kube-scheduler-simulator/simulator/oneshotimporter/mock_clusterresourceimporter"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
@@ -63,7 +64,7 @@ func TestService_ImportClusterResources(t *testing.T) {
 			s := NewService(mockSimulatorExportService, mockClusterExportService)
 			tt.prepareEachServiceMockFn(mockSimulatorExportService, mockClusterExportService)
 
-			if err := s.ImportClusterResources(context.Background(), map[string]string{}); (err != nil) != tt.wantErr {
+			if err := s.ImportClusterResources(context.Background(), metav1.LabelSelector{}); (err != nil) != tt.wantErr {
 				t.Fatalf("ImportClusterResources() %v test, \nerror = %v", tt.name, err)
 			}
 		})

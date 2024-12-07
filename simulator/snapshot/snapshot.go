@@ -5,6 +5,7 @@ package snapshot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"golang.org/x/xerrors"
@@ -100,29 +101,32 @@ func (s *Service) IgnoreSchedulerConfiguration() Option {
 }
 
 // get gets all resources from each service.
-func (s *Service) get(ctx context.Context, importLabel map[string]string, opts options) (*ResourcesForSnap, error) {
+func (s *Service) get(ctx context.Context, labelSelector metav1.LabelSelector, opts options) (*ResourcesForSnap, error) {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
 	resources := ResourcesForSnap{}
 
-	if err := s.listPods(ctx, &resources, errgrp, importLabel, opts); err != nil {
+	fmt.Println("test")
+	fmt.Printf("%+v\n", labelSelector)
+
+	if err := s.listPods(ctx, &resources, errgrp, labelSelector, opts); err != nil {
 		return nil, xerrors.Errorf("call listPods: %w", err)
 	}
-	if err := s.listNodes(ctx, &resources, errgrp, importLabel, opts); err != nil {
+	if err := s.listNodes(ctx, &resources, errgrp, labelSelector, opts); err != nil {
 		return nil, xerrors.Errorf("call listNodes: %w", err)
 	}
-	if err := s.listPvs(ctx, &resources, errgrp, importLabel, opts); err != nil {
+	if err := s.listPvs(ctx, &resources, errgrp, labelSelector, opts); err != nil {
 		return nil, xerrors.Errorf("call listPvs: %w", err)
 	}
-	if err := s.listPvcs(ctx, &resources, errgrp, importLabel, opts); err != nil {
+	if err := s.listPvcs(ctx, &resources, errgrp, labelSelector, opts); err != nil {
 		return nil, xerrors.Errorf("call listPvcs: %w", err)
 	}
-	if err := s.listStorageClasses(ctx, &resources, errgrp, importLabel, opts); err != nil {
+	if err := s.listStorageClasses(ctx, &resources, errgrp, labelSelector, opts); err != nil {
 		return nil, xerrors.Errorf("call listStorageClasses: %w", err)
 	}
-	if err := s.listPcs(ctx, &resources, errgrp, importLabel, opts); err != nil {
+	if err := s.listPcs(ctx, &resources, errgrp, labelSelector, opts); err != nil {
 		return nil, xerrors.Errorf("call listPcs: %w", err)
 	}
-	if err := s.listNamespaces(ctx, &resources, errgrp, importLabel, opts); err != nil {
+	if err := s.listNamespaces(ctx, &resources, errgrp, labelSelector, opts); err != nil {
 		return nil, xerrors.Errorf("call listNamespaces: %w", err)
 	}
 	if err := s.getSchedulerConfig(&resources, errgrp, opts); err != nil {
@@ -136,12 +140,12 @@ func (s *Service) get(ctx context.Context, importLabel map[string]string, opts o
 }
 
 // Snap exports all resources as one data.
-func (s *Service) Snap(ctx context.Context, importLabel map[string]string, opts ...Option) (*ResourcesForSnap, error) {
+func (s *Service) Snap(ctx context.Context, labelSelector metav1.LabelSelector, opts ...Option) (*ResourcesForSnap, error) {
 	options := options{}
 	for _, o := range opts {
 		o.apply(&options)
 	}
-	resources, err := s.get(ctx, importLabel, options)
+	resources, err := s.get(ctx, labelSelector, options)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get(): %w", err)
 	}
@@ -214,11 +218,8 @@ func (s *Service) Load(ctx context.Context, resources *ResourcesForLoad, opts ..
 	return nil
 }
 
-func (s *Service) listPods(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, importLabel map[string]string, opts options) error {
+func (s *Service) listPods(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, labelSelector metav1.LabelSelector, opts options) error {
 	if err := eg.Go(func() error {
-		labelSelector := metav1.LabelSelector{
-			MatchLabels: importLabel,
-		}
 		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
 		if err != nil {
 			return xerrors.Errorf("failed to create label selector: %w", err)
@@ -241,11 +242,8 @@ func (s *Service) listPods(ctx context.Context, r *ResourcesForSnap, eg *util.Se
 	return nil
 }
 
-func (s *Service) listNodes(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, importLabel map[string]string, opts options) error {
+func (s *Service) listNodes(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, labelSelector metav1.LabelSelector, opts options) error {
 	if err := eg.Go(func() error {
-		labelSelector := metav1.LabelSelector{
-			MatchLabels: importLabel,
-		}
 		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
 		if err != nil {
 			return xerrors.Errorf("failed to create label selector: %w", err)
@@ -268,11 +266,8 @@ func (s *Service) listNodes(ctx context.Context, r *ResourcesForSnap, eg *util.S
 	return nil
 }
 
-func (s *Service) listPvs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, importLabel map[string]string, opts options) error {
+func (s *Service) listPvs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, labelSelector metav1.LabelSelector, opts options) error {
 	if err := eg.Go(func() error {
-		labelSelector := metav1.LabelSelector{
-			MatchLabels: importLabel,
-		}
 		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
 		if err != nil {
 			return xerrors.Errorf("failed to create label selector: %w", err)
@@ -295,11 +290,8 @@ func (s *Service) listPvs(ctx context.Context, r *ResourcesForSnap, eg *util.Sem
 	return nil
 }
 
-func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, importLabel map[string]string, opts options) error {
+func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, labelSelector metav1.LabelSelector, opts options) error {
 	if err := eg.Go(func() error {
-		labelSelector := metav1.LabelSelector{
-			MatchLabels: importLabel,
-		}
 		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
 		if err != nil {
 			return xerrors.Errorf("failed to create label selector: %w", err)
@@ -322,11 +314,8 @@ func (s *Service) listPvcs(ctx context.Context, r *ResourcesForSnap, eg *util.Se
 	return nil
 }
 
-func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, importLabel map[string]string, opts options) error {
+func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, labelSelector metav1.LabelSelector, opts options) error {
 	if err := eg.Go(func() error {
-		labelSelector := metav1.LabelSelector{
-			MatchLabels: importLabel,
-		}
 		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
 		if err != nil {
 			return xerrors.Errorf("failed to create label selector: %w", err)
@@ -349,11 +338,8 @@ func (s *Service) listStorageClasses(ctx context.Context, r *ResourcesForSnap, e
 	return nil
 }
 
-func (s *Service) listPcs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, importLabel map[string]string, opts options) error {
+func (s *Service) listPcs(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, labelSelector metav1.LabelSelector, opts options) error {
 	if err := eg.Go(func() error {
-		labelSelector := metav1.LabelSelector{
-			MatchLabels: importLabel,
-		}
 		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
 		if err != nil {
 			return xerrors.Errorf("failed to create label selector: %w", err)
@@ -382,11 +368,8 @@ func (s *Service) listPcs(ctx context.Context, r *ResourcesForSnap, eg *util.Sem
 	return nil
 }
 
-func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, importLabel map[string]string, opts options) error {
+func (s *Service) listNamespaces(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, labelSelector metav1.LabelSelector, opts options) error {
 	if err := eg.Go(func() error {
-		labelSelector := metav1.LabelSelector{
-			MatchLabels: importLabel,
-		}
 		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
 		if err != nil {
 			return xerrors.Errorf("failed to create label selector: %w", err)

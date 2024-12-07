@@ -15,6 +15,7 @@ import (
 	configv1 "k8s.io/kube-scheduler/config/v1"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config/v1alpha1"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 )
@@ -37,8 +38,7 @@ type Config struct {
 	// ExternalImportEnabled indicates whether the simulator will import resources from a target cluster once
 	// when it's started.
 	ExternalImportEnabled bool
-	// ImportLabel is Labels to select which resources import from external cluster.
-	ImportLabel map[string]string
+	metav1.LabelSelector
 	// ExternalImportEnabled indicates whether the simulator will keep syncing resources from a target cluster.
 	ResourceSyncEnabled bool
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
@@ -106,7 +106,7 @@ func NewConfig() (*Config, error) {
 		CorsAllowedOriginList: corsAllowedOriginList,
 		InitialSchedulerCfg:   initialschedulerCfg,
 		ExternalImportEnabled: externalimportenabled,
-		ImportLabel:           configYaml.ImportLabel,
+		LabelSelector:         configYaml.LabelSelector,
 		ExternalKubeClientCfg: externalKubeClientCfg,
 		ResourceSyncEnabled:   resourceSyncEnabled,
 	}, nil
