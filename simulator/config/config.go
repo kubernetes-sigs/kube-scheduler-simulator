@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"golang.org/x/xerrors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -15,7 +16,6 @@ import (
 	configv1 "k8s.io/kube-scheduler/config/v1"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config/v1alpha1"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler/config"
 )

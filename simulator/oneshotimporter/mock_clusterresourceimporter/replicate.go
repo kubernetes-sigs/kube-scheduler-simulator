@@ -10,6 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	snapshot "sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 
