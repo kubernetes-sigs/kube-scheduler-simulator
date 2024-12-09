@@ -56,14 +56,8 @@ func startSimulator() error {
 	cachedDiscoveryClient := memory.NewMemCacheClient(discoverClient)
 	restMapper := restmapper.NewDeferredDiscoveryRESTMapper(cachedDiscoveryClient)
 
-	importClusterResourceClient := &clientset.Clientset{}
 	var importClusterDynamicClient dynamic.Interface
 	if cfg.ExternalImportEnabled || cfg.ResourceSyncEnabled {
-		importClusterResourceClient, err = clientset.NewForConfig(cfg.ExternalKubeClientCfg)
-		if err != nil {
-			return xerrors.Errorf("creates a new Clientset for the ExternalKubeClientCfg: %w", err)
-		}
-
 		importClusterDynamicClient, err = dynamic.NewForConfig(cfg.ExternalKubeClientCfg)
 		if err != nil {
 			return xerrors.Errorf("creates a new dynamic Clientset for the ExternalKubeClientCfg: %w", err)
@@ -94,7 +88,7 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceapplier.Options{})
+	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterDynamicClient, cfg.Port, resourceapplier.Options{})
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
