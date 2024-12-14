@@ -229,7 +229,7 @@ func TestService_Snap(t *testing.T) {
 		name                     string
 		prepareEachServiceMockFn func(*mock_snapshot.MockSchedulerService)
 		prepareFakeClientSetFn   func() *fake.Clientset
-		labels                   metav1.LabelSelector
+		labelSelector            metav1.LabelSelector
 		wantReturn               func() *ResourcesForSnap
 		wantErr                  error
 	}{
@@ -555,7 +555,7 @@ func TestService_Snap(t *testing.T) {
 				}, defaultFuncs)
 				return c
 			},
-			labels: metav1.LabelSelector{
+			labelSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"test": "test1",
 				},
@@ -586,7 +586,7 @@ func TestService_Snap(t *testing.T) {
 
 			s := NewService(fakeClientset, mockSchedulerSvc)
 			tt.prepareEachServiceMockFn(mockSchedulerSvc)
-			r, err := s.Snap(context.Background(), tt.labels)
+			r, err := s.Snap(context.Background(), tt.labelSelector)
 
 			var diffResponse string
 			if tt.wantReturn != nil {
@@ -1974,7 +1974,7 @@ func TestFunction_listPcs(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "all pc which have `env` lavel's value is not `prod` should filter out",
+			name: "all priority classes that don't match a label selector should be filtered out",
 			labels: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"env": "prod",
