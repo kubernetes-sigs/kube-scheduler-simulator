@@ -61,6 +61,8 @@ type SimulatorConfiguration struct {
 	// Note, this is still a beta feature.
 	ExternalImportEnabled bool `json:"externalImportEnabled,omitempty"`
 
+	ResourceImportLabelSelector metav1.LabelSelector `json:"resourceImportLabelSelector,omitempty"`
+
 	// This variable indicates whether the simulator will
 	// sync resources from an user cluster's or not.
 	ResourceSyncEnabled bool `json:"resourceSyncEnabled,omitempty"`

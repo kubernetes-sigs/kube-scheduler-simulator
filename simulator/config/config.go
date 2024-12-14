@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"golang.org/x/xerrors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -37,7 +38,9 @@ type Config struct {
 	// ExternalImportEnabled indicates whether the simulator will import resources from a target cluster once
 	// when it's started.
 	ExternalImportEnabled bool
-	// ExternalImportEnabled indicates whether the simulator will keep syncing resources from a target cluster.
+	// ResourceImportLabelSelector is the label selector used to determine which resources from the target cluster should be imported.
+	ResourceImportLabelSelector metav1.LabelSelector
+	// ResourceSyncEnabled indicates whether the simulator will keep syncing resources from a target cluster.
 	ResourceSyncEnabled bool
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
 	// This field should be set when ExternalImportEnabled == true or ResourceSyncEnabled == true.
@@ -98,14 +101,15 @@ func NewConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port:                  port,
-		KubeAPIServerURL:      apiurl,
-		EtcdURL:               etcdurl,
-		CorsAllowedOriginList: corsAllowedOriginList,
-		InitialSchedulerCfg:   initialschedulerCfg,
-		ExternalImportEnabled: externalimportenabled,
-		ExternalKubeClientCfg: externalKubeClientCfg,
-		ResourceSyncEnabled:   resourceSyncEnabled,
+		Port:                        port,
+		KubeAPIServerURL:            apiurl,
+		EtcdURL:                     etcdurl,
+		CorsAllowedOriginList:       corsAllowedOriginList,
+		InitialSchedulerCfg:         initialschedulerCfg,
+		ExternalImportEnabled:       externalimportenabled,
+		ResourceImportLabelSelector: configYaml.ResourceImportLabelSelector,
+		ExternalKubeClientCfg:       externalKubeClientCfg,
+		ResourceSyncEnabled:         resourceSyncEnabled,
 	}, nil
 }
 

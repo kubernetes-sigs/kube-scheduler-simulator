@@ -105,7 +105,7 @@ func startSimulator() error {
 		// This must be called after `StartScheduler`
 		timeoutCtx, timeoutCancel := context.WithTimeout(ctx, importTimeout)
 		defer timeoutCancel()
-		if err := dic.OneshotClusterResourceImporter().ImportClusterResources(timeoutCtx); err != nil {
+		if err := dic.OneshotClusterResourceImporter().ImportClusterResources(timeoutCtx, cfg.ResourceImportLabelSelector); err != nil {
 			return xerrors.Errorf("import from the target cluster: %w", err)
 		}
 	}
