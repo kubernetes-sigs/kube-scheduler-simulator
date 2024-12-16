@@ -42,6 +42,12 @@ type Config struct {
 	ResourceImportLabelSelector metav1.LabelSelector
 	// ResourceSyncEnabled indicates whether the simulator will keep syncing resources from a target cluster.
 	ResourceSyncEnabled bool
+	// RecorderEnabled indicates whether the simulator will record events from a target cluster.
+	RecorderEnabled bool
+	// ReplayerEnabled indicates whether the simulator will replay events recorded in a file.
+	ReplayerEnabled bool
+	// RecordFilePath is the path to the file where the simulator records events.
+	RecordFilePath string
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
 	// This field should be set when ExternalImportEnabled == true or ResourceSyncEnabled == true.
 	ExternalKubeClientCfg *rest.Config
@@ -84,11 +90,17 @@ func NewConfig() (*Config, error) {
 
 	externalimportenabled := getExternalImportEnabled()
 	resourceSyncEnabled := getResourceSyncEnabled()
+	recorderEnabled := getRecorderEnabled()
+	replayerEnabled := getReplayerEnabled()
+	recordFilePath := getRecordFilePath()
 	externalKubeClientCfg := &rest.Config{}
-	if externalimportenabled && resourceSyncEnabled {
-		return nil, xerrors.Errorf("externalImportEnabled and resourceSyncEnabled cannot be used simultaneously.")
+	if hasTwoOrMoreTrue(externalimportenabled, resourceSyncEnabled, replayerEnabled) {
+		return nil, xerrors.Errorf("externalImportEnabled, resourceSyncEnabled and replayerEnabled cannot be used simultaneously.")
 	}
-	if externalimportenabled || resourceSyncEnabled {
+	if replayerEnabled && recorderEnabled {
+		return nil, xerrors.Errorf("recorderEnabled and replayerEnabled cannot be used simultaneously.")
+	}
+	if externalimportenabled || resourceSyncEnabled || recorderEnabled {
 		externalKubeClientCfg, err = clientcmd.BuildConfigFromFlags("", configYaml.KubeConfig)
 		if err != nil {
 			return nil, xerrors.Errorf("get kube clientconfig: %w", err)
@@ -110,6 +122,9 @@ func NewConfig() (*Config, error) {
 		ResourceImportLabelSelector: configYaml.ResourceImportLabelSelector,
 		ExternalKubeClientCfg:       externalKubeClientCfg,
 		ResourceSyncEnabled:         resourceSyncEnabled,
+		RecorderEnabled:             recorderEnabled,
+		ReplayerEnabled:             replayerEnabled,
+		RecordFilePath:              recordFilePath,
 	}, nil
 }
 
@@ -272,6 +287,40 @@ func getResourceSyncEnabled() bool {
 	return resourceSyncEnabled
 }
 
+// getRecorderEnabled reads RECORDER_ENABLED and converts it to bool
+// if empty from the config file.
+// This function will return `true` if `RECORDER_ENABLED` is "1".
+func getRecorderEnabled() bool {
+	recorderEnabledString := os.Getenv("RECORDER_ENABLED")
+	if recorderEnabledString == "" {
+		recorderEnabledString = strconv.FormatBool(configYaml.RecorderEnabled)
+	}
+	recorderEnabled, _ := strconv.ParseBool(recorderEnabledString)
+	return recorderEnabled
+}
+
+// getReplayerEnabled reads REPLAYER_ENABLED and converts it to bool
+// if empty from the config file.
+// This function will return `true` if `REPLAYER_ENABLED` is "1".
+func getReplayerEnabled() bool {
+	replayerEnabledString := os.Getenv("REPLAYER_ENABLED")
+	if replayerEnabledString == "" {
+		replayerEnabledString = strconv.FormatBool(configYaml.ReplayerEnabled)
+	}
+	replayerEnabled, _ := strconv.ParseBool(replayerEnabledString)
+	return replayerEnabled
+}
+
+// getRecordFilePath reads RECORD_FILE_PATH
+// if empty from the config file.
+func getRecordFilePath() string {
+	recordFilePath := os.Getenv("RECORD_FILE_PATH")
+	if recordFilePath == "" {
+		recordFilePath = configYaml.RecordFilePath
+	}
+	return recordFilePath
+}
+
 func decodeSchedulerCfg(buf []byte) (*configv1.KubeSchedulerConfiguration, error) {
 	decoder := scheme.Codecs.UniversalDeserializer()
 	obj, _, err := decoder.Decode(buf, nil, nil)
@@ -298,4 +347,14 @@ func GetKubeClientConfig() (*rest.Config, error) {
 		return nil, xerrors.Errorf("get client config: %w", err)
 	}
 	return clientConfig, nil
+}
+
+func hasTwoOrMoreTrue(values ...bool) bool {
+	count := 0
+	for _, v := range values {
+		if v {
+			count++
+		}
+	}
+	return count >= 2
 }
