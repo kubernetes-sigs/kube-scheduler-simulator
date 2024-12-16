@@ -47,6 +47,7 @@ func NewDIContainer(
 	externalDynamicClient dynamic.Interface,
 	simulatorPort int,
 	syncerOptions syncer.Options,
+	resourceapplierOptions resourceapplier.Options,
 ) (*Container, error) {
 	c := &Container{}
 
@@ -63,7 +64,7 @@ func NewDIContainer(
 		extSnapshotSvc := snapshot.NewService(externalClient, c.schedulerService)
 		c.oneshotClusterResourceImporter = oneshotimporter.NewService(snapshotSvc, extSnapshotSvc)
 	}
-	resourceApplierService := resourceapplier.New(dynamicClient, restMapper, resourceapplier.Options{}) // TODO: make options configurable
+	resourceApplierService := resourceapplier.New(dynamicClient, restMapper, resourceapplierOptions)
 	if resourceSyncEnabled {
 		c.resourceSyncer = syncer.New(externalDynamicClient, resourceApplierService, syncerOptions)
 	}
