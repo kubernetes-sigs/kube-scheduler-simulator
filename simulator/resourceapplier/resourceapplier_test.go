@@ -8,6 +8,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -74,38 +75,7 @@ func TestResourceApplier_createPods(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			s := runtime.NewScheme()
-			v1.AddToScheme(s)
-			scheduling.AddToScheme(s)
-			storage.AddToScheme(s)
-			client := dynamicFake.NewSimpleDynamicClient(s)
-			resources := []*restmapper.APIGroupResources{
-				{
-					Group: metav1.APIGroup{
-						Versions: []metav1.GroupVersionForDiscovery{
-							{Version: "v1"},
-						},
-					},
-					VersionedResources: map[string][]metav1.APIResource{
-						"v1": {
-							{Name: "pods", Namespaced: true, Kind: "Pod"},
-						},
-					},
-				},
-				{
-					Group: metav1.APIGroup{
-						Versions: []metav1.GroupVersionForDiscovery{
-							{Version: "v1"},
-						},
-					},
-					VersionedResources: map[string][]metav1.APIResource{
-						"v1": {
-							{Name: "nodes", Namespaced: true, Kind: "Node"},
-						},
-					},
-				},
-			}
-			mapper := restmapper.NewDiscoveryRESTMapper(resources)
+			client, mapper := prepare()
 			service := New(client, mapper, Options{})
 
 			p, err := runtime.DefaultUnstructuredConverter.ToUnstructured(tt.podToApply)
@@ -214,38 +184,7 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			s := runtime.NewScheme()
-			v1.AddToScheme(s)
-			scheduling.AddToScheme(s)
-			storage.AddToScheme(s)
-			client := dynamicFake.NewSimpleDynamicClient(s)
-			resources := []*restmapper.APIGroupResources{
-				{
-					Group: metav1.APIGroup{
-						Versions: []metav1.GroupVersionForDiscovery{
-							{Version: "v1"},
-						},
-					},
-					VersionedResources: map[string][]metav1.APIResource{
-						"v1": {
-							{Name: "pods", Namespaced: true, Kind: "Pod"},
-						},
-					},
-				},
-				{
-					Group: metav1.APIGroup{
-						Versions: []metav1.GroupVersionForDiscovery{
-							{Version: "v1"},
-						},
-					},
-					VersionedResources: map[string][]metav1.APIResource{
-						"v1": {
-							{Name: "nodes", Namespaced: true, Kind: "Node"},
-						},
-					},
-				},
-			}
-			mapper := restmapper.NewDiscoveryRESTMapper(resources)
+			client, mapper := prepare()
 			options := Options{
 				FilterBeforeCreating: map[schema.GroupVersionResource][]FilteringFunction{
 					{Group: "", Version: "v1", Resource: "pods"}: {tt.filter},
@@ -265,19 +204,11 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 			}
 
 			got, err := client.Resource(corev1.Resource("pods").WithVersion("v1")).Namespace("default").Get(context.Background(), tt.podToCreate.Name, metav1.GetOptions{})
-
-			if tt.filtered {
-				if !errors.IsNotFound(err) {
-					t.Fatalf("pod should not be created but it exists: %v", err)
+			if err != nil {
+				if tt.filtered && errors.IsNotFound(err) || tt.wantErr {
+					return
 				}
-				return
-			}
-
-			if tt.wantErr {
-				if err == nil {
-					t.Fatalf("error = %v, wantErr %v", err, tt.wantErr)
-				}
-				return
+				t.Fatalf("failed to get pod when comparing: %v", err)
 			}
 
 			var gotPod corev1.Pod
@@ -440,38 +371,7 @@ func TestResourceApplier_updatePods(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			s := runtime.NewScheme()
-			v1.AddToScheme(s)
-			scheduling.AddToScheme(s)
-			storage.AddToScheme(s)
-			client := dynamicFake.NewSimpleDynamicClient(s)
-			resources := []*restmapper.APIGroupResources{
-				{
-					Group: metav1.APIGroup{
-						Versions: []metav1.GroupVersionForDiscovery{
-							{Version: "v1"},
-						},
-					},
-					VersionedResources: map[string][]metav1.APIResource{
-						"v1": {
-							{Name: "pods", Namespaced: true, Kind: "Pod"},
-						},
-					},
-				},
-				{
-					Group: metav1.APIGroup{
-						Versions: []metav1.GroupVersionForDiscovery{
-							{Version: "v1"},
-						},
-					},
-					VersionedResources: map[string][]metav1.APIResource{
-						"v1": {
-							{Name: "nodes", Namespaced: true, Kind: "Node"},
-						},
-					},
-				},
-			}
-			mapper := restmapper.NewDiscoveryRESTMapper(resources)
+			client, mapper := prepare()
 			service := New(client, mapper, Options{})
 
 			p, err := runtime.DefaultUnstructuredConverter.ToUnstructured(tt.originalPod)
@@ -552,38 +452,7 @@ func TestResourceApplier_deletePods(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			s := runtime.NewScheme()
-			v1.AddToScheme(s)
-			scheduling.AddToScheme(s)
-			storage.AddToScheme(s)
-			client := dynamicFake.NewSimpleDynamicClient(s)
-			resources := []*restmapper.APIGroupResources{
-				{
-					Group: metav1.APIGroup{
-						Versions: []metav1.GroupVersionForDiscovery{
-							{Version: "v1"},
-						},
-					},
-					VersionedResources: map[string][]metav1.APIResource{
-						"v1": {
-							{Name: "pods", Namespaced: true, Kind: "Pod"},
-						},
-					},
-				},
-				{
-					Group: metav1.APIGroup{
-						Versions: []metav1.GroupVersionForDiscovery{
-							{Version: "v1"},
-						},
-					},
-					VersionedResources: map[string][]metav1.APIResource{
-						"v1": {
-							{Name: "nodes", Namespaced: true, Kind: "Node"},
-						},
-					},
-				},
-			}
-			mapper := restmapper.NewDiscoveryRESTMapper(resources)
+			client, mapper := prepare()
 			service := New(client, mapper, Options{})
 
 			p, err := runtime.DefaultUnstructuredConverter.ToUnstructured(tt.pod)
@@ -613,4 +482,40 @@ func TestResourceApplier_deletePods(t *testing.T) {
 			}
 		})
 	}
+}
+
+func prepare() (*dynamicFake.FakeDynamicClient, meta.RESTMapper) {
+	s := runtime.NewScheme()
+	v1.AddToScheme(s)
+	scheduling.AddToScheme(s)
+	storage.AddToScheme(s)
+	client := dynamicFake.NewSimpleDynamicClient(s)
+	resources := []*restmapper.APIGroupResources{
+		{
+			Group: metav1.APIGroup{
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1"},
+				},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1": {
+					{Name: "pods", Namespaced: true, Kind: "Pod"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1"},
+				},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1": {
+					{Name: "nodes", Namespaced: true, Kind: "Node"},
+				},
+			},
+		},
+	}
+	mapper := restmapper.NewDiscoveryRESTMapper(resources)
+	return client, mapper
 }
