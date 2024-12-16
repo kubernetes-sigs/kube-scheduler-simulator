@@ -20,6 +20,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/recorder"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/replayer"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourceapplier"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
@@ -58,7 +60,7 @@ func startSimulator() error {
 
 	importClusterResourceClient := &clientset.Clientset{}
 	var importClusterDynamicClient dynamic.Interface
-	if cfg.ExternalImportEnabled || cfg.ResourceSyncEnabled {
+	if cfg.ExternalImportEnabled || cfg.ResourceSyncEnabled || cfg.RecorderEnabled {
 		importClusterResourceClient, err = clientset.NewForConfig(cfg.ExternalKubeClientCfg)
 		if err != nil {
 			return xerrors.Errorf("creates a new Clientset for the ExternalKubeClientCfg: %w", err)
@@ -94,7 +96,11 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceapplier.Options{})
+	recorderOptions := recorder.Options{Path: cfg.RecordFilePath}
+	replayerOptions := replayer.Options{Path: cfg.RecordFilePath}
+	resourceApplierOptions := resourceapplier.Options{}
+
+	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, cfg.RecorderEnabled, cfg.ReplayerEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceApplierOptions, recorderOptions, replayerOptions)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
@@ -110,12 +116,26 @@ func startSimulator() error {
 		}
 	}
 
+	// If ReplayEnabled is enabled, the simulator replays the recorded resources.
+	if cfg.ReplayerEnabled {
+		if err := dic.ReplayService().Replay(ctx); err != nil {
+			return xerrors.Errorf("replay resources: %w", err)
+		}
+	}
+
 	dic.SchedulerService().SetSchedulerConfig(cfg.InitialSchedulerCfg)
 
 	if cfg.ResourceSyncEnabled {
 		// Start the resource syncer to sync resources from the target cluster.
 		if err = dic.ResourceSyncer().Run(ctx); err != nil {
 			return xerrors.Errorf("start syncing: %w", err)
+		}
+	}
+
+	if cfg.RecorderEnabled {
+		// Start the recorder to record events in the target cluster.
+		if err = dic.RecorderService().Run(ctx); err != nil {
+			return xerrors.Errorf("start recording: %w", err)
 		}
 	}
 
