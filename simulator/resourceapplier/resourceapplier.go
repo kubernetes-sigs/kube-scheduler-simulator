@@ -55,45 +55,29 @@ func New(dynamicClient dynamic.Interface, restMapper meta.RESTMapper, options Op
 	}
 
 	for gvr, fn := range mandatoryFilterForCreating {
-		s.filterBeforeCreating[gvr] = []FilteringFunction{fn}
+		s.addFilterBeforeCreating(gvr, []FilteringFunction{fn})
 	}
 	for gvr, fn := range mandatoryMutateForCreating {
-		s.mutateBeforeCreating[gvr] = []MutatingFunction{fn}
+		s.addMutateBeforeCreating(gvr, []MutatingFunction{fn})
 	}
 	for gvr, fn := range mandatoryFilterForUpdating {
-		s.filterBeforeUpdating[gvr] = []FilteringFunction{fn}
+		s.addFilterBeforeUpdating(gvr, []FilteringFunction{fn})
 	}
 	for gvr, fn := range mandatoryMutateForUpdating {
-		s.mutateBeforeUpdating[gvr] = []MutatingFunction{fn}
+		s.addMutateBeforeUpdating(gvr, []MutatingFunction{fn})
 	}
 
 	for gvr, fns := range options.FilterBeforeCreating {
-		if _, ok := s.filterBeforeCreating[gvr]; !ok {
-			s.filterBeforeCreating[gvr] = []FilteringFunction{}
-		}
-
-		s.filterBeforeCreating[gvr] = append(s.filterBeforeCreating[gvr], fns...)
+		s.addFilterBeforeCreating(gvr, fns)
 	}
 	for gvr, fns := range options.MutateBeforeCreating {
-		if _, ok := s.mutateBeforeCreating[gvr]; !ok {
-			s.mutateBeforeCreating[gvr] = []MutatingFunction{}
-		}
-
-		s.mutateBeforeCreating[gvr] = append(s.mutateBeforeCreating[gvr], fns...)
+		s.addMutateBeforeCreating(gvr, fns)
 	}
 	for gvr, fns := range options.FilterBeforeUpdating {
-		if _, ok := s.filterBeforeUpdating[gvr]; !ok {
-			s.filterBeforeUpdating[gvr] = []FilteringFunction{}
-		}
-
-		s.filterBeforeUpdating[gvr] = append(s.filterBeforeUpdating[gvr], fns...)
+		s.addFilterBeforeUpdating(gvr, fns)
 	}
 	for gvr, fns := range options.MutateBeforeUpdating {
-		if _, ok := s.mutateBeforeUpdating[gvr]; !ok {
-			s.mutateBeforeUpdating[gvr] = []MutatingFunction{}
-		}
-
-		s.mutateBeforeUpdating[gvr] = append(s.mutateBeforeUpdating[gvr], fns...)
+		s.addMutateBeforeUpdating(gvr, fns)
 	}
 
 	return s
@@ -293,4 +277,36 @@ func removeUnnecessaryMetadata(resource *unstructured.Unstructured) *unstructure
 	resource.SetResourceVersion("")
 
 	return resource
+}
+
+func (s *Service) addFilterBeforeCreating(gvr schema.GroupVersionResource, fn []FilteringFunction) {
+	if _, ok := s.filterBeforeCreating[gvr]; !ok {
+		s.filterBeforeCreating[gvr] = []FilteringFunction{}
+	}
+
+	s.filterBeforeCreating[gvr] = append(s.filterBeforeCreating[gvr], fn...)
+}
+
+func (s *Service) addMutateBeforeCreating(gvr schema.GroupVersionResource, fn []MutatingFunction) {
+	if _, ok := s.mutateBeforeCreating[gvr]; !ok {
+		s.mutateBeforeCreating[gvr] = []MutatingFunction{}
+	}
+
+	s.mutateBeforeCreating[gvr] = append(s.mutateBeforeCreating[gvr], fn...)
+}
+
+func (s *Service) addFilterBeforeUpdating(gvr schema.GroupVersionResource, fn []FilteringFunction) {
+	if _, ok := s.filterBeforeUpdating[gvr]; !ok {
+		s.filterBeforeUpdating[gvr] = []FilteringFunction{}
+	}
+
+	s.filterBeforeUpdating[gvr] = append(s.filterBeforeUpdating[gvr], fn...)
+}
+
+func (s *Service) addMutateBeforeUpdating(gvr schema.GroupVersionResource, fn []MutatingFunction) {
+	if _, ok := s.mutateBeforeUpdating[gvr]; !ok {
+		s.mutateBeforeUpdating[gvr] = []MutatingFunction{}
+	}
+
+	s.mutateBeforeUpdating[gvr] = append(s.mutateBeforeUpdating[gvr], fn...)
 }
