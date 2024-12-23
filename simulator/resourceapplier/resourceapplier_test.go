@@ -89,7 +89,7 @@ func TestResourceApplier_createPods(t *testing.T) {
 				return
 			}
 
-			got, err := client.Resource(corev1.Resource("pods").WithVersion("v1")).Namespace("default").Get(context.Background(), tt.podToApply.Name, metav1.GetOptions{})
+			got, err := getResource(tt.podToApply.GroupVersionKind(), tt.podToApply.Name, tt.podToApply.Namespace, mapper, client)
 			if err != nil {
 				t.Fatalf("failed to get pod when comparing: %v", err)
 			}
@@ -185,9 +185,14 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 			t.Parallel()
 
 			client, mapper := prepare()
+
+			m, err := mapper.RESTMapping(schema.GroupKind{Group: tt.podToCreate.GroupVersionKind().Group, Kind: tt.podToCreate.Kind}, tt.podToCreate.GroupVersionKind().Version)
+			if err != nil {
+				t.Fatalf("failed to get RESTMapping: %v", err)
+			}
 			options := Options{
 				FilterBeforeCreating: map[schema.GroupVersionResource][]FilteringFunction{
-					{Group: "", Version: "v1", Resource: "pods"}: {tt.filter},
+					m.Resource: {tt.filter},
 				},
 			}
 			service := New(client, mapper, options)
@@ -203,12 +208,14 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 				return
 			}
 
-			got, err := client.Resource(corev1.Resource("pods").WithVersion("v1")).Namespace("default").Get(context.Background(), tt.podToCreate.Name, metav1.GetOptions{})
+			got, err := getResource(tt.podToCreate.GroupVersionKind(), tt.podToCreate.Name, tt.podToCreate.Namespace, mapper, client)
 			if err != nil {
 				if tt.filtered && errors.IsNotFound(err) || tt.wantErr {
 					return
 				}
 				t.Fatalf("failed to get pod when comparing: %v", err)
+			} else if tt.filtered || tt.wantErr {
+				t.Fatalf("pod should not be created but it exists")
 			}
 
 			var gotPod corev1.Pod
@@ -398,7 +405,7 @@ func TestResourceApplier_updatePods(t *testing.T) {
 				return
 			}
 
-			got, err := client.Resource(corev1.Resource("pods").WithVersion("v1")).Namespace("default").Get(context.Background(), tt.originalPod.Name, metav1.GetOptions{})
+			got, err := getResource(tt.originalPod.GroupVersionKind(), tt.originalPod.Name, tt.originalPod.Namespace, mapper, client)
 			if err != nil {
 				t.Fatalf("failed to get pod when comparing: %v", err)
 			}
@@ -472,13 +479,83 @@ func TestResourceApplier_deletePods(t *testing.T) {
 				return
 			}
 
-			_, err = client.Resource(corev1.Resource("pods").WithVersion("v1")).Namespace("default").Get(context.Background(), tt.pod.Name, metav1.GetOptions{})
+			_, err = getResource(tt.pod.GroupVersionKind(), tt.pod.Name, tt.pod.Namespace, mapper, client)
 			if err == nil {
 				t.Fatalf("pod should be deleted but it still exists")
 			}
 
 			if !errors.IsNotFound(err) && !tt.wantErr {
 				t.Fatalf("failed to check if pod is deleted: %v", err)
+			}
+		})
+	}
+}
+
+func TestResourceApplier_createNode(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		nodeToApply    *corev1.Node
+		nodeAfterApply *corev1.Node
+		wantErr        bool
+	}{
+		{
+			name: "create a Node",
+			nodeToApply: &corev1.Node{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Node",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "node-1",
+				},
+			},
+			nodeAfterApply: &corev1.Node{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Node",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "node-1",
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			client, mapper := prepare()
+			service := New(client, mapper, Options{})
+
+			n, err := runtime.DefaultUnstructuredConverter.ToUnstructured(tt.nodeToApply)
+			if err != nil {
+				t.Fatalf("failed to convert node to unstructured: %v", err)
+			}
+			unstructedNode := &unstructured.Unstructured{Object: n}
+			err = service.Create(context.Background(), unstructedNode)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("createNode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			got, err := getResource(tt.nodeToApply.GroupVersionKind(), tt.nodeToApply.Name, tt.nodeToApply.Namespace, mapper, client)
+			if err != nil {
+				t.Fatalf("failed to get node when comparing: %v", err)
+			}
+			var gotNode corev1.Node
+			err = runtime.DefaultUnstructuredConverter.FromUnstructured(got.UnstructuredContent(), &gotNode)
+			if err != nil {
+				t.Fatalf("failed to convert got unstructured to node: %v", err)
+			}
+
+			if diff := cmp.Diff(*tt.nodeAfterApply, gotNode); diff != "" {
+				t.Errorf("createNode() mismatch (-want +got):\n %s", diff)
+				return
 			}
 		})
 	}
@@ -511,11 +588,22 @@ func prepare() (*dynamicFake.FakeDynamicClient, meta.RESTMapper) {
 			},
 			VersionedResources: map[string][]metav1.APIResource{
 				"v1": {
-					{Name: "nodes", Namespaced: true, Kind: "Node"},
+					{Name: "nodes", Namespaced: false, Kind: "Node"},
 				},
 			},
 		},
 	}
+
 	mapper := restmapper.NewDiscoveryRESTMapper(resources)
 	return client, mapper
+}
+
+func getResource(gvk schema.GroupVersionKind, name, namespace string, mapper meta.RESTMapper, client *dynamicFake.FakeDynamicClient) (*unstructured.Unstructured, error) {
+	mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	resource := client.Resource(mapping.Resource).Namespace(namespace)
+	return resource.Get(context.Background(), name, metav1.GetOptions{})
 }
