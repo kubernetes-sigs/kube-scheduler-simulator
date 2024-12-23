@@ -139,7 +139,7 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 					},
 				},
 			},
-			filter: func(ctx context.Context, resource *unstructured.Unstructured, clients *Clients) (bool, error) {
+			filter: func(_ context.Context, resource *unstructured.Unstructured, _ *Clients) (bool, error) {
 				if resource.GetLabels()["ignore"] == "true" {
 					return false, nil
 				}
@@ -168,7 +168,7 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 					},
 				},
 			},
-			filter: func(ctx context.Context, resource *unstructured.Unstructured, clients *Clients) (bool, error) {
+			filter: func(_ context.Context, resource *unstructured.Unstructured, _ *Clients) (bool, error) {
 				if resource.GetLabels()["ignore"] == "true" {
 					return false, nil
 				}
@@ -186,15 +186,7 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 
 			client, mapper := prepare()
 
-			m, err := mapper.RESTMapping(schema.GroupKind{Group: tt.podToCreate.GroupVersionKind().Group, Kind: tt.podToCreate.Kind}, tt.podToCreate.GroupVersionKind().Version)
-			if err != nil {
-				t.Fatalf("failed to get RESTMapping: %v", err)
-			}
-			options := Options{
-				FilterBeforeCreating: map[schema.GroupVersionResource][]FilteringFunction{
-					m.Resource: {tt.filter},
-				},
-			}
+			options := setFilter(tt.podToCreate.GroupVersionKind(), tt.filter, mapper)
 			service := New(client, mapper, options)
 
 			p, err := runtime.DefaultUnstructuredConverter.ToUnstructured(tt.podToCreate)
@@ -491,7 +483,7 @@ func TestResourceApplier_deletePods(t *testing.T) {
 	}
 }
 
-func TestResourceApplier_createNode(t *testing.T) {
+func TestResourceApplier_createNodes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -606,4 +598,17 @@ func getResource(gvk schema.GroupVersionKind, name, namespace string, mapper met
 
 	resource := client.Resource(mapping.Resource).Namespace(namespace)
 	return resource.Get(context.Background(), name, metav1.GetOptions{})
+}
+
+func setFilter(gvk schema.GroupVersionKind, filter FilteringFunction, mapper meta.RESTMapper) Options {
+	m, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+	if err != nil {
+		panic(err)
+	}
+
+	return Options{
+		FilterBeforeCreating: map[schema.GroupVersionResource][]FilteringFunction{
+			m.Resource: {filter},
+		},
+	}
 }
