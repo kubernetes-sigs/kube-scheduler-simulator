@@ -3,6 +3,7 @@ package di
 import (
 	"context"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	configv1 "k8s.io/kube-scheduler/config/v1"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 
@@ -24,7 +25,7 @@ type SchedulerService interface {
 
 // SnapshotService represents a service for exporting/importing resources on the simulator.
 type SnapshotService interface {
-	Snap(ctx context.Context, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
+	Snap(ctx context.Context, labelSelector metav1.LabelSelector, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
 	Load(ctx context.Context, resources *snapshot.ResourcesForLoad, opts ...snapshot.Option) error
 	IgnoreErr() snapshot.Option
 }
@@ -35,7 +36,7 @@ type ResetService interface {
 
 // OneShotClusterResourceImporter represents a service to import resources from an target cluster when starting the simulator.
 type OneShotClusterResourceImporter interface {
-	ImportClusterResources(ctx context.Context) error
+	ImportClusterResources(ctx context.Context, labelSelector metav1.LabelSelector) error
 }
 
 // ResourceSyncer represents a service to constantly sync resources from an target cluster.

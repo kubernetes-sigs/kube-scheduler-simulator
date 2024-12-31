@@ -10,10 +10,14 @@ To use this, you need to follow these two steps in the simulator configuration:
 - Set `true` to `externalImportEnabled`.
 - Set the path of the kubeconfig file for the your cluster to `KubeConfig`. 
   - This feature only requires the read permission for resources.
+- [optional] Set a label selector at `resourceImportLabelSelector` if you want to import specific resources only.
 
 ```yaml
 externalImportEnabled: true
 kubeConfig: "/path/to/your-cluster-kubeconfig"
+resourceImportLabelSelector:
+  matchLabels:
+    env: dev
 ```
 
 ## Syncer: Keep importing resources 

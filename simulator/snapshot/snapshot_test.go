@@ -229,6 +229,7 @@ func TestService_Snap(t *testing.T) {
 		name                     string
 		prepareEachServiceMockFn func(*mock_snapshot.MockSchedulerService)
 		prepareFakeClientSetFn   func() *fake.Clientset
+		labelSelector            metav1.LabelSelector
 		wantReturn               func() *ResourcesForSnap
 		wantErr                  error
 	}{
@@ -520,6 +521,60 @@ func TestService_Snap(t *testing.T) {
 				return r
 			},
 		},
+		{
+			name: "Snap all Pods with different namespaces use labelSelector",
+			prepareEachServiceMockFn: func(ss *mock_snapshot.MockSchedulerService) {
+				ss.EXPECT().GetSchedulerConfig().Return(&configv1.KubeSchedulerConfiguration{}, nil)
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				ctx := context.Background()
+				// add test data.
+				invokeResourcesFn(ctx, c, SettingClientFuncMap{
+					pod: func(ctx context.Context, c *fake.Clientset) {
+						c.CoreV1().Pods(testNamespace1).Create(ctx, &corev1.Pod{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "pod1",
+								Labels: map[string]string{
+									"test": "test1",
+								},
+							},
+							Spec: corev1.PodSpec{
+								NodeName: "node1",
+							},
+						}, metav1.CreateOptions{})
+						c.CoreV1().Pods(testNamespace2).Create(ctx, &corev1.Pod{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "pod2",
+							},
+							Spec: corev1.PodSpec{
+								NodeName: "node1",
+							},
+						}, metav1.CreateOptions{})
+					},
+				}, defaultFuncs)
+				return c
+			},
+			labelSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"test": "test1",
+				},
+			},
+			wantReturn: func() *ResourcesForSnap {
+				r := &ResourcesForSnap{
+					Pods: []corev1.Pod{
+						{
+							ObjectMeta: metav1.ObjectMeta{Name: "pod1", Labels: map[string]string{"test": "test1"}, Namespace: testNamespace1},
+							Spec:       corev1.PodSpec{NodeName: "node1"},
+						},
+					},
+					PriorityClasses: []schedulingv1.PriorityClass{},
+					SchedulerConfig: &configv1.KubeSchedulerConfiguration{},
+					Namespaces:      []corev1.Namespace{},
+				}
+				return r
+			},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -531,7 +586,7 @@ func TestService_Snap(t *testing.T) {
 
 			s := NewService(fakeClientset, mockSchedulerSvc)
 			tt.prepareEachServiceMockFn(mockSchedulerSvc)
-			r, err := s.Snap(context.Background())
+			r, err := s.Snap(context.Background(), tt.labelSelector)
 
 			var diffResponse string
 			if tt.wantReturn != nil {
@@ -750,7 +805,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 			mockSchedulerSvc := mock_snapshot.NewMockSchedulerService(ctrl)
 			s := NewService(fakeClientset, mockSchedulerSvc)
 			tt.prepareEachServiceMockFn(mockSchedulerSvc)
-			r, err := s.Snap(context.Background(), s.IgnoreErr())
+			var labels metav1.LabelSelector
+			r, err := s.Snap(context.Background(), labels, s.IgnoreErr())
 
 			var diffResponse string
 			if tt.wantReturn != nil {
@@ -1865,6 +1921,7 @@ func TestFunction_listPcs(t *testing.T) {
 	tests := []struct {
 		name                   string
 		prepareFakeClientSetFn func() *fake.Clientset
+		labels                 metav1.LabelSelector
 		wantReturn             func() *ResourcesForSnap
 		wantErr                bool
 	}{
@@ -1916,6 +1973,68 @@ func TestFunction_listPcs(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "all priority classes that don't match a label selector should be filtered out",
+			labels: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"env": "prod",
+				},
+			},
+			prepareFakeClientSetFn: func() *fake.Clientset {
+				c := fake.NewSimpleClientset()
+				ctx := context.Background()
+				// add test data.
+				invokeResourcesFn(ctx, c, SettingClientFuncMap{
+					pc: func(ctx context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+							return true, &schedulingv1.PriorityClassList{
+								Items: []schedulingv1.PriorityClass{
+									{
+										ObjectMeta: metav1.ObjectMeta{
+											Name: "cluster-critical",
+											Labels: map[string]string{
+												"env": "dev",
+											},
+										},
+									},
+									{
+										ObjectMeta: metav1.ObjectMeta{
+											Name: "priority-class1",
+											Labels: map[string]string{
+												"env": "prod",
+											},
+										},
+									},
+								},
+							}, nil
+						})
+					},
+				}, defaultFuncs)
+				return c
+			},
+			wantReturn: func() *ResourcesForSnap {
+				_pcs := []schedulingv1.PriorityClass{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "priority-class1",
+							Labels: map[string]string{
+								"env": "prod",
+							},
+						},
+					},
+				}
+				return &ResourcesForSnap{
+					Pods:            []corev1.Pod{},
+					Nodes:           []corev1.Node{},
+					Pvs:             []corev1.PersistentVolume{},
+					Pvcs:            []corev1.PersistentVolumeClaim{},
+					StorageClasses:  []storagev1.StorageClass{},
+					PriorityClasses: _pcs,
+					SchedulerConfig: &configv1.KubeSchedulerConfiguration{},
+				}
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -1939,7 +2058,7 @@ func TestFunction_listPcs(t *testing.T) {
 				SchedulerConfig: &configv1.KubeSchedulerConfiguration{},
 			}
 
-			err := s.listPcs(context.Background(), resources, errgrp, options{})
+			err := s.listPcs(context.Background(), resources, errgrp, tt.labels, options{})
 			if err := errgrp.Wait(); err != nil {
 				t.Fatalf("listPcs: %v", err)
 			}
