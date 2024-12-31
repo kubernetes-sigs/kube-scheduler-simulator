@@ -5,7 +5,7 @@ services:
       image: busybox
       volumes:
         - conf:/config
-        - ${PWD}/simulator/cmd/scheduler:/host-config:ro    
+        - ${PWD}/simulator/cmd/scheduler:/host-config:ro
       command: sh -c "cp -rf /host-config/* /config/"
   simulator-scheduler:
     image: registry.k8s.io/scheduler-simulator/debuggable-scheduler:v0.4.0
