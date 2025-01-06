@@ -23,14 +23,16 @@ func TestResourceApplier_createPods(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name          string
-		podToApply    *corev1.Pod
-		podAfterApply *corev1.Pod
-		wantErr       bool
+		name           string
+		podToCreate    *corev1.Pod
+		podAfterCreate *corev1.Pod
+		filter         FilteringFunction
+		filtered       bool
+		wantErr        bool
 	}{
 		{
 			name: "create a Pod",
-			podToApply: &corev1.Pod{
+			podToCreate: &corev1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Pod",
 					APIVersion: "v1",
@@ -48,7 +50,7 @@ func TestResourceApplier_createPods(t *testing.T) {
 					},
 				},
 			},
-			podAfterApply: &corev1.Pod{
+			podAfterCreate: &corev1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Pod",
 					APIVersion: "v1",
@@ -66,56 +68,10 @@ func TestResourceApplier_createPods(t *testing.T) {
 					},
 				},
 			},
-			wantErr: false,
+			filter:   nil,
+			filtered: false,
+			wantErr:  false,
 		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			client, mapper := prepare()
-			service := New(client, mapper, Options{})
-
-			p, err := runtime.DefaultUnstructuredConverter.ToUnstructured(tt.podToApply)
-			if err != nil {
-				t.Fatalf("failed to convert pod to unstructured: %v", err)
-			}
-			unstructedPod := &unstructured.Unstructured{Object: p}
-			err = service.Create(context.Background(), unstructedPod)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("createPods() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			got, err := getResource(tt.podToApply.GroupVersionKind(), tt.podToApply.Name, tt.podToApply.Namespace, mapper, client)
-			if err != nil {
-				t.Fatalf("failed to get pod when comparing: %v", err)
-			}
-			var gotPod corev1.Pod
-			err = runtime.DefaultUnstructuredConverter.FromUnstructured(got.UnstructuredContent(), &gotPod)
-			if err != nil {
-				t.Fatalf("failed to convert got unstructured to pod: %v", err)
-			}
-
-			if diff := cmp.Diff(*tt.podAfterApply, gotPod); diff != "" {
-				t.Errorf("createPods() mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestResourceApplier_createPodsWithFilter(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name        string
-		podToCreate *corev1.Pod
-		filter      FilteringFunction
-		filtered    bool
-		wantErr     bool
-	}{
 		{
 			name: "create a Pod but it should not be created because of the filter",
 			podToCreate: &corev1.Pod{
@@ -151,6 +107,24 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 		{
 			name: "create a Pod and it should be pass the filter",
 			podToCreate: &corev1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Pod",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pod-1",
+					Namespace: "default",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "container-1",
+							Image: "image-1",
+						},
+					},
+				},
+			},
+			podAfterCreate: &corev1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Pod",
 					APIVersion: "v1",
@@ -216,8 +190,8 @@ func TestResourceApplier_createPodsWithFilter(t *testing.T) {
 				t.Fatalf("failed to convert got unstructured to pod: %v", err)
 			}
 
-			if diff := cmp.Diff(*tt.podToCreate, gotPod); diff != "" {
-				t.Errorf("mismatch (-want +got):\n%s", diff)
+			if diff := cmp.Diff(*tt.podAfterCreate, gotPod); diff != "" {
+				t.Errorf("createPods() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -601,6 +575,10 @@ func getResource(gvk schema.GroupVersionKind, name, namespace string, mapper met
 }
 
 func setFilter(gvk schema.GroupVersionKind, filter FilteringFunction, mapper meta.RESTMapper) Options {
+	if filter == nil {
+		return Options{}
+	}
+
 	m, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 	if err != nil {
 		panic(err)
