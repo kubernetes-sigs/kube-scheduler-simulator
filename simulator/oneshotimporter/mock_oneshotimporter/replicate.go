@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	snapshot "sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
@@ -90,9 +91,9 @@ func (mr *MockReplicateServiceMockRecorder) Load(ctx, resources any, opts ...any
 }
 
 // Snap mocks base method.
-func (m *MockReplicateService) Snap(ctx context.Context, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error) {
+func (m *MockReplicateService) Snap(ctx context.Context, labelSelector v1.LabelSelector, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []any{ctx, labelSelector}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -103,8 +104,8 @@ func (m *MockReplicateService) Snap(ctx context.Context, opts ...snapshot.Option
 }
 
 // Snap indicates an expected call of Snap.
-func (mr *MockReplicateServiceMockRecorder) Snap(ctx any, opts ...any) *gomock.Call {
+func (mr *MockReplicateServiceMockRecorder) Snap(ctx, labelSelector any, opts ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]any{ctx, labelSelector}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Snap", reflect.TypeOf((*MockReplicateService)(nil).Snap), varargs...)
 }
