@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
+
 	snapshot "sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 

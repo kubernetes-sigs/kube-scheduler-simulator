@@ -13,10 +13,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-
+	gomock "go.uber.org/mock/gomock"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	gomock "go.uber.org/mock/gomock"
 	snapshot "sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
 )
 

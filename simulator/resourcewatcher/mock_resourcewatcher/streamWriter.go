@@ -13,6 +13,7 @@ import (
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
+
 	streamwriter "sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher/streamwriter"
 )
 
