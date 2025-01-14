@@ -14,6 +14,7 @@ import (
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/oneshotimporter"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/reset"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourceapplier"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
@@ -46,6 +47,7 @@ func NewDIContainer(
 	externalDynamicClient dynamic.Interface,
 	simulatorPort int,
 	syncerOptions syncer.Options,
+	resourceapplierOptions resourceapplier.Options,
 ) (*Container, error) {
 	c := &Container{}
 
@@ -62,8 +64,9 @@ func NewDIContainer(
 		extSnapshotSvc := snapshot.NewService(externalClient, c.schedulerService)
 		c.oneshotClusterResourceImporter = oneshotimporter.NewService(snapshotSvc, extSnapshotSvc)
 	}
+	resourceApplierService := resourceapplier.New(dynamicClient, restMapper, resourceapplierOptions)
 	if resourceSyncEnabled {
-		c.resourceSyncer = syncer.New(externalDynamicClient, dynamicClient, restMapper, syncerOptions)
+		c.resourceSyncer = syncer.New(externalDynamicClient, resourceApplierService, syncerOptions)
 	}
 	c.resourceWatcherService = resourcewatcher.NewService(client)
 

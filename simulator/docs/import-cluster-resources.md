@@ -72,16 +72,21 @@ dic, err := di.NewDIContainer(..., syncer.Options{
 	// GVRsToSync is a list of GroupVersionResource that will be synced.
 	// If GVRsToSync is nil, defaultGVRs are used.
 	GVRsToSync: []schema.GroupVersionResource{
-    		{Group: "your-group", Version: "v1", Resource: "your-custom-resources"},
-  	}
-
+		{Group: "your-group", Version: "v1", Resource: "your-custom-resources"},
+	},
+},
 	// Actually, more options are available...
- 
-	// AdditionalMutatingFunctions is a list of mutating functions that users add.
-	AdditionalMutatingFunctions:  map[schema.GroupVersionResource]MutatingFunction{...}
-	// AdditionalFilteringFunctions is a list of filtering functions that users add.
-	AdditionalFilteringFunctions: map[schema.GroupVersionResource]FilteringFunction{...}
-})
+	resourceapplier.Options{
+		// FilterBeforeCreating is a list of additional filtering functions that are applied before creating resources.
+		FilterBeforeCreating: map[schema.GroupVersionResource][]resourceapplier.FilteringFunction{...},
+		// MutateBeforeCreating is a list of additional mutating functions that are applied before creating resources.
+		MutateBeforeCreating: map[schema.GroupVersionResource][]resourceapplier.MutatingFunction{...},
+		// FilterBeforeUpdating is a list of additional filtering functions that are applied before updating resources.
+		FilterBeforeUpdating: map[schema.GroupVersionResource][]resourceapplier.FilteringFunction{...},
+		// MutateBeforeUpdating is a list of additional mutating functions that are applied before updating resources.
+		MutateBeforeUpdating: map[schema.GroupVersionResource][]resourceapplier.MutatingFunction{...},
+	},
+)
 ```
 
 > [!NOTE]
