@@ -19,6 +19,8 @@ import (
 	"k8s.io/client-go/restmapper"
 	scheduling "k8s.io/kubernetes/pkg/apis/scheduling/v1"
 	storage "k8s.io/kubernetes/pkg/apis/storage/v1"
+
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourceapplier"
 )
 
 //nolint:gocognit // it is because of huge test cases.
@@ -389,7 +391,8 @@ func TestSyncerWithPod(t *testing.T) {
 				},
 			}
 			mapper := restmapper.NewDiscoveryRESTMapper(resources)
-			service := New(src, dest, mapper, Options{})
+			resourceApplier := resourceapplier.New(dest, mapper, resourceapplier.Options{})
+			service := New(src, resourceApplier)
 
 			ctx, cancel := context.WithCancel(context.Background())
 
