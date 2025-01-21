@@ -26,6 +26,7 @@ type Clients struct {
 }
 
 type Options struct {
+	GVRsToSync           []schema.GroupVersionResource
 	FilterBeforeCreating map[schema.GroupVersionResource][]FilteringFunction
 	MutateBeforeCreating map[schema.GroupVersionResource][]MutatingFunction
 	FilterBeforeUpdating map[schema.GroupVersionResource][]FilteringFunction
@@ -39,6 +40,8 @@ type Service struct {
 	filterBeforeCreating map[schema.GroupVersionResource][]FilteringFunction
 	mutateBeforeUpdating map[schema.GroupVersionResource][]MutatingFunction
 	filterBeforeUpdating map[schema.GroupVersionResource][]FilteringFunction
+
+	GVRsToSync []schema.GroupVersionResource
 }
 
 func New(dynamicClient dynamic.Interface, restMapper meta.RESTMapper, options Options) *Service {
@@ -52,6 +55,8 @@ func New(dynamicClient dynamic.Interface, restMapper meta.RESTMapper, options Op
 		mutateBeforeCreating: map[schema.GroupVersionResource][]MutatingFunction{},
 		filterBeforeUpdating: map[schema.GroupVersionResource][]FilteringFunction{},
 		mutateBeforeUpdating: map[schema.GroupVersionResource][]MutatingFunction{},
+
+		GVRsToSync: options.GVRsToSync,
 	}
 
 	for gvr, fn := range mandatoryFilterForCreating {

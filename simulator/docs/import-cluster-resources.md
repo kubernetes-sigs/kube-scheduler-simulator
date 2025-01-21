@@ -68,25 +68,24 @@ It imports the following resources, which the scheduler's default plugins take i
 If you need to, you can tweak which resources to import via the option in [/simulator/cmd/simulator/simulator.go](https://github.com/kubernetes-sigs/kube-scheduler-simulator/blob/master/simulator/cmd/simulator/simulator.go):
 
 ```go
-dic, err := di.NewDIContainer(..., syncer.Options{
+dic, err := di.NewDIContainer(..., resourceapplier.Options{
 	// GVRsToSync is a list of GroupVersionResource that will be synced.
 	// If GVRsToSync is nil, defaultGVRs are used.
 	GVRsToSync: []schema.GroupVersionResource{
 		{Group: "your-group", Version: "v1", Resource: "your-custom-resources"},
 	},
-},
+
 	// Actually, more options are available...
-	resourceapplier.Options{
-		// FilterBeforeCreating is a list of additional filtering functions that are applied before creating resources.
-		FilterBeforeCreating: map[schema.GroupVersionResource][]resourceapplier.FilteringFunction{...},
-		// MutateBeforeCreating is a list of additional mutating functions that are applied before creating resources.
-		MutateBeforeCreating: map[schema.GroupVersionResource][]resourceapplier.MutatingFunction{...},
-		// FilterBeforeUpdating is a list of additional filtering functions that are applied before updating resources.
-		FilterBeforeUpdating: map[schema.GroupVersionResource][]resourceapplier.FilteringFunction{...},
-		// MutateBeforeUpdating is a list of additional mutating functions that are applied before updating resources.
-		MutateBeforeUpdating: map[schema.GroupVersionResource][]resourceapplier.MutatingFunction{...},
-	},
-)
+
+	// FilterBeforeCreating is a list of additional filtering functions that are applied before creating resources.
+	FilterBeforeCreating: map[schema.GroupVersionResource][]resourceapplier.FilteringFunction{},
+	// MutateBeforeCreating is a list of additional mutating functions that are applied before creating resources.
+	MutateBeforeCreating: map[schema.GroupVersionResource][]resourceapplier.MutatingFunction{},
+	// FilterBeforeUpdating is a list of additional filtering functions that are applied before updating resources.
+	FilterBeforeUpdating: map[schema.GroupVersionResource][]resourceapplier.FilteringFunction{},
+	// MutateBeforeUpdating is a list of additional mutating functions that are applied before updating resources.
+	MutateBeforeUpdating: map[schema.GroupVersionResource][]resourceapplier.MutatingFunction{},
+})
 ```
 
 > [!NOTE]

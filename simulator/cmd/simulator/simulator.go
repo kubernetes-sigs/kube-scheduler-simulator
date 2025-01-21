@@ -23,7 +23,6 @@ import (
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourceapplier"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/syncer"
 )
 
 const (
@@ -95,7 +94,7 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, syncer.Options{}, resourceapplier.Options{})
+	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceapplier.Options{})
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}

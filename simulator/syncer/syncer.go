@@ -36,21 +36,15 @@ type Service struct {
 	resourceApplierService *resourceapplier.Service
 }
 
-type Options struct {
-	// GVRsToSync is a list of GroupVersionResource that will be synced.
-	// If GVRsToSync is nil, defaultGVRs are used.
-	GVRsToSync []schema.GroupVersionResource
-}
-
-func New(srcDynamicClient dynamic.Interface, resourceApplierService *resourceapplier.Service, options Options) *Service {
+func New(srcDynamicClient dynamic.Interface, resourceApplierService *resourceapplier.Service) *Service {
 	s := &Service{
 		gvrs:                   DefaultGVRs,
 		srcDynamicClient:       srcDynamicClient,
 		resourceApplierService: resourceApplierService,
 	}
 
-	if options.GVRsToSync != nil {
-		s.gvrs = options.GVRsToSync
+	if resourceApplierService.GVRsToSync != nil {
+		s.gvrs = resourceApplierService.GVRsToSync
 	}
 
 	return s

@@ -392,7 +392,7 @@ func TestSyncerWithPod(t *testing.T) {
 			}
 			mapper := restmapper.NewDiscoveryRESTMapper(resources)
 			resourceApplier := resourceapplier.New(dest, mapper, resourceapplier.Options{})
-			service := New(src, resourceApplier, Options{})
+			service := New(src, resourceApplier)
 
 			ctx, cancel := context.WithCancel(context.Background())
 

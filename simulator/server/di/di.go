@@ -46,7 +46,6 @@ func NewDIContainer(
 	externalClient clientset.Interface,
 	externalDynamicClient dynamic.Interface,
 	simulatorPort int,
-	syncerOptions syncer.Options,
 	resourceapplierOptions resourceapplier.Options,
 ) (*Container, error) {
 	c := &Container{}
@@ -66,7 +65,7 @@ func NewDIContainer(
 	}
 	resourceApplierService := resourceapplier.New(dynamicClient, restMapper, resourceapplierOptions)
 	if resourceSyncEnabled {
-		c.resourceSyncer = syncer.New(externalDynamicClient, resourceApplierService, syncerOptions)
+		c.resourceSyncer = syncer.New(externalDynamicClient, resourceApplierService)
 	}
 	c.resourceWatcherService = resourcewatcher.NewService(client)
 
