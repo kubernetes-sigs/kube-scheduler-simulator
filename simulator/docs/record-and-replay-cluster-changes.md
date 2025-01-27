@@ -1,35 +1,35 @@
-# [Beta] Record your real cluster's events and replay them in the simulator
+# [Beta] Record your real cluster's changes in resources and replay them in the simulator
 
-You can record events from your real cluster and replay them in the simulator. This feature is useful for reproducing issues that occur in your real cluster.
+You can record resource addition/update/deletion at your real cluster. This feature is useful for reproducing issues that occur in your real cluster.
 
-## Record events
+## Record changes
 
-To record events from your real cluster, you need to follow these steps:
+To record changes from your real cluster, you need to follow these steps:
 
 1. Set `true` to `recorderEnabled`.
 2. Set the path of the kubeconfig file for your cluster to `KubeConfig`.
-   - This feature only requires the read permission for events.
-3. Set the path of the file to save the recorded events to `recordedFilePath`.
+  - This feature only requires the read permission for resources.
+3. Set the path of the file to save the recorded changes to `recordedFilePath`.
 4. Make sure the file path is mounted to the simulator container.
 
 ```yaml
 recorderEnabled: true
 kubeConfig: "/path/to/your-cluster-kubeconfig"
-recordedFilePath: "/path/to/recorded-events.json"
+recordedFilePath: "/path/to/recorded-changes.json"
 ```
 
 ```yaml
 volumes:
   ...
-  - ./path/to/recorded-events.json:/path/to/recorded-events.json
+  - ./path/to/recorded-changes.json:/path/to/recorded-changes.json
 ```
 
 > [!NOTE]
-> When a file already exists at `recordedFilePath`, it backs up the file in the same directory adding a timestamp to the filename and creates a new file for recording.
+> When a file already exists at `recordedFilePath`, it puts out an error.
 
 ### Resources to record
 
-It records the events of the following resources:
+It records the changes of the following resources:
 
 - Pods
 - Nodes
@@ -49,21 +49,21 @@ recorderOptions := recorder.Options{Path: cfg.RecordFilePath,
 }
 ```
 
-## Replay events
+## Replay changes
 
-To replay the recorded events in the simulator, you need to follow these steps:
+To replay the recorded changes in the simulator, you need to follow these steps:
 
 1. Set `true` to `replayerEnabled`.
-2. Set the path of the file where the events are recorded to `recordedFilePath`.
+2. Set the path of the file where the changes are recorded to `recordedFilePath`.
 
 ```yaml
 replayerEnabled: true
-recordedFilePath: "/path/to/recorded-events.json"
+recordedFilePath: "/path/to/recorded-changes.json"
 ```
 
 ### Resources to replay
 
-It replays the events of the following resources:
+It replays the changes of the following resources:
 
 - Pods
 - Nodes
