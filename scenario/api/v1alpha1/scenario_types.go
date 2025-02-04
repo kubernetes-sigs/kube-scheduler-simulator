@@ -23,7 +23,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ScenarioSpec defines the desired state of Scenario
+// ScenarioSpec defines the desired state of Scenario.
 type ScenarioSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -32,16 +32,16 @@ type ScenarioSpec struct {
 	Foo string `json:"foo,omitempty"`
 }
 
-// ScenarioStatus defines the observed state of Scenario
+// ScenarioStatus defines the observed state of Scenario.
 type ScenarioStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
-// Scenario is the Schema for the scenarios API
+// Scenario is the Schema for the scenarios API.
 type Scenario struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -50,9 +50,9 @@ type Scenario struct {
 	Status ScenarioStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 
-// ScenarioList contains a list of Scenario
+// ScenarioList contains a list of Scenario.
 type ScenarioList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
