@@ -94,6 +94,11 @@ func (s *Service) Run(ctx context.Context) error {
 		infFact.WaitForCacheSync(ctx.Done())
 	}
 
+	err := os.MkdirAll(s.path, 0755)
+	if err != nil {
+		return xerrors.Errorf("failed to create record directory: %w", err)
+	}
+
 	go s.record(ctx)
 
 	return nil

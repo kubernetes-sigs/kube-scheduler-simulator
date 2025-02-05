@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path"
+	"strings"
 	"testing"
 
 	"go.uber.org/mock/gomock"
@@ -102,11 +104,17 @@ func TestService_Replay(t *testing.T) {
 			mockApplier := mock_resourceapplier.NewMockResourceApplier(ctrl)
 			tt.prepareMockFn(mockApplier)
 
-			tempFile, err := os.CreateTemp("", "record.json")
+			recordDir := path.Join(os.TempDir(), strings.ReplaceAll(tt.name, " ", "_"))
+			filePath := path.Join(recordDir, "record.json")
+			err := os.MkdirAll(recordDir, 0755)
+			if err != nil {
+				t.Fatalf("failed to create record directory: %v", err)
+			}
+			tempFile, err := os.Create(filePath)
 			if err != nil {
 				t.Fatalf("failed to create temp file: %v", err)
 			}
-			defer os.Remove(tempFile.Name())
+			defer os.RemoveAll(recordDir)
 
 			b, err := json.Marshal(tt.records)
 			if err != nil {
@@ -123,7 +131,7 @@ func TestService_Replay(t *testing.T) {
 				t.Fatalf("failed to close temp file: %v", err)
 			}
 
-			service := New(mockApplier, Options{tempFile.Name()})
+			service := New(mockApplier, Options{RecordDir: recordDir})
 
 			err = service.Replay(context.Background())
 			if (err != nil) != tt.wantErr {
