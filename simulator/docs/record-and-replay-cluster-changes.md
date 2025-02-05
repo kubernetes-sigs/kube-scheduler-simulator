@@ -28,7 +28,7 @@ It records the changes of the following resources:
 You can tweak which resources to record via the option in [/simulator/cmd/recorder/recorder.go](https://github.com/kubernetes-sigs/kube-scheduler-simulator/blob/master/simulator/cmd/recorder/recorder.go):
 
 ```go
-recorderOptions := recorder.Options{RecordDir: *dirFlag,
+recorderOptions := recorder.Options{RecordDir: recordDir,
 	// GVRs is a list of GroupVersionResource that will be recorded.
 	// If it's nil, DefaultGVRs are used.
 	GVRs: []schema.GroupVersionResource{
@@ -42,13 +42,13 @@ recorderOptions := recorder.Options{RecordDir: *dirFlag,
 To replay the recorded changes in the simulator, you need to follow these steps:
 
 1. Set `true` to `replayerEnabled`.
-2. Set the path of the file where the changes are recorded to `recordedFilePath`.
-3. Make sure the file path is mounted to the simulator server container.
+2. Set the path of the directory where the changes are recorded to `recordDirPath`.
+3. Make sure the directory is mounted to the simulator server container.
 
 
 ```yaml:config.yaml
 replayerEnabled: true
-recordedFilePath: "/path/to/directory-to-store-recorded-changes"
+recordDirPath: "/path/to/directory-to-store-recorded-changes"
 ```
 
 ```yaml:compose.yml
