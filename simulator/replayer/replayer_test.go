@@ -106,7 +106,7 @@ func TestService_Replay(t *testing.T) {
 
 			recordDir := path.Join(os.TempDir(), strings.ReplaceAll(tt.name, " ", "_"))
 			filePath := path.Join(recordDir, "record.json")
-			err := os.MkdirAll(recordDir, 0755)
+			err := os.MkdirAll(recordDir, 0o755)
 			if err != nil {
 				t.Fatalf("failed to create record directory: %v", err)
 			}

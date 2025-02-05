@@ -94,7 +94,7 @@ func (s *Service) Run(ctx context.Context) error {
 		infFact.WaitForCacheSync(ctx.Done())
 	}
 
-	err := os.MkdirAll(s.path, 0755)
+	err := os.MkdirAll(s.path, 0o755)
 	if err != nil {
 		return xerrors.Errorf("failed to create record directory: %w", err)
 	}
@@ -130,21 +130,9 @@ func (s *Service) record(ctx context.Context) {
 		}()
 
 		filePath := path.Join(s.path, fmt.Sprintf("record-%018d.json", count))
-		file, err := os.Create(filePath)
+		err := writeToFile(filePath, records)
 		if err != nil {
-			klog.Error("Failed to create record file: ", err)
-			return
-		}
-
-		b, err := json.Marshal(records)
-		if err != nil {
-			klog.Error("Failed to marshal record: ", err)
-			return
-		}
-
-		_, err = file.Write(b)
-		if err != nil {
-			klog.Error("Failed to write record: ", err)
+			klog.Errorf("failed to write records to file: %v", err)
 			return
 		}
 	}
@@ -169,4 +157,28 @@ func (s *Service) record(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func writeToFile(filePath string, records []Record) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return xerrors.Errorf("failed to create record file: %w", err)
+	}
+
+	b, err := json.Marshal(records)
+	if err != nil {
+		return xerrors.Errorf("failed to marshal records: %w", err)
+	}
+
+	_, err = file.Write(b)
+	if err != nil {
+		return xerrors.Errorf("failed to write records: %w", err)
+	}
+
+	err = file.Close()
+	if err != nil {
+		return xerrors.Errorf("failed to close file: %w", err)
+	}
+
+	return nil
 }
