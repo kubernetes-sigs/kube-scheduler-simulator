@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"strings"
 	"testing"
 	"time"
 
@@ -240,11 +241,7 @@ func TestRecorder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			dir := path.Join(t.TempDir(), tt.name)
-			err := os.MkdirAll(dir, 0755)
-			if err != nil {
-				t.Fatal(err)
-			}
+			dir := path.Join(t.TempDir(), strings.ReplaceAll(tt.name, " ", "_"))
 			defer os.RemoveAll(dir)
 
 			s := runtime.NewScheme()
@@ -258,7 +255,7 @@ func TestRecorder(t *testing.T) {
 			defer cancel()
 
 			service := New(client, Options{RecordDir: dir})
-			err = service.Run(ctx)
+			err := service.Run(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.Record() error = %v, wantErr %v", err, tt.wantErr)
 				return
