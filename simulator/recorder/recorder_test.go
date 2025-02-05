@@ -276,7 +276,7 @@ func TestRecorder(t *testing.T) {
 
 func apply(ctx context.Context, client *dynamicFake.FakeDynamicClient, resourceToCreate []unstructured.Unstructured, resourceToUpdate []unstructured.Unstructured, resourceToDelete []unstructured.Unstructured) error {
 	for _, resource := range resourceToCreate {
-		gvr, err := findGVR(&resource)
+		gvr, err := findGVR(resource)
 		if err != nil {
 			return xerrors.Errorf("failed to find GVR: %w", err)
 		}
@@ -289,7 +289,7 @@ func apply(ctx context.Context, client *dynamicFake.FakeDynamicClient, resourceT
 	}
 
 	for _, resource := range resourceToUpdate {
-		gvr, err := findGVR(&resource)
+		gvr, err := findGVR(resource)
 		if err != nil {
 			return xerrors.Errorf("failed to find GVR: %w", err)
 		}
@@ -302,7 +302,7 @@ func apply(ctx context.Context, client *dynamicFake.FakeDynamicClient, resourceT
 	}
 
 	for _, resource := range resourceToDelete {
-		gvr, err := findGVR(&resource)
+		gvr, err := findGVR(resource)
 		if err != nil {
 			return xerrors.Errorf("failed to find GVR: %w", err)
 		}
@@ -389,7 +389,7 @@ var (
 	mapper = restmapper.NewDiscoveryRESTMapper(resources)
 )
 
-func findGVR(obj *unstructured.Unstructured) (schema.GroupVersionResource, error) {
+func findGVR(obj unstructured.Unstructured) (schema.GroupVersionResource, error) {
 	gvk := obj.GroupVersionKind()
 	m, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 	if err != nil {
