@@ -68,16 +68,11 @@ type SimulatorConfiguration struct {
 	ResourceSyncEnabled bool `json:"resourceSyncEnabled,omitempty"`
 
 	// This variable indicates whether the simulator will
-	// record events from an user cluster's or not.
-	RecorderEnabled bool `json:"recorderEnabled,omitempty"`
-
-	// This variable indicates whether the simulator will
 	// replay events recorded in a file or not.
 	ReplayerEnabled bool `json:"replayEnabled,omitempty"`
 
-	// The path to a file which the simulator will record
-	// events to or replay events from.
-	RecordFilePath string `json:"recordFilePath,omitempty"`
+	// The path to a directory where the record files are stored.
+	RecordDirPath string `json:"recordDirPath,omitempty"`
 
 	// This variable indicates whether an external scheduler
 	// is used.

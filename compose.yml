@@ -29,6 +29,7 @@ services:
       - ./simulator/kubeconfig.yaml:/kubeconfig.yaml
       - /var/run/docker.sock:/var/run/docker.sock
       - conf:/config
+      - ./simulator/record:/record
     environment:
       - PORT=1212
       - KUBE_SCHEDULER_SIMULATOR_ETCD_URL=http://simulator-cluster:2379

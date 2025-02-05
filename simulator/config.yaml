@@ -20,7 +20,7 @@ corsAllowedOriginList:
   - "http://localhost:3000"
 
 # This is for the beta feature "One-shot importing cluster's resources",
-# "Continuous syncing cluster's resources" and "Recording cluster's events".
+# "Continuous syncing cluster's resources" and "Replaying cluster's events".
 # This variable is used to find Kubeconfig required to access your
 # cluster for importing resources to scheduler simulator.
 kubeConfig: "/kubeconfig.yaml"
@@ -51,19 +51,11 @@ externalImportEnabled: false
 resourceSyncEnabled: false
 
 # This variable indicates whether the simulator will
-# record events from a user cluster specified by kubeConfig.
-# You cannot make both of recorderEnabled and replayEnabled true because those features would be conflicted.
-# Note, this is still a beta feature.
-recorderEnabled: false
-
-# This variable indicates whether the simulator will
-# replay events recorded in the file specified by recordFilePath.
+# replay events recorded in the file specified by recordDirPath.
 # You cannot make two or more of externalImportEnabled, resourceSyncEnabled and replayEnabled true
 # because those features would be conflicted.
-# You cannot make both of recorderEnabled and replayEnabled true because those features would be conflicted.
 # Note, this is still a beta feature.
 replayEnabled: true
 
-# The path to a file which the simulator will record
-# events to or replay events from.
-recordFilePath: "./simulator/record"
+# The path to a directory where the record files are stored.
+recordDirPath: "/record"
