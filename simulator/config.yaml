@@ -55,7 +55,7 @@ resourceSyncEnabled: false
 # You cannot make two or more of externalImportEnabled, resourceSyncEnabled and replayEnabled true
 # because those features would be conflicted.
 # Note, this is still a beta feature.
-replayEnabled: true
+replayEnabled: false
 
 # The path to a directory where the record files are stored.
 recordDirPath: "/record"

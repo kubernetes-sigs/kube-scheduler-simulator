@@ -89,7 +89,7 @@ func NewConfig() (*Config, error) {
 	externalimportenabled := getExternalImportEnabled()
 	resourceSyncEnabled := getResourceSyncEnabled()
 	replayerEnabled := getReplayerEnabled()
-	recordFilePath := getRecordDirPath()
+	recordDirPath := getRecordDirPath()
 	externalKubeClientCfg := &rest.Config{}
 	if hasTwoOrMoreTrue(externalimportenabled, resourceSyncEnabled, replayerEnabled) {
 		return nil, xerrors.Errorf("externalImportEnabled, resourceSyncEnabled and replayerEnabled cannot be used simultaneously.")
@@ -117,7 +117,7 @@ func NewConfig() (*Config, error) {
 		ExternalKubeClientCfg:       externalKubeClientCfg,
 		ResourceSyncEnabled:         resourceSyncEnabled,
 		ReplayerEnabled:             replayerEnabled,
-		RecordDirPath:               recordFilePath,
+		RecordDirPath:               recordDirPath,
 	}, nil
 }
 
@@ -292,14 +292,14 @@ func getReplayerEnabled() bool {
 	return replayerEnabled
 }
 
-// getRecordDirPath reads RECORD_FILE_PATH
+// getRecordDirPath reads RECORD_DIR_PATH
 // if empty from the config file.
 func getRecordDirPath() string {
-	recordFilePath := os.Getenv("RECORD_FILE_PATH")
-	if recordFilePath == "" {
-		recordFilePath = configYaml.RecordDirPath
+	recordDirPath := os.Getenv("RECORD_DIR_PATH")
+	if recordDirPath == "" {
+		recordDirPath = configYaml.RecordDirPath
 	}
-	return recordFilePath
+	return recordDirPath
 }
 
 func decodeSchedulerCfg(buf []byte) (*configv1.KubeSchedulerConfiguration, error) {
