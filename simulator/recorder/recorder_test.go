@@ -275,34 +275,37 @@ func TestRecorder(t *testing.T) {
 }
 
 func apply(ctx context.Context, client *dynamicFake.FakeDynamicClient, resourceToCreate []unstructured.Unstructured, resourceToUpdate []unstructured.Unstructured, resourceToDelete []unstructured.Unstructured) error {
-	for _, resource := range resourceToCreate {
-		gvr, err := findGVR(&resource)
+	for i := range resourceToCreate {
+		resource := &resourceToCreate[i]
+		gvr, err := findGVR(resource)
 		if err != nil {
 			return xerrors.Errorf("failed to find GVR: %w", err)
 		}
 		ns := resource.GetNamespace()
 
-		_, err = client.Resource(gvr).Namespace(ns).Create(ctx, &resource, metav1.CreateOptions{})
+		_, err = client.Resource(gvr).Namespace(ns).Create(ctx, resource, metav1.CreateOptions{})
 		if err != nil {
 			return xerrors.Errorf("failed to create a pod: %w", err)
 		}
 	}
 
-	for _, resource := range resourceToUpdate {
-		gvr, err := findGVR(&resource)
+	for i := range resourceToUpdate {
+		resource := &resourceToUpdate[i]
+		gvr, err := findGVR(resource)
 		if err != nil {
 			return xerrors.Errorf("failed to find GVR: %w", err)
 		}
 		ns := resource.GetNamespace()
 
-		_, err = client.Resource(gvr).Namespace(ns).Update(ctx, &resource, metav1.UpdateOptions{})
+		_, err = client.Resource(gvr).Namespace(ns).Update(ctx, resource, metav1.UpdateOptions{})
 		if err != nil {
 			return xerrors.Errorf("failed to update a pod: %w", err)
 		}
 	}
 
-	for _, resource := range resourceToDelete {
-		gvr, err := findGVR(&resource)
+	for i := range resourceToDelete {
+		resource := &resourceToDelete[i]
+		gvr, err := findGVR(resource)
 		if err != nil {
 			return xerrors.Errorf("failed to find GVR: %w", err)
 		}
