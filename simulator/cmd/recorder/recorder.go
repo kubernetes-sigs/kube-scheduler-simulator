@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -37,11 +36,9 @@ func startRecorder() error {
 	}
 
 	client := dynamic.NewForConfigOrDie(restCfg)
-	fmt.Println(restCfg.Host)
 
-	recorder := recorder.New(client, recorder.Options{
-		RecordDir: *dirFlag,
-	})
+	recorderOptions := recorder.Options{RecordDir: *dirFlag}
+	recorder := recorder.New(client, recorderOptions)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

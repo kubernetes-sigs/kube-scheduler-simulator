@@ -6,26 +6,11 @@ You can record resource addition/update/deletion at your real cluster. This feat
 
 To record changes from your real cluster, you need to follow these steps:
 
-1. Set `true` to `recorderEnabled`.
-2. Set the path of the kubeconfig file for your cluster to `KubeConfig`.
-  - This feature only requires the read permission for resources.
-3. Set the path of the file to save the recorded changes to `recordedFilePath`.
-4. Make sure the file path is mounted to the simulator container.
-
-```yaml
-recorderEnabled: true
-kubeConfig: "/path/to/your-cluster-kubeconfig"
-recordedFilePath: "/path/to/recorded-changes.json"
-```
-
-```yaml
-volumes:
-  ...
-  - ./path/to/recorded-changes.json:/path/to/recorded-changes.json
-```
+1. Go to `simulator` directory.
+2. Start the recorder by running `go run cmd/recorder/recorder.go --dir /path/to/directory-to-store-recorded-changes --kubeconfig /path/to/kubeconfig`.
 
 > [!NOTE]
-> When a file already exists at `recordedFilePath`, it puts out an error.
+> When a file already exists at the value of `--dir`, it will be overwritten.
 
 ### Resources to record
 
@@ -37,12 +22,12 @@ It records the changes of the following resources:
 - PersistentVolumeClaims
 - StorageClasses
 
-You can tweak which resources to record via the option in [/simulator/cmd/simulator/simulator.go](https://github.com/kubernetes-sigs/kube-scheduler-simulator/blob/master/simulator/cmd/simulator/simulator.go):
+You can tweak which resources to record via the option in [/simulator/cmd/recorder/recorder.go](https://github.com/kubernetes-sigs/kube-scheduler-simulator/blob/master/simulator/cmd/recorder/recorder.go):
 
 ```go
-recorderOptions := recorder.Options{Path: cfg.RecordFilePath,
-// GVRs is a list of GroupVersionResource that will be recorded.
-// If it's nil, DefaultGVRs are used.
+recorderOptions := recorder.Options{RecordDir: *dirFlag,
+	// GVRs is a list of GroupVersionResource that will be recorded.
+	// If it's nil, DefaultGVRs are used.
 	GVRs: []schema.GroupVersionResource{
 		{Group: "your-group", Version: "v1", Resource: "your-custom-resources"},
 	},
@@ -55,10 +40,18 @@ To replay the recorded changes in the simulator, you need to follow these steps:
 
 1. Set `true` to `replayerEnabled`.
 2. Set the path of the file where the changes are recorded to `recordedFilePath`.
+3. Make sure the file path is mounted to the simulator server container.
 
-```yaml
+
+```yaml:config.yaml
 replayerEnabled: true
-recordedFilePath: "/path/to/recorded-changes.json"
+recordedFilePath: "/path/to/directory-to-store-recorded-changes"
+```
+
+```yaml:compose.yml
+volumes:
+  ...
+  - ./path/to/directory-to-store-recorded-changes:/path/to/directory-to-store-recorded-changes
 ```
 
 ### Resources to replay
