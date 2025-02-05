@@ -97,7 +97,7 @@ func startSimulator() error {
 	}
 
 	recorderOptions := recorder.Options{RecordDir: cfg.RecordFilePath}
-	replayerOptions := replayer.Options{Path: cfg.RecordFilePath}
+	replayerOptions := replayer.Options{RecordDir: cfg.RecordFilePath}
 	resourceApplierOptions := resourceapplier.Options{}
 
 	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, cfg.RecorderEnabled, cfg.ReplayerEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceApplierOptions, recorderOptions, replayerOptions)
