@@ -20,7 +20,6 @@ import (
 	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
-	"sigs.k8s.io/kube-scheduler-simulator/simulator/recorder"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/replayer"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourceapplier"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
@@ -60,7 +59,7 @@ func startSimulator() error {
 
 	importClusterResourceClient := &clientset.Clientset{}
 	var importClusterDynamicClient dynamic.Interface
-	if cfg.ExternalImportEnabled || cfg.ResourceSyncEnabled || cfg.RecorderEnabled {
+	if cfg.ExternalImportEnabled || cfg.ResourceSyncEnabled {
 		importClusterResourceClient, err = clientset.NewForConfig(cfg.ExternalKubeClientCfg)
 		if err != nil {
 			return xerrors.Errorf("creates a new Clientset for the ExternalKubeClientCfg: %w", err)
@@ -96,11 +95,10 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	recorderOptions := recorder.Options{RecordDir: cfg.RecordFilePath}
-	replayerOptions := replayer.Options{RecordDir: cfg.RecordFilePath}
+	replayerOptions := replayer.Options{RecordDir: cfg.RecordDirPath}
 	resourceApplierOptions := resourceapplier.Options{}
 
-	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, cfg.RecorderEnabled, cfg.ReplayerEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceApplierOptions, recorderOptions, replayerOptions)
+	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, cfg.ReplayerEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceApplierOptions, replayerOptions)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
@@ -129,13 +127,6 @@ func startSimulator() error {
 		// Start the resource syncer to sync resources from the target cluster.
 		if err = dic.ResourceSyncer().Run(ctx); err != nil {
 			return xerrors.Errorf("start syncing: %w", err)
-		}
-	}
-
-	if cfg.RecorderEnabled {
-		// Start the recorder to record events in the target cluster.
-		if err = dic.RecorderService().Run(ctx); err != nil {
-			return xerrors.Errorf("start recording: %w", err)
 		}
 	}
 

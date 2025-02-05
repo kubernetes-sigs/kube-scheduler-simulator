@@ -45,7 +45,7 @@ func (s *Service) Replay(ctx context.Context) error {
 		}
 
 		filePath := path.Join(s.recordDir, file.Name())
-		if err := s.replayRecordsFromFile(ctx, filePath, s.applier); err != nil {
+		if err := s.replayRecordsFromFile(ctx, filePath); err != nil {
 			return xerrors.Errorf("failed to replay records from file: %w", err)
 		}
 	}
@@ -53,7 +53,7 @@ func (s *Service) Replay(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) replayRecordsFromFile(ctx context.Context, path string, applier ResourceApplier) error {
+func (s *Service) replayRecordsFromFile(ctx context.Context, path string) error {
 	records := []recorder.Record{}
 
 	b, err := os.ReadFile(path)
