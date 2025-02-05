@@ -14,7 +14,7 @@ format:
 
 .PHONY: test
 test: 
-	go test ./...
+	go test -count=1 -v ./...
 
 .PHONY: mod-download
 mod-download: ## Downloads the Go module

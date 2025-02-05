@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"os"
 	"path"
-	"strings"
 	"testing"
 	"time"
 
@@ -241,8 +240,12 @@ func TestRecorder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			tempPath := path.Join(os.TempDir(), strings.ReplaceAll(tt.name, " ", "_")+".json")
-			defer os.Remove(tempPath)
+			dir := path.Join(t.TempDir(), tt.name)
+			err := os.MkdirAll(dir, 0755)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dir)
 
 			s := runtime.NewScheme()
 			corev1.AddToScheme(s)
@@ -254,8 +257,8 @@ func TestRecorder(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			service := New(client, Options{Path: tempPath})
-			err := service.Run(ctx)
+			service := New(client, Options{RecordDir: dir})
+			err = service.Run(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.Record() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -266,7 +269,7 @@ func TestRecorder(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			err = assert(ctx, tempPath, tt.want)
+			err = assert(ctx, dir, tt.want)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -317,21 +320,35 @@ func apply(ctx context.Context, client *dynamicFake.FakeDynamicClient, resourceT
 	return nil
 }
 
-func assert(ctx context.Context, filePath string, want []Record) error {
+func assert(ctx context.Context, dirPath string, want []Record) error {
 	var finalErr error
-	err := wait.PollUntilContextTimeout(ctx, 100*time.Millisecond, 5*time.Second, false, func(context.Context) (bool, error) {
-		got := []Record{}
-		var b []byte
-		b, err := os.ReadFile(filePath)
+	wait.PollUntilContextTimeout(ctx, 100*time.Millisecond, 5*time.Second, false, func(context.Context) (bool, error) {
+		files, err := os.ReadDir(dirPath)
 		if err != nil {
-			finalErr = xerrors.Errorf("failed to read the records: %w", err)
+			finalErr = xerrors.Errorf("failed to read the record directory: %w", err)
 			return false, nil
 		}
 
-		err = json.Unmarshal(b, &got)
-		if err != nil {
-			finalErr = xerrors.Errorf("failed to unmarshal the records: %w", err)
-			return false, nil
+		got := []Record{}
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+
+			b, err := os.ReadFile(path.Join(dirPath, file.Name()))
+			if err != nil {
+				finalErr = xerrors.Errorf("failed to read the record file: %w", err)
+				return false, nil
+			}
+
+			var records []Record
+			err = json.Unmarshal(b, &records)
+			if err != nil {
+				finalErr = xerrors.Errorf("failed to unmarshal the records: %w", err)
+				return false, nil
+			}
+
+			got = append(got, records...)
 		}
 
 		if len(got) != len(want) {
@@ -354,7 +371,7 @@ func assert(ctx context.Context, filePath string, want []Record) error {
 		return true, nil
 	})
 
-	return err
+	return finalErr
 }
 
 var (

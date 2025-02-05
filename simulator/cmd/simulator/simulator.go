@@ -96,7 +96,7 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	recorderOptions := recorder.Options{Path: cfg.RecordFilePath}
+	recorderOptions := recorder.Options{RecordDir: cfg.RecordFilePath}
 	replayerOptions := replayer.Options{Path: cfg.RecordFilePath}
 	resourceApplierOptions := resourceapplier.Options{}
 

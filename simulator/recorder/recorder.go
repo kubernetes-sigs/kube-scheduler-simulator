@@ -3,10 +3,9 @@ package recorder
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"io"
+	"fmt"
 	"os"
-	"path/filepath"
+	"path"
 	"time"
 
 	"golang.org/x/xerrors"
@@ -27,11 +26,14 @@ var (
 	Delete Event = "Delete"
 )
 
+const defaultBufferSize = 1000
+
 type Service struct {
-	client   dynamic.Interface
-	gvrs     []schema.GroupVersionResource
-	path     string
-	recordCh chan Record
+	client     dynamic.Interface
+	gvrs       []schema.GroupVersionResource
+	path       string
+	recordCh   chan Record
+	bufferSize int
 }
 
 type Record struct {
@@ -51,8 +53,9 @@ var DefaultGVRs = []schema.GroupVersionResource{
 }
 
 type Options struct {
-	GVRs []schema.GroupVersionResource
-	Path string
+	GVRs       []schema.GroupVersionResource
+	RecordDir  string
+	BufferSize *int
 }
 
 func New(client dynamic.Interface, options Options) *Service {
@@ -61,11 +64,17 @@ func New(client dynamic.Interface, options Options) *Service {
 		gvrs = options.GVRs
 	}
 
+	bufferSize := defaultBufferSize
+	if options.BufferSize != nil {
+		bufferSize = *options.BufferSize
+	}
+
 	return &Service{
-		client:   client,
-		gvrs:     gvrs,
-		path:     options.Path,
-		recordCh: make(chan Record),
+		client:     client,
+		gvrs:       gvrs,
+		path:       options.RecordDir,
+		recordCh:   make(chan Record, bufferSize),
+		bufferSize: bufferSize,
 	}
 }
 
@@ -83,11 +92,6 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 		infFact.Start(ctx.Done())
 		infFact.WaitForCacheSync(ctx.Done())
-	}
-
-	err := s.backup()
-	if err != nil {
-		klog.Error("Failed to backup record: ", err)
 	}
 
 	go s.record(ctx)
@@ -112,82 +116,52 @@ func (s *Service) RecordEvent(obj interface{}, e Event) {
 }
 
 func (s *Service) record(ctx context.Context) {
-	records := []Record{}
+	records := make([]Record, 0, s.bufferSize)
+	count := 0
+	writeRecord := func() {
+		defer func() {
+			count++
+			records = make([]Record, 0, s.bufferSize)
+		}()
+
+		filePath := path.Join(s.path, fmt.Sprintf("record-%018d.json", count))
+		file, err := os.Create(filePath)
+		if err != nil {
+			klog.Error("Failed to create record file: ", err)
+			return
+		}
+
+		b, err := json.Marshal(records)
+		if err != nil {
+			klog.Error("Failed to marshal record: ", err)
+			return
+		}
+
+		_, err = file.Write(b)
+		if err != nil {
+			klog.Error("Failed to write record: ", err)
+			return
+		}
+	}
+
 	for {
 		select {
 		case r := <-s.recordCh:
 			records = append(records, r)
-
-			tempFile, err := os.CreateTemp("", "record_temp.json")
-			if err != nil {
-				klog.Error("Failed to open file: ", err)
-				continue
-			}
-
-			b, err := json.Marshal(records)
-			if err != nil {
-				klog.Error("Failed to marshal record: ", err)
-				continue
-			}
-
-			_, err = tempFile.Write(b)
-			if err != nil {
-				klog.Error("Failed to write record: ", err)
-				continue
-			}
-
-			tempFile.Close()
-
-			if err = moveFile(tempFile.Name(), s.path); err != nil {
-				klog.Error("Failed to rename file: ", err)
-				continue
+			if len(records) == s.bufferSize {
+				writeRecord()
 			}
 
 		case <-ctx.Done():
+			if len(records) > 0 {
+				writeRecord()
+			}
 			return
 
 		default:
-			time.Sleep(1 * time.Second)
+			if len(records) > 0 {
+				writeRecord()
+			}
 		}
 	}
-}
-
-func (s *Service) backup() error {
-	f, err := os.Stat(s.path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
-		}
-		return xerrors.Errorf("failed to get file info: %w", err)
-	}
-
-	if f.IsDir() {
-		return xerrors.New("record file is a directory")
-	}
-
-	name := filepath.Base(s.path)
-	dir := filepath.Dir(s.path)
-	backupPath := filepath.Join(dir, f.ModTime().Format("2006-01-02_150405_")+name)
-	return moveFile(s.path, backupPath)
-}
-
-func moveFile(srcPath, destPath string) error {
-	src, err := os.Open(srcPath)
-	if err != nil {
-		return err
-	}
-	defer src.Close()
-
-	dest, err := os.Create(destPath)
-	if err != nil {
-		return err
-	}
-	defer dest.Close()
-
-	_, err = io.Copy(dest, src)
-	if err != nil {
-		return err
-	}
-
-	return os.Remove(srcPath)
 }
