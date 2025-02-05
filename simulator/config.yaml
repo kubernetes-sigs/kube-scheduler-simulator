@@ -66,4 +66,4 @@ replayEnabled: true
 
 # The path to a file which the simulator will record
 # events to or replay events from.
-recordFilePath: "/record/record.json"
+recordFilePath: "./simulator/record"

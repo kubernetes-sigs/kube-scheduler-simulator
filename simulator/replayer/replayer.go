@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path"
 
 	"golang.org/x/xerrors"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -14,8 +15,8 @@ import (
 )
 
 type Service struct {
-	applier ResourceApplier
-	path    string
+	applier   ResourceApplier
+	recordDir string
 }
 
 type ResourceApplier interface {
@@ -25,23 +26,44 @@ type ResourceApplier interface {
 }
 
 type Options struct {
-	Path string
+	RecordDir string
 }
 
 func New(applier ResourceApplier, options Options) *Service {
-	return &Service{applier: applier, path: options.Path}
+	return &Service{applier: applier, recordDir: options.RecordDir}
 }
 
 func (s *Service) Replay(ctx context.Context) error {
+	files, err := os.ReadDir(s.recordDir)
+	if err != nil {
+		return xerrors.Errorf("failed to read record directory: %w", err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		filePath := path.Join(s.recordDir, file.Name())
+		if err := s.replayRecordsFromFile(ctx, filePath, s.applier); err != nil {
+			return xerrors.Errorf("failed to replay records from file: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) replayRecordsFromFile(ctx context.Context, path string, applier ResourceApplier) error {
 	records := []recorder.Record{}
 
-	b, err := os.ReadFile(s.path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
 	if err := json.Unmarshal(b, &records); err != nil {
-		return err
+		klog.Warningf("failed to unmarshal records from file %s: %v", path, err)
+		return nil
 	}
 
 	for _, record := range records {
