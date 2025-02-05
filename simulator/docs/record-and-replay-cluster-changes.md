@@ -12,6 +12,9 @@ To record changes from your real cluster, you need to follow these steps:
 > [!NOTE]
 > When a file already exists at the value of `--dir`, it will be overwritten.
 
+> [!NOTE]
+> You can add `--timeout` option to set the timeout for the recorder. The value is in seconds. If not set, the recorder will run until it's stopped.
+
 ### Resources to record
 
 It records the changes of the following resources:
