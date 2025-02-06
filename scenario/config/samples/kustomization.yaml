@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- simulation_v1alpha1_scenario.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

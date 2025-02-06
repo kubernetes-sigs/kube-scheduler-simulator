@@ -1,0 +1,98 @@
+run:
+  skip-dirs:
+    - docs
+linters-settings:
+  # if you fix this gci config, you should modify the gci command on `make format` as well.
+  gci:
+    sections:
+      - Standard
+      - Default
+      - Prefix(sigs.k8s.io/kube-scheduler-simulator/scenario)
+
+  gocritic:
+    disabled-checks:
+      - appendAssign
+
+  revive:
+    rules:
+      # default settings
+      # from: https://github.com/mgechev/revive/blob/master/defaults.toml
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+      # additional settings
+      - name: duplicated-imports
+
+linters:
+  disable-all: true
+  enable:
+    - unused
+    - govet
+    - staticcheck
+    - typecheck
+    - errcheck
+    - gosimple
+    - asciicheck
+    - bodyclose
+    - cyclop
+    - dogsled
+    - durationcheck
+    - errorlint
+    - exportloopref
+    - forcetypeassert
+    - funlen
+    - gci
+    - gochecknoinits
+    - gocognit
+    - gocritic
+    - gocyclo
+    - godot
+    - goerr113
+    - gofmt
+    - gofumpt
+    - gosec
+    - makezero
+    - nakedret
+    - nestif
+    - nilerr
+    - nolintlint
+    - paralleltest
+    - predeclared
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - thelper
+    - unconvert
+    - unparam
+    - wastedassign
+    - prealloc
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - funlen
+        - goerr113
+        - errcheck
+        - cyclop

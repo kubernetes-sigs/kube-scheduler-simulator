@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - simulation.kube-scheduler-simulator.x-k8s.io
+  resources:
+  - scenarios
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - simulation.kube-scheduler-simulator.x-k8s.io
+  resources:
+  - scenarios/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - simulation.kube-scheduler-simulator.x-k8s.io
+  resources:
+  - scenarios/status
+  verbs:
+  - get
+  - patch
+  - update
