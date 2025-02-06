@@ -26,20 +26,19 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
 	"sigs.k8s.io/kube-scheduler-simulator/scenario/test/utils"
 )
 
-// namespace where the project is deployed in
+// namespace where the project is deployed in.
 const namespace = "scenario-system"
 
-// serviceAccountName created for the project
+// serviceAccountName created for the project.
 const serviceAccountName = "scenario-controller-manager"
 
-// metricsServiceName is the name of the metrics service of the project
+// metricsServiceName is the name of the metrics service of the project.
 const metricsServiceName = "scenario-controller-manager-metrics-service"
 
-// metricsRoleBindingName is the name of the RBAC that will be created to allow get the metrics data
+// metricsRoleBindingName is the name of the RBAC that will be created to allow get the metrics data.
 const metricsRoleBindingName = "scenario-metrics-binding"
 
 var _ = Describe("Manager", Ordered, func() {

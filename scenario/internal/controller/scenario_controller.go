@@ -23,11 +23,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	simulationv1alpha1 "sigs.k8s.io/kube-scheduler-simulator/scenario/api/v1alpha1"
 )
 
-// ScenarioReconciler reconciles a Scenario object
+// ScenarioReconciler reconciles a Scenario object.
 type ScenarioReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme

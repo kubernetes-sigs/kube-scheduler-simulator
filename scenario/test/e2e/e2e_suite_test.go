@@ -24,7 +24,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
 	"sigs.k8s.io/kube-scheduler-simulator/scenario/test/utils"
 )
 
@@ -36,9 +35,9 @@ var (
 	// re-installation and conflicts.
 	skipPrometheusInstall  = os.Getenv("PROMETHEUS_INSTALL_SKIP") == "true"
 	skipCertManagerInstall = os.Getenv("CERT_MANAGER_INSTALL_SKIP") == "true"
-	// isPrometheusOperatorAlreadyInstalled will be set true when prometheus CRDs be found on the cluster
+	// isPrometheusOperatorAlreadyInstalled will be set true when prometheus CRDs be found on the cluster.
 	isPrometheusOperatorAlreadyInstalled = false
-	// isCertManagerAlreadyInstalled will be set true when CertManager CRDs be found on the cluster
+	// isCertManagerAlreadyInstalled will be set true when CertManager CRDs be found on the cluster.
 	isCertManagerAlreadyInstalled = false
 
 	// projectImage is the name of the image which will be build and loaded
