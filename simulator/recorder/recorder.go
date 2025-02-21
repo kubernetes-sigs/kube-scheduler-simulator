@@ -100,7 +100,7 @@ func (s *Service) Run(ctx context.Context) error {
 		infFact.Start(ctx.Done())
 		infFact.WaitForCacheSync(ctx.Done())
 	}
-	
+
 	return nil
 }
 
@@ -124,17 +124,15 @@ func (s *Service) record(ctx context.Context) {
 	records := make([]Record, 0, s.recordBatchCapacity)
 	count := 0
 	writeRecord := func() {
-		defer func() {
-			count++
-			records = make([]Record, 0, s.recordBatchCapacity)
-		}()
-
 		filePath := path.Join(s.path, fmt.Sprintf("record-%018d.json", count))
 		err := writeToFile(filePath, records)
 		if err != nil {
 			klog.Errorf("failed to write records to file: %v", err)
 			return
 		}
+
+		count++
+		records = make([]Record, 0, s.recordBatchCapacity)
 	}
 
 	for {
