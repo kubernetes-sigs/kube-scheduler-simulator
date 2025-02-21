@@ -162,6 +162,7 @@ func writeToFile(filePath string, records []Record) error {
 	if err != nil {
 		return xerrors.Errorf("failed to create record file: %w", err)
 	}
+	defer file.Close()
 
 	b, err := json.Marshal(records)
 	if err != nil {
@@ -171,11 +172,6 @@ func writeToFile(filePath string, records []Record) error {
 	_, err = file.Write(b)
 	if err != nil {
 		return xerrors.Errorf("failed to write records: %w", err)
-	}
-
-	err = file.Close()
-	if err != nil {
-		return xerrors.Errorf("failed to close file: %w", err)
 	}
 
 	return nil
