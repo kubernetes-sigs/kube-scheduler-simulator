@@ -79,6 +79,13 @@ func New(client dynamic.Interface, options Options) *Service {
 }
 
 func (s *Service) Run(ctx context.Context) error {
+	err := os.MkdirAll(s.path, 0o755)
+	if err != nil {
+		return xerrors.Errorf("failed to create record directory: %w", err)
+	}
+
+	go s.record(ctx)
+
 	infFact := dynamicinformer.NewFilteredDynamicSharedInformerFactory(s.client, 0, metav1.NamespaceAll, nil)
 	for _, gvr := range s.gvrs {
 		inf := infFact.ForResource(gvr).Informer()
@@ -93,14 +100,7 @@ func (s *Service) Run(ctx context.Context) error {
 		infFact.Start(ctx.Done())
 		infFact.WaitForCacheSync(ctx.Done())
 	}
-
-	err := os.MkdirAll(s.path, 0o755)
-	if err != nil {
-		return xerrors.Errorf("failed to create record directory: %w", err)
-	}
-
-	go s.record(ctx)
-
+	
 	return nil
 }
 
