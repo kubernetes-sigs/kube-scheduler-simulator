@@ -1,6 +1,23 @@
 # [Beta] Record your real cluster's changes in resources and replay them in the simulator
 
-You can record resource addition/update/deletion at your real cluster. This feature is useful for reproducing issues that occur in your real cluster.
+You can record resource addition/update/deletion at your real cluster and replay the changes. This feature is useful for reproducing issues that occur in your real cluster.
+
+```mermaid
+sequenceDiagram
+    participant user as User
+    participant recorder as Recorder
+    participant realcluster as Real Cluster
+    participant simulator as Simulator Cluster
+    participant recordfile as Record File
+    user->>recorder: Run recorder
+    recorder->>realcluster: Watch resources
+    realcluster->>recorder: Resource changes
+    recorder->>recordfile: Write changes
+    user->>recorder: Stop recorder
+    user->>simulator: Run simulator with replayer enabled
+    recordfile->>simulator: Get resource changes
+    simulator->>simulator: Apply changes
+```
 
 ## Record changes
 
