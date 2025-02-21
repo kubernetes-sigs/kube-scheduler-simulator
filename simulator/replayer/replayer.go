@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"path"
+	"path/filepath"
 
 	"golang.org/x/xerrors"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -39,31 +39,18 @@ func (s *Service) Replay(ctx context.Context) error {
 		return xerrors.Errorf("failed to read record directory: %w", err)
 	}
 
+	records := []recorder.Record{}
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 
-		filePath := path.Join(s.recordDir, file.Name())
-		if err := s.replayRecordsFromFile(ctx, filePath); err != nil {
-			return xerrors.Errorf("failed to replay records from file: %w", err)
+		recordsToAppend, err := s.loadRecordFromFile(file.Name())
+		if err != nil {
+			return xerrors.Errorf("failed to load record from file: %w", err)
 		}
-	}
 
-	return nil
-}
-
-func (s *Service) replayRecordsFromFile(ctx context.Context, path string) error {
-	records := []recorder.Record{}
-
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(b, &records); err != nil {
-		klog.Warningf("failed to unmarshal records from file %s: %v", path, err)
-		return nil
+		records = append(records, recordsToAppend...)
 	}
 
 	for _, record := range records {
@@ -73,6 +60,21 @@ func (s *Service) replayRecordsFromFile(ctx context.Context, path string) error 
 	}
 
 	return nil
+}
+
+func (s *Service) loadRecordFromFile(path string) ([]recorder.Record, error) {
+	filePath := filepath.Join(s.recordDir, path)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to read file %s: %w", filePath, err)
+	}
+
+	var records []recorder.Record
+	if err := json.Unmarshal(data, &records); err != nil {
+		return nil, xerrors.Errorf("failed to unmarshal records from %s: %w", filePath, err)
+	}
+
+	return records, nil
 }
 
 func (s *Service) applyEvent(ctx context.Context, record recorder.Record) error {
