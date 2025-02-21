@@ -26,14 +26,14 @@ var (
 	Delete Event = "Delete"
 )
 
-const defaultBufferSize = 1000
+const defaultRecordBatchCapacity = 1000
 
 type Service struct {
-	client     dynamic.Interface
-	gvrs       []schema.GroupVersionResource
-	path       string
-	recordCh   chan Record
-	bufferSize int
+	client              dynamic.Interface
+	gvrs                []schema.GroupVersionResource
+	path                string
+	recordCh            chan Record
+	recordBatchCapacity int
 }
 
 type Record struct {
@@ -53,9 +53,9 @@ var DefaultGVRs = []schema.GroupVersionResource{
 }
 
 type Options struct {
-	GVRs       []schema.GroupVersionResource
-	RecordDir  string
-	BufferSize *int
+	GVRs                []schema.GroupVersionResource
+	RecordDir           string
+	RecordBatchCapacity *int
 }
 
 func New(client dynamic.Interface, options Options) *Service {
@@ -64,17 +64,17 @@ func New(client dynamic.Interface, options Options) *Service {
 		gvrs = options.GVRs
 	}
 
-	bufferSize := defaultBufferSize
-	if options.BufferSize != nil {
-		bufferSize = *options.BufferSize
+	recordBatchCapacity := defaultRecordBatchCapacity
+	if options.RecordBatchCapacity != nil {
+		recordBatchCapacity = *options.RecordBatchCapacity
 	}
 
 	return &Service{
-		client:     client,
-		gvrs:       gvrs,
-		path:       options.RecordDir,
-		recordCh:   make(chan Record, bufferSize),
-		bufferSize: bufferSize,
+		client:              client,
+		gvrs:                gvrs,
+		path:                options.RecordDir,
+		recordCh:            make(chan Record, recordBatchCapacity),
+		recordBatchCapacity: recordBatchCapacity,
 	}
 }
 
@@ -121,12 +121,12 @@ func (s *Service) RecordEvent(obj interface{}, e Event) {
 }
 
 func (s *Service) record(ctx context.Context) {
-	records := make([]Record, 0, s.bufferSize)
+	records := make([]Record, 0, s.recordBatchCapacity)
 	count := 0
 	writeRecord := func() {
 		defer func() {
 			count++
-			records = make([]Record, 0, s.bufferSize)
+			records = make([]Record, 0, s.recordBatchCapacity)
 		}()
 
 		filePath := path.Join(s.path, fmt.Sprintf("record-%018d.json", count))
@@ -141,7 +141,7 @@ func (s *Service) record(ctx context.Context) {
 		select {
 		case r := <-s.recordCh:
 			records = append(records, r)
-			if len(records) == s.bufferSize {
+			if len(records) == s.recordBatchCapacity {
 				writeRecord()
 			}
 
