@@ -81,7 +81,7 @@ func startSimulator() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = wait.PollUntilContextTimeout(ctx, kubeAPIServerPollInterval, kubeAPIServerReadyTimeout, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, kubeAPIServerPollInterval, kubeAPIServerReadyTimeout, true, func(_ context.Context) (bool, error) {
 		_, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
 		if err != nil {
 			klog.Infof("waiting for kube-system namespace to be ready: %v", err)

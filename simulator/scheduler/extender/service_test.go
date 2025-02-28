@@ -45,7 +45,7 @@ func TestService_Filter(t *testing.T) {
 			prepareMockExtenderSetFn: func(m *mock_extender.MockExtender) {
 				m.EXPECT().Filter(extenderv1.ExtenderArgs{}).Return(nil, xerrors.New("failed"))
 			},
-			prepareMockStoreSetFn: func(m *mock_extender.MockStore) {
+			prepareMockStoreSetFn: func(_ *mock_extender.MockStore) {
 			},
 			wantErr: true,
 		},
@@ -107,7 +107,7 @@ func TestService_Prioritize(t *testing.T) {
 			prepareMockExtenderSetFn: func(m *mock_extender.MockExtender) {
 				m.EXPECT().Prioritize(extenderv1.ExtenderArgs{}).Return(nil, xerrors.New("failed"))
 			},
-			prepareMockStoreSetFn: func(m *mock_extender.MockStore) {
+			prepareMockStoreSetFn: func(_ *mock_extender.MockStore) {
 			},
 			wantErr: true,
 		},
@@ -169,7 +169,7 @@ func TestService_Preempt(t *testing.T) {
 			prepareMockExtenderSetFn: func(m *mock_extender.MockExtender) {
 				m.EXPECT().Preempt(extenderv1.ExtenderPreemptionArgs{}).Return(nil, xerrors.New("failed"))
 			},
-			prepareMockStoreSetFn: func(m *mock_extender.MockStore) {
+			prepareMockStoreSetFn: func(_ *mock_extender.MockStore) {
 			},
 			wantErr: true,
 		},
@@ -231,7 +231,7 @@ func TestService_Bind(t *testing.T) {
 			prepareMockExtenderSetFn: func(m *mock_extender.MockExtender) {
 				m.EXPECT().Bind(extenderv1.ExtenderBindingArgs{}).Return(nil, xerrors.New("failed"))
 			},
-			prepareMockStoreSetFn: func(m *mock_extender.MockStore) {
+			prepareMockStoreSetFn: func(_ *mock_extender.MockStore) {
 			},
 			wantErr: true,
 		},
