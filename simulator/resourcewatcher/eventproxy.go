@@ -180,9 +180,9 @@ func (p *eventProxy) lastResourceVersion() string {
 // WatchErrorHandler handles some errors.
 func (p *eventProxy) watchErrorHandler(err error) {
 	switch {
-	case errors.Is(io.EOF, err):
+	case errors.Is(err, io.EOF):
 		// watch closed normally
-	case errors.Is(io.ErrUnexpectedEOF, err):
+	case errors.Is(err, io.ErrUnexpectedEOF):
 		klog.Infof("watch for %v closed with unexpected EOF: %v", p.r, err)
 	default:
 		utilruntime.HandleError(fmt.Errorf("failed to watch %v: %w", p.r, err))

@@ -253,7 +253,7 @@ func pluginName(pluginName string) string {
 func NewWrappedPlugin(s Store, p framework.Plugin, opts ...Option) framework.Plugin {
 	options := options{
 		// default value to create empty extenders.
-		extenderInitializerOption: func(handle SimulatorHandle) PluginExtenders { return PluginExtenders{} },
+		extenderInitializerOption: func(_ SimulatorHandle) PluginExtenders { return PluginExtenders{} },
 	}
 	for _, o := range opts {
 		o.apply(&options)
