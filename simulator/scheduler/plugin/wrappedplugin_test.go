@@ -217,7 +217,7 @@ func Test_wrappedPlugin_Filter(t *testing.T) {
 					return n
 				}(),
 			},
-			want: framework.AsStatus(errors.New("filter failed")),
+			want: framework.AsStatus(errFilter),
 		},
 	}
 	for _, tt := range tests {
@@ -434,7 +434,7 @@ func Test_wrappedPlugin_PostFilter(t *testing.T) {
 				},
 			},
 			wantResult: nil,
-			wantStatus: framework.AsStatus(errors.New("postFilter failed")),
+			wantStatus: framework.AsStatus(errPost),
 		},
 	}
 	for _, tt := range tests {
@@ -719,7 +719,7 @@ func Test_wrappedPlugin_NormalizeScore(t *testing.T) {
 					},
 				},
 			},
-			want: framework.AsStatus(errors.New("normalize failed")),
+			want: framework.AsStatus(errNormalize),
 		},
 	}
 	for _, tt := range tests {
@@ -1015,7 +1015,7 @@ func Test_wrappedPlugin_Score(t *testing.T) {
 				nodename: "node1",
 			},
 			want:       0,
-			wantstatus: framework.AsStatus(errors.New("score failed")),
+			wantstatus: framework.AsStatus(errScore),
 		},
 	}
 	for _, tt := range tests {
@@ -1954,13 +1954,20 @@ func (fakeWrappedPlugin) Score(_ context.Context, _ *framework.CycleState, _ *v1
 // all method on this plugin will fail.
 type fakeMustFailWrappedPlugin struct{}
 
+var (
+	errFilter    = errors.New("filter failed")
+	errPost      = errors.New("postFilter failed")
+	errNormalize = errors.New("normalize failed")
+	errScore     = errors.New("score failed")
+)
+
 func (fakeMustFailWrappedPlugin) Name() string { return "fakeMustFailWrappedPlugin" }
 func (fakeMustFailWrappedPlugin) Filter(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ *framework.NodeInfo) *framework.Status {
-	return framework.AsStatus(errors.New("filter failed"))
+	return framework.AsStatus(errFilter)
 }
 
 func (fakeMustFailWrappedPlugin) PostFilter(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
-	return nil, framework.AsStatus(errors.New("postFilter failed"))
+	return nil, framework.AsStatus(errPost)
 }
 
 func (pl fakeMustFailWrappedPlugin) ScoreExtensions() framework.ScoreExtensions {
@@ -1968,9 +1975,9 @@ func (pl fakeMustFailWrappedPlugin) ScoreExtensions() framework.ScoreExtensions 
 }
 
 func (fakeMustFailWrappedPlugin) NormalizeScore(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ framework.NodeScoreList) *framework.Status {
-	return framework.AsStatus(errors.New("normalize failed"))
+	return framework.AsStatus(errNormalize)
 }
 
 func (fakeMustFailWrappedPlugin) Score(_ context.Context, _ *framework.CycleState, _ *v1.Pod, _ string) (int64, *framework.Status) {
-	return 0, framework.AsStatus(errors.New("score failed"))
+	return 0, framework.AsStatus(errScore)
 }
