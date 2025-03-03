@@ -90,9 +90,9 @@ func (s *Service) Run(ctx context.Context) error {
 	for _, gvr := range s.gvrs {
 		inf := infFact.ForResource(gvr).Informer()
 		_, err := inf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-			AddFunc:    func(obj interface{}) { s.RecordEvent(obj, Add) },
-			UpdateFunc: func(_, obj interface{}) { s.RecordEvent(obj, Update) },
-			DeleteFunc: func(obj interface{}) { s.RecordEvent(obj, Delete) },
+			AddFunc:    func(obj interface{}) { s.recordEvent(obj, Add) },
+			UpdateFunc: func(_, obj interface{}) { s.recordEvent(obj, Update) },
+			DeleteFunc: func(obj interface{}) { s.recordEvent(obj, Delete) },
 		})
 		if err != nil {
 			return xerrors.Errorf("failed to add event handler: %w", err)
@@ -104,7 +104,7 @@ func (s *Service) Run(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) RecordEvent(obj interface{}, e Event) {
+func (s *Service) recordEvent(obj interface{}, e Event) {
 	unstructObj, ok := obj.(*unstructured.Unstructured)
 	if !ok {
 		klog.Error("Failed to convert runtime.Object to *unstructured.Unstructured")
