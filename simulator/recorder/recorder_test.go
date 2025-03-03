@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -379,8 +378,6 @@ func loadRecordFromLine(reader *bufio.Reader) (*Record, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("failed to read line: %w", err)
 	}
-	line = []byte(strings.TrimRight(string(line), "\n"))
-	fmt.Println(string(line))
 
 	record := &Record{}
 	if err := json.Unmarshal(line, record); err != nil {

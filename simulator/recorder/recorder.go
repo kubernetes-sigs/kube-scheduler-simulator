@@ -156,7 +156,7 @@ func appendToFile(filePath string, record Record) error {
 	}
 	defer file.Close()
 
-	b, err := json.Marshal(record)
+	b, err := json.Marshal(&record)
 	if err != nil {
 		return xerrors.Errorf("failed to marshal record: %w", err)
 	}

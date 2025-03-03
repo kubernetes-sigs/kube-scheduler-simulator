@@ -133,7 +133,7 @@ func TestService_Replay(t *testing.T) {
 
 func writeRecordsToFile(file *os.File, records []recorder.Record) error {
 	for _, record := range records {
-		b, err := json.Marshal(record)
+		b, err := json.Marshal(&record)
 		if err != nil {
 			return xerrors.Errorf("failed to marshal record: %w", err)
 		}
