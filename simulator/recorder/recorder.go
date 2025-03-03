@@ -169,7 +169,6 @@ func (s *Service) record(ctx context.Context) {
 				writeRecord()
 			}
 		}
-
 	}
 }
 
