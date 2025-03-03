@@ -77,6 +77,16 @@ func New(client dynamic.Interface, options Options) *Service {
 }
 
 func (s *Service) Run(ctx context.Context) error {
+	// create or recreate the file
+	f, err := os.Create(s.path)
+	if err != nil {
+		return xerrors.Errorf("failed to create record file: %w", err)
+	}
+	err = f.Close()
+	if err != nil {
+		return xerrors.Errorf("failed to close record file: %w", err)
+	}
+
 	go s.record(ctx)
 
 	infFact := dynamicinformer.NewFilteredDynamicSharedInformerFactory(s.client, 0, metav1.NamespaceAll, nil)
