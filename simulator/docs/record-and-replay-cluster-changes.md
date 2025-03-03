@@ -24,10 +24,10 @@ sequenceDiagram
 To record changes from your real cluster, you need to follow these steps:
 
 1. Go to `simulator` directory.
-2. Start the recorder by running `go run cmd/recorder/recorder.go --dir /path/to/directory-to-store-recorded-changes --kubeconfig /path/to/kubeconfig`.
+2. Start the recorder by running `go run cmd/recorder/recorder.go --path /path/to/directory-to-store-recorded-changes --kubeconfig /path/to/kubeconfig`.
 
 > [!NOTE]
-> When a file already exists at the value of `--dir`, it will be overwritten.
+> When a file already exists at the value of `--path`, it will be overwritten.
 
 > [!NOTE]
 > You can add `--timeout` option to set the timeout for the recorder. The value is in seconds. If not set, the recorder will run until it's stopped.
@@ -45,7 +45,7 @@ It records the changes of the following resources:
 You can tweak which resources to record via the option in [/simulator/cmd/recorder/recorder.go](https://github.com/kubernetes-sigs/kube-scheduler-simulator/blob/master/simulator/cmd/recorder/recorder.go):
 
 ```go
-recorderOptions := recorder.Options{RecordDir: recordDir,
+recorderOptions := recorder.Options{RecordFile: recordFile,
 	// GVRs is a list of GroupVersionResource that will be recorded.
 	// If it's nil, DefaultGVRs are used.
 	GVRs: []schema.GroupVersionResource{
@@ -59,19 +59,19 @@ recorderOptions := recorder.Options{RecordDir: recordDir,
 To replay the recorded changes in the simulator, you need to follow these steps:
 
 1. Set `true` to `replayEnabled`.
-2. Set the path of the directory where the changes are recorded to `recordFilePath`.
-3. Make sure the directory is mounted to the simulator server container.
+2. Set the path of the file where the changes are recorded to `recordFilePath`.
+3. Make sure the file is mounted to the simulator server container.
 
 
 ```yaml:config.yaml
 replayEnabled: true
-recordFilePath: "/path/to/directory-to-store-recorded-changes"
+recordFilePath: "/path/to/file-to-store-recorded-changes"
 ```
 
 ```yaml:compose.yml
 volumes:
   ...
-  - ./path/to/directory-to-store-recorded-changes:/path/to/directory-to-store-recorded-changes
+  - ./path/to/file-to-store-recorded-changes:/path/to/file-to-store-recorded-changes
 ```
 
 ### Resources to replay
