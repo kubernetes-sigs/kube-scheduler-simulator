@@ -148,7 +148,14 @@ func (s *Service) record(ctx context.Context) {
 				writeRecord()
 			}
 			return
+
+		default:
+			// flush the buffer
+			if len(records) > 0 {
+				writeRecord()
+			}
 		}
+
 	}
 }
 
