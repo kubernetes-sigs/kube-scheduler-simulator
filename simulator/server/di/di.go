@@ -43,7 +43,6 @@ func NewDIContainer(
 	initialSchedulerCfg *configv1.KubeSchedulerConfiguration,
 	externalImportEnabled bool,
 	resourceSyncEnabled bool,
-	externalClient clientset.Interface,
 	externalDynamicClient dynamic.Interface,
 	simulatorPort int,
 	resourceapplierOptions resourceapplier.Options,
@@ -59,11 +58,10 @@ func NewDIContainer(
 	}
 	snapshotSvc := snapshot.NewService(client, c.schedulerService)
 	c.snapshotService = snapshotSvc
-	if externalImportEnabled {
-		extSnapshotSvc := snapshot.NewService(externalClient, c.schedulerService)
-		c.oneshotClusterResourceImporter = oneshotimporter.NewService(snapshotSvc, extSnapshotSvc)
-	}
 	resourceApplierService := resourceapplier.New(dynamicClient, restMapper, resourceapplierOptions)
+	if externalImportEnabled {
+		c.oneshotClusterResourceImporter = oneshotimporter.NewService(externalDynamicClient, resourceApplierService)
+	}
 	if resourceSyncEnabled {
 		c.resourceSyncer = syncer.New(externalDynamicClient, resourceApplierService)
 	}

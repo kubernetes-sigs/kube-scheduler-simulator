@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	schedulingcfgv1 "k8s.io/client-go/applyconfigurations/scheduling/v1"
 	confstoragev1 "k8s.io/client-go/applyconfigurations/storage/v1"
@@ -37,8 +36,7 @@ func NewSnapshotHandler(s di.SnapshotService) *SnapshotHandler {
 func (h *SnapshotHandler) Snap(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var label metav1.LabelSelector
-	rs, err := h.service.Snap(ctx, label)
+	rs, err := h.service.Snap(ctx)
 	if err != nil {
 		klog.Errorf("failed to save all resources: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)

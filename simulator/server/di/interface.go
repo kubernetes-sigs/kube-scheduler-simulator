@@ -25,7 +25,7 @@ type SchedulerService interface {
 
 // SnapshotService represents a service for exporting/importing resources on the simulator.
 type SnapshotService interface {
-	Snap(ctx context.Context, labelSelector metav1.LabelSelector, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
+	Snap(ctx context.Context, opts ...snapshot.Option) (*snapshot.ResourcesForSnap, error)
 	Load(ctx context.Context, resources *snapshot.ResourcesForLoad, opts ...snapshot.Option) error
 	IgnoreErr() snapshot.Option
 }
