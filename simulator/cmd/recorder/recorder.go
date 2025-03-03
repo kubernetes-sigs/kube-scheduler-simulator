@@ -43,11 +43,12 @@ func startRecorder() error {
 	recorderOptions := recorder.Options{RecordDir: recordDir}
 	recorder := recorder.New(client, recorderOptions)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, cancel1 := context.WithCancel(context.Background())
+	defer cancel1()
 	if timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
-		defer cancel()
+		var cancel2 context.CancelFunc
+		ctx, cancel2 = context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+		defer cancel2()
 	}
 
 	if err := recorder.Run(ctx); err != nil {
