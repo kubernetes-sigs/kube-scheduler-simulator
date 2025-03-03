@@ -104,26 +104,16 @@ func TestService_Replay(t *testing.T) {
 			mockApplier := mock_resourceapplier.NewMockResourceApplier(ctrl)
 			tt.prepareMockFn(mockApplier)
 
-			recordDir := path.Join(os.TempDir(), strings.ReplaceAll(tt.name, " ", "_"))
-			filePath := path.Join(recordDir, "record.json")
-			err := os.MkdirAll(recordDir, 0o755)
-			if err != nil {
-				t.Fatalf("failed to create record directory: %v", err)
-			}
+			filePath := path.Join(os.TempDir(), strings.ReplaceAll(tt.name, " ", "_"))
 			tempFile, err := os.Create(filePath)
 			if err != nil {
 				t.Fatalf("failed to create temp file: %v", err)
 			}
-			defer os.RemoveAll(recordDir)
+			defer os.Remove(filePath)
 
-			b, err := json.Marshal(tt.records)
+			err = writeRecordsToFile(tempFile, tt.records)
 			if err != nil {
 				t.Fatalf("failed to marshal records: %v", err)
-			}
-
-			_, err = tempFile.Write(b)
-			if err != nil {
-				t.Fatalf("failed to write records: %v", err)
 			}
 
 			err = tempFile.Close()
@@ -131,7 +121,7 @@ func TestService_Replay(t *testing.T) {
 				t.Fatalf("failed to close temp file: %v", err)
 			}
 
-			service := New(mockApplier, Options{RecordDir: recordDir})
+			service := New(mockApplier, Options{RecordFile: filePath})
 
 			err = service.Replay(context.Background())
 			if (err != nil) != tt.wantErr {
@@ -139,4 +129,19 @@ func TestService_Replay(t *testing.T) {
 			}
 		})
 	}
+}
+
+func writeRecordsToFile(file *os.File, records []recorder.Record) error {
+	for _, record := range records {
+		b, err := json.Marshal(record)
+		if err != nil {
+			return xerrors.Errorf("failed to marshal record: %w", err)
+		}
+
+		if _, err := file.Write(append(b, '\n')); err != nil {
+			return xerrors.Errorf("failed to write record to file: %w", err)
+		}
+	}
+
+	return nil
 }

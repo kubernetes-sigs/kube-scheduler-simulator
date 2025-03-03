@@ -95,7 +95,7 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	replayerOptions := replayer.Options{RecordDir: cfg.RecordDirPath}
+	replayerOptions := replayer.Options{RecordFile: cfg.RecordDirPath}
 	resourceApplierOptions := resourceapplier.Options{}
 
 	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, cfg.ReplayerEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceApplierOptions, replayerOptions)

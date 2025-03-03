@@ -3,9 +3,7 @@ package recorder
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
-	"path"
 	"time"
 
 	"golang.org/x/xerrors"
@@ -54,7 +52,7 @@ var DefaultGVRs = []schema.GroupVersionResource{
 
 type Options struct {
 	GVRs                []schema.GroupVersionResource
-	RecordDir           string
+	RecordFile          string
 	RecordBatchCapacity *int
 }
 
@@ -72,18 +70,13 @@ func New(client dynamic.Interface, options Options) *Service {
 	return &Service{
 		client:              client,
 		gvrs:                gvrs,
-		path:                options.RecordDir,
+		path:                options.RecordFile,
 		recordCh:            make(chan Record, recordBatchCapacity),
 		recordBatchCapacity: recordBatchCapacity,
 	}
 }
 
 func (s *Service) Run(ctx context.Context) error {
-	err := os.MkdirAll(s.path, 0o755)
-	if err != nil {
-		return xerrors.Errorf("failed to create record directory: %w", err)
-	}
-
 	go s.record(ctx)
 
 	infFact := dynamicinformer.NewFilteredDynamicSharedInformerFactory(s.client, 0, metav1.NamespaceAll, nil)
@@ -135,58 +128,41 @@ func (s *Service) recordEvent(obj interface{}, e Event) {
 }
 
 func (s *Service) record(ctx context.Context) {
-	records := make([]Record, 0, s.recordBatchCapacity)
-	count := 0
-	writeRecord := func() {
-		filePath := path.Join(s.path, fmt.Sprintf("record-%018d.json", count))
-		err := writeToFile(filePath, records)
-		if err != nil {
-			klog.Errorf("failed to write records to file: %v", err)
-			return
-		}
-
-		count++
-		records = make([]Record, 0, s.recordBatchCapacity)
-	}
-
 	for {
 		select {
 		case r := <-s.recordCh:
-			records = append(records, r)
-			if len(records) == s.recordBatchCapacity {
-				writeRecord()
+			if err := appendToFile(s.path, r); err != nil {
+				klog.Errorf("failed to append record to file: %v", err)
 			}
 
 		case <-ctx.Done():
-			if len(records) > 0 {
-				writeRecord()
-			}
-			return
-
-		default:
 			// flush the buffer
-			if len(records) > 0 {
-				writeRecord()
+			for len(s.recordCh) > 0 {
+				r := <-s.recordCh
+				if err := appendToFile(s.path, r); err != nil {
+					klog.Errorf("failed to append record to file: %v", err)
+				}
 			}
+
+			return
 		}
 	}
 }
 
-func writeToFile(filePath string, records []Record) error {
-	file, err := os.Create(filePath)
+func appendToFile(filePath string, record Record) error {
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return xerrors.Errorf("failed to create record file: %w", err)
 	}
 	defer file.Close()
 
-	b, err := json.Marshal(records)
+	b, err := json.Marshal(record)
 	if err != nil {
-		return xerrors.Errorf("failed to marshal records: %w", err)
+		return xerrors.Errorf("failed to marshal record: %w", err)
 	}
 
-	_, err = file.Write(b)
-	if err != nil {
-		return xerrors.Errorf("failed to write records: %w", err)
+	if _, err := file.Write(append(b, '\n')); err != nil {
+		return xerrors.Errorf("failed to write record: %w", err)
 	}
 
 	return nil

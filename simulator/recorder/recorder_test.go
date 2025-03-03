@@ -1,8 +1,11 @@
 package recorder
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -241,8 +244,8 @@ func TestRecorder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			dir := path.Join(t.TempDir(), strings.ReplaceAll(tt.name, " ", "_"))
-			defer os.RemoveAll(dir)
+			filePath := path.Join(t.TempDir(), strings.ReplaceAll(tt.name, " ", "_"))
+			defer os.Remove(filePath)
 
 			s := runtime.NewScheme()
 			corev1.AddToScheme(s)
@@ -254,7 +257,7 @@ func TestRecorder(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			service := New(client, Options{RecordDir: dir})
+			service := New(client, Options{RecordFile: filePath})
 			err := service.Run(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.Record() error = %v, wantErr %v", err, tt.wantErr)
@@ -266,7 +269,7 @@ func TestRecorder(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			err = assert(ctx, dir, tt.want)
+			err = assert(ctx, filePath, tt.want)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -320,35 +323,29 @@ func apply(ctx context.Context, client *dynamicFake.FakeDynamicClient, resourceT
 	return nil
 }
 
-func assert(ctx context.Context, dirPath string, want []Record) error {
+func assert(ctx context.Context, filePath string, want []Record) error {
 	var finalErr error
 	wait.PollUntilContextTimeout(ctx, 100*time.Millisecond, 5*time.Second, false, func(context.Context) (bool, error) {
-		files, err := os.ReadDir(dirPath)
+		file, err := os.Open(filePath)
 		if err != nil {
-			finalErr = xerrors.Errorf("failed to read the record directory: %w", err)
+			finalErr = xerrors.Errorf("failed to open the record file: %w", err)
 			return false, nil
 		}
+		defer file.Close()
 
 		got := []Record{}
-		for _, file := range files {
-			if file.IsDir() {
-				continue
-			}
-
-			b, err := os.ReadFile(path.Join(dirPath, file.Name()))
+		reader := bufio.NewReader(file)
+		for {
+			record, err := loadRecordFromLine(reader)
 			if err != nil {
-				finalErr = xerrors.Errorf("failed to read the record file: %w", err)
+				finalErr = xerrors.Errorf("failed to load record from line: %w", err)
 				return false, nil
 			}
-
-			var records []Record
-			err = json.Unmarshal(b, &records)
-			if err != nil {
-				finalErr = xerrors.Errorf("failed to unmarshal the records: %w", err)
-				return false, nil
+			if record == nil {
+				break
 			}
 
-			got = append(got, records...)
+			got = append(got, *record)
 		}
 
 		if len(got) != len(want) {
@@ -372,6 +369,25 @@ func assert(ctx context.Context, dirPath string, want []Record) error {
 	})
 
 	return finalErr
+}
+
+func loadRecordFromLine(reader *bufio.Reader) (*Record, error) {
+	line, err := reader.ReadBytes('\n')
+	if len(line) == 0 || err == io.EOF {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, xerrors.Errorf("failed to read line: %w", err)
+	}
+	line = []byte(strings.TrimRight(string(line), "\n"))
+	fmt.Println(string(line))
+
+	record := &Record{}
+	if err := json.Unmarshal(line, record); err != nil {
+		return nil, xerrors.Errorf("failed to unmarshal record: %w", err)
+	}
+
+	return record, nil
 }
 
 var (

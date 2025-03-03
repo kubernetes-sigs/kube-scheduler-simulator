@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	recordDir  string
+	recordFile string
 	kubeConfig string
 	timeout    int
 )
@@ -40,7 +40,7 @@ func startRecorder() error {
 
 	client := dynamic.NewForConfigOrDie(restCfg)
 
-	recorderOptions := recorder.Options{RecordDir: recordDir}
+	recorderOptions := recorder.Options{RecordFile: recordFile}
 	recorder := recorder.New(client, recorderOptions)
 
 	ctx, cancel1 := context.WithCancel(context.Background())
@@ -67,13 +67,13 @@ func startRecorder() error {
 }
 
 func parseOptions() error {
-	flag.StringVar(&recordDir, "dir", "", "directory to store the recorded resources")
+	flag.StringVar(&recordFile, "dir", "", "directory to store the recorded resources")
 	flag.StringVar(&kubeConfig, "kubeconfig", "", "path to kubeconfig file")
 	flag.IntVar(&timeout, "timeout", 0, "timeout in seconds for the simulator to run")
 
 	flag.Parse()
 
-	if recordDir == "" {
+	if recordFile == "" {
 		return xerrors.New("dir flag is required")
 	}
 

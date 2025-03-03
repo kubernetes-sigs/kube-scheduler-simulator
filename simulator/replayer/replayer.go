@@ -1,10 +1,11 @@
 package replayer
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"io"
 	"os"
-	"path/filepath"
 
 	"golang.org/x/xerrors"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -15,8 +16,8 @@ import (
 )
 
 type Service struct {
-	applier   ResourceApplier
-	recordDir string
+	applier    ResourceApplier
+	recordFile string
 }
 
 type ResourceApplier interface {
@@ -26,55 +27,54 @@ type ResourceApplier interface {
 }
 
 type Options struct {
-	RecordDir string
+	RecordFile string
 }
 
 func New(applier ResourceApplier, options Options) *Service {
-	return &Service{applier: applier, recordDir: options.RecordDir}
+	return &Service{applier: applier, recordFile: options.RecordFile}
 }
 
 func (s *Service) Replay(ctx context.Context) error {
-	files, err := os.ReadDir(s.recordDir)
+	file, err := os.Open(s.recordFile)
 	if err != nil {
 		return xerrors.Errorf("failed to read record directory: %w", err)
 	}
+	defer file.Close()
 
-	records := []recorder.Record{}
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
+	reader := bufio.NewReader(file)
 
-		recordsToAppend, err := s.loadRecordFromFile(file.Name())
+	for {
+		record, err := s.loadRecordFromLine(reader)
 		if err != nil {
-			return xerrors.Errorf("failed to load record from file: %w", err)
+			return xerrors.Errorf("failed to load record from line: %w", err)
+		}
+		if record == nil {
+			break
 		}
 
-		records = append(records, recordsToAppend...)
-	}
-
-	for _, record := range records {
-		if err := s.applyEvent(ctx, record); err != nil {
-			return xerrors.Errorf("failed to replay event: %w", err)
+		if err := s.applyEvent(ctx, *record); err != nil {
+			return xerrors.Errorf("failed to apply event: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func (s *Service) loadRecordFromFile(path string) ([]recorder.Record, error) {
-	filePath := filepath.Join(s.recordDir, path)
-	data, err := os.ReadFile(filePath)
+func (s *Service) loadRecordFromLine(reader *bufio.Reader) (*recorder.Record, error) {
+	line, err := reader.ReadBytes('\n')
+	if len(line) == 0 || err == io.EOF {
+		return nil, nil
+	}
 	if err != nil {
-		return nil, xerrors.Errorf("failed to read file %s: %w", filePath, err)
+		return nil, xerrors.Errorf("failed to read line: %w", err)
 	}
 
-	var records []recorder.Record
-	if err := json.Unmarshal(data, &records); err != nil {
-		return nil, xerrors.Errorf("failed to unmarshal records from %s: %w", filePath, err)
+	record := &recorder.Record{}
+	if err := json.Unmarshal(line, record); err != nil {
+		return nil, xerrors.Errorf("failed to unmarshal record: %w", err)
 	}
 
-	return records, nil
+	return record, nil
 }
 
 func (s *Service) applyEvent(ctx context.Context, record recorder.Record) error {
