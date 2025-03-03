@@ -148,11 +148,6 @@ func (s *Service) record(ctx context.Context) {
 				writeRecord()
 			}
 			return
-
-		default:
-			if len(records) > 0 {
-				writeRecord()
-			}
 		}
 	}
 }
