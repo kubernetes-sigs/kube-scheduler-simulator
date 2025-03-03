@@ -37,7 +37,7 @@ func New(applier ResourceApplier, options Options) *Service {
 func (s *Service) Replay(ctx context.Context) error {
 	file, err := os.Open(s.recordFile)
 	if err != nil {
-		return xerrors.Errorf("failed to read record directory: %w", err)
+		return xerrors.Errorf("failed to read record file: %w", err)
 	}
 	defer file.Close()
 

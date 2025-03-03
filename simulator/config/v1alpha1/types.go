@@ -72,7 +72,7 @@ type SimulatorConfiguration struct {
 	ReplayerEnabled bool `json:"replayEnabled,omitempty"`
 
 	// The path to a directory where the record files are stored.
-	RecordDirPath string `json:"recordDirPath,omitempty"`
+	RecordFilePath string `json:"recordFilePath,omitempty"`
 
 	// This variable indicates whether an external scheduler
 	// is used.

@@ -51,11 +51,11 @@ externalImportEnabled: false
 resourceSyncEnabled: false
 
 # This variable indicates whether the simulator will
-# replay events recorded in the file specified by recordDirPath.
+# replay events recorded in the file specified by recordFilePath.
 # You cannot make two or more of externalImportEnabled, resourceSyncEnabled and replayEnabled true
 # because those features would be conflicted.
 # Note, this is still a beta feature.
 replayEnabled: false
 
 # The path to a directory where the record files are stored.
-recordDirPath: "/record"
+recordFilePath: "/record.jsonl"

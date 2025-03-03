@@ -59,13 +59,13 @@ recorderOptions := recorder.Options{RecordDir: recordDir,
 To replay the recorded changes in the simulator, you need to follow these steps:
 
 1. Set `true` to `replayEnabled`.
-2. Set the path of the directory where the changes are recorded to `recordDirPath`.
+2. Set the path of the directory where the changes are recorded to `recordFilePath`.
 3. Make sure the directory is mounted to the simulator server container.
 
 
 ```yaml:config.yaml
 replayEnabled: true
-recordDirPath: "/path/to/directory-to-store-recorded-changes"
+recordFilePath: "/path/to/directory-to-store-recorded-changes"
 ```
 
 ```yaml:compose.yml

@@ -44,8 +44,8 @@ type Config struct {
 	ResourceSyncEnabled bool
 	// ReplayerEnabled indicates whether the simulator will replay events recorded in a file.
 	ReplayerEnabled bool
-	// RecordDirPath is the path to the file where the simulator records events.
-	RecordDirPath string
+	// RecordFilePath is the path to the file where the simulator records events.
+	RecordFilePath string
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
 	// This field should be set when ExternalImportEnabled == true or ResourceSyncEnabled == true.
 	ExternalKubeClientCfg *rest.Config
@@ -89,7 +89,7 @@ func NewConfig() (*Config, error) {
 	externalimportenabled := getExternalImportEnabled()
 	resourceSyncEnabled := getResourceSyncEnabled()
 	replayerEnabled := getReplayerEnabled()
-	recordDirPath := getRecordDirPath()
+	recordFilePath := getRecordFilePath()
 	externalKubeClientCfg := &rest.Config{}
 	if hasTwoOrMoreTrue(externalimportenabled, resourceSyncEnabled, replayerEnabled) {
 		return nil, xerrors.Errorf("externalImportEnabled, resourceSyncEnabled and replayerEnabled cannot be used simultaneously.")
@@ -117,7 +117,7 @@ func NewConfig() (*Config, error) {
 		ExternalKubeClientCfg:       externalKubeClientCfg,
 		ResourceSyncEnabled:         resourceSyncEnabled,
 		ReplayerEnabled:             replayerEnabled,
-		RecordDirPath:               recordDirPath,
+		RecordFilePath:              recordFilePath,
 	}, nil
 }
 
@@ -292,14 +292,14 @@ func getReplayerEnabled() bool {
 	return replayerEnabled
 }
 
-// getRecordDirPath reads RECORD_DIR_PATH
+// getRecordFilePath reads RECORD_FILE_PATH
 // if empty from the config file.
-func getRecordDirPath() string {
-	recordDirPath := os.Getenv("RECORD_DIR_PATH")
-	if recordDirPath == "" {
-		recordDirPath = configYaml.RecordDirPath
+func getRecordFilePath() string {
+	recordFilePath := os.Getenv("RECORD_FILE_PATH")
+	if recordFilePath == "" {
+		recordFilePath = configYaml.RecordFilePath
 	}
-	return recordDirPath
+	return recordFilePath
 }
 
 func decodeSchedulerCfg(buf []byte) (*configv1.KubeSchedulerConfiguration, error) {

@@ -104,7 +104,8 @@ func TestService_Replay(t *testing.T) {
 			mockApplier := mock_resourceapplier.NewMockResourceApplier(ctrl)
 			tt.prepareMockFn(mockApplier)
 
-			filePath := path.Join(os.TempDir(), strings.ReplaceAll(tt.name, " ", "_"))
+			fileName := strings.ReplaceAll(tt.name, " ", "_") + ".jsonl"
+			filePath := path.Join(os.TempDir(), fileName)
 			tempFile, err := os.Create(filePath)
 			if err != nil {
 				t.Fatalf("failed to create temp file: %v", err)
