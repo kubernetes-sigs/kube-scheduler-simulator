@@ -111,6 +111,20 @@ func (s *Service) recordEvent(obj interface{}, e Event) {
 		return
 	}
 
+	// we only need name and namespace for DELETE events
+	if e == Delete {
+		unstructObj = &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": unstructObj.GetAPIVersion(),
+				"kind":       unstructObj.GetKind(),
+				"metadata": map[string]interface{}{
+					"name":      unstructObj.GetName(),
+					"namespace": unstructObj.GetNamespace(),
+				},
+			},
+		}
+	}
+
 	r := Record{
 		Event:    e,
 		Time:     time.Now(),
