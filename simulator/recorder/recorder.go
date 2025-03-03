@@ -150,7 +150,7 @@ func (s *Service) record(ctx context.Context) {
 }
 
 func appendToFile(filePath string, record Record) error {
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o644)
 	if err != nil {
 		return xerrors.Errorf("failed to create record file: %w", err)
 	}
