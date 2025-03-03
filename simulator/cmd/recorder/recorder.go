@@ -66,25 +66,19 @@ func startRecorder() error {
 }
 
 func parseOptions() error {
-	var (
-		dirFlag        = flag.String("dir", "", "directory to store the recorded resources")
-		kubeConfigFlag = flag.String("kubeconfig", "", "path to kubeconfig file")
-		timeoutFlag    = flag.Int("timeout", 0, "timeout in seconds for the simulator to run")
-	)
+	flag.StringVar(&recordDir, "dir", "", "directory to store the recorded resources")
+	flag.StringVar(&kubeConfig, "kubeconfig", "", "path to kubeconfig file")
+	flag.IntVar(&timeout, "timeout", 0, "timeout in seconds for the simulator to run")
 
 	flag.Parse()
 
-	if *dirFlag == "" {
+	if recordDir == "" {
 		return xerrors.New("dir flag is required")
 	}
 
-	if *kubeConfigFlag == "" {
+	if kubeConfig == "" {
 		return xerrors.New("kubeconfig flag is required")
 	}
-
-	recordDir = *dirFlag
-	kubeConfig = *kubeConfigFlag
-	timeout = *timeoutFlag
 
 	return nil
 }
