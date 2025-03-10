@@ -5,9 +5,9 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
-	"path/filepath"
 
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/dynamic"

@@ -138,40 +138,61 @@ func (s *Service) recordEvent(obj interface{}, e Event) {
 }
 
 func (s *Service) record(ctx context.Context) {
+	records := make([]Record, 0, s.recordBatchCapacity)
+	flushBuffer := func() {
+		if err := appendToFile(s.path, records); err != nil {
+			klog.Errorf("failed to append record to file: %v", err)
+		}
+		records = make([]Record, 0, s.recordBatchCapacity)
+	}
+
 	for {
 		select {
 		case r := <-s.recordCh:
-			if err := appendToFile(s.path, r); err != nil {
-				klog.Errorf("failed to append record to file: %v", err)
+			records = append(records, r)
+			if len(records) >= s.recordBatchCapacity {
+				flushBuffer()
 			}
 
 		case <-ctx.Done():
 			// flush the buffer
-			for len(s.recordCh) > 0 {
-				r := <-s.recordCh
-				if err := appendToFile(s.path, r); err != nil {
-					klog.Errorf("failed to append record to file: %v", err)
-				}
+			for r := range s.recordCh {
+				records = append(records, r)
+			}
+
+			if len(records) > 0 {
+				flushBuffer()
 			}
 
 			return
 		}
+
+		// if there is nothing to do, flush the buffer
+		if len(s.recordCh) == 0 && len(records) > 0 {
+			flushBuffer()
+		}
 	}
 }
 
-func appendToFile(filePath string, record Record) error {
+func appendToFile(filePath string, records []Record) error {
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o644)
 	if err != nil {
 		return xerrors.Errorf("failed to create record file: %w", err)
 	}
 	defer file.Close()
 
-	b, err := json.Marshal(&record)
-	if err != nil {
-		return xerrors.Errorf("failed to marshal record: %w", err)
+	content := make([]byte, 0)
+	for _, record := range records {
+		b, err := json.Marshal(&record)
+		if err != nil {
+			return xerrors.Errorf("failed to marshal record: %w", err)
+		}
+
+		content = append(content, b...)
+		content = append(content, '\n')
 	}
 
-	if _, err := file.Write(append(b, '\n')); err != nil {
+	if _, err := file.Write(content); err != nil {
 		return xerrors.Errorf("failed to write record: %w", err)
 	}
 

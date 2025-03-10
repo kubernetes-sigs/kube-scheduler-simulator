@@ -23,9 +23,8 @@ sequenceDiagram
 
 To record changes from your real cluster, you need to follow these steps:
 
-1. Go to `simulator` directory.
-2. Install the recorder by `go install ./cmd/sched-recorder` or `go install sigs.k8s.io/kube-scheduler-simulator/simulator/cmd/sched-recorder`.
-3. Start the recorder by running `sched-recorder --path /path/to/directory-to-store-recorded-changes`.
+1. Install the recorder by moving to simulator/ and running `go install ./cmd/sched-recorder` or just `go install sigs.k8s.io/kube-scheduler-simulator/simulator/cmd/sched-recorder`.
+2. Start the recorder by `sched-recorder --path /path/to/directory-to-store-recorded-changes`.
 
 > [!NOTE]
 > You can add `--timeout` option to set the timeout for the recorder. The value is in seconds. If not set, the recorder will run until it's stopped.  
