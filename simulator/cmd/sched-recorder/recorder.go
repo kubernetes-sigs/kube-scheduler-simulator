@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"path/filepath"
 
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/dynamic"
@@ -78,7 +79,11 @@ func parseOptions() error {
 	}
 
 	if kubeConfig == "" {
-		return xerrors.New("kubeconfig flag is required")
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return xerrors.Errorf("could not get user home directory: %w", err)
+		}
+		kubeConfig = filepath.Join(home, ".kube", "config")
 	}
 
 	return nil

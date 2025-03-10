@@ -5,15 +5,15 @@ You can record resource addition/update/deletion at your real cluster and replay
 ```mermaid
 sequenceDiagram
     participant user as User
-    participant recorder as Recorder
+    participant recorder as Recorder (CLI)
     participant realcluster as Real Cluster
     participant simulator as Simulator Cluster
     participant recordfile as Record File
-    user->>recorder: Run recorder
+    user->>recorder: Run sched-recorder
     recorder->>realcluster: Watch resources
     realcluster->>recorder: Resource changes
     recorder->>recordfile: Write changes
-    user->>recorder: Stop recorder
+    user->>recorder: Stop sched-recorder
     user->>simulator: Run simulator with replayer enabled
     recordfile->>simulator: Get resource changes
     simulator->>simulator: Apply changes
@@ -24,13 +24,15 @@ sequenceDiagram
 To record changes from your real cluster, you need to follow these steps:
 
 1. Go to `simulator` directory.
-2. Start the recorder by running `go run cmd/recorder/recorder.go --path /path/to/directory-to-store-recorded-changes --kubeconfig /path/to/kubeconfig`.
+2. Install the recorder by `go install ./cmd/sched-recorder` or `go install sigs.k8s.io/kube-scheduler-simulator/simulator/cmd/sched-recorder`.
+3. Start the recorder by running `sched-recorder --path /path/to/directory-to-store-recorded-changes`.
 
 > [!NOTE]
+> You can add `--timeout` option to set the timeout for the recorder. The value is in seconds. If not set, the recorder will run until it's stopped.  
+> You can add `--kubeconfig` option to set the kubeconfig file to use. If not set, the recorder will use the default kubeconfig file.
+
+> [!WARNING]
 > When a file already exists at the value of `--path`, it will be overwritten.
-
-> [!NOTE]
-> You can add `--timeout` option to set the timeout for the recorder. The value is in seconds. If not set, the recorder will run until it's stopped.
 
 ### Resources to record
 
