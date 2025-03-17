@@ -57,5 +57,5 @@ resourceSyncEnabled: false
 # Note, this is still a beta feature.
 replayEnabled: false
 
-# The path to a directory where the record files are stored.
+# The path to a file where the record files are stored.
 recordFilePath: "/record.jsonl"

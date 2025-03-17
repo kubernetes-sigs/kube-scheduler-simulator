@@ -71,7 +71,7 @@ type SimulatorConfiguration struct {
 	// replay events recorded in a file or not.
 	ReplayerEnabled bool `json:"replayEnabled,omitempty"`
 
-	// The path to a directory where the record files are stored.
+	// The path to a file where the record files are stored.
 	RecordFilePath string `json:"recordFilePath,omitempty"`
 
 	// This variable indicates whether an external scheduler
