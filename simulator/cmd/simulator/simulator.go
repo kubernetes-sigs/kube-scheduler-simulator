@@ -57,14 +57,8 @@ func startSimulator() error {
 	cachedDiscoveryClient := memory.NewMemCacheClient(discoverClient)
 	restMapper := restmapper.NewDeferredDiscoveryRESTMapper(cachedDiscoveryClient)
 
-	importClusterResourceClient := &clientset.Clientset{}
 	var importClusterDynamicClient dynamic.Interface
 	if cfg.ExternalImportEnabled || cfg.ResourceSyncEnabled {
-		importClusterResourceClient, err = clientset.NewForConfig(cfg.ExternalKubeClientCfg)
-		if err != nil {
-			return xerrors.Errorf("creates a new Clientset for the ExternalKubeClientCfg: %w", err)
-		}
-
 		importClusterDynamicClient, err = dynamic.NewForConfig(cfg.ExternalKubeClientCfg)
 		if err != nil {
 			return xerrors.Errorf("creates a new dynamic Clientset for the ExternalKubeClientCfg: %w", err)
@@ -98,7 +92,7 @@ func startSimulator() error {
 	replayerOptions := replayer.Options{RecordFile: cfg.RecordFilePath}
 	resourceApplierOptions := resourceapplier.Options{}
 
-	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, cfg.ReplayerEnabled, importClusterResourceClient, importClusterDynamicClient, cfg.Port, resourceApplierOptions, replayerOptions)
+	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, cfg.ReplayerEnabled, importClusterDynamicClient, cfg.Port, resourceApplierOptions, replayerOptions)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
