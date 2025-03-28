@@ -156,7 +156,7 @@ func (s *Service) record(ctx context.Context) {
 
 		case <-ctx.Done():
 			// flush the buffer
-			for len(records) > 0 {
+			for len(s.recordCh) > 0 {
 				r := <-s.recordCh
 				records = append(records, r)
 			}
