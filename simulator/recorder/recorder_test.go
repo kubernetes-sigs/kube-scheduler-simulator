@@ -24,6 +24,7 @@ import (
 	appsv1 "k8s.io/kubernetes/pkg/apis/apps/v1"
 	schedulingv1 "k8s.io/kubernetes/pkg/apis/scheduling/v1"
 	storagev1 "k8s.io/kubernetes/pkg/apis/storage/v1"
+	"k8s.io/utils/ptr"
 )
 
 func TestRecorder(t *testing.T) {
@@ -256,7 +257,7 @@ func TestRecorder(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			service := New(client, Options{RecordFile: filePath})
+			service := New(client, Options{RecordFile: filePath, PollInterval: ptr.To(100 * time.Millisecond)})
 			err := service.Run(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.Record() error = %v, wantErr %v", err, tt.wantErr)

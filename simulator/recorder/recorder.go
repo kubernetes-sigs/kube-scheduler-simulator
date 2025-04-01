@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"sync"
 	"time"
 
 	"golang.org/x/xerrors"
@@ -24,14 +25,15 @@ var (
 	Delete Event = "Delete"
 )
 
-const defaultRecordBatchCapacity = 1000
+const defaultPollInterval = 5 * time.Second
 
 type Service struct {
-	client              dynamic.Interface
-	gvrs                []schema.GroupVersionResource
-	path                string
-	recordCh            chan Record
-	recordBatchCapacity int
+	client       dynamic.Interface
+	gvrs         []schema.GroupVersionResource
+	path         string
+	records      []Record
+	recordsMutex sync.Mutex
+	pollInterval time.Duration
 }
 
 type Record struct {
@@ -51,9 +53,9 @@ var DefaultGVRs = []schema.GroupVersionResource{
 }
 
 type Options struct {
-	GVRs                []schema.GroupVersionResource
-	RecordFile          string
-	RecordBatchCapacity *int
+	GVRs         []schema.GroupVersionResource
+	RecordFile   string
+	PollInterval *time.Duration
 }
 
 func New(client dynamic.Interface, options Options) *Service {
@@ -62,17 +64,18 @@ func New(client dynamic.Interface, options Options) *Service {
 		gvrs = options.GVRs
 	}
 
-	recordBatchCapacity := defaultRecordBatchCapacity
-	if options.RecordBatchCapacity != nil {
-		recordBatchCapacity = *options.RecordBatchCapacity
+	pollInterval := defaultPollInterval
+	if options.PollInterval != nil {
+		pollInterval = *options.PollInterval
 	}
 
 	return &Service{
-		client:              client,
-		gvrs:                gvrs,
-		path:                options.RecordFile,
-		recordCh:            make(chan Record, recordBatchCapacity),
-		recordBatchCapacity: recordBatchCapacity,
+		client:       client,
+		gvrs:         gvrs,
+		path:         options.RecordFile,
+		records:      make([]Record, 0),
+		recordsMutex: sync.Mutex{},
+		pollInterval: pollInterval,
 	}
 }
 
@@ -130,47 +133,47 @@ func (s *Service) recordEvent(obj interface{}, e Event) {
 		Resource: *unstructObj,
 	}
 
-	s.recordCh <- r
+	s.recordsMutex.Lock()
+	s.records = append(s.records, r)
+	s.recordsMutex.Unlock()
 }
 
 func (s *Service) record(ctx context.Context, file *os.File) {
 	defer file.Close()
 
-	records := make([]Record, 0, s.recordBatchCapacity)
-	flushBuffer := func() {
-		if err := appendToFile(file, records); err != nil {
-			klog.Errorf("failed to append record to file: %v", err)
-		}
-		records = make([]Record, 0, s.recordBatchCapacity)
-	}
+	ticker := time.NewTicker(s.pollInterval)
+	defer ticker.Stop()
 
 	for {
 		select {
-		case r := <-s.recordCh:
-			records = append(records, r)
-			if len(records) >= s.recordBatchCapacity {
-				flushBuffer()
-			}
-
 		case <-ctx.Done():
-			// flush the buffer
-			for len(s.recordCh) > 0 {
-				r := <-s.recordCh
-				records = append(records, r)
+			if err := s.flushRecords(file); err != nil {
+				klog.Errorf("failed to flush records: %v", err)
 			}
-
-			if len(records) > 0 {
-				flushBuffer()
-			}
-
 			return
-		}
-
-		// if there is nothing to do, flush the buffer
-		if len(s.recordCh) == 0 && len(records) > 0 {
-			flushBuffer()
+		case <-ticker.C:
+			if err := s.flushRecords(file); err != nil {
+				klog.Errorf("failed to flush records: %v", err)
+			}
 		}
 	}
+}
+
+func (s *Service) flushRecords(file *os.File) error {
+	if len(s.records) == 0 {
+		return nil
+	}
+
+	s.recordsMutex.Lock()
+	records := s.records
+	s.records = make([]Record, 0)
+	s.recordsMutex.Unlock()
+
+	if err := appendToFile(file, records); err != nil {
+		return xerrors.Errorf("failed to append record to file: %w", err)
+	}
+
+	return nil
 }
 
 func appendToFile(file *os.File, records []Record) error {
