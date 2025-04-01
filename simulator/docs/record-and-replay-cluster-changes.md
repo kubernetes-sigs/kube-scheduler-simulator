@@ -28,7 +28,7 @@ To record changes from your real cluster, you need to follow these steps:
 
 > [!NOTE]
 > You can add `--timeout` option to set the timeout for the recorder. The value is in seconds. If not set, the recorder will run until it's stopped.  
-> You can add `--kubeconfig` option to set the kubeconfig file to use. If not set, the recorder will use the default kubeconfig file.
+> You can add `--kubeconfig` option to set the kubeconfig file to use. If not set, the recorder will use the default kubeconfig file (~/.kube/config).
 
 > [!WARNING]
 > When a file already exists at the value of `--path`, it will be overwritten.

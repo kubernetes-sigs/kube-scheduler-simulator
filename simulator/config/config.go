@@ -331,11 +331,12 @@ func GetKubeClientConfig() (*rest.Config, error) {
 }
 
 func hasTwoOrMoreTrue(values ...bool) bool {
-	count := 0
+	trueExist := false
 	for _, v := range values {
-		if v {
-			count++
+		if trueExist {
+			return true
 		}
+		trueExist = v
 	}
-	return count >= 2
+	return false
 }

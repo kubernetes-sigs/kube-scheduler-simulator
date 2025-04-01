@@ -82,12 +82,9 @@ func (s *Service) Run(ctx context.Context) error {
 	if err != nil {
 		return xerrors.Errorf("failed to create record file: %w", err)
 	}
-	err = f.Close()
-	if err != nil {
-		return xerrors.Errorf("failed to close record file: %w", err)
-	}
+	defer f.Close()
 
-	go s.record(ctx)
+	go s.record(ctx, f)
 
 	infFact := dynamicinformer.NewFilteredDynamicSharedInformerFactory(s.client, 0, metav1.NamespaceAll, nil)
 	for _, gvr := range s.gvrs {
@@ -137,10 +134,10 @@ func (s *Service) recordEvent(obj interface{}, e Event) {
 	s.recordCh <- r
 }
 
-func (s *Service) record(ctx context.Context) {
+func (s *Service) record(ctx context.Context, file *os.File) {
 	records := make([]Record, 0, s.recordBatchCapacity)
 	flushBuffer := func() {
-		if err := appendToFile(s.path, records); err != nil {
+		if err := appendToFile(file, records); err != nil {
 			klog.Errorf("failed to append record to file: %v", err)
 		}
 		records = make([]Record, 0, s.recordBatchCapacity)
@@ -175,13 +172,7 @@ func (s *Service) record(ctx context.Context) {
 	}
 }
 
-func appendToFile(filePath string, records []Record) error {
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o644)
-	if err != nil {
-		return xerrors.Errorf("failed to create record file: %w", err)
-	}
-	defer file.Close()
-
+func appendToFile(file *os.File, records []Record) error {
 	content := make([]byte, 0)
 	for _, record := range records {
 		b, err := json.Marshal(&record)

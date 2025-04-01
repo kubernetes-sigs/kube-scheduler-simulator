@@ -44,13 +44,11 @@ func startRecorder() error {
 	recorderOptions := recorder.Options{RecordFile: recordFile}
 	recorder := recorder.New(client, recorderOptions)
 
-	ctx, cancel1 := context.WithCancel(context.Background())
-	defer cancel1()
+	ctx, cancel := context.WithCancel(context.Background())
 	if timeout > 0 {
-		var cancel2 context.CancelFunc
-		ctx, cancel2 = context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
-		defer cancel2()
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	}
+	defer cancel()
 
 	if err := recorder.Run(ctx); err != nil {
 		return xerrors.Errorf("run recorder: %w", err)
@@ -68,22 +66,19 @@ func startRecorder() error {
 }
 
 func parseOptions() error {
-	flag.StringVar(&recordFile, "path", "", "path to store the recorded resources")
-	flag.StringVar(&kubeConfig, "kubeconfig", "", "path to kubeconfig file")
-	flag.IntVar(&timeout, "timeout", 0, "timeout in seconds for the simulator to run")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return xerrors.Errorf("could not get user home directory: %w", err)
+	}
+	kubeConfigdefaultPath := filepath.Join(home, ".kube", "config")
 
+	flag.StringVar(&recordFile, "path", "", "path to store the recorded resources")
+	flag.StringVar(&kubeConfig, "kubeconfig", kubeConfigdefaultPath, "path to kubeconfig file")
+	flag.IntVar(&timeout, "timeout", 0, "timeout in seconds for the simulator to run")
 	flag.Parse()
 
 	if recordFile == "" {
 		return xerrors.New("path flag is required")
-	}
-
-	if kubeConfig == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return xerrors.Errorf("could not get user home directory: %w", err)
-		}
-		kubeConfig = filepath.Join(home, ".kube", "config")
 	}
 
 	return nil
