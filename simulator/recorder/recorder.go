@@ -82,7 +82,6 @@ func (s *Service) Run(ctx context.Context) error {
 	if err != nil {
 		return xerrors.Errorf("failed to create record file: %w", err)
 	}
-	defer f.Close()
 
 	go s.record(ctx, f)
 
@@ -135,6 +134,8 @@ func (s *Service) recordEvent(obj interface{}, e Event) {
 }
 
 func (s *Service) record(ctx context.Context, file *os.File) {
+	defer file.Close()
+
 	records := make([]Record, 0, s.recordBatchCapacity)
 	flushBuffer := func() {
 		if err := appendToFile(file, records); err != nil {
