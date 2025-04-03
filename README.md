@@ -91,6 +91,7 @@ you can refer to the [documentation](./simulator/docs/simulator-server-config.md
 
 See the following docs to know more about simulator:
 - [import-cluster-resources.md](./simulator/docs/import-cluster-resources.md): describes how you can import resources in your cluster to the simulator so that you can simulate scheduling based on your cluster's situation.
+- [record-and-replay-cluster-changes.md](./simulator/docs/record-and-replay-cluster-changes.md): describes how you can record and replay the resources changes in the simulator.
 - [how-it-works.md](simulator/docs/how-it-works.md): describes about how the simulator works.
 - [kube-apiserver.md](simulator/docs/kube-apiserver.md): describe about kube-apiserver in simulator. (how you can configure and access)
 - [api.md](simulator/docs/api.md): describes about HTTP server the simulator has. (mainly for the webUI)
