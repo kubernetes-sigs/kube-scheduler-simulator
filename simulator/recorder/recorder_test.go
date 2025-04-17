@@ -257,7 +257,7 @@ func TestRecorder(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			service := New(client, Options{RecordFile: filePath, PollInterval: ptr.To(100 * time.Millisecond)})
+			service := New(client, Options{RecordFile: filePath, FlushInterval: ptr.To(100 * time.Millisecond)})
 			err := service.Run(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.Record() error = %v, wantErr %v", err, tt.wantErr)

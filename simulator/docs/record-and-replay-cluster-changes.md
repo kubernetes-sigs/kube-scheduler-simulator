@@ -27,7 +27,7 @@ To record changes from your real cluster, you need to follow these steps:
 2. Start the recorder by `sched-recorder --path /path/to/file-to-store-recorded-changes`.
 
 > [!NOTE]
-> You can add `--timeout` option to set the timeout for the recorder. The value is in seconds. If not set, the recorder will run until it's stopped.  
+> You can add `--duration` option to set the duration for the recorder to run. The value is in seconds. If not set, the recorder will run until it's stopped.  
 > You can add `--kubeconfig` option to set the kubeconfig file to use. If not set, the recorder will use the default kubeconfig file (~/.kube/config).
 
 > [!WARNING]
@@ -52,6 +52,9 @@ recorderOptions := recorder.Options{RecordFile: recordFile,
 	GVRs: []schema.GroupVersionResource{
 		{Group: "your-group", Version: "v1", Resource: "your-custom-resources"},
 	},
+	// You can also specify the interval to flush the changes to the file.
+	// The default value is 5 seconds.
+	FlushInterval: ptr.To(time.Second * 1),
 }
 ```
 

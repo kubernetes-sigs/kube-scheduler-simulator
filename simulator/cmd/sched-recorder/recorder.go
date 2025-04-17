@@ -20,7 +20,7 @@ import (
 var (
 	recordFile string
 	kubeConfig string
-	timeout    int
+	duration   int
 )
 
 func main() {
@@ -45,8 +45,8 @@ func startRecorder() error {
 	recorder := recorder.New(client, recorderOptions)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	if timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	if duration > 0 {
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(duration)*time.Second)
 	}
 	defer cancel()
 
@@ -54,12 +54,12 @@ func startRecorder() error {
 		return xerrors.Errorf("run recorder: %w", err)
 	}
 
-	// Block until signal is received
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-quit:
 	case <-ctx.Done():
+		klog.Info("recording is finishing because the specified duration has elapsed")
 	}
 
 	return nil
@@ -74,11 +74,15 @@ func parseOptions() error {
 
 	flag.StringVar(&recordFile, "path", "", "path to store the recorded resources")
 	flag.StringVar(&kubeConfig, "kubeconfig", kubeConfigdefaultPath, "path to kubeconfig file")
-	flag.IntVar(&timeout, "timeout", 0, "timeout in seconds for the simulator to run")
+	flag.IntVar(&duration, "duration", 0, "duration in seconds for the simulator to run")
 	flag.Parse()
 
 	if recordFile == "" {
 		return xerrors.New("path flag is required")
+	}
+
+	if duration < 0 {
+		return xerrors.New("duration must be a non-negative value")
 	}
 
 	return nil

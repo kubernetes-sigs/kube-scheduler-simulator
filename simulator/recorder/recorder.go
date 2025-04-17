@@ -53,9 +53,9 @@ var DefaultGVRs = []schema.GroupVersionResource{
 }
 
 type Options struct {
-	GVRs         []schema.GroupVersionResource
-	RecordFile   string
-	PollInterval *time.Duration
+	GVRs          []schema.GroupVersionResource
+	RecordFile    string
+	FlushInterval *time.Duration
 }
 
 func New(client dynamic.Interface, options Options) *Service {
@@ -65,8 +65,8 @@ func New(client dynamic.Interface, options Options) *Service {
 	}
 
 	pollInterval := defaultPollInterval
-	if options.PollInterval != nil {
-		pollInterval = *options.PollInterval
+	if options.FlushInterval != nil {
+		pollInterval = *options.FlushInterval
 	}
 
 	return &Service{
