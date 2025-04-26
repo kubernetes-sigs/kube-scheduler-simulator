@@ -1,0 +1,9 @@
+resources:
+- manifests.yaml
+- service.yaml
+patches:
+- path: secret_patch.yaml
+  target:
+    kind: Deployment
+configurations:
+- kustomizeconfig.yaml

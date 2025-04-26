@@ -43,6 +43,319 @@ spec:
                 description: Foo is an example field of Scenario. Edit scenario_types.go
                   to remove/update
                 type: string
+              operations:
+                description: Operations is a list of ScenarioOperation that define
+                  the actions to perform.
+                items:
+                  properties:
+                    createOperation:
+                      description: Create is the operation to create a new resource.
+                      properties:
+                        createOptions:
+                          description: CreateOptions may be provided when creating
+                            an API object.
+                          properties:
+                            apiVersion:
+                              description: |-
+                                APIVersion defines the versioned schema of this representation of an object.
+                                Servers should convert recognized schemas to the latest internal value, and
+                                may reject unrecognized values.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+                              type: string
+                            dryRun:
+                              description: |-
+                                When present, indicates that modifications should not be
+                                persisted. An invalid or unrecognized dryRun directive will
+                                result in an error response and no further processing of the
+                                request. Valid values are:
+                                - All: all dry run stages will be processed
+                              items:
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: atomic
+                            fieldManager:
+                              description: |-
+                                fieldManager is a name associated with the actor or entity
+                                that is making these changes. The value must be less than or
+                                128 characters long, and only contain printable characters,
+                                as defined by https://golang.org/pkg/unicode/#IsPrint.
+                              type: string
+                            fieldValidation:
+                              description: |-
+                                fieldValidation instructs the server on how to handle
+                                objects in the request (POST/PUT/PATCH) containing unknown
+                                or duplicate fields. Valid values are:
+                                - Ignore: This will ignore any unknown fields that are silently
+                                dropped from the object, and will ignore all but the last duplicate
+                                field that the decoder encounters. This is the default behavior
+                                prior to v1.23.
+                                - Warn: This will send a warning via the standard warning response
+                                header for each unknown field that is dropped from the object, and
+                                for each duplicate field that is encountered. The request will
+                                still succeed if there are no other errors, and will only persist
+                                the last of any duplicate fields. This is the default in v1.23+
+                                - Strict: This will fail the request with a BadRequest error if
+                                any unknown fields would be dropped from the object, or if any
+                                duplicate fields are present. The error returned from the server
+                                will contain all unknown and duplicate fields encountered.
+                              type: string
+                            kind:
+                              description: |-
+                                Kind is a string value representing the REST resource this object represents.
+                                Servers may infer this from the endpoint the client submits requests to.
+                                Cannot be updated.
+                                In CamelCase.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                          type: object
+                        object:
+                          description: Object is the Object to be created.
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                      required:
+                      - object
+                      type: object
+                    deleteOperation:
+                      description: Delete indicates the operation to delete a resource.
+                      properties:
+                        deleteOptions:
+                          description: DeleteOptions may be provided when deleting
+                            an API object.
+                          properties:
+                            apiVersion:
+                              description: |-
+                                APIVersion defines the versioned schema of this representation of an object.
+                                Servers should convert recognized schemas to the latest internal value, and
+                                may reject unrecognized values.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+                              type: string
+                            dryRun:
+                              description: |-
+                                When present, indicates that modifications should not be
+                                persisted. An invalid or unrecognized dryRun directive will
+                                result in an error response and no further processing of the
+                                request. Valid values are:
+                                - All: all dry run stages will be processed
+                              items:
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: atomic
+                            gracePeriodSeconds:
+                              description: |-
+                                The duration in seconds before the object should be deleted. Value must be non-negative integer.
+                                The value zero indicates delete immediately. If this value is nil, the default grace period for the
+                                specified type will be used.
+                                Defaults to a per object value if not specified. zero means delete immediately.
+                              format: int64
+                              type: integer
+                            ignoreStoreReadErrorWithClusterBreakingPotential:
+                              description: |-
+                                if set to true, it will trigger an unsafe deletion of the resource in
+                                case the normal deletion flow fails with a corrupt object error.
+                                A resource is considered corrupt if it can not be retrieved from
+                                the underlying storage successfully because of a) its data can
+                                not be transformed e.g. decryption failure, or b) it fails
+                                to decode into an object.
+                                NOTE: unsafe deletion ignores finalizer constraints, skips
+                                precondition checks, and removes the object from the storage.
+                                WARNING: This may potentially break the cluster if the workload
+                                associated with the resource being unsafe-deleted relies on normal
+                                deletion flow. Use only if you REALLY know what you are doing.
+                                The default value is false, and the user must opt in to enable it
+                              type: boolean
+                            kind:
+                              description: |-
+                                Kind is a string value representing the REST resource this object represents.
+                                Servers may infer this from the endpoint the client submits requests to.
+                                Cannot be updated.
+                                In CamelCase.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                            orphanDependents:
+                              description: |-
+                                Deprecated: please use the PropagationPolicy, this field will be deprecated in 1.7.
+                                Should the dependent objects be orphaned. If true/false, the "orphan"
+                                finalizer will be added to/removed from the object's finalizers list.
+                                Either this field or PropagationPolicy may be set, but not both.
+                              type: boolean
+                            preconditions:
+                              description: |-
+                                Must be fulfilled before a deletion is carried out. If not possible, a 409 Conflict status will be
+                                returned.
+                              properties:
+                                resourceVersion:
+                                  description: Specifies the target ResourceVersion
+                                  type: string
+                                uid:
+                                  description: Specifies the target UID.
+                                  type: string
+                              type: object
+                            propagationPolicy:
+                              description: |-
+                                Whether and how garbage collection will be performed.
+                                Either this field or OrphanDependents may be set, but not both.
+                                The default policy is decided by the existing finalizer set in the
+                                metadata.finalizers and the resource-specific default policy.
+                                Acceptable values are: 'Orphan' - orphan the dependents; 'Background' -
+                                allow the garbage collector to delete the dependents in the background;
+                                'Foreground' - a cascading policy that deletes all dependents in the
+                                foreground.
+                              type: string
+                          type: object
+                        objectMeta:
+                          type: object
+                        typeMeta:
+                          description: |-
+                            TypeMeta describes an individual object in an API response or request
+                            with strings representing the type of the object and its API schema version.
+                            Structures that are versioned or persisted should inline TypeMeta.
+                          properties:
+                            apiVersion:
+                              description: |-
+                                APIVersion defines the versioned schema of this representation of an object.
+                                Servers should convert recognized schemas to the latest internal value, and
+                                may reject unrecognized values.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+                              type: string
+                            kind:
+                              description: |-
+                                Kind is a string value representing the REST resource this object represents.
+                                Servers may infer this from the endpoint the client submits requests to.
+                                Cannot be updated.
+                                In CamelCase.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                          type: object
+                      required:
+                      - objectMeta
+                      - typeMeta
+                      type: object
+                    doneOperation:
+                      description: |-
+                        Done indicates the operation to mark the scenario as Succeeded.
+                        When finish the step DoneOperation belongs, this Scenario changes its status to Succeeded.
+                      type: object
+                    id:
+                      description: ID for this operation. Normally, the system sets
+                        this field for you.
+                      type: string
+                    patchOperation:
+                      description: Patch is the operation to patch a resource.
+                      properties:
+                        objectMeta:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        patch:
+                          description: Patch is the patch for target.
+                          type: string
+                        patchOptions:
+                          description: |-
+                            PatchOptions may be provided when patching an API object.
+                            PatchOptions is meant to be a superset of UpdateOptions.
+                          properties:
+                            apiVersion:
+                              description: |-
+                                APIVersion defines the versioned schema of this representation of an object.
+                                Servers should convert recognized schemas to the latest internal value, and
+                                may reject unrecognized values.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+                              type: string
+                            dryRun:
+                              description: |-
+                                When present, indicates that modifications should not be
+                                persisted. An invalid or unrecognized dryRun directive will
+                                result in an error response and no further processing of the
+                                request. Valid values are:
+                                - All: all dry run stages will be processed
+                              items:
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: atomic
+                            fieldManager:
+                              description: |-
+                                fieldManager is a name associated with the actor or entity
+                                that is making these changes. The value must be less than or
+                                128 characters long, and only contain printable characters,
+                                as defined by https://golang.org/pkg/unicode/#IsPrint. This
+                                field is required for apply requests
+                                (application/apply-patch) but optional for non-apply patch
+                                types (JsonPatch, MergePatch, StrategicMergePatch).
+                              type: string
+                            fieldValidation:
+                              description: |-
+                                fieldValidation instructs the server on how to handle
+                                objects in the request (POST/PUT/PATCH) containing unknown
+                                or duplicate fields. Valid values are:
+                                - Ignore: This will ignore any unknown fields that are silently
+                                dropped from the object, and will ignore all but the last duplicate
+                                field that the decoder encounters. This is the default behavior
+                                prior to v1.23.
+                                - Warn: This will send a warning via the standard warning response
+                                header for each unknown field that is dropped from the object, and
+                                for each duplicate field that is encountered. The request will
+                                still succeed if there are no other errors, and will only persist
+                                the last of any duplicate fields. This is the default in v1.23+
+                                - Strict: This will fail the request with a BadRequest error if
+                                any unknown fields would be dropped from the object, or if any
+                                duplicate fields are present. The error returned from the server
+                                will contain all unknown and duplicate fields encountered.
+                              type: string
+                            force:
+                              description: |-
+                                Force is going to "force" Apply requests. It means user will
+                                re-acquire conflicting fields owned by other people. Force
+                                flag must be unset for non-apply patch requests.
+                              type: boolean
+                            kind:
+                              description: |-
+                                Kind is a string value representing the REST resource this object represents.
+                                Servers may infer this from the endpoint the client submits requests to.
+                                Cannot be updated.
+                                In CamelCase.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                          type: object
+                        patchType:
+                          description: PatchType
+                          type: string
+                        typeMeta:
+                          description: |-
+                            TypeMeta describes an individual object in an API response or request
+                            with strings representing the type of the object and its API schema version.
+                            Structures that are versioned or persisted should inline TypeMeta.
+                          properties:
+                            apiVersion:
+                              description: |-
+                                APIVersion defines the versioned schema of this representation of an object.
+                                Servers should convert recognized schemas to the latest internal value, and
+                                may reject unrecognized values.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+                              type: string
+                            kind:
+                              description: |-
+                                Kind is a string value representing the REST resource this object represents.
+                                Servers may infer this from the endpoint the client submits requests to.
+                                Cannot be updated.
+                                In CamelCase.
+                                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                              type: string
+                          type: object
+                      required:
+                      - objectMeta
+                      - patch
+                      - patchType
+                      - typeMeta
+                      type: object
+                    step:
+                      description: MajorStep indicates when the operation should be
+                        done.
+                      format: int32
+                      type: integer
+                  required:
+                  - id
+                  - step
+                  type: object
+                type: array
             type: object
           status:
             description: ScenarioStatus defines the observed state of Scenario.
