@@ -20,6 +20,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/config"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/replayer"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourceapplier"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/server/di"
@@ -88,7 +89,10 @@ func startSimulator() error {
 		return xerrors.Errorf("kubeapi-server is not ready: %w", err)
 	}
 
-	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, importClusterDynamicClient, cfg.Port, resourceapplier.Options{})
+	replayerOptions := replayer.Options{RecordFile: cfg.RecordFilePath}
+	resourceApplierOptions := resourceapplier.Options{}
+
+	dic, err := di.NewDIContainer(client, dynamicClient, restMapper, etcdclient, restCfg, cfg.InitialSchedulerCfg, cfg.ExternalImportEnabled, cfg.ResourceSyncEnabled, cfg.ReplayerEnabled, importClusterDynamicClient, cfg.Port, resourceApplierOptions, replayerOptions)
 	if err != nil {
 		return xerrors.Errorf("create di container: %w", err)
 	}
@@ -101,6 +105,13 @@ func startSimulator() error {
 		defer timeoutCancel()
 		if err := dic.OneshotClusterResourceImporter().ImportClusterResources(timeoutCtx, cfg.ResourceImportLabelSelector); err != nil {
 			return xerrors.Errorf("import from the target cluster: %w", err)
+		}
+	}
+
+	// If ReplayEnabled is enabled, the simulator replays the recorded resources.
+	if cfg.ReplayerEnabled {
+		if err := dic.ReplayService().Replay(ctx); err != nil {
+			return xerrors.Errorf("replay resources: %w", err)
 		}
 	}
 
