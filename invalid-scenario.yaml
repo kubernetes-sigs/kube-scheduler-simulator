@@ -1,0 +1,26 @@
+apiVersion: simulation.kube-scheduler-simulator.x-k8s.io/v1alpha1
+kind: Scenario
+metadata:
+  name: invalid-scenario
+spec:
+  foo: "invalid test scenario"
+  operations:
+    - id: "op1"
+      step: 1
+      createOperation:
+        object:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: invalid-configmap
+          data:
+            key: "value"
+      patchOperation:
+        typeMeta:
+          apiVersion: v1
+          kind: ConfigMap
+        objectMeta:
+          name: invalid-configmap
+        patch: '{"data":{"key":"new-value"}}'
+        patchType: "StrategicMergePatch"
+
