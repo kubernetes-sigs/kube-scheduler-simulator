@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: scenario
+    app.kubernetes.io/managed-by: kustomize
+  name: scenario-webhook-service
+  namespace: scenario-system
+  annotations:
+    cert-manager.io/inject-ca-from: scenario-system/scenario-webhook-tls
+spec:
+  type: ExternalName
+  externalName: host.docker.internal
+  ports:
+    - port: 9443
+      protocol: TCP
+      targetPort: 9443
