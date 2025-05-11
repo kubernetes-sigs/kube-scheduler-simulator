@@ -70,7 +70,7 @@ func (v *ScenarioCustomValidator) ValidateCreate(ctx context.Context, obj runtim
 	for _, op := range scenario.Spec.Operations {
 		err := op.ValidateCreate()
 		if err != nil {
-			return nil, xerrors.Errorf("error")
+			return nil, xerrors.Errorf("scenario webhook ValidateCreate: %w", err)
 		}
 	}
 
@@ -88,7 +88,7 @@ func (v *ScenarioCustomValidator) ValidateUpdate(ctx context.Context, oldObj, ne
 	for _, op := range scenario.Spec.Operations {
 		err := op.ValidateUpdate(oldObj)
 		if err != nil {
-			return nil, xerrors.Errorf("error")
+			return nil, xerrors.Errorf("scenario webhook ValidateUpdate: %w", err)
 		}
 	}
 

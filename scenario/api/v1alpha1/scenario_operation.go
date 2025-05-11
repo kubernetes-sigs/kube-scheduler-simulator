@@ -90,7 +90,7 @@ func (s *ScenarioOperation) validateOperations() error {
 		count++
 	}
 	if count != 1 {
-		return fmt.Errorf("ERROR!!")
+		return fmt.Errorf("validateOperation find some operations")
 	}
 	return nil
 }
