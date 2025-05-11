@@ -1,9 +1,0 @@
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: validating-webhook-configuration
-webhooks:
-- name: vscenario-v1alpha1.kb.io
-  clientConfig:
-    service:
-      port: 9443

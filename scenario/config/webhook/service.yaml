@@ -6,8 +6,6 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: scenario-webhook-service
   namespace: scenario-system
-  annotations:
-    cert-manager.io/inject-ca-from: scenario-system/scenario-webhook-tls
 spec:
   type: ExternalName
   externalName: host.docker.internal
