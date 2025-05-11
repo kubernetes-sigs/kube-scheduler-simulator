@@ -86,5 +86,5 @@ docker_down_local:
 	docker compose -f compose.yml -f compose.local.yml down --volumes
 
 .PHONY: docker_down_scenario
-docker_down_local:
+docker_down_scenario:
 	docker compose -f compose.yml -f compose.local.yml --profile scenario down --volumes

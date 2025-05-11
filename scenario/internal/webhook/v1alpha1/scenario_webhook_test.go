@@ -46,26 +46,47 @@ var _ = Describe("Scenario Webhook", func() {
 	})
 
 	Context("When creating or updating Scenario under Validating Webhook", func() {
-		// TODO (user): Add logic for validating webhooks
-		// Example:
-		// It("Should deny creation if a required field is missing", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = ""
-		//     Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
-		// })
-		//
-		// It("Should admit creation if all required fields are present", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = "valid_value"
-		//     Expect(validator.ValidateCreate(ctx, obj)).To(BeNil())
-		// })
-		//
-		// It("Should validate updates correctly", func() {
-		//     By("simulating a valid update scenario")
-		//     oldObj.SomeRequiredField = "updated_value"
-		//     obj.SomeRequiredField = "updated_value"
-		//     Expect(validator.ValidateUpdate(ctx, oldObj, obj)).To(BeNil())
-		// })
+		It("Should deny creation if there are some operation fields", func() {
+			By("simulating an invalid creation scenario")
+			obj.Spec.Operations = []*simulationv1alpha1.ScenarioOperation{
+				{
+					Create: &simulationv1alpha1.CreateOperation{},
+					Delete: &simulationv1alpha1.DeleteOperation{},
+				},
+			}
+			Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
+		})
+
+		It("Should validate create correctly", func() {
+			By("simulating a valid creation scenario")
+			obj.Spec.Operations = []*simulationv1alpha1.ScenarioOperation{
+				{
+					Create: &simulationv1alpha1.CreateOperation{},
+				},
+			}
+			Expect(validator.ValidateCreate(ctx, obj)).To(BeNil())
+		})
+
+		It("Should deny update if there are some operation fields", func() {
+			By("simulating an invalid creation scenario")
+			obj.Spec.Operations = []*simulationv1alpha1.ScenarioOperation{
+				{
+					Create: &simulationv1alpha1.CreateOperation{},
+					Delete: &simulationv1alpha1.DeleteOperation{},
+				},
+			}
+			Expect(validator.ValidateUpdate(ctx, oldObj, obj)).Error().To(HaveOccurred())
+		})
+
+		It("Should validate updates correctly", func() {
+			By("simulating a valid update scenario")
+			obj.Spec.Operations = []*simulationv1alpha1.ScenarioOperation{
+				{
+					Create: &simulationv1alpha1.CreateOperation{},
+				},
+			}
+			Expect(validator.ValidateUpdate(ctx, oldObj, obj)).To(BeNil())
+		})
 	})
 
 })
