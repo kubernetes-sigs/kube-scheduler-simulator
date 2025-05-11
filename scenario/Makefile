@@ -43,8 +43,7 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	# $(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./api/..." output:crd:dir=config/crd/bases output:webhook:dir=config/webhook
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd paths="./api/..." output:crd:dir=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./api/..." output:crd:dir=config/crd/bases output:webhook:dir=config/webhook
 
 
 .PHONY: generate

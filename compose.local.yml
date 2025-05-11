@@ -50,7 +50,7 @@ services:
     networks:
       - simulator-internal-network
 
-  # ブートストラップ用 kubectl コンテナ
+  # Bootstrap container: prepares CRDs and generates webhook certificates
   bootstrap:
     image: bootstrap
     profiles: ["scenario"]

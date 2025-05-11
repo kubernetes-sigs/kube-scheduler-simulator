@@ -2,7 +2,6 @@
 set -euo pipefail
 trap 'echo "[Error] on line $LINENO"; exit 1' ERR
 
-### 定数定義 ###
 readonly KUBECONFIG_PATH=/config/kubeconfig.yaml
 readonly TMP_MANIFEST=/tmp/webhook
 readonly WORK_MANIFEST=/manifests/webhook
@@ -11,7 +10,6 @@ readonly CAFILE_DIR=$WORK_MANIFEST/ca
 readonly CERT_DIR=$WORK_MANIFEST/certs
 readonly NAMESPACE=scenario-system
 
-### マニフェスト同期（certs は残す） ###
 sync_manifests() {
   mkdir -p "$WORK_MANIFEST"
   find "$WORK_MANIFEST" -mindepth 1 -maxdepth 1 \
@@ -19,14 +17,12 @@ sync_manifests() {
   cp -a "$TMP_MANIFEST"/. "$WORK_MANIFEST"/
 }
 
-### API サーバ起動待ち ###
 wait_for_k8s() {
   echo ">>> Waiting for Kubernetes API server…"
   until kubectl get nodes &>/dev/null; do sleep 1; done
   echo ">>> API server is up!"
 }
 
-### CA 証明書生成 ###
 generate_ca() {
   mkdir -p "$CAFILE_DIR"
   cat >"$CAFILE_DIR/openssl-ca.cnf" <<'EOF'
@@ -51,7 +47,6 @@ EOF
     -extensions v3_ca
 }
 
-### サーバ証明書生成 ###
 generate_server_cert() {
   mkdir -p "$CERT_DIR"
   cat >"$CERT_DIR/openssl-server.cnf" <<EOF
@@ -91,7 +86,6 @@ EOF
   chmod 755 "$CERT_DIR"
 }
 
-### Secret 作成 & Webhook 適用 ###
 apply_webhook() {
   kubectl delete secret scenario-webhook-tls -n "$NAMESPACE" --ignore-not-found
   kubectl create secret tls scenario-webhook-tls \
@@ -106,7 +100,6 @@ apply_webhook() {
   kubectl apply -k "$WORK_MANIFEST"
 }
 
-### メイン処理 ###
 main() {
   sync_manifests
   export KUBECONFIG="$KUBECONFIG_PATH"
