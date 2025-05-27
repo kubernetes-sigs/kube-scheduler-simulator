@@ -15,6 +15,7 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler"
 
+	"k8s.io/apimachinery/pkg/api/validation"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
 
@@ -157,11 +158,22 @@ func updateResultHistory(p *corev1.Pod, m map[string]string) error {
 
 	results = append(results, m)
 
-	r, err := json.Marshal(results)
-	if err != nil {
-		return xerrors.Errorf("encode all results: %w", err)
-	}
-	metav1.SetMetaDataAnnotation(&p.ObjectMeta, ResultsHistoryAnnotation, string(r))
+	for {
+		r, err := json.Marshal(results)
+		if err != nil {
+			return xerrors.Errorf("encode all results: %w", err)
+		}
 
-	return nil
+		if len(r) <= validation.TotalAnnotationSizeLimitB {
+			metav1.SetMetaDataAnnotation(&p.ObjectMeta, ResultsHistoryAnnotation, string(r))
+			return nil
+		}
+
+		if len(results) == 0 {
+			return xerrors.Errorf("result history still exceeds annotation limit after trimming")
+		}
+		results = results[1:]
+	}
+
+	// unreachable
 }
