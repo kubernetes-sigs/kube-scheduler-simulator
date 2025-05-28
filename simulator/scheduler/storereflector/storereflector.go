@@ -9,13 +9,13 @@ import (
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	validation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler"
 
-	"k8s.io/apimachinery/pkg/api/validation"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/util"
 )
 
@@ -158,6 +158,8 @@ func updateResultHistory(p *corev1.Pod, m map[string]string) error {
 
 	results = append(results, m)
 
+	// If we exceed that annotation limit, we drop entries from the oldest side
+	// of the history slice until the payload fits.
 	for {
 		r, err := json.Marshal(results)
 		if err != nil {
