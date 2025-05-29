@@ -3,6 +3,7 @@ package storereflector
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -130,6 +131,27 @@ func Test_updateResultHistory(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
+			name: "success: trim oldest result history when exceeds annotation size limitation",
+			p: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ResultsHistoryAnnotation: fmt.Sprintf(`[{"result":"%s"}]`, strings.Repeat("a", 200000)),
+					},
+				},
+			},
+			m: map[string]string{
+				"result": strings.Repeat("b", 200000),
+			},
+			wantPod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ResultsHistoryAnnotation: fmt.Sprintf(`[{"result":"%s"}]`, strings.Repeat("b", 200000)),
+					},
+				},
+			},
+			wantErr: assert.NoError,
+		},
+		{
 			name: "fail: Pod has broken value on annotation",
 			p: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -141,6 +163,27 @@ func Test_updateResultHistory(t *testing.T) {
 			m: map[string]string{
 				"result1": "fuga2",
 				"result2": "hoge2",
+			},
+			wantErr: assert.Error,
+		},
+		{
+			name: "fail: single result history exceeds annotation size limitation",
+			p: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ResultsHistoryAnnotation: "[]",
+					},
+				},
+			},
+			m: map[string]string{
+				"result": strings.Repeat("a", 270000),
+			},
+			wantPod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ResultsHistoryAnnotation: "[]",
+					},
+				},
 			},
 			wantErr: assert.Error,
 		},
