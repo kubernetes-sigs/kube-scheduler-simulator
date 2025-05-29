@@ -158,24 +158,19 @@ func updateResultHistory(p *corev1.Pod, m map[string]string) error {
 
 	results = append(results, m)
 
-	// If we exceed that annotation limit, we drop entries from the oldest side
-	// of the history slice until the payload fits.
-	for {
+	// If we exceed that annotation size limitation, we should drop entries from the oldest side
+	// of the history slice until the payload fits, since the newer histories are likely more important.
+	for ; len(results) != 0; results = results[1:] {
 		r, err := json.Marshal(results)
 		if err != nil {
 			return xerrors.Errorf("encode all results: %w", err)
 		}
-
 		if len(r) <= validation.TotalAnnotationSizeLimitB {
 			metav1.SetMetaDataAnnotation(&p.ObjectMeta, ResultsHistoryAnnotation, string(r))
 			return nil
 		}
-
-		if len(results) == 0 {
-			return xerrors.Errorf("result history still exceeds annotation limit after trimming")
-		}
-		results = results[1:]
 	}
 
-	// unreachable
+	// Basically shouldn't happen unless a single history entry is bigger than TotalAnnotationSizeLimitB, which is very unlikely.
+	return xerrors.Errorf("result history still exceeds annotation limit even after removing several histories")
 }
