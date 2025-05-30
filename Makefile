@@ -53,6 +53,11 @@ docker_build_server:
 docker_build_scheduler:
 	docker $(BUILD) -f simulator/cmd/scheduler/Dockerfile -t simulator-scheduler simulator
 
+.PHONY: docker_build_scenario
+docker_build_scenario:
+	docker $(BUILD) -f scenario/Dockerfile -t scenario-controller scenario
+	docker $(BUILD) -f scenario/bootstrap/Dockerfile -t bootstrap scenario/bootstrap
+
 .PHONY: docker_build_front
 docker_build_front:
 	docker $(BUILD) -t simulator-frontend ./web/
@@ -65,6 +70,10 @@ docker_up:
 docker_up_local:
 	docker compose -f compose.yml -f compose.local.yml up -d
 
+.PHONY: docker_up_scenario
+docker_up_scenario:
+	docker compose -f compose.yml -f compose.local.yml --profile scenario up -d
+
 .PHONY: docker_build_and_up
 docker_build_and_up: docker_build docker_up_local
 
@@ -75,3 +84,7 @@ docker_down:
 .PHONY: docker_down_local
 docker_down_local:
 	docker compose -f compose.yml -f compose.local.yml down --volumes
+
+.PHONY: docker_down_scenario
+docker_down_scenario:
+	docker compose -f compose.yml -f compose.local.yml --profile scenario down --volumes
