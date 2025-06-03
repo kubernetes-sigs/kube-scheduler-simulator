@@ -151,6 +151,54 @@ func TestResourceApplier_createPods(t *testing.T) {
 			filtered: false,
 			wantErr:  false,
 		},
+		{
+			name: "create a Pod have succeeded status",
+			podToCreate: &corev1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Pod",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "succeeded-pod",
+					Namespace: "default",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "container-1",
+							Image: "image-1",
+						},
+					},
+				},
+				Status: corev1.PodStatus{
+					Phase: corev1.PodSucceeded,
+				},
+			},
+			podAfterCreate: &corev1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Pod",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "succeeded-pod",
+					Namespace: "default",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "container-1",
+							Image: "image-1",
+						},
+					},
+				},
+				Status: corev1.PodStatus{
+					Phase: corev1.PodSucceeded,
+				},
+			},
+			filter:   nil,
+			filtered: false,
+			wantErr:  false,
+		},
 	}
 
 	for _, tt := range tests {
