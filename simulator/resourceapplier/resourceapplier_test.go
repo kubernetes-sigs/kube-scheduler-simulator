@@ -385,6 +385,54 @@ func TestResourceApplier_updatePods(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "update an Pod have succeeded status",
+			originalPod: &corev1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Pod",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pod-1",
+					Namespace: "default",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "container-1",
+							Image: "image-1",
+						},
+					},
+				},
+			},
+			updatePod: func(pod *corev1.Pod) {
+				pod.Status = corev1.PodStatus{
+					Phase: corev1.PodSucceeded,
+				}
+			},
+			podAfterUpdate: &corev1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Pod",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pod-1",
+					Namespace: "default",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "container-1",
+							Image: "image-1",
+						},
+					},
+				},
+				Status: corev1.PodStatus{
+					Phase: corev1.PodSucceeded,
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -454,6 +502,29 @@ func TestResourceApplier_deletePods(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "pod-1",
 					Namespace: "default",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "container-1",
+							Image: "image-1",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "delete a Pod have finalizer",
+			pod: &corev1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Pod",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "pod-1",
+					Namespace:  "default",
+					Finalizers: []string{"sample-finalizer"},
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{

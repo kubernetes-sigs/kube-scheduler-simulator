@@ -127,7 +127,7 @@ func (s *Service) Create(ctx context.Context, resource *unstructured.Unstructure
 	}
 
 	if gvk.Kind == "Pod" {
-		return s.patchPodStatus(ctx, gvr, resource)
+		return s.PatchPodStatus(ctx, resource)
 	}
 	return nil
 }
@@ -321,7 +321,13 @@ func (s *Service) addMutateBeforeUpdating(gvr schema.GroupVersionResource, fn []
 	s.mutateBeforeUpdating[gvr] = append(s.mutateBeforeUpdating[gvr], fn...)
 }
 
-func (s *Service) patchPodStatus(ctx context.Context, gvr schema.GroupVersionResource, resource *unstructured.Unstructured) error {
+func (s *Service) PatchPodStatus(ctx context.Context, resource *unstructured.Unstructured) error {
+	gvk := resource.GroupVersionKind()
+	gvr, err := s.findGVRForGVK(gvk)
+	if err != nil {
+		return err
+	}
+
 	namespace := resource.GetNamespace()
 	newStatus := resource.Object["status"]
 	patchData := map[string]interface{}{
