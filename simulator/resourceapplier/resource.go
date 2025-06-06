@@ -76,6 +76,10 @@ func mutatePods(_ context.Context, resource *unstructured.Unstructured, _ *Clien
 	// If the pod has an owner, it may be deleted because resources such as ReplicaSet are not synced.
 	pod.OwnerReferences = nil
 
+	if len(pod.Finalizers) != 0 {
+		pod.Finalizers = make([]string, 0)
+	}
+
 	modifiedUnstructed, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&pod)
 	return &unstructured.Unstructured{Object: modifiedUnstructed}, err
 }
