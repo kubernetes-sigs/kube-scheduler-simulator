@@ -55,7 +55,7 @@ func TestHttpExtender_send(t *testing.T) {
 			},
 			prepareMockHTTPClientFn: func() HTTPClient {
 				return &MockHTTPClient{
-					DoFunc: func(req *http.Request) (*http.Response, error) {
+					DoFunc: func(_ *http.Request) (*http.Response, error) {
 						return &http.Response{
 							StatusCode: http.StatusOK,
 							Body:       io.NopCloser(strings.NewReader(`{"Error":"myerror"}`)),
@@ -91,7 +91,7 @@ func TestHttpExtender_send(t *testing.T) {
 			args: math.Inf(1),
 			prepareMockHTTPClientFn: func() HTTPClient {
 				return &MockHTTPClient{
-					DoFunc: func(req *http.Request) (*http.Response, error) {
+					DoFunc: func(_ *http.Request) (*http.Response, error) {
 						return nil, nil
 					},
 				}
@@ -124,7 +124,7 @@ func TestHttpExtender_send(t *testing.T) {
 			},
 			prepareMockHTTPClientFn: func() HTTPClient {
 				return &MockHTTPClient{
-					DoFunc: func(req *http.Request) (*http.Response, error) {
+					DoFunc: func(_ *http.Request) (*http.Response, error) {
 						return &http.Response{
 							Body: io.NopCloser(strings.NewReader(`{"Error":"myerror"}`)),
 						}, nil
@@ -159,7 +159,7 @@ func TestHttpExtender_send(t *testing.T) {
 			},
 			prepareMockHTTPClientFn: func() HTTPClient {
 				return &MockHTTPClient{
-					DoFunc: func(req *http.Request) (*http.Response, error) {
+					DoFunc: func(_ *http.Request) (*http.Response, error) {
 						return nil, xerrors.New("Do returns an error")
 					},
 				}
@@ -192,7 +192,7 @@ func TestHttpExtender_send(t *testing.T) {
 			},
 			prepareMockHTTPClientFn: func() HTTPClient {
 				return &MockHTTPClient{
-					DoFunc: func(req *http.Request) (*http.Response, error) {
+					DoFunc: func(_ *http.Request) (*http.Response, error) {
 						return &http.Response{
 							StatusCode: http.StatusInternalServerError,
 							Body:       io.NopCloser(strings.NewReader(`{"Error":"myerror"}`)),

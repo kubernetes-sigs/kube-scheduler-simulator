@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"golang.org/x/xerrors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -37,8 +38,14 @@ type Config struct {
 	// ExternalImportEnabled indicates whether the simulator will import resources from a target cluster once
 	// when it's started.
 	ExternalImportEnabled bool
-	// ExternalImportEnabled indicates whether the simulator will keep syncing resources from a target cluster.
+	// ResourceImportLabelSelector is the label selector used to determine which resources from the target cluster should be imported.
+	ResourceImportLabelSelector metav1.LabelSelector
+	// ResourceSyncEnabled indicates whether the simulator will keep syncing resources from a target cluster.
 	ResourceSyncEnabled bool
+	// ReplayerEnabled indicates whether the simulator will replay events recorded in a file.
+	ReplayerEnabled bool
+	// RecordFilePath is the path to the file where the simulator records events.
+	RecordFilePath string
 	// ExternalKubeClientCfg is KubeConfig to get resources from external cluster.
 	// This field should be set when ExternalImportEnabled == true or ResourceSyncEnabled == true.
 	ExternalKubeClientCfg *rest.Config
@@ -81,9 +88,11 @@ func NewConfig() (*Config, error) {
 
 	externalimportenabled := getExternalImportEnabled()
 	resourceSyncEnabled := getResourceSyncEnabled()
+	replayerEnabled := getReplayerEnabled()
+	recordFilePath := getRecordFilePath()
 	externalKubeClientCfg := &rest.Config{}
-	if externalimportenabled && resourceSyncEnabled {
-		return nil, xerrors.Errorf("externalImportEnabled and resourceSyncEnabled cannot be used simultaneously.")
+	if hasTwoOrMoreTrue(externalimportenabled, resourceSyncEnabled, replayerEnabled) {
+		return nil, xerrors.Errorf("externalImportEnabled, resourceSyncEnabled and replayerEnabled cannot be used simultaneously.")
 	}
 	if externalimportenabled || resourceSyncEnabled {
 		externalKubeClientCfg, err = clientcmd.BuildConfigFromFlags("", configYaml.KubeConfig)
@@ -98,14 +107,17 @@ func NewConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port:                  port,
-		KubeAPIServerURL:      apiurl,
-		EtcdURL:               etcdurl,
-		CorsAllowedOriginList: corsAllowedOriginList,
-		InitialSchedulerCfg:   initialschedulerCfg,
-		ExternalImportEnabled: externalimportenabled,
-		ExternalKubeClientCfg: externalKubeClientCfg,
-		ResourceSyncEnabled:   resourceSyncEnabled,
+		Port:                        port,
+		KubeAPIServerURL:            apiurl,
+		EtcdURL:                     etcdurl,
+		CorsAllowedOriginList:       corsAllowedOriginList,
+		InitialSchedulerCfg:         initialschedulerCfg,
+		ExternalImportEnabled:       externalimportenabled,
+		ResourceImportLabelSelector: configYaml.ResourceImportLabelSelector,
+		ExternalKubeClientCfg:       externalKubeClientCfg,
+		ResourceSyncEnabled:         resourceSyncEnabled,
+		ReplayerEnabled:             replayerEnabled,
+		RecordFilePath:              recordFilePath,
 	}, nil
 }
 
@@ -268,6 +280,28 @@ func getResourceSyncEnabled() bool {
 	return resourceSyncEnabled
 }
 
+// getReplayerEnabled reads REPLAYER_ENABLED and converts it to bool
+// if empty from the config file.
+// This function will return `true` if `REPLAYER_ENABLED` is "1".
+func getReplayerEnabled() bool {
+	replayerEnabledString := os.Getenv("REPLAYER_ENABLED")
+	if replayerEnabledString == "" {
+		replayerEnabledString = strconv.FormatBool(configYaml.ReplayerEnabled)
+	}
+	replayerEnabled, _ := strconv.ParseBool(replayerEnabledString)
+	return replayerEnabled
+}
+
+// getRecordFilePath reads RECORD_FILE_PATH
+// if empty from the config file.
+func getRecordFilePath() string {
+	recordFilePath := os.Getenv("RECORD_FILE_PATH")
+	if recordFilePath == "" {
+		recordFilePath = configYaml.RecordFilePath
+	}
+	return recordFilePath
+}
+
 func decodeSchedulerCfg(buf []byte) (*configv1.KubeSchedulerConfiguration, error) {
 	decoder := scheme.Codecs.UniversalDeserializer()
 	obj, _, err := decoder.Decode(buf, nil, nil)
@@ -294,4 +328,15 @@ func GetKubeClientConfig() (*rest.Config, error) {
 		return nil, xerrors.Errorf("get client config: %w", err)
 	}
 	return clientConfig, nil
+}
+
+func hasTwoOrMoreTrue(values ...bool) bool {
+	trueExist := false
+	for _, v := range values {
+		if trueExist {
+			return true
+		}
+		trueExist = v
+	}
+	return false
 }

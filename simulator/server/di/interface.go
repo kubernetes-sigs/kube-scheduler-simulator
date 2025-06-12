@@ -3,6 +3,7 @@ package di
 import (
 	"context"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	configv1 "k8s.io/kube-scheduler/config/v1"
 	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 
@@ -33,16 +34,30 @@ type ResetService interface {
 	Reset(ctx context.Context) error
 }
 
-// OneShotClusterResourceImporter represents a service to import resources from an target cluster when starting the simulator.
+// OneShotClusterResourceImporter represents a service to import resources from a target cluster when starting the simulator.
 type OneShotClusterResourceImporter interface {
-	ImportClusterResources(ctx context.Context) error
+	ImportClusterResources(ctx context.Context, labelSelector metav1.LabelSelector) error
 }
 
-// ResourceSyncer represents a service to constantly sync resources from an target cluster.
+// ResourceSyncer represents a service to constantly sync resources from a target cluster.
 type ResourceSyncer interface {
 	// Run starts the resource syncer.
 	// It should be run until the context is canceled.
 	Run(ctx context.Context) error
+}
+
+// RecorderService represents a service to record events in a target cluster.
+type RecorderService interface {
+	// Run starts the recorder.
+	// It should be run until the context is canceled.
+	Run(ctx context.Context) error
+}
+
+// ReplayService represents a service to replay events recorded in a file.
+type ReplayService interface {
+	// Replay replays the recorded events.
+	// It should be run until the context is canceled.
+	Replay(ctx context.Context) error
 }
 
 // ResourceWatcherService represents service for watch k8s resources.

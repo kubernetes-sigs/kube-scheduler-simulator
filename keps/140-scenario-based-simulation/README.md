@@ -64,6 +64,10 @@ Therefore, this kep proposes to define the scenario **as CRD**. All clients, inc
 The Scenario is a non-namespaced resource. 
 This CRD will be applied to kube-apiserver started in kube-scheduler-simulator.
 
+The following diagram depicts the high-level relationship among entities in `Scenario` CRD.
+
+![Scenario CRD diagram](images/crd-diagram.png)
+
 We may need to change etcd request-size limitation by --max-request-bytes since the scenario resource may be more significant than other standard resources.
 https://etcd.io/docs/v3.4/dev-guide/limit/#request-size-limit
 
@@ -81,7 +85,7 @@ type ScenarioSpec struct {
 	Controllers *Controllers `json:"controllers"`
 }
 
-// See [# SimulationControllers and PreSimulationControllers](#Simulated-controllers-and-preparing-controllers).
+// See [# SimulationControllers and PreSimulationControllers](#simulationcontrollers-and-presimulationcontrollers).
 type Controllers struct {
 	// PreSimulationControllers is a list of controllers that should be run before SimulationControllers.
 	// They will run in parallel.
@@ -172,7 +176,7 @@ type DeleteOperation struct {
 
 type DoneOperation struct{}
 
-// See [# The concept "ScenarioStep"](#The-concept-"ScenarioStep").
+// See [# The concept "ScenarioStep"](#the-concept-scenariostep).
 // ScenarioStep is the time represented by a set of numbers, MajorStep and MinorStep,
 // which are like hours and minutes in clocks in the real world.
 // ScenarioStep.Major is moved to the next ScenarioStep.Major when the SimulationController can no longer do anything with the current cluster state.
@@ -332,11 +336,11 @@ type Scenario struct {
 #### The required configuration for users
 
 - add the comment directive to all SimulationController's codes and modify the code by our code generator.
-  - The simulator has the scheduler internally by default, and this scheduler has already been set up. 
-  - See [# How to stop the SimulationControllers loop](#How-to-stop-the-simulation-controllers-loop).
+  - The simulator has the scheduler internally by default, and this scheduler has already been set up.
+  - See [# How to stop the SimulationControllers loop](#how-to-stop-the-simulationcontrollers-loop).
 - define the functions for controllers to expect when controllers start to work and when controllers finish working.
-  - The simulator has some controllers internally by default, and they have already been set up. 
-  - See [# Expect when controllers finish working](#Expect-when-controllers-finish-working).
+  - The simulator has some controllers internally by default, and they have already been set up.
+  - See [#How the simulator knows when a cluster state gets converged by the controller?](#how-the-simulator-knows-when-a-cluster-state-gets-converged-by-the-controller).
 
 #### Kubernetes controller
 
@@ -449,9 +453,9 @@ The scheduler needs to be stopped scheduling until the NodeSet controller create
 ScenarioStep: {X, 0}
 StepPhase: OperatingCompleted
 
-See [#Expect when controllers finish working](#Expect-when-controllers-finish-working).
+See [#How the simulator knows when a cluster state gets converged by the controller?](#how-the-simulator-knows-when-a-cluster-state-gets-converged-by-the-controller).
 
-We use `WaitForControllerFinish` to wait for all controllers to finish their work to deal with (1).
+We use `WaitConditionFunc` to wait for all controllers to finish their work to deal with (1).
 
 ##### 4. the SimulationController starts
 
@@ -469,7 +473,7 @@ ScenarioStep: {X, 0} -> {X, 1}
 StepPhase: ControllerRunning -> ControllerPaused
 
 The SimulationController may perform some operations for k8s resources.
-In admission webhook, we change the StepPhase to ControllerStopped and increment MinorStep. (Then, the requests are accepted.)
+In admission webhook, we change the StepPhase to ControllerPaused and increment MinorStep. (Then, the requests are accepted.)
 
 ##### 6. the SimulationController stops working
 
@@ -483,9 +487,9 @@ https://kubernetes.io/docs/concepts/architecture/controller/
 
 The SimulationController always checks ScenarioStep at the end of its loop. And if StepPhase is ControllerPaused, the controller stops working. 
 
-StepPhase was changed to ControllerStopped at (5), and the SimulationController should be stopped at the end of that loop.
+StepPhase was changed to ControllerPaused at (5), and the SimulationController should be stopped at the end of that loop.
 
-See also [# How to stop the SimulationControllers loop](#How-to-stop-the-simulated-controllers-loop).
+See also [# How to stop the SimulationControllers loop](#how-to-stop-the-simulationcontrollers-loop).
 
 ##### 7. wait PreSimulationControllers to handle resource changes
 
@@ -503,7 +507,7 @@ It will repeat from (3) to (7) until the SimulationController can no longer do a
 ScenarioStep: {X, Y} 
 StepPhase: ControllerRunning -> ControllerCompleted
 
-We use `WaitForControllerFinish` of the SimulationController to detect this (like at (3)).
+We use `WaitConditionFunc` of the SimulationController to detect this (like at (3)).
 The SimulationController stops working again like at (6).
 
 After ControllerCompleted, the next SimulationController is started. 
@@ -547,7 +551,7 @@ func (h *HogeController) runOnce() {
 The function `scenario.CheckScenarioStepPhase()` is always executed at the end of `runOnce`, and checks the running Scenario's .status.stepStatus.phase and .status.stepStatus.runningSimulationController. 
 And when .status.stepStatus.phase is ControllerPaused and .status.stepStatus.runningSimulationController is "hoge-controller", it is blocked at that point until .status.stepStatus.phase becomes OperatingCompleted.
 
-See the diagram in [the previous section](#The-concept-"ScenarioStep"), when the hoge-controller performs some operation for k8s resources, the admission webhook will change .status.stepStatus.phase to ControllerPaused. Then `controllermanager.CheckScenario` will be executed at the end of `runOnce` and the hoge-controller will stop looping.
+See the diagram in [the previous section](#the-concept-scenariostep), when the hoge-controller performs some operation for k8s resources, the admission webhook will change .status.stepStatus.phase to ControllerPaused. Then `scenario.CheckScenarioStepPhase` will be executed at the end of `runOnce` and the hoge-controller will stop looping.
 
 Note: Even if multiple k8s resource operations happen in a single `runOnce`, the controller will stop at the end of `runOnce`.
 

@@ -61,9 +61,18 @@ type SimulatorConfiguration struct {
 	// Note, this is still a beta feature.
 	ExternalImportEnabled bool `json:"externalImportEnabled,omitempty"`
 
+	ResourceImportLabelSelector metav1.LabelSelector `json:"resourceImportLabelSelector,omitempty"`
+
 	// This variable indicates whether the simulator will
 	// sync resources from an user cluster's or not.
 	ResourceSyncEnabled bool `json:"resourceSyncEnabled,omitempty"`
+
+	// This variable indicates whether the simulator will
+	// replay events recorded in a file or not.
+	ReplayerEnabled bool `json:"replayEnabled,omitempty"`
+
+	// The path to a file where the record files are stored.
+	RecordFilePath string `json:"recordFilePath,omitempty"`
 
 	// This variable indicates whether an external scheduler
 	// is used.

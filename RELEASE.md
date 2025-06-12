@@ -11,7 +11,7 @@
 9. Publish release.
 10. Make sure the new version's image can be pulled and we can run the simulator correctly.
 11. Create a PR to update [compose.yml](./compose.yml) specifies the new release.
-12. Email `kubernetes-sig-scheduling@googlegroups.com` to announce the release.
+12. Email `sig-scheduling@kubernetes.io` to announce the release.
 
 ## Notes
 See [post-kube-scheduler-simulator-push-images dashboard](https://testgrid.k8s.io/sig-scheduling#post-kube-scheduler-simulator-push-images) for staging registry image build job status.

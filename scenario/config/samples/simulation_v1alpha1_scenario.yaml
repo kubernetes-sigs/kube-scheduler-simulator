@@ -1,6 +1,9 @@
 apiVersion: simulation.kube-scheduler-simulator.x-k8s.io/v1alpha1
 kind: Scenario
 metadata:
+  labels:
+    app.kubernetes.io/name: scenario
+    app.kubernetes.io/managed-by: kustomize
   name: scenario-sample
 spec:
   # TODO(user): Add fields here

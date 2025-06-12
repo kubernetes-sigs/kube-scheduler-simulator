@@ -9,6 +9,7 @@ import (
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	validation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -74,7 +75,7 @@ func (s *reflector) ResisterResultSavingToInformer(client clientset.Interface, s
 // storeAllResultToPodFunc returns the function that reflects all results on the pod annotation when the scheduling is finished.
 // It will be used as the even handler of resource updating.
 //
-//nolint:funlen,gocognit,cyclop
+//nolint:gocognit,cyclop
 func (s *reflector) storeAllResultToPodFunc(client clientset.Interface) func(interface{}, interface{}) {
 	return func(_, newObj interface{}) {
 		ctx := context.Background()
@@ -157,11 +158,19 @@ func updateResultHistory(p *corev1.Pod, m map[string]string) error {
 
 	results = append(results, m)
 
-	r, err := json.Marshal(results)
-	if err != nil {
-		return xerrors.Errorf("encode all results: %w", err)
+	// If we exceed that annotation size limitation, we should drop entries from the oldest side
+	// of the history slice until the payload fits, since the newer histories are likely more important.
+	for ; len(results) != 0; results = results[1:] {
+		r, err := json.Marshal(results)
+		if err != nil {
+			return xerrors.Errorf("encode all results: %w", err)
+		}
+		if len(r) <= validation.TotalAnnotationSizeLimitB {
+			metav1.SetMetaDataAnnotation(&p.ObjectMeta, ResultsHistoryAnnotation, string(r))
+			return nil
+		}
 	}
-	metav1.SetMetaDataAnnotation(&p.ObjectMeta, ResultsHistoryAnnotation, string(r))
 
-	return nil
+	// Basically shouldn't happen unless a single history entry is bigger than TotalAnnotationSizeLimitB, which is very unlikely.
+	return xerrors.Errorf("result history still exceeds annotation limit even after removing several histories")
 }

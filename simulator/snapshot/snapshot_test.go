@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
@@ -116,38 +116,38 @@ var (
 	}
 	// defaultApplyFuncs returns default expected settings to fakeClientset for `Apply`.
 	defaultApplyFuncs = SettingClientFuncMap{
-		ns: func(ctx context.Context, c *fake.Clientset) {
-			c.PrependReactor("patch", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		ns: func(_ context.Context, c *fake.Clientset) {
+			c.PrependReactor("patch", "namespaces", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 				return true, &corev1.Namespace{}, nil
 			})
 		},
-		node: func(ctx context.Context, c *fake.Clientset) {
-			c.PrependReactor("patch", "nodes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		node: func(_ context.Context, c *fake.Clientset) {
+			c.PrependReactor("patch", "nodes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 				return true, &corev1.Node{}, nil
 			})
 		},
-		pod: func(ctx context.Context, c *fake.Clientset) {
-			c.PrependReactor("patch", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		pod: func(_ context.Context, c *fake.Clientset) {
+			c.PrependReactor("patch", "pods", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 				return true, &corev1.Pod{}, nil
 			})
 		},
-		pv: func(ctx context.Context, c *fake.Clientset) {
-			c.PrependReactor("patch", "persistentvolumes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		pv: func(_ context.Context, c *fake.Clientset) {
+			c.PrependReactor("patch", "persistentvolumes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 				return true, &corev1.PersistentVolume{}, nil
 			})
 		},
-		pvc: func(ctx context.Context, c *fake.Clientset) {
-			c.PrependReactor("patch", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		pvc: func(_ context.Context, c *fake.Clientset) {
+			c.PrependReactor("patch", "persistentvolumeclaims", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 				return true, &corev1.PersistentVolumeClaim{}, nil
 			})
 		},
-		sc: func(ctx context.Context, c *fake.Clientset) {
-			c.PrependReactor("patch", "storageclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		sc: func(_ context.Context, c *fake.Clientset) {
+			c.PrependReactor("patch", "storageclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 				return true, &storagev1.StorageClass{}, nil
 			})
 		},
-		pc: func(ctx context.Context, c *fake.Clientset) {
-			c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		pc: func(_ context.Context, c *fake.Clientset) {
+			c.PrependReactor("patch", "priorityclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 				return true, &schedulingv1.PriorityClass{}, nil
 			})
 		},
@@ -256,8 +256,8 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pod: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pod: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "pods", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list Pod")
 						})
 					},
@@ -276,8 +276,8 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					node: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "nodes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					node: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "nodes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list Node")
 						})
 					},
@@ -296,8 +296,8 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pv: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "persistentvolumes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pv: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "persistentvolumes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list PersistentVolume")
 						})
 					},
@@ -316,8 +316,8 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pvc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pvc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "persistentvolumeclaims", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list PersistentVolumeClaim")
 						})
 					},
@@ -336,8 +336,8 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					sc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "storageclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					sc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "storageclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list StorageClass")
 						})
 					},
@@ -356,8 +356,8 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "priorityclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list PriorityClass")
 						})
 					},
@@ -376,8 +376,8 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					ns: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					ns: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "namespaces", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list Namespace")
 						})
 					},
@@ -428,7 +428,7 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pod: func(ctx context.Context, c *fake.Clientset) {
+					pod: func(_ context.Context, c *fake.Clientset) {
 						c.CoreV1().Pods(testNamespace1).Create(ctx, &corev1.Pod{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "pod1",
@@ -474,7 +474,7 @@ func TestService_Snap(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pvc: func(ctx context.Context, c *fake.Clientset) {
+					pvc: func(_ context.Context, c *fake.Clientset) {
 						c.CoreV1().PersistentVolumeClaims(testNamespace1).Create(ctx, &corev1.PersistentVolumeClaim{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "pvc1",
@@ -581,8 +581,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pod: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pod: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "pods", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list Pod")
 						})
 					},
@@ -605,8 +605,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					node: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "nodes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					node: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "nodes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list Node")
 						})
 					},
@@ -629,8 +629,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pv: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "persistentvolumes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pv: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "persistentvolumes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list PersistentVolume")
 						})
 					},
@@ -653,8 +653,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pvc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pvc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "persistentvolumeclaims", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list PersistentVolumeClaim")
 						})
 					},
@@ -677,8 +677,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					sc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "storageclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					sc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "storageclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list StorageClass")
 						})
 					},
@@ -701,8 +701,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "priorityclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list PriorityClass")
 						})
 					},
@@ -725,8 +725,8 @@ func TestService_Snap_IgnoreErrOption(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					ns: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					ns: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "namespaces", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to list Namespace")
 						})
 					},
@@ -908,8 +908,8 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pod: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pod: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "pods", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply Pod")
 						})
 					},
@@ -960,8 +960,8 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					node: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "nodes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					node: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "nodes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply Node")
 						})
 					},
@@ -1012,8 +1012,8 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pv: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "persistentvolumes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pv: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "persistentvolumes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply PersistentVolume")
 						})
 					},
@@ -1064,8 +1064,8 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pvc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pvc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "persistentvolumeclaims", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply PersistentVolumeClaim")
 						})
 					},
@@ -1116,8 +1116,8 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					sc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "storageclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					sc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "storageclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply StorageClass")
 						})
 					},
@@ -1168,8 +1168,8 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "priorityclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply PriorityClass")
 						})
 					},
@@ -1220,8 +1220,8 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					ns: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					ns: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "namespaces", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply Namespace")
 						})
 					},
@@ -1272,11 +1272,11 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pvc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pvc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "persistentvolumeclaims", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, &corev1.PersistentVolumeClaim{}, nil
 						})
-						c.PrependReactor("get", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+						c.PrependReactor("get", "persistentvolumeclaims", func(action k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							a, ok := action.(k8stesting.GetAction)
 							assert.Equal(t, true, ok)
 							assert.Equal(t, "PVC1", a.GetName())
@@ -1329,7 +1329,7 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{}, defaultApplyFuncs)
-				c.PrependReactor("get", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				c.PrependReactor("get", "persistentvolumeclaims", func(action k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 					a, ok := action.(k8stesting.GetAction)
 					assert.Equal(t, true, ok)
 					assert.Equal(t, "PVC1", a.GetName())
@@ -1367,7 +1367,7 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{}, defaultApplyFuncs)
-				c.PrependReactor("get", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				c.PrependReactor("get", "persistentvolumeclaims", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 					t.Fatal("This will not be called.")
 					return false, nil, nil
 				})
@@ -1394,7 +1394,7 @@ func TestService_Load(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{}, defaultApplyFuncs)
-				c.PrependReactor("get", "persistentvolumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				c.PrependReactor("get", "persistentvolumeclaims", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 					t.Fatal("This will not be called.")
 					return false, nil, nil
 				})
@@ -1521,8 +1521,8 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pod: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pod: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "pods", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply Pod")
 						})
 					},
@@ -1572,8 +1572,8 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					node: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "nodes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					node: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "nodes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply Node")
 						})
 					},
@@ -1623,8 +1623,8 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pv: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "persistentvlumes", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pv: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "persistentvlumes", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply PersistentVolume")
 						})
 					},
@@ -1674,8 +1674,8 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pvc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "persistentvlumeclaims", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pvc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "persistentvlumeclaims", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply PersistentVolumeClaims")
 						})
 					},
@@ -1725,8 +1725,8 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					sc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "storageclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					sc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "storageclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply StorageClass")
 						})
 					},
@@ -1776,8 +1776,8 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					pc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "priorityclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply PriorityClass")
 						})
 					},
@@ -1827,8 +1827,8 @@ func TestService_Load_WithIgnoreErrOption(t *testing.T) {
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
 				invokeResourcesFn(context.Background(), c, SettingClientFuncMap{
-					ns: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("patch", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					ns: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("patch", "namespaces", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, nil, xerrors.New("failed to apply Namespace")
 						})
 					},
@@ -1875,8 +1875,8 @@ func TestFunction_listPcs(t *testing.T) {
 				ctx := context.Background()
 				// add test data.
 				invokeResourcesFn(ctx, c, SettingClientFuncMap{
-					pc: func(ctx context.Context, c *fake.Clientset) {
-						c.PrependReactor("list", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					pc: func(_ context.Context, c *fake.Clientset) {
+						c.PrependReactor("list", "priorityclasses", func(_ k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 							return true, &schedulingv1.PriorityClassList{
 								Items: []schedulingv1.PriorityClass{
 									{
@@ -1983,7 +1983,7 @@ func TestFunction_applyPcs(t *testing.T) {
 			},
 			prepareFakeClientSetFn: func() *fake.Clientset {
 				c := fake.NewSimpleClientset()
-				c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				c.PrependReactor("patch", "priorityclasses", func(action k8stesting.Action) (_ bool, _ runtime.Object, _ error) {
 					a, ok := action.(k8stesting.PatchAction)
 					assert.Equal(t, true, ok)
 					// High priority PriorityClass will not come.

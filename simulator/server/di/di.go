@@ -13,7 +13,9 @@ import (
 	configv1 "k8s.io/kube-scheduler/config/v1"
 
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/oneshotimporter"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/replayer"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/reset"
+	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourceapplier"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/resourcewatcher"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/scheduler"
 	"sigs.k8s.io/kube-scheduler-simulator/simulator/snapshot"
@@ -28,6 +30,7 @@ type Container struct {
 	oneshotClusterResourceImporter OneShotClusterResourceImporter
 	resourceSyncer                 ResourceSyncer
 	resourceWatcherService         ResourceWatcherService
+	replayService                  ReplayService
 }
 
 // NewDIContainer initializes Container.
@@ -42,10 +45,11 @@ func NewDIContainer(
 	initialSchedulerCfg *configv1.KubeSchedulerConfiguration,
 	externalImportEnabled bool,
 	resourceSyncEnabled bool,
-	externalClient clientset.Interface,
+	replayEnabled bool,
 	externalDynamicClient dynamic.Interface,
 	simulatorPort int,
-	syncerOptions syncer.Options,
+	resourceapplierOptions resourceapplier.Options,
+	replayerOptions replayer.Options,
 ) (*Container, error) {
 	c := &Container{}
 
@@ -58,14 +62,17 @@ func NewDIContainer(
 	}
 	snapshotSvc := snapshot.NewService(client, c.schedulerService)
 	c.snapshotService = snapshotSvc
+	resourceApplierService := resourceapplier.New(dynamicClient, restMapper, resourceapplierOptions)
 	if externalImportEnabled {
-		extSnapshotSvc := snapshot.NewService(externalClient, c.schedulerService)
-		c.oneshotClusterResourceImporter = oneshotimporter.NewService(snapshotSvc, extSnapshotSvc)
+		c.oneshotClusterResourceImporter = oneshotimporter.NewService(externalDynamicClient, resourceApplierService)
 	}
 	if resourceSyncEnabled {
-		c.resourceSyncer = syncer.New(externalDynamicClient, dynamicClient, restMapper, syncerOptions)
+		c.resourceSyncer = syncer.New(externalDynamicClient, resourceApplierService)
 	}
 	c.resourceWatcherService = resourcewatcher.NewService(client)
+	if replayEnabled {
+		c.replayService = replayer.New(resourceApplierService, replayerOptions)
+	}
 
 	return c, nil
 }
@@ -94,6 +101,11 @@ func (c *Container) OneshotClusterResourceImporter() OneShotClusterResourceImpor
 // ResourceSyncer returns ResourceSyncer.
 func (c *Container) ResourceSyncer() ResourceSyncer {
 	return c.resourceSyncer
+}
+
+// ReplayService returns ReplayService.
+func (c *Container) ReplayService() ReplayService {
+	return c.replayService
 }
 
 // ResourceWatcherService returns ResourceWatcherService.

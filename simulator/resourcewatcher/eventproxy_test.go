@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"golang.org/x/xerrors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -107,7 +107,7 @@ func TestService_listAndHandleItems(t *testing.T) {
 				get, _ := nodes.Get(context.Background(), "node1", metav1.GetOptions{})
 				l.EXPECT().List(metav1.ListOptions{}).Return(get, nil)
 			},
-			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+			prepareStreamWriterMockFn: func(_ *mock_resourcewatcher.MockStreamWriter) {
 			},
 			prepareFakeRestClientFn: func() *restfake.RESTClient {
 				return &restfake.RESTClient{}
@@ -526,7 +526,7 @@ func TestEventProxyer_watchHandlerFunc(t *testing.T) {
 		},
 		{
 			name: "should return an error if the passed object is failed to cast to a metav1.Object",
-			prepareStreamWriterMockFn: func(w *mock_resourcewatcher.MockStreamWriter) {
+			prepareStreamWriterMockFn: func(_ *mock_resourcewatcher.MockStreamWriter) {
 			},
 			prepareFakeRestClientFn: func() *restfake.RESTClient {
 				return &restfake.RESTClient{}
