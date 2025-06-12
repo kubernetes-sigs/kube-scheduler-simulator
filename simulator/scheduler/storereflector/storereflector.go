@@ -58,8 +58,21 @@ func (s *reflector) ResisterResultSavingToInformer(client clientset.Interface, s
 	// Reflector adds scheduling results when pod is updating.
 	// This is because Extenders doesn't have any phase to hook scheduling finished. (both successfully and non-successfully)
 	_, err := informerFactory.Core().V1().Pods().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			UpdateFunc: s.storeAllResultToPodFunc(client),
+		cache.FilteringResourceEventHandler{
+			FilterFunc: func(obj interface{}) bool {
+				if _, ok := obj.(cache.DeletedFinalStateUnknown); ok {
+					return false
+				}
+				if pod, ok := obj.(*corev1.Pod); ok {
+					if pod.DeletionTimestamp != nil {
+						return false
+					}
+				}
+				return true
+			},
+			Handler: cache.ResourceEventHandlerFuncs{
+				UpdateFunc: s.storeAllResultToPodFunc(client),
+			},
 		},
 	)
 	if err != nil {
