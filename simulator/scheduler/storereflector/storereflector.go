@@ -59,6 +59,10 @@ func (s *reflector) ResisterResultSavingToInformer(client clientset.Interface, s
 	// This is because Extenders doesn't have any phase to hook scheduling finished. (both successfully and non-successfully)
 	_, err := informerFactory.Core().V1().Pods().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: func(obj interface{}) bool {
+			if obj == nil {
+				klog.V(5).Info("Filtering nil object")
+				return false
+			}
 			if _, ok := obj.(cache.DeletedFinalStateUnknown); ok {
 				return false
 			}
