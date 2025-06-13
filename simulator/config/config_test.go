@@ -195,3 +195,59 @@ func Test_validateURLs(t *testing.T) {
 		})
 	}
 }
+
+func Test_hasTwoOrMoreTrue(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		input    []bool
+		expected bool
+	}{
+		{
+			name:     "No true values",
+			input:    []bool{false, false, false},
+			expected: false,
+		},
+		{
+			name:     "One true value",
+			input:    []bool{false, true, false},
+			expected: false,
+		},
+		{
+			name:     "Two true values",
+			input:    []bool{true, false, true},
+			expected: true,
+		},
+		{
+			name:     "Three true values",
+			input:    []bool{true, true, true},
+			expected: true,
+		},
+		{
+			name:     "Empty input",
+			input:    []bool{},
+			expected: false,
+		},
+		{
+			name:     "Two trues at start",
+			input:    []bool{true, true, false},
+			expected: true,
+		},
+		{
+			name:     "Two trues at end",
+			input:    []bool{false, false, true, true},
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := hasTwoOrMoreTrue(tt.input...)
+			if result != tt.expected {
+				t.Errorf("hasTwoOrMoreTrue(%v) = %v; want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
