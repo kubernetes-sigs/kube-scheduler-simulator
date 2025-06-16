@@ -3,10 +3,11 @@ package storereflector
 import (
 	"context"
 	"fmt"
-	"k8s.io/client-go/tools/cache"
 	"strings"
 	"testing"
 	"time"
+
+	"k8s.io/client-go/tools/cache"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
