@@ -204,6 +204,8 @@ func Test_updateResultHistory(t *testing.T) {
 }
 
 func Test_filterPodFunc(t *testing.T) {
+	t.Parallel()
+
 	// 1. obj == nil
 	if filterPodFunc(nil) != false {
 		t.Error("expected false when obj is nil")
