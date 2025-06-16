@@ -5,7 +5,6 @@ package snapshot
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"golang.org/x/xerrors"
@@ -517,7 +516,6 @@ func (s *Service) applySas(ctx context.Context, r *ResourcesForLoad, eg *util.Se
 			return xerrors.Errorf("start error group: %w", err)
 		}
 	}
-	fmt.Println("applySas 成功")
 	return nil
 }
 
