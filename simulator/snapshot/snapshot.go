@@ -5,6 +5,7 @@ package snapshot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"golang.org/x/xerrors"
@@ -42,6 +43,7 @@ type ResourcesForSnap struct {
 
 // ResourcesForLoad indicates all resources and scheduler configuration to be loaded.
 type ResourcesForLoad struct {
+	Sas             []v1.ServiceAccountApplyConfiguration             `json:"sas"`
 	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
 	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
 	Pvs             []v1.PersistentVolumeApplyConfiguration           `json:"pvs"`
@@ -172,6 +174,9 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForLoad, opts o
 	}
 	if err := s.applyNodes(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyNodes: %w", err)
+	}
+	if err := s.applySas(ctx, resources, errgrp, opts); err != nil {
+		return xerrors.Errorf("call applySas: %w", err)
 	}
 	if err := s.applyPods(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPods: %w", err)
@@ -487,6 +492,32 @@ func (s *Service) applyNodes(ctx context.Context, r *ResourcesForLoad, eg *util.
 			return xerrors.Errorf("start error group: %w", err)
 		}
 	}
+	return nil
+}
+
+func (s *Service) applySas(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
+	for i := range r.Sas {
+		sa := r.Sas[i]
+		if err := eg.Go(func() error {
+			sa.ObjectMetaApplyConfiguration.UID = nil
+			sa.ObjectMetaApplyConfiguration.CreationTimestamp = nil
+			sa.ObjectMetaApplyConfiguration.ResourceVersion = nil
+
+			sa.WithAPIVersion("v1").WithKind("ServiceAccount")
+
+			_, err := s.client.CoreV1().ServiceAccounts(*sa.Namespace).Apply(ctx, &sa, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			if err != nil {
+				if !opts.ignoreErr {
+					return xerrors.Errorf("apply Sa: %w", err)
+				}
+				klog.Errorf("failed to apply Sa: %v", err)
+			}
+			return nil
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
+	}
+	fmt.Println("applySas 成功")
 	return nil
 }
 
