@@ -3,8 +3,10 @@ package storereflector
 import (
 	"context"
 	"fmt"
+	"k8s.io/client-go/tools/cache"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
@@ -198,5 +200,36 @@ func Test_updateResultHistory(t *testing.T) {
 				t.Fatalf("unexpected Pod: %v", d)
 			}
 		})
+	}
+}
+
+func Test_filterPodFunc(t *testing.T) {
+	// 1. obj == nil
+	if filterPodFunc(nil) != false {
+		t.Error("expected false when obj is nil")
+	}
+	// 2. obj is cache.DeletedFinalStateUnknown
+	var del cache.DeletedFinalStateUnknown
+	if filterPodFunc(del) != false {
+		t.Error("expected false when obj is DeletedFinalStateUnknown")
+	}
+	// 3. obj is *corev1.Pod with DeletionTimestamp != nil
+	now := metav1.NewTime(time.Now())
+	podWithDel := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			DeletionTimestamp: &now,
+		},
+	}
+	if filterPodFunc(podWithDel) != false {
+		t.Error("expected false when pod.DeletionTimestamp != nil")
+	}
+	// 4. obj is *corev1.Pod with DeletionTimestamp == nil
+	podWithoutDel := &corev1.Pod{}
+	if filterPodFunc(podWithoutDel) != true {
+		t.Error("expected true when pod.DeletionTimestamp == nil")
+	}
+	// 5. obj is other type (e.g., string)
+	if filterPodFunc("test") != true {
+		t.Error("expected true for non-pod, non-DeletedFinalStateUnknown, non-nil object")
 	}
 }

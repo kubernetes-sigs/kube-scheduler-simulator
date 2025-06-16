@@ -59,19 +59,7 @@ func (s *reflector) ResisterResultSavingToInformer(client clientset.Interface, s
 	// This is because Extenders doesn't have any phase to hook scheduling finished. (both successfully and non-successfully)
 	_, err := informerFactory.Core().V1().Pods().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: func(obj interface{}) bool {
-			if obj == nil {
-				klog.V(5).Info("Filtering nil object")
-				return false
-			}
-			if _, ok := obj.(cache.DeletedFinalStateUnknown); ok {
-				return false
-			}
-			if pod, ok := obj.(*corev1.Pod); ok {
-				if pod.DeletionTimestamp != nil {
-					return false
-				}
-			}
-			return true
+			return filterPodFunc(obj)
 		},
 		Handler: cache.ResourceEventHandlerFuncs{
 			UpdateFunc: s.storeAllResultToPodFunc(client),
@@ -85,6 +73,22 @@ func (s *reflector) ResisterResultSavingToInformer(client clientset.Interface, s
 	informerFactory.WaitForCacheSync(stopCh)
 
 	return nil
+}
+
+func filterPodFunc(obj interface{}) bool {
+	if obj == nil {
+		klog.V(5).Info("Filtering nil object")
+		return false
+	}
+	if _, ok := obj.(cache.DeletedFinalStateUnknown); ok {
+		return false
+	}
+	if pod, ok := obj.(*corev1.Pod); ok {
+		if pod.DeletionTimestamp != nil {
+			return false
+		}
+	}
+	return true
 }
 
 // storeAllResultToPodFunc returns the function that reflects all results on the pod annotation when the scheduling is finished.
