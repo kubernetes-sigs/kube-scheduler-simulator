@@ -90,3 +90,16 @@ resourceApplierOptions := resourceapplier.Options{
 
 > [!NOTE]
 > Right now, one-shot import cannot change which resources to import.
+
+## Troubleshooting
+
+### Client Rate Limiter Errors
+
+When importing resources from large clusters, you might encounter "context deadline" or client rate limiter errors. This typically happens when the default QPS (Queries Per Second) and Burst settings are too low to handle the volume of API requests needed for resource synchronization.
+
+**Solution**: If you encounter these errors, consider increasing the QPS and Burst limits in your kubeconfig:
+
+- QPS: Consider setting to 400 (instead of the default 5)
+- Burst: Consider setting to 1200 (instead of the default 10)
+
+You can modify these values in your kubeconfig file or client configuration to handle large cluster imports more efficiently. Please note that higher values may increase the load on your API server.
