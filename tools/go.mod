@@ -1,8 +1,6 @@
 module github.com/kubernetes-sigs/kube-scheduler-simulator/tools
 
-go 1.22
-
-toolchain go1.22.9
+go 1.24.0
 
 require (
 	github.com/daixiang0/gci v0.11.2

@@ -318,7 +318,7 @@ func (m *MockPostFilterPluginExtender) EXPECT() *MockPostFilterPluginExtenderMoc
 }
 
 // AfterPostFilter mocks base method.
-func (m *MockPostFilterPluginExtender) AfterPostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap, postFilterResult *framework.PostFilterResult, status *framework.Status) (*framework.PostFilterResult, *framework.Status) {
+func (m *MockPostFilterPluginExtender) AfterPostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusReader, postFilterResult *framework.PostFilterResult, status *framework.Status) (*framework.PostFilterResult, *framework.Status) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AfterPostFilter", ctx, state, pod, filteredNodeStatusMap, postFilterResult, status)
 	ret0, _ := ret[0].(*framework.PostFilterResult)
@@ -333,7 +333,7 @@ func (mr *MockPostFilterPluginExtenderMockRecorder) AfterPostFilter(ctx, state, 
 }
 
 // BeforePostFilter mocks base method.
-func (m *MockPostFilterPluginExtender) BeforePostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+func (m *MockPostFilterPluginExtender) BeforePostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusReader) (*framework.PostFilterResult, *framework.Status) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BeforePostFilter", ctx, state, pod, filteredNodeStatusMap)
 	ret0, _ := ret[0].(*framework.PostFilterResult)
