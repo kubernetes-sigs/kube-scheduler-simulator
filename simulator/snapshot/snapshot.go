@@ -30,6 +30,7 @@ type Service struct {
 
 // ResourcesForSnap indicates all resources and scheduler configuration to be snapped.
 type ResourcesForSnap struct {
+	Sas             []corev1.ServiceAccount              `json:"sas"`
 	Pods            []corev1.Pod                         `json:"pods"`
 	Nodes           []corev1.Node                        `json:"nodes"`
 	Pvs             []corev1.PersistentVolume            `json:"pvs"`
@@ -42,6 +43,7 @@ type ResourcesForSnap struct {
 
 // ResourcesForLoad indicates all resources and scheduler configuration to be loaded.
 type ResourcesForLoad struct {
+	Sas             []v1.ServiceAccountApplyConfiguration             `json:"sas"`
 	Pods            []v1.PodApplyConfiguration                        `json:"pods"`
 	Nodes           []v1.NodeApplyConfiguration                       `json:"nodes"`
 	Pvs             []v1.PersistentVolumeApplyConfiguration           `json:"pvs"`
@@ -103,7 +105,9 @@ func (s *Service) IgnoreSchedulerConfiguration() Option {
 func (s *Service) get(ctx context.Context, opts options) (*ResourcesForSnap, error) {
 	errgrp := util.NewErrGroupWithSemaphore(ctx)
 	resources := ResourcesForSnap{}
-
+	if err := s.listSas(ctx, &resources, errgrp, opts); err != nil {
+		return nil, xerrors.Errorf("call listSas: %w", err)
+	}
 	if err := s.listPods(ctx, &resources, errgrp, opts); err != nil {
 		return nil, xerrors.Errorf("call listPods: %w", err)
 	}
@@ -173,6 +177,9 @@ func (s *Service) apply(ctx context.Context, resources *ResourcesForLoad, opts o
 	if err := s.applyNodes(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyNodes: %w", err)
 	}
+	if err := s.applySas(ctx, resources, errgrp, opts); err != nil {
+		return xerrors.Errorf("call applySas: %w", err)
+	}
 	if err := s.applyPods(ctx, resources, errgrp, opts); err != nil {
 		return xerrors.Errorf("call applyPods: %w", err)
 	}
@@ -210,6 +217,24 @@ func (s *Service) Load(ctx context.Context, resources *ResourcesForLoad, opts ..
 	}
 	if err := s.apply(ctx, resources, options); err != nil {
 		return xerrors.Errorf("failed to apply(): %w", err)
+	}
+	return nil
+}
+
+func (s *Service) listSas(ctx context.Context, r *ResourcesForSnap, eg *util.SemaphoredErrGroup, opts options) error {
+	if err := eg.Go(func() error {
+		sass, err := s.client.CoreV1().ServiceAccounts(metav1.NamespaceAll).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			if !opts.ignoreErr {
+				return xerrors.Errorf("call list Pod: %w", err)
+			}
+			klog.Errorf("failed to call list Pod: %v", err)
+			sass = &corev1.ServiceAccountList{Items: []corev1.ServiceAccount{}}
+		}
+		r.Sas = sass.Items
+		return nil
+	}); err != nil {
+		return xerrors.Errorf("start error group: %w", err)
 	}
 	return nil
 }
@@ -481,6 +506,31 @@ func (s *Service) applyNodes(ctx context.Context, r *ResourcesForLoad, eg *util.
 					return xerrors.Errorf("apply Node: %w", err)
 				}
 				klog.Errorf("failed to apply Node: %v", err)
+			}
+			return nil
+		}); err != nil {
+			return xerrors.Errorf("start error group: %w", err)
+		}
+	}
+	return nil
+}
+
+func (s *Service) applySas(ctx context.Context, r *ResourcesForLoad, eg *util.SemaphoredErrGroup, opts options) error {
+	for i := range r.Sas {
+		sa := r.Sas[i]
+		if err := eg.Go(func() error {
+			sa.ObjectMetaApplyConfiguration.UID = nil
+			sa.ObjectMetaApplyConfiguration.CreationTimestamp = nil
+			sa.ObjectMetaApplyConfiguration.ResourceVersion = nil
+
+			sa.WithAPIVersion("v1").WithKind("ServiceAccount")
+
+			_, err := s.client.CoreV1().ServiceAccounts(*sa.Namespace).Apply(ctx, &sa, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
+			if err != nil {
+				if !opts.ignoreErr {
+					return xerrors.Errorf("apply Sa: %w", err)
+				}
+				klog.Errorf("failed to apply Sa: %v", err)
 			}
 			return nil
 		}); err != nil {

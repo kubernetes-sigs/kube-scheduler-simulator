@@ -29,6 +29,7 @@ type Service struct {
 var DefaultGVRs = []schema.GroupVersionResource{
 	{Group: "", Version: "v1", Resource: "namespaces"},
 	{Group: "scheduling.k8s.io", Version: "v1", Resource: "priorityclasses"},
+	{Group: "", Version: "v1", Resource: "serviceaccounts"},
 	{Group: "storage.k8s.io", Version: "v1", Resource: "storageclasses"},
 	{Group: "", Version: "v1", Resource: "persistentvolumeclaims"},
 	{Group: "", Version: "v1", Resource: "nodes"},
