@@ -87,15 +87,27 @@ func (s *Service) addFunc(obj interface{}) {
 	}
 }
 
-func (s *Service) updateFunc(_, newObj interface{}) {
+func (s *Service) updateFunc(oldObj, newObj interface{}) {
 	ctx := context.Background()
-	unstructObj, ok := newObj.(*unstructured.Unstructured)
+	newUnstructuredObj, ok := newObj.(*unstructured.Unstructured)
 	if !ok {
 		klog.Error("Failed to convert runtime.Object to *unstructured.Unstructured")
 		return
 	}
 
-	err := s.resourceApplierService.Update(ctx, unstructObj)
+	oldUnstructuredObj, ok := oldObj.(*unstructured.Unstructured)
+	if !ok {
+		klog.Error("Failed to convert runtime.Object to *unstructured.Unstructured")
+		return
+	}
+
+	if newUnstructuredObj.GetKind() == "Pod" && !podStatusEqual(oldUnstructuredObj, newUnstructuredObj) {
+		if patchErr := s.resourceApplierService.PatchPodStatus(ctx, newUnstructuredObj); patchErr != nil {
+			klog.Errorf("Failed to patch pod status: %v", patchErr)
+		}
+	}
+
+	err := s.resourceApplierService.Update(ctx, newUnstructuredObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// We just ignore the not found error because the scheduler may preempt the Pods, or users may remove the resources for debugging.
@@ -123,4 +135,10 @@ func (s *Service) deleteFunc(obj interface{}) {
 			klog.ErrorS(err, "Failed to delete resource on destination cluster")
 		}
 	}
+}
+
+func podStatusEqual(oldPod, newPod *unstructured.Unstructured) bool {
+	oldPhase, _, _ := unstructured.NestedString(oldPod.Object, "status", "phase")
+	newPhase, _, _ := unstructured.NestedString(newPod.Object, "status", "phase")
+	return oldPhase == newPhase
 }

@@ -2,12 +2,14 @@ package resourceapplier
 
 import (
 	"context"
+	"encoding/json"
 
 	"golang.org/x/xerrors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 )
 
@@ -124,6 +126,9 @@ func (s *Service) Create(ctx context.Context, resource *unstructured.Unstructure
 		return xerrors.Errorf("failed to create resource: %w", err)
 	}
 
+	if gvk.Kind == "Pod" {
+		return s.PatchPodStatus(ctx, resource)
+	}
 	return nil
 }
 
@@ -314,4 +319,33 @@ func (s *Service) addMutateBeforeUpdating(gvr schema.GroupVersionResource, fn []
 	}
 
 	s.mutateBeforeUpdating[gvr] = append(s.mutateBeforeUpdating[gvr], fn...)
+}
+
+func (s *Service) PatchPodStatus(ctx context.Context, resource *unstructured.Unstructured) error {
+	gvk := resource.GroupVersionKind()
+	gvr, err := s.findGVRForGVK(gvk)
+	if err != nil {
+		return err
+	}
+
+	namespace := resource.GetNamespace()
+	newStatus := resource.Object["status"]
+	patchData := map[string]interface{}{
+		"status": newStatus,
+	}
+	patchBytes, err := json.Marshal(patchData)
+	if err != nil {
+		return err
+	}
+	_, err = s.clients.DynamicClient.Resource(gvr).Namespace(namespace).Patch(
+		ctx,
+		resource.GetName(),
+		types.MergePatchType,
+		patchBytes, metav1.PatchOptions{},
+		"status",
+	)
+	if err != nil {
+		return xerrors.Errorf("failed to patch status: %w, gvr: %v, name: %v", err, gvr, resource.GetName())
+	}
+	return nil
 }
