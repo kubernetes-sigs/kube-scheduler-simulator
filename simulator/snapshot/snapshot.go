@@ -495,6 +495,9 @@ func (s *Service) applyPods(ctx context.Context, r *ResourcesForLoad, eg *util.S
 		pod := r.Pods[i]
 		if err := eg.Go(func() error {
 			pod.ObjectMetaApplyConfiguration.UID = nil
+			pod.ObjectMetaApplyConfiguration.CreationTimestamp = nil
+			pod.ObjectMetaApplyConfiguration.ResourceVersion = nil
+
 			pod.WithAPIVersion("v1").WithKind("Pod")
 			_, err := s.client.CoreV1().Pods(*pod.Namespace).Apply(ctx, &pod, metav1.ApplyOptions{Force: true, FieldManager: "simulator"})
 			if err != nil {
