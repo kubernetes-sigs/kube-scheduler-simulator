@@ -280,6 +280,7 @@ func removeUnnecessaryMetadata(resource *unstructured.Unstructured) *unstructure
 	resource.SetUID("")
 	resource.SetGeneration(0)
 	resource.SetResourceVersion("")
+	resource.SetCreationTimestamp(metav1.Time{})
 
 	return resource
 }
