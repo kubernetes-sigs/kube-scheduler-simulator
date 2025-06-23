@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
@@ -199,4 +200,90 @@ func Test_updateResultHistory(t *testing.T) {
 			}
 		})
 	}
+}
+
+type fakeStore struct{}
+
+func (f fakeStore) GetStoredResult(_ *corev1.Pod) map[string]string {
+	return map[string]string{"foo": "bar"}
+}
+func (f fakeStore) DeleteData(_ corev1.Pod) { /* no-op */ }
+
+func TestResisterResultSavingToInformer_FilterFunc(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	now := metav1.NewTime(time.Now())
+
+	podAlive := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pod-alive",
+			Namespace: "default",
+		},
+	}
+	podDeleting := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              "pod-deleting",
+			Namespace:         "default",
+			DeletionTimestamp: &now,
+		},
+	}
+
+	client := fake.NewSimpleClientset(podAlive, podDeleting)
+
+	r, ok := New().(*reflector)
+	if !ok {
+		t.Fatalf("reflector failed")
+	}
+	r.AddResultStore(fakeStore{}, "fake")
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
+	if err := r.ResisterResultSavingToInformer(client, stopCh); err != nil {
+		t.Fatalf("register failed: %v", err)
+	}
+
+	// Update both Pods to trigger the Update event
+	patchPods := func(podName string) {
+		_ = retry(100*time.Millisecond, 50, func() error {
+			pod, err := client.CoreV1().Pods("default").Get(ctx, podName, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			// Modify a label to ensure the update is triggered
+			if pod.Labels == nil {
+				pod.Labels = map[string]string{}
+			}
+			pod.Labels["touched"] = "true"
+			_, err = client.CoreV1().Pods("default").Update(ctx, pod, metav1.UpdateOptions{})
+			return err
+		})
+	}
+	patchPods("pod-alive")
+	patchPods("pod-deleting")
+
+	time.Sleep(500 * time.Millisecond)
+
+	// Assert that pod-alive has the annotation written
+	pod1, _ := client.CoreV1().Pods("default").Get(ctx, "pod-alive", metav1.GetOptions{})
+	if v := pod1.Annotations["foo"]; v != "bar" {
+		t.Fatalf("pod-alive should have annotation foo=bar, got %#v", pod1.Annotations)
+	}
+
+	// Assert that pod-deleting does NOT have the annotation
+	pod2, _ := client.CoreV1().Pods("default").Get(ctx, "pod-deleting", metav1.GetOptions{})
+	if pod2.Annotations != nil && pod2.Annotations["foo"] == "bar" {
+		t.Fatalf("pod-deleting should NOT have annotation foo=bar, but it has: %#v", pod2.Annotations)
+	}
+}
+
+func retry(interval time.Duration, maxTry int, f func() error) (err error) {
+	for i := 0; i < maxTry; i++ {
+		if err = f(); err == nil {
+			return nil
+		}
+		time.Sleep(interval)
+	}
+	return
 }
