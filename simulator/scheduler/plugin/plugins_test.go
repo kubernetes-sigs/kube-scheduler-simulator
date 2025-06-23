@@ -98,7 +98,7 @@ func TestConvertForSimulator(t *testing.T) {
 				MultiPoint: configv1.PluginSet{
 					Disabled: []configv1.Plugin{
 						{
-							Name: "EBSLimits",
+							Name: "ImageLocality",
 						},
 					},
 				},
@@ -192,16 +192,13 @@ func TestConvertForSimulator(t *testing.T) {
 						{Name: "NodePortsWrapped"},
 						{Name: "NodeResourcesFitWrapped", Weight: &weight1},
 						{Name: "VolumeRestrictionsWrapped"},
-						{Name: "GCEPDLimitsWrapped"},
 						{Name: "NodeVolumeLimitsWrapped"},
-						{Name: "AzureDiskLimitsWrapped"},
 						{Name: "VolumeBindingWrapped"},
 						{Name: "VolumeZoneWrapped"},
 						{Name: "PodTopologySpreadWrapped", Weight: &weight2},
 						{Name: "InterPodAffinityWrapped", Weight: &weight2},
 						{Name: "DefaultPreemptionWrapped"},
 						{Name: "NodeResourcesBalancedAllocationWrapped", Weight: &weight1},
-						{Name: "ImageLocalityWrapped", Weight: &weight1},
 						{Name: "DefaultBinderWrapped"},
 					},
 					Disabled: []configv1.Plugin{

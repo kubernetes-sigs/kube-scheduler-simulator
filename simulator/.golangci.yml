@@ -67,7 +67,7 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - err113
+    - goerr113
     - gofmt
     - gofumpt
     - gosec

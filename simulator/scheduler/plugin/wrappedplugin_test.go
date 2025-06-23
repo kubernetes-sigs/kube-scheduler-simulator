@@ -366,7 +366,7 @@ func Test_wrappedPlugin_PostFilter(t *testing.T) {
 
 	type args struct {
 		pod                   *v1.Pod
-		filteredNodeStatusMap framework.NodeToStatusMap
+		filteredNodeStatusMap framework.NodeToStatusReader
 	}
 	tests := []struct {
 		name                     string
@@ -389,10 +389,13 @@ func Test_wrappedPlugin_PostFilter(t *testing.T) {
 			originalPostFilterPlugin: fakePostFilterPlugin{},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
-				filteredNodeStatusMap: framework.NodeToStatusMap{
-					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-				},
+				filteredNodeStatusMap: framework.NewNodeToStatus(
+					map[string]*framework.Status{
+						"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+						"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					},
+					nil,
+				),
 			},
 			wantResult: &framework.PostFilterResult{
 				NominatingInfo: &framework.NominatingInfo{
@@ -407,10 +410,13 @@ func Test_wrappedPlugin_PostFilter(t *testing.T) {
 			originalPostFilterPlugin: nil, // don't have post filter plugin
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1"}},
-				filteredNodeStatusMap: framework.NodeToStatusMap{
-					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-				},
+				filteredNodeStatusMap: framework.NewNodeToStatus(
+					map[string]*framework.Status{
+						"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+						"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					},
+					nil,
+				),
 			},
 			wantResult: nil,
 			wantStatus: framework.NewStatus(framework.Unschedulable),
@@ -428,10 +434,13 @@ func Test_wrappedPlugin_PostFilter(t *testing.T) {
 			originalPostFilterPlugin: fakeMustFailWrappedPlugin{},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
-				filteredNodeStatusMap: framework.NodeToStatusMap{
-					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-				},
+				filteredNodeStatusMap: framework.NewNodeToStatus(
+					map[string]*framework.Status{
+						"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+						"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					},
+					nil,
+				),
 			},
 			wantResult: nil,
 			wantStatus: framework.AsStatus(errPost),
@@ -461,7 +470,7 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 
 	type args struct {
 		pod                   *v1.Pod
-		filteredNodeStatusMap framework.NodeToStatusMap
+		filteredNodeStatusMap framework.NodeToStatusReader
 	}
 	tests := []struct {
 		name              string
@@ -500,10 +509,13 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
-				filteredNodeStatusMap: framework.NodeToStatusMap{
-					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-				},
+				filteredNodeStatusMap: framework.NewNodeToStatus(
+					map[string]*framework.Status{
+						"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+						"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					},
+					nil,
+				),
 			},
 			wantResult: &framework.PostFilterResult{
 				NominatingInfo: &framework.NominatingInfo{
@@ -537,10 +549,13 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
-				filteredNodeStatusMap: framework.NodeToStatusMap{
-					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-				},
+				filteredNodeStatusMap: framework.NewNodeToStatus(
+					map[string]*framework.Status{
+						"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+						"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					},
+					nil,
+				),
 			},
 			wantResult: &framework.PostFilterResult{
 				NominatingInfo: &framework.NominatingInfo{
@@ -558,10 +573,13 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
-				filteredNodeStatusMap: framework.NodeToStatusMap{
-					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-				},
+				filteredNodeStatusMap: framework.NewNodeToStatus(
+					map[string]*framework.Status{
+						"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+						"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					},
+					nil,
+				),
 			},
 			wantResult: nil,
 			wantStatus: framework.NewStatus(framework.Error, "BeforePostFilter returned"),
@@ -591,10 +609,13 @@ func Test_wrappedPlugin_PostFilter_WithPluginExtender(t *testing.T) {
 			},
 			args: args{
 				pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
-				filteredNodeStatusMap: framework.NodeToStatusMap{
-					"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-					"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
-				},
+				filteredNodeStatusMap: framework.NewNodeToStatus(
+					map[string]*framework.Status{
+						"node1": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+						"node2": framework.NewStatus(framework.UnschedulableAndUnresolvable, ""),
+					},
+					nil,
+				),
 			},
 			wantResult: nil,
 			wantStatus: framework.NewStatus(framework.Error, "AfterPostFilter returned"),

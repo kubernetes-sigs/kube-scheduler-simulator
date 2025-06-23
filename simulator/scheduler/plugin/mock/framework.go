@@ -177,7 +177,7 @@ func (mr *MockPostFilterPluginMockRecorder) Name() *gomock.Call {
 }
 
 // PostFilter mocks base method.
-func (m *MockPostFilterPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+func (m *MockPostFilterPlugin) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, filteredNodeStatusMap framework.NodeToStatusReader) (*framework.PostFilterResult, *framework.Status) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PostFilter", ctx, state, pod, filteredNodeStatusMap)
 	ret0, _ := ret[0].(*framework.PostFilterResult)
