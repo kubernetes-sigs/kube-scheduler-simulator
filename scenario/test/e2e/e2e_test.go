@@ -26,6 +26,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
 	"sigs.k8s.io/kube-scheduler-simulator/scenario/test/utils"
 )
 
@@ -258,6 +259,30 @@ var _ = Describe("Manager", Ordered, func() {
 			Expect(metricsOutput).To(ContainSubstring(
 				"controller_runtime_reconcile_total",
 			))
+		})
+
+		It("should provisioned cert-manager", func() {
+			By("validating that cert-manager has the certificate Secret")
+			verifyCertManager := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get", "secrets", "webhook-server-cert", "-n", namespace)
+				_, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+			}
+			Eventually(verifyCertManager).Should(Succeed())
+		})
+
+		It("should have CA injection for validating webhooks", func() {
+			By("checking CA injection for validating webhooks")
+			verifyCAInjection := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get",
+					"validatingwebhookconfigurations.admissionregistration.k8s.io",
+					"scenario-validating-webhook-configuration",
+					"-o", "go-template={{ range .webhooks }}{{ .clientConfig.caBundle }}{{ end }}")
+				vwhOutput, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(len(vwhOutput)).To(BeNumerically(">", 10))
+			}
+			Eventually(verifyCAInjection).Should(Succeed())
 		})
 
 		// +kubebuilder:scaffold:e2e-webhooks-checks

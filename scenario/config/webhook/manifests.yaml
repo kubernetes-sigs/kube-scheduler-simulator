@@ -1,0 +1,28 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: scenario-webhook-service
+        namespace: scenario-system
+        path: /validate-simulation-kube-scheduler-simulator-x-k8s-io-v1alpha1-scenario
+        port: 9443
+      caBundle: ""
+    failurePolicy: Fail
+    name: vscenario-v1alpha1.kb.io
+    rules:
+      - apiGroups:
+          - simulation.kube-scheduler-simulator.x-k8s.io
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - scenarios
+    sideEffects: None

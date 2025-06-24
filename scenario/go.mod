@@ -7,6 +7,7 @@ godebug default=go1.24
 require (
 	github.com/onsi/ginkgo/v2 v2.21.0
 	github.com/onsi/gomega v1.35.1
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	k8s.io/apimachinery v0.32.0
 	k8s.io/client-go v0.32.0
 	sigs.k8s.io/controller-runtime v0.20.0

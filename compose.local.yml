@@ -32,9 +32,50 @@ services:
       - simulator-internal-network
     profiles:
       - externalImportEnabled
+
+  scenario-controller:
+    image: scenario-controller
+    profiles: ["scenario"]
+    command:
+      - "--kubeconfig=/config/kubeconfig.yaml"
+      - "--webhook-cert-path=/tmp/k8s-webhook-server/serving-certs"
+    volumes:
+      - ./simulator/cmd/scheduler/kubeconfig.yaml:/config/kubeconfig.yaml:ro
+      - scenario-webhook-certs:/tmp/k8s-webhook-server/serving-certs:ro
+    ports:
+      - "9443:9443"
+    depends_on:
+      bootstrap:
+        condition: service_healthy
+    networks:
+      - simulator-internal-network
+
+  # Bootstrap container: prepares CRDs and generates webhook certificates
+  bootstrap:
+    image: bootstrap
+    profiles: ["scenario"]
+    depends_on:
+      - simulator-cluster
+    volumes:
+      - ./simulator/cmd/scheduler/kubeconfig.yaml:/config/kubeconfig.yaml:ro
+      - ./scenario/config/webhook:/tmp/webhook:ro
+      - ./scenario/config/crd:/manifests/crd:ro
+      - scenario-webhook-certs:/manifests/webhook/certs
+      - scenario-webhook-work:/manifests/webhook
+    networks:
+      - simulator-internal-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "test -f /manifests/webhook/certs/tls.crt"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
 networks:
   simulator-internal-network:
     driver: bridge
 volumes:
   simulator-etcd-data:
+  scenario-webhook-certs:
+  scenario-webhook-work:
   conf:
