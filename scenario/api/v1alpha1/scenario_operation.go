@@ -90,7 +90,7 @@ func (s *ScenarioOperation) validateOperations() error {
 		count++
 	}
 	if count != 1 {
-		return fmt.Errorf("validateOperation find some operations")
+		return fmt.Errorf("exactly one operation type must be specified, but found %d", count)
 	}
 	return nil
 }
