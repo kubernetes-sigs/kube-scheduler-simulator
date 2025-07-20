@@ -32,6 +32,7 @@ format:
 # run test on all modules
 test:
 	cd simulator/ && make test
+	cd scenario/ && make test
 
 .PHONY: mod-download
 mod-download:

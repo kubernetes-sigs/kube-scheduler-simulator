@@ -24,7 +24,7 @@ func (s *ScenarioOperation) Run(ctx context.Context, cfg *rest.Config) (bool, er
 		if err != nil {
 			return true, xerrors.Errorf("build client failed for id: %s error: %w", s.ID, err)
 		}
-		_, err = client.Create(ctx, ope.Object, ope.CreateOptions)
+		_, err = client.Namespace(ope.Object.GetNamespace()).Create(ctx, ope.Object, ope.CreateOptions)
 		if err != nil {
 			return true, xerrors.Errorf("run create operation: id: %s error: %w", s.ID, err)
 		}
@@ -35,7 +35,7 @@ func (s *ScenarioOperation) Run(ctx context.Context, cfg *rest.Config) (bool, er
 		if err != nil {
 			return true, xerrors.Errorf("build client failed for id: %s error: %w", s.ID, err)
 		}
-		_, err = client.Patch(ctx, ope.ObjectMeta.Name, ope.PatchType, []byte(ope.Patch), ope.PatchOptions)
+		_, err = client.Namespace(ope.ObjectMeta.Namespace).Patch(ctx, ope.ObjectMeta.Name, ope.PatchType, []byte(ope.Patch), ope.PatchOptions)
 		if err != nil {
 			return true, xerrors.Errorf("run patch operation: id: %s error: %w", s.ID, err)
 		}
@@ -46,7 +46,7 @@ func (s *ScenarioOperation) Run(ctx context.Context, cfg *rest.Config) (bool, er
 		if err != nil {
 			return true, xerrors.Errorf("build client failed for id: %s error: %w", s.ID, err)
 		}
-		err = client.Delete(ctx, ope.ObjectMeta.Name, ope.DeleteOptions)
+		err = client.Namespace(ope.ObjectMeta.Namespace).Delete(ctx, ope.ObjectMeta.Name, ope.DeleteOptions)
 		if err != nil {
 			return true, xerrors.Errorf("run delete operation: id: %s error: %w", s.ID, err)
 		}
