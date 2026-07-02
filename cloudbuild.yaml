@@ -3,30 +3,51 @@
 # this must be specified in seconds. If omitted, defaults to 600s (10 mins)
 timeout: 3000s
 steps:
+  # Register QEMU emulators and create a buildx builder so the images below can be
+  # built for both linux/amd64 and linux/arm64. Without arm64 images, the Go backend
+  # crashes under emulation on Apple Silicon (fatal error: lfstack.push) and no pod
+  # ever gets scheduled.
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        docker run --privileged --rm tonistiigi/binfmt --install all
+        docker buildx create --name multiarch --driver docker-container --use
+        docker buildx inspect --bootstrap
   - name: gcr.io/cloud-builders/docker
     args:
-    - buildx
-    - build
-    - --tag=gcr.io/$PROJECT_ID/simulator-backend:$_GIT_TAG
-    - --tag=gcr.io/$PROJECT_ID/simulator-backend:latest
-    - -f=./simulator/cmd/simulator/Dockerfile
-    - ./simulator/
+      - buildx
+      - build
+      - --builder=multiarch
+      - --platform=linux/amd64,linux/arm64
+      - --tag=gcr.io/$PROJECT_ID/simulator-backend:$_GIT_TAG
+      - --tag=gcr.io/$PROJECT_ID/simulator-backend:latest
+      - --push
+      - -f=./simulator/cmd/simulator/Dockerfile
+      - ./simulator/
   - name: gcr.io/cloud-builders/docker
     args:
-    - buildx
-    - build
-    - --tag=gcr.io/$PROJECT_ID/debuggable-scheduler:$_GIT_TAG
-    - --tag=gcr.io/$PROJECT_ID/debuggable-scheduler:latest
-    - -f=./simulator/cmd/scheduler/Dockerfile
-    - ./simulator/
+      - buildx
+      - build
+      - --builder=multiarch
+      - --platform=linux/amd64,linux/arm64
+      - --tag=gcr.io/$PROJECT_ID/debuggable-scheduler:$_GIT_TAG
+      - --tag=gcr.io/$PROJECT_ID/debuggable-scheduler:latest
+      - --push
+      - -f=./simulator/cmd/scheduler/Dockerfile
+      - ./simulator/
   - name: gcr.io/cloud-builders/docker
     args:
-    - buildx
-    - build
-    - --tag=gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG
-    - --tag=gcr.io/$PROJECT_ID/simulator-frontend:latest
-    - -f=./web/Dockerfile
-    - ./web/
+      - buildx
+      - build
+      - --builder=multiarch
+      - --platform=linux/amd64,linux/arm64
+      - --tag=gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG
+      - --tag=gcr.io/$PROJECT_ID/simulator-frontend:latest
+      - --push
+      - -f=./web/Dockerfile
+      - ./web/
 substitutions:
   _GIT_TAG: '12345'
   _PULL_BASE_REF: 'master'
@@ -34,11 +55,7 @@ substitutions:
 # or any new substitutions added in the future.
 options:
   substitution_option: ALLOW_LOOSE
-# this will push these images, or cause the build to fail if they weren't built.
-images:
-  - 'gcr.io/$PROJECT_ID/simulator-frontend:$_GIT_TAG'
-  - 'gcr.io/$PROJECT_ID/simulator-frontend:latest'
-  - 'gcr.io/$PROJECT_ID/simulator-backend:$_GIT_TAG'
-  - 'gcr.io/$PROJECT_ID/simulator-backend:latest'
-  - 'gcr.io/$PROJECT_ID/debuggable-scheduler:$_GIT_TAG'
-  - 'gcr.io/$PROJECT_ID/debuggable-scheduler:latest'
+# NOTE: images are pushed by `docker buildx build --push` above (as multi-arch
+# manifest lists). A top-level `images:` list is intentionally omitted because those
+# images are not present in the local docker store when using the docker-container
+# builder, which would make the push step fail.
